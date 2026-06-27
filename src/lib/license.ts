@@ -20,8 +20,8 @@ export function validateLicenseKey(key: string): LicenseValidation {
 
   const tierPrefix = parts[1]
   let tier: LicenseTier
-  if (tierPrefix === 'PROC' || tierPrefix === 'PRO-') tier = LicenseTier.PRO
-  else if (tierPrefix === 'PREM') tier = LicenseTier.PREMIUM
+  if (tierPrefix.startsWith('PRO')) tier = LicenseTier.PRO
+  else if (tierPrefix.startsWith('PREM')) tier = LicenseTier.PREMIUM
   else return { valid: false, tier: null, error: 'Unknown tier in key' }
 
   const checksum = parts[3]

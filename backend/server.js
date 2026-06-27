@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 
@@ -26,8 +27,8 @@ function validateKeyFormat(key) {
   if (parts.length !== 4 || parts[0] !== 'CHTX') return null;
   const tierPrefix = parts[1];
   let tier;
-  if (tierPrefix === 'PROC' || tierPrefix === 'PRO-') tier = 'PRO';
-  else if (tierPrefix === 'PREM') tier = 'PREMIUM';
+  if (tierPrefix.startsWith('PRO')) tier = 'PRO';
+  else if (tierPrefix.startsWith('PREM')) tier = 'PREMIUM';
   else return null;
   return { tier, nonce: parts[2], checksum: parts[3] };
 }
