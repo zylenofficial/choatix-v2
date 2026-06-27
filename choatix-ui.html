@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Choatix V2</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; border-color: rgba(255,255,255,0.06); }
+  :root {
+    --bg: #000; --bg2: #080808; --bg3: #111; --bg4: #181818; --bg5: #1e1e1e; --bg6: #252525;
+    --b1: rgba(255,255,255,0.06); --b2: rgba(255,255,255,0.10); --b3: rgba(255,255,255,0.18);
+    --t1: #f5f5f5; --t2: rgba(255,255,255,0.55); --t3: rgba(255,255,255,0.32); --t4: rgba(255,255,255,0.18);
+    --accent: #fff; --accent-dim: rgba(255,255,255,0.07);
+    --success: #e0e0e0; --warning: rgba(255,255,255,0.60); --danger: rgba(255,255,255,0.42);
+    --r1: 8px; --r2: 12px; --r3: 16px; --r4: 20px;
+  }
+  body { font-family: 'Inter', -apple-system, sans-serif; background: #000; color: var(--t1); overflow: hidden; height: 100vh; -webkit-font-smoothing: antialiased; letter-spacing: -0.011em; }
+  ::-webkit-scrollbar { width: 5px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 4px; }
+
+  /* Layout */
+  .app { display: flex; flex-direction: column; height: 100vh; }
+  .titlebar { height: 36px; display: flex; align-items: center; justify-content: space-between; padding: 0 12px; border-bottom: 1px solid var(--b1); -webkit-app-region: drag; flex-shrink: 0; }
+  .titlebar .brand { font-size: 10px; font-weight: 700; letter-spacing: 0.15em; color: var(--t4); }
+  .titlebar .controls { display: flex; gap: 2px; -webkit-app-region: no-drag; }
+  .titlebar .controls button { width: 32px; height: 32px; border: none; background: transparent; color: var(--t4); border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; transition: 0.15s; }
+  .titlebar .controls button:hover { background: rgba(255,255,255,0.05); color: var(--t1); }
+  .main { display: flex; flex: 1; overflow: hidden; }
+
+  /* Sidebar */
+  .sidebar { width: 224px; background: rgba(6,6,6,0.92); backdrop-filter: blur(24px); border-right: 1px solid var(--b1); display: flex; flex-direction: column; flex-shrink: 0; position: relative; }
+  .sidebar .logo { height: 56px; display: flex; align-items: center; padding: 0 20px; }
+  .sidebar .logo span { font-size: 13px; font-weight: 900; letter-spacing: 0.2em; color: var(--t1); }
+  .sidebar .logo small { font-size: 8px; font-weight: 500; letter-spacing: 0.1em; color: var(--t4); margin-left: 8px; }
+  .sidebar .sep { height: 1px; margin: 0 16px; background: linear-gradient(90deg, transparent, var(--b1), transparent); }
+  .sidebar nav { flex: 1; padding: 12px; display: flex; flex-direction: column; gap: 2px; margin-top: 8px; }
+  .sidebar nav button { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border: none; background: transparent; color: var(--t2); font-size: 12px; font-weight: 500; border-radius: var(--r2); cursor: pointer; transition: all 0.2s cubic-bezier(0.4,0,0.2,1); position: relative; width: 100%; text-align: left; }
+  .sidebar nav button:hover { background: var(--bg5); color: var(--t1); transform: translateX(1px); }
+  .sidebar nav button.active { background: var(--accent-dim); color: var(--accent); box-shadow: inset 0 0 20px rgba(255,255,255,0.02); }
+  .sidebar nav button.active::before { content: ''; position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 2px; height: 20px; border-radius: 0 4px 4px 0; background: var(--accent); box-shadow: 0 0 8px rgba(255,255,255,0.2); }
+  .sidebar nav button svg { width: 15px; height: 15px; flex-shrink: 0; }
+  .sidebar .upgrade { padding: 12px; }
+  .sidebar .upgrade-card { padding: 16px; border-radius: var(--r3); background: linear-gradient(135deg, rgba(255,255,255,0.035), rgba(255,255,255,0.01)); border: 1px solid rgba(255,255,255,0.06); position: relative; overflow: hidden; }
+  .sidebar .upgrade-card .label { font-size: 9px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--t4); margin-bottom: 6px; }
+  .sidebar .upgrade-card .desc { font-size: 10px; color: var(--t3); margin-bottom: 12px; }
+  .sidebar .upgrade-card button { width: 100%; height: 32px; border: none; border-radius: var(--r2); background: var(--accent); color: #000; font-size: 10px; font-weight: 700; letter-spacing: 0.05em; cursor: pointer; transition: all 0.2s; }
+  .sidebar .upgrade-card button:hover { transform: translateY(-1px); box-shadow: 0 4px 20px rgba(255,255,255,0.1); }
+
+  /* Content */
+  .content { flex: 1; overflow-y: auto; padding: 24px; }
+
+  /* Cards */
+  .card { background: var(--bg2); border: 1px solid var(--b1); border-radius: var(--r3); transition: all 0.25s cubic-bezier(0.4,0,0.2,1); }
+  .card:hover { border-color: var(--b2); background: var(--bg3); box-shadow: 0 0 0 1px rgba(255,255,255,0.03), 0 4px 24px rgba(0,0,0,0.3); }
+  .card-glow { box-shadow: 0 0 30px rgba(255,255,255,0.02), inset 0 1px 0 rgba(255,255,255,0.04); }
+
+  /* Page header */
+  .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+  .page-header h1 { font-size: 17px; font-weight: 700; letter-spacing: -0.01em; }
+  .page-header p { font-size: 10px; color: var(--t4); margin-top: 2px; }
+  .live-dot { display: flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 999px; background: var(--bg3); border: 1px solid var(--b1); }
+  .live-dot::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--success); animation: pulse 2s infinite; }
+
+  /* Gauge */
+  .gauge { position: relative; display: inline-flex; align-items: center; justify-content: center; }
+  .gauge svg { transform: rotate(-90deg); }
+  .gauge .val { position: absolute; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .gauge .val .num { font-size: 18px; font-weight: 700; line-height: 1; }
+  .gauge .val .lbl { font-size: 8px; color: var(--t4); margin-top: 2px; }
+
+  /* Stats row */
+  .stat-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--b1); }
+  .stat-row:last-child { border-bottom: none; }
+  .stat-row .label { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--t3); }
+  .stat-row .label svg { width: 14px; height: 14px; }
+  .stat-row .value { font-size: 11px; font-weight: 500; color: var(--t2); }
+
+  /* Charts */
+  .chart-area { height: 110px; position: relative; overflow: hidden; border-radius: 8px; }
+  .chart-area canvas { width: 100% !important; height: 100% !important; }
+
+  /* Scan page */
+  .scan-center { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; }
+  .scan-icon { width: 128px; height: 128px; border-radius: 24px; display: flex; align-items: center; justify-content: center; background: var(--bg3); border: 1px solid var(--b2); margin-bottom: 32px; position: relative; }
+  .scan-icon svg { width: 56px; height: 56px; color: var(--accent); }
+  .scan-icon .badge { position: absolute; bottom: -6px; right: -6px; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--bg2); border: 1px solid var(--b2); }
+  .scan-icon .badge svg { width: 14px; height: 14px; }
+
+  .btn-primary { background: var(--accent); color: #000; border: none; font-weight: 600; border-radius: var(--r2); cursor: pointer; transition: all 0.2s cubic-bezier(0.4,0,0.2,1); }
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 20px rgba(255,255,255,0.1); }
+  .btn-primary:active { transform: translateY(0); }
+
+  /* Progress */
+  .progress { height: 3px; border-radius: 2px; background: var(--bg6); overflow: hidden; position: relative; }
+  .progress .fill { height: 100%; border-radius: 2px; background: var(--accent); transition: width 0.6s cubic-bezier(0.4,0,0.2,1); position: relative; }
+  .progress .fill::after { content: ''; position: absolute; top: 0; right: 0; width: 40px; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3)); border-radius: 2px; }
+
+  /* Optimizer list */
+  .tweak-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; }
+  .tweak-item .dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+  .tweak-item .info { flex: 1; min-width: 0; }
+  .tweak-item .info .name { font-size: 12px; font-weight: 600; }
+  .tweak-item .info .desc { font-size: 10px; color: var(--t4); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .tweak-item .cat { font-size: 8px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; padding: 4px 8px; border-radius: 6px; background: var(--bg6); color: var(--t4); flex-shrink: 0; }
+  .tweak-item .apply-btn { height: 32px; padding: 0 12px; border: none; border-radius: var(--r2); background: var(--accent); color: #000; font-size: 10px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 4px; flex-shrink: 0; transition: all 0.2s; }
+  .tweak-item .apply-btn:hover { transform: translateY(-1px); box-shadow: 0 2px 12px rgba(255,255,255,0.1); }
+
+  /* Category grid */
+  .cat-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 8px; margin-bottom: 20px; }
+  .cat-pill { padding: 12px; border-radius: var(--r3); text-align: center; background: var(--bg2); border: 1px solid var(--b1); transition: all 0.25s; }
+  .cat-pill:hover { border-color: var(--b2); background: var(--bg3); }
+  .cat-pill .icon { width: 32px; height: 32px; border-radius: 12px; margin: 0 auto 8px; display: flex; align-items: center; justify-content: center; }
+  .cat-pill .icon .dot { width: 10px; height: 10px; border-radius: 50%; }
+  .cat-pill .name { font-size: 8px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--t4); margin-bottom: 2px; }
+  .cat-pill .count { font-size: 13px; font-weight: 700; }
+
+  /* Upgrade modal */
+  .modal-overlay { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; background: rgba(0,0,0,0.85); z-index: 100; }
+  .modal-overlay.show { display: flex; }
+  .modal { width: 100%; max-width: 480px; background: var(--bg2); border: 1px solid var(--b1); border-radius: var(--r4); overflow: hidden; }
+  .modal-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; border-bottom: 1px solid var(--b1); }
+  .modal-header h2 { font-size: 13px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; }
+  .modal-header p { font-size: 10px; color: var(--t3); margin-top: 2px; }
+  .modal-header button { width: 28px; height: 28px; border: none; background: transparent; color: var(--t4); border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.15s; }
+  .modal-header button:hover { background: rgba(255,255,255,0.05); color: var(--t1); }
+  .plan-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 16px; }
+  .plan-card { padding: 16px; border-radius: var(--r3); background: var(--bg); border: 1px solid var(--b1); position: relative; }
+  .plan-card.recommended { border: 2px solid var(--accent); background: linear-gradient(135deg, rgba(255,255,255,0.04), var(--bg)); }
+  .plan-card .badge { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); font-size: 8px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; padding: 2px 10px; border-radius: 999px; background: var(--accent); color: #000; white-space: nowrap; }
+  .plan-card .tier { font-size: 9px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--t4); margin-bottom: 6px; }
+  .plan-card .price { font-size: 20px; font-weight: 700; margin-bottom: 2px; }
+  .plan-card .sub { font-size: 10px; color: var(--t4); margin-bottom: 12px; }
+  .plan-card button { width: 100%; height: 32px; border: none; border-radius: var(--r2); font-size: 10px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+  .plan-card button.primary { background: var(--accent); color: #000; }
+  .plan-card button.primary:hover { transform: translateY(-1px); box-shadow: 0 4px 20px rgba(255,255,255,0.1); }
+  .plan-card button.secondary { background: var(--bg3); color: var(--t2); border: 1px solid var(--b2); }
+  .modal-footer { padding: 12px 20px 16px; text-align: center; font-size: 10px; color: var(--t4); }
+  .modal-footer b { color: var(--t2); font-weight: 500; }
+
+  /* Health score */
+  .health-card { padding: 24px; display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 190px; position: relative; overflow: hidden; }
+  .health-card .glow { position: absolute; inset: 0; pointer-events: none; border-radius: inherit; }
+
+  /* Animations */
+  @keyframes pulse { 0%,100% { opacity: 0.4; transform: scale(1); } 50% { opacity: 1; transform: scale(1.05); } }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  .fade-in { animation: fadeIn 0.4s cubic-bezier(0.4,0,0.2,1) forwards; opacity: 0; }
+  .stagger > * { opacity: 0; animation: fadeIn 0.35s cubic-bezier(0.4,0,0.2,1) forwards; }
+  .stagger > *:nth-child(1) { animation-delay: 0ms; }
+  .stagger > *:nth-child(2) { animation-delay: 35ms; }
+  .stagger > *:nth-child(3) { animation-delay: 70ms; }
+  .stagger > *:nth-child(4) { animation-delay: 105ms; }
+  .stagger > *:nth-child(5) { animation-delay: 140ms; }
+  .stagger > *:nth-child(6) { animation-delay: 175ms; }
+  .stagger > *:nth-child(7) { animation-delay: 210ms; }
+  .stagger > *:nth-child(8) { animation-delay: 245ms; }
+  .stagger > *:nth-child(n+9) { animation-delay: 280ms; }
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- Title Bar -->
+  <div class="titlebar">
+    <div class="brand">CHOATIX</div>
+    <div class="controls">
+      <button>&#x2212;</button>
+      <button>&#9633;</button>
+      <button>&#10005;</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="logo"><span>CHAOTIX</span><small>v2.0</small></div>
+      <div class="sep"></div>
+      <nav id="nav">
+        <button class="active" data-page="dashboard">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          Dashboard
+        </button>
+        <button data-page="scan">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          Scan
+        </button>
+        <button data-page="optimizer">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+          Optimizer
+        </button>
+        <button data-page="autopilot">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 12h3l3-9 4 18 3-9h3"/></svg>
+          AutoPilot
+        </button>
+        <button data-page="performance">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 20V4M4 12h16"/></svg>
+          Performance
+        </button>
+        <button data-page="rollback">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+          Rollback
+        </button>
+      </nav>
+      <div class="sep"></div>
+      <div class="upgrade">
+        <div class="upgrade-card">
+          <div class="label">Free Plan</div>
+          <div class="desc">Unlock all optimizations</div>
+          <button onclick="openModal()">Upgrade</button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Dashboard Page -->
+    <div class="content" id="page-dashboard">
+      <div class="page-header">
+        <div>
+          <h1>Dashboard</h1>
+          <p>Last updated: just now · Auto-refreshing</p>
+        </div>
+        <div class="live-dot"><span style="font-size:9px;font-weight:600;letter-spacing:0.1em;color:var(--success)">LIVE</span></div>
+      </div>
+
+      <!-- Health + Gauges -->
+      <div style="display:flex;gap:16px;margin-bottom:20px">
+        <div class="card card-glow health-card" style="flex-shrink:0">
+          <div class="glow" id="healthGlow"></div>
+          <div class="gauge" style="width:130px;height:130px">
+            <svg width="130" height="130">
+              <circle cx="65" cy="65" r="56" fill="none" stroke="var(--bg6)" stroke-width="7"/>
+              <circle cx="65" cy="65" r="56" fill="none" stroke="var(--success)" stroke-width="7" stroke-linecap="round"
+                stroke-dasharray="351.86" stroke-dashoffset="35.19" id="healthRing"
+                style="transition:stroke-dashoffset 0.8s cubic-bezier(0.4,0,0.2,1);filter:drop-shadow(0 0 10px rgba(224,224,224,0.2))"/>
+            </svg>
+            <div class="val"><span class="num" id="healthScore" style="color:var(--success)">90</span><span class="lbl">/ 100</span></div>
+          </div>
+          <div style="font-size:12px;font-weight:600;margin-top:12px">System Health</div>
+          <div style="font-size:10px;color:var(--success)">Excellent</div>
+        </div>
+
+        <div style="flex:1;display:grid;grid-template-columns:repeat(4,1fr);gap:12px" class="stagger">
+          <div class="card card-glow" style="padding:16px;display:flex;flex-direction:column;align-items:center">
+            <div class="gauge" style="width:80px;height:80px">
+              <svg width="80" height="80"><circle cx="40" cy="40" r="34" fill="none" stroke="var(--bg6)" stroke-width="5"/><circle cx="40" cy="40" r="34" fill="none" stroke="var(--success)" stroke-width="5" stroke-linecap="round" stroke-dasharray="213.63" stroke-dashoffset="42.73" style="filter:drop-shadow(0 0 6px rgba(224,224,224,0.15))"/></svg>
+              <div class="val"><span class="num" style="font-size:16px;color:var(--success)">32%</span><span class="lbl">CPU</span></div>
+            </div>
+            <div style="margin-top:12px;width:100%;display:flex;flex-direction:column;gap:6px">
+              <div class="stat-row"><span class="label">Temp</span><span class="value">58°C</span></div>
+              <div class="stat-row"><span class="label">Cores</span><span class="value">8C / 16T</span></div>
+              <div class="stat-row"><span class="label">Clock</span><span class="value">4.5 GHz</span></div>
+            </div>
+          </div>
+
+          <div class="card card-glow" style="padding:16px;display:flex;flex-direction:column;align-items:center">
+            <div class="gauge" style="width:80px;height:80px">
+              <svg width="80" height="80"><circle cx="40" cy="40" r="34" fill="none" stroke="var(--bg6)" stroke-width="5"/><circle cx="40" cy="40" r="34" fill="none" stroke="var(--success)" stroke-width="5" stroke-linecap="round" stroke-dasharray="213.63" stroke-dashoffset="85.45" style="filter:drop-shadow(0 0 6px rgba(224,224,224,0.15))"/></svg>
+              <div class="val"><span class="num" style="font-size:16px;color:var(--success)">60%</span><span class="lbl">RAM</span></div>
+            </div>
+            <div style="margin-top:12px;width:100%;display:flex;flex-direction:column;gap:6px">
+              <div class="stat-row"><span class="label">Used</span><span class="value">9.6 GB</span></div>
+              <div class="stat-row"><span class="label">Total</span><span class="value">16 GB</span></div>
+              <div class="stat-row"><span class="label">Free</span><span class="value">6.4 GB</span></div>
+            </div>
+          </div>
+
+          <div class="card card-glow" style="padding:16px;display:flex;flex-direction:column;align-items:center">
+            <div class="gauge" style="width:80px;height:80px">
+              <svg width="80" height="80"><circle cx="40" cy="40" r="34" fill="none" stroke="var(--bg6)" stroke-width="5"/><circle cx="40" cy="40" r="34" fill="none" stroke="var(--warning)" stroke-width="5" stroke-linecap="round" stroke-dasharray="213.63" stroke-dashoffset="42.73" style="filter:drop-shadow(0 0 6px rgba(224,224,224,0.15))"/></svg>
+              <div class="val"><span class="num" style="font-size:16px;color:var(--warning)">65%</span><span class="lbl">GPU</span></div>
+            </div>
+            <div style="margin-top:12px;width:100%;display:flex;flex-direction:column;gap:6px">
+              <div class="stat-row"><span class="label">Temp</span><span class="value">62°C</span></div>
+              <div class="stat-row"><span class="label">VRAM</span><span class="value">8192 MB</span></div>
+              <div class="stat-row"><span class="label">Model</span><span class="value">RTX 4070</span></div>
+            </div>
+          </div>
+
+          <div class="card card-glow" style="padding:16px;display:flex;flex-direction:column;align-items:center">
+            <div class="gauge" style="width:80px;height:80px">
+              <svg width="80" height="80"><circle cx="40" cy="40" r="34" fill="none" stroke="var(--bg6)" stroke-width="5"/><circle cx="40" cy="40" r="34" fill="none" stroke="var(--success)" stroke-width="5" stroke-linecap="round" stroke-dasharray="213.63" stroke-dashoffset="64.09" style="filter:drop-shadow(0 0 6px rgba(224,224,224,0.15))"/></svg>
+              <div class="val"><span class="num" style="font-size:16px;color:var(--success)">45%</span><span class="lbl">C:</span></div>
+            </div>
+            <div style="margin-top:12px;width:100%;display:flex;flex-direction:column;gap:6px">
+              <div class="stat-row"><span class="label">Used</span><span class="value">225 GB</span></div>
+              <div class="stat-row"><span class="label">Free</span><span class="value">275 GB</span></div>
+              <div class="stat-row"><span class="label">Total</span><span class="value">500 GB</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Charts -->
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px">
+        <div class="card card-glow" style="padding:16px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="1.5"><path d="M12 20V4M4 12h16"/></svg>
+            <span style="font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--t4)">CPU Usage</span>
+          </div>
+          <div class="chart-area"><canvas id="cpuChart"></canvas></div>
+        </div>
+        <div class="card card-glow" style="padding:16px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
+            <span style="font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--t4)">RAM Usage</span>
+          </div>
+          <div class="chart-area"><canvas id="ramChart"></canvas></div>
+        </div>
+        <div class="card card-glow" style="padding:16px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+            <span style="font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--t4)">GPU Usage</span>
+          </div>
+          <div class="chart-area"><canvas id="gpuChart"></canvas></div>
+        </div>
+      </div>
+
+      <!-- System Info / Network / Quick Actions -->
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
+        <div class="card card-glow" style="padding:16px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+            <span style="font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--t4)">System Info</span>
+          </div>
+          <div class="stat-row"><span class="label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg> Power Plan</span><span class="value">High Performance</span></div>
+          <div class="stat-row"><span class="label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 12h3l3-9 4 18 3-9h3"/></svg> Game Mode</span><span class="value" style="color:var(--success)">Enabled</span></div>
+          <div class="stat-row"><span class="label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg> OS</span><span class="value">Windows 11 Pro</span></div>
+          <div class="stat-row"><span class="label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg> Uptime</span><span class="value">3d 14h 22m</span></div>
+        </div>
+
+        <div class="card card-glow" style="padding:16px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--t2)" stroke-width="1.5"><path d="M5 12.55a11 11 0 0 1 14.08 0M1.42 9a16 16 0 0 1 21.16 0M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01"/></svg>
+            <span style="font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--t4)">Network</span>
+          </div>
+          <div class="stat-row"><span class="label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 5v14M5 12l7 7 7-7"/></svg> Download</span><span class="value" style="color:var(--success)">24.5 MB/s</span></div>
+          <div class="stat-row"><span class="label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 19V5M5 12l7-7 7 7"/></svg> Upload</span><span class="value">8.2 MB/s</span></div>
+          <div class="stat-row"><span class="label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 12.55a11 11 0 0 1 14.08 0"/></svg> Adapter</span><span class="value">Wi-Fi 6</span></div>
+        </div>
+
+        <div class="card card-glow" style="padding:16px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--warning)" stroke-width="1.5"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            <span style="font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--t4)">Quick Actions</span>
+          </div>
+          <button class="card" style="width:100%;display:flex;align-items:center;gap:12px;padding:14px;border:1px solid var(--b1);cursor:pointer;margin-bottom:8px;transition:all 0.2s" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 30px rgba(0,0,0,0.3)'" onmouseout="this.style.transform='';this.style.boxShadow=''">
+            <div style="width:36px;height:36px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.05);flex-shrink:0"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+            <div style="text-align:left"><div style="font-size:11px;font-weight:600">Scan System</div><div style="font-size:9px;color:var(--t4)">Detect performance issues</div></div>
+          </button>
+          <button class="card" style="width:100%;display:flex;align-items:center;gap:12px;padding:14px;border:1px solid var(--b1);cursor:pointer;margin-bottom:8px;transition:all 0.2s" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">
+            <div style="width:36px;height:36px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.05);flex-shrink:0"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="1.5"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg></div>
+            <div style="text-align:left"><div style="font-size:11px;font-weight:600">Optimize All</div><div style="font-size:9px;color:var(--t4)">Apply recommended fixes</div></div>
+          </button>
+          <button class="card" style="width:100%;display:flex;align-items:center;gap:12px;padding:14px;border:1px solid var(--b1);cursor:pointer;transition:all 0.2s" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">
+            <div style="width:36px;height:36px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.05);flex-shrink:0"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--warning)" stroke-width="1.5"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></div>
+            <div style="text-align:left"><div style="font-size:11px;font-weight:600">Clear Cache</div><div style="font-size:9px;color:var(--t4)">Remove temporary files</div></div>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scan Page -->
+    <div class="content" id="page-scan" style="display:none">
+      <div class="scan-center">
+        <div class="scan-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <div class="badge"><svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg></div>
+        </div>
+        <h2 style="font-size:20px;font-weight:700;margin-bottom:6px">Scan Your PC</h2>
+        <p style="font-size:12px;max-width:380px;margin-bottom:32px;color:var(--t3);line-height:1.5">Detect gaming performance bottlenecks. Get personalized, safe optimization recommendations.</p>
+        <button class="btn-primary" style="height:48px;padding:0 40px;font-size:12px;font-weight:700;letter-spacing:0.05em" onclick="startScan()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:8px;vertical-align:middle"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          Start System Scan
+        </button>
+        <div style="display:flex;gap:24px;margin-top:32px">
+          <div style="display:flex;align-items:center;gap:6px;font-size:10px;color:var(--t4)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Safe & reversible</div>
+          <div style="display:flex;align-items:center;gap:6px;font-size:10px;color:var(--t4)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 12h3l3-9 4 18 3-9h3"/></svg>Gaming-focused</div>
+          <div style="display:flex;align-items:center;gap:6px;font-size:10px;color:var(--t4)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>No fake fixes</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Optimizer Page -->
+    <div class="content" id="page-optimizer" style="display:none">
+      <div class="page-header">
+        <div>
+          <h1>Optimizer</h1>
+          <p>82 optimizations available</p>
+        </div>
+        <button class="btn-primary" style="height:36px;padding:0 20px;font-size:11px;font-weight:700;display:flex;align-items:center;gap:6px">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+          Optimize All
+        </button>
+      </div>
+      <div class="cat-grid stagger" id="catGrid"></div>
+      <div style="font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--t4);margin-bottom:12px">All Optimizations</div>
+      <div id="tweakList" style="display:flex;flex-direction:column;gap:6px"></div>
+    </div>
+
+    <!-- Other pages placeholder -->
+    <div class="content" id="page-autopilot" style="display:none"><div class="scan-center"><h2 style="font-size:17px;font-weight:700">AutoPilot</h2><p style="font-size:12px;color:var(--t3);margin-top:8px">Game profiles, auto-optimization & scheduled scans</p></div></div>
+    <div class="content" id="page-performance" style="display:none"><div class="scan-center"><h2 style="font-size:17px;font-weight:700">Performance</h2><p style="font-size:12px;color:var(--t3);margin-top:8px">Real-time system monitoring</p></div></div>
+    <div class="content" id="page-rollback" style="display:none"><div class="scan-center"><h2 style="font-size:17px;font-weight:700">Rollback</h2><p style="font-size:12px;color:var(--t3);margin-top:8px">Undo applied optimizations</p></div></div>
+  </div>
+</div>
+
+<!-- Upgrade Modal -->
+<div class="modal-overlay" id="upgradeModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div><h2>Choose Your Plan</h2><p>Unlock the full power of Choatix</p></div>
+      <button onclick="closeModal()">&#10005;</button>
+    </div>
+    <div class="plan-grid">
+      <div class="plan-card">
+        <div class="tier">Free</div>
+        <div class="price">€0</div>
+        <div class="sub">Get started</div>
+        <button class="secondary">Current</button>
+      </div>
+      <div class="plan-card">
+        <div class="tier">Pro</div>
+        <div class="price">€12.99</div>
+        <div class="sub">Advanced optimizations</div>
+        <button class="primary">Get PRO</button>
+      </div>
+      <div class="plan-card recommended">
+        <div class="badge">Recommended</div>
+        <div class="tier">Premium</div>
+        <div class="price">€24.99</div>
+        <div class="sub">Complete power</div>
+        <button class="primary">Get PREMIUM</button>
+      </div>
+    </div>
+    <div class="modal-footer">Join the <b>CHAOTIX</b> Discord to purchase</div>
+  </div>
+</div>
+
+<script>
+// Navigation
+const pages = document.querySelectorAll('[data-page]');
+pages.forEach(btn => {
+  btn.addEventListener('click', () => {
+    pages.forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.content').forEach(p => p.style.display = 'none');
+    const target = document.getElementById('page-' + btn.dataset.page);
+    if (target) target.style.display = '';
+  });
+});
+
+// Upgrade modal
+function openModal() { document.getElementById('upgradeModal').classList.add('show'); }
+function closeModal() { document.getElementById('upgradeModal').classList.remove('show'); }
+
+// Scan
+function startScan() {
+  const scan = document.getElementById('page-scan');
+  scan.innerHTML = `<div class="scan-center">
+    <div class="scan-icon" style="animation:pulse 2s infinite"><svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5" style="width:56px;height:56px"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></div>
+    <h2 style="font-size:18px;font-weight:700;margin-bottom:4px">Analyzing System</h2>
+    <p style="font-size:12px;color:var(--accent);margin-bottom:32px" id="scanLabel">CPU analysis...</p>
+    <div style="width:320px" class="progress"><div class="fill" id="scanBar" style="width:0%"></div></div>
+  </div>`;
+  const steps = ['CPU analysis','Memory scan','Disk check','GPU detection','Network test','Power plan review'];
+  let i = 0;
+  const iv = setInterval(() => {
+    if (i >= steps.length) { clearInterval(iv); setTimeout(() => { scan.innerHTML = `<div class="scan-center"><div style="width:48px;height:48px;margin-bottom:16px"><svg viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2" style="width:48px;height:48px"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4 12 14.01l-3-3"/></svg></div><h2 style="font-size:18px;font-weight:700;margin-bottom:4px">Scan Complete</h2><p style="font-size:12px;color:var(--t3)">Score: 85/100 · 3 issues found</p></div>`; }, 500); return; }
+    document.getElementById('scanLabel').textContent = steps[i];
+    document.getElementById('scanBar').style.width = ((i+1)/steps.length*100)+'%';
+    i++;
+  }, 400);
+}
+
+// Charts (simple canvas)
+function drawChart(canvasId, color, data) {
+  const c = document.getElementById(canvasId);
+  if (!c) return;
+  const ctx = c.getContext('2d');
+  const w = c.parentElement.clientWidth, h = c.parentElement.clientHeight;
+  c.width = w; c.height = h;
+  const max = Math.max(...data, 100);
+  ctx.clearRect(0,0,w,h);
+  ctx.beginPath();
+  ctx.moveTo(0, h);
+  data.forEach((v,i) => { ctx.lineTo(i*(w/(data.length-1)), h - (v/max)*h); });
+  ctx.lineTo(w, h);
+  const grad = ctx.createLinearGradient(0,0,0,h);
+  grad.addColorStop(0, color.replace(')',',0.12)').replace('rgb','rgba'));
+  grad.addColorStop(1, color.replace(')',',0)').replace('rgb','rgba'));
+  ctx.fillStyle = grad;
+  ctx.fill();
+  ctx.beginPath();
+  data.forEach((v,i) => { const x=i*(w/(data.length-1)), y=h-(v/max)*h; i===0?ctx.moveTo(x,y):ctx.lineTo(x,y); });
+  ctx.strokeStyle = color; ctx.lineWidth = 1.5; ctx.stroke();
+}
+const cpuData = [32,28,45,52,38,25,42,55,48,35,28,40,52,60,45,32,28,35,42,48];
+const ramData = [58,60,62,61,59,63,65,64,62,60,58,56,58,60,62,64,63,61,59,60];
+const gpuData = [45,52,65,72,58,42,55,68,75,60,48,52,58,62,65,60,55,50,48,45];
+setTimeout(() => { drawChart('cpuChart','rgb(255,255,255)',cpuData); drawChart('ramChart','rgb(200,200,200)',ramData); drawChart('gpuChart','rgb(150,150,150)',gpuData); }, 100);
+
+// Categories & Tweaks
+const cats = [
+  {id:'system',label:'System',color:'var(--accent)',count:6},
+  {id:'nvidia',label:'NVIDIA',color:'rgba(255,255,255,0.7)',count:6},
+  {id:'network',label:'Network',color:'rgba(255,255,255,0.5)',count:5},
+  {id:'debloat',label:'Debloat',color:'rgba(255,255,255,0.4)',count:6},
+  {id:'mouse',label:'Mouse',color:'rgba(255,255,255,0.35)',count:4},
+  {id:'keyboard',label:'Keyboard',color:'rgba(255,255,255,0.3)',count:5},
+  {id:'cpu',label:'CPU',color:'rgba(255,255,255,0.55)',count:6},
+  {id:'memory',label:'Memory',color:'rgba(255,255,255,0.4)',count:6},
+];
+const catGrid = document.getElementById('catGrid');
+cats.forEach(c => {
+  catGrid.innerHTML += `<div class="cat-pill"><div class="icon"><div class="dot" style="background:${c.color}"></div></div><div class="name">${c.label}</div><div class="count">${c.count}</div></div>`;
+});
+
+const tweaks = [
+  {name:'High Performance Power Plan',desc:'Set Windows to maximum performance mode',cat:'system'},
+  {name:'Game Mode',desc:'Enable Windows Game Mode for reduced latency',cat:'system'},
+  {name:'Disable Fullscreen Optimizations',desc:'Prevent Windows from interfering with fullscreen games',cat:'system'},
+  {name:'GPU Hardware Scheduling',desc:'Enable hardware-accelerated GPU scheduling',cat:'nvidia'},
+  {name:'Disable VSync',desc:'Turn off vertical sync for uncapped framerates',cat:'nvidia'},
+  {name:'Optimize Shader Cache',desc:'Clear and rebuild GPU shader cache',cat:'nvidia'},
+  {name:'Disable Mouse Acceleration',desc:'Raw mouse input for competitive gaming',cat:'mouse'},
+  {name:'Disable Filter Keys',desc:'Remove keyboard input lag from accessibility filters',cat:'keyboard'},
+  {name:'Disable Sticky Keys',desc:'Prevent sticky keys popups during gaming',cat:'keyboard'},
+  {name:'TCP/IP Optimization',desc:'Reset and optimize network stack',cat:'network'},
+  {name:'Disable Telemetry',desc:'Stop Windows data collection services',cat:'debloat'},
+  {name:'Disable Superfetch',desc:'Free up RAM by disabling memory pre-fetching',cat:'debloat'},
+];
+const tweakList = document.getElementById('tweakList');
+tweaks.forEach(t => {
+  tweakList.innerHTML += `<div class="card card-glow tweak-item">
+    <div class="dot" style="background:${cats.find(c=>c.id===t.cat)?.color||'var(--t4)'}"></div>
+    <div class="info"><div class="name" style="color:var(--t1)">${t.name}</div><div class="desc">${t.desc}</div></div>
+    <div class="cat">${cats.find(c=>c.id===t.cat)?.label||t.cat}</div>
+    <button class="apply-btn" onclick="this.innerHTML='✓ Applied';this.style.background='var(--bg6)';this.style.color='var(--success)';this.disabled=true">Apply</button>
+  </div>`;
+});
+</script>
+</body>
+</html>

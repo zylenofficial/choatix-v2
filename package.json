@@ -1,0 +1,87 @@
+{
+  "name": "choatix-v2",
+  "version": "2.0.0",
+  "description": "Choatix V2 - Advanced Gaming Optimization Suite",
+  "author": "zylenofficial",
+  "main": "electron/main.js",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "clean": "if exist out rmdir /s /q out & if exist .next rmdir /s /q .next & if exist dist rmdir /s /q dist",
+    "electron:dev": "concurrently \"next dev\" \"cross-env DISCORD_FEEDBACK_WEBHOOK=https://discordapp.com/api/webhooks/1517719109633183816/a7i_DLoAUzzvQybXz2N1Wh172vDISAU_slS4GDxa9lNHU23ArUUrd4e9FbZb_blRN1IU wait-on http://localhost:3000 && electron .\"",
+    "electron:build": "npm run clean & next build && electron-builder --win",
+    "electron:build:portable": "npm run clean & next build && electron-builder --win portable"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "autoprefixer": "^10.4.0",
+    "chart.js": "^4.5.1",
+    "class-variance-authority": "^0.7.0",
+    "clsx": "^2.1.0",
+    "concurrently": "^10.0.3",
+    "cross-env": "^10.1.0",
+    "date-fns": "^3.3.0",
+    "electron": "^42.4.1",
+    "electron-builder": "^26.15.3",
+    "eslint": "^8.56.0",
+    "eslint-config-next": "^14.2.0",
+    "lucide-react": "^0.350.0",
+    "next": "^14.2.0",
+    "postcss": "^8.4.0",
+    "react": "^18.3.0",
+    "react-chartjs-2": "^5.3.1",
+    "react-dom": "^18.3.0",
+    "recharts": "^2.12.0",
+    "tailwind-merge": "^2.2.0",
+    "tailwindcss": "^3.4.0",
+    "typescript": "^5.3.0",
+    "wait-on": "^9.0.10",
+    "zustand": "^4.5.0"
+  },
+  "build": {
+    "appId": "com.choatix.v2",
+    "productName": "Choatix V2",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "out/**/*",
+      "electron/**/*",
+      "config.json",
+      "!**/node_modules/**"
+    ],
+    "extraResources": [
+      "config.json"
+    ],
+    "asar": true,
+    "win": {
+      "icon": "assets/icon.ico",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": true,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Choatix V2",
+      "deleteAppDataOnUninstall": true,
+      "installerIcon": "assets/icon.ico",
+      "uninstallerIcon": "assets/icon.ico",
+      "installerHeaderIcon": "assets/icon.ico"
+    }
+  }
+}

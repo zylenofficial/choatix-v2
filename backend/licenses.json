@@ -1,0 +1,37 @@
+{
+  "keys": {
+    "CHTX-PREM-T7GO-PPIZQE": {
+      "tier": "PREMIUM",
+      "expiry": "2027-06-26",
+      "createdAt": "2026-06-26T17:50:02.039Z",
+      "redeemed": true,
+      "discordId": "123456789"
+    },
+    "CHTX-PREM-0ECC-XRHBIC": {
+      "tier": "PREMIUM",
+      "expiry": "2027-06-26",
+      "createdAt": "2026-06-26T17:50:02.039Z",
+      "redeemed": false,
+      "discordId": null
+    },
+    "CHTX-PREM-0KY2-DPZXBX": {
+      "tier": "PREMIUM",
+      "expiry": "2027-06-26",
+      "createdAt": "2026-06-26T17:52:58.548Z",
+      "redeemed": true,
+      "discordId": "1014494449809772544"
+    }
+  },
+  "discordUsers": {
+    "123456789": {
+      "tier": "PREMIUM",
+      "key": "CHTX-PREM-T7GO-PPIZQE",
+      "activatedAt": "2026-06-26T17:50:15.402Z"
+    },
+    "1014494449809772544": {
+      "tier": "PREMIUM",
+      "key": "CHTX-PREM-0KY2-DPZXBX",
+      "activatedAt": "2026-06-26T17:53:08.982Z"
+    }
+  }
+}
