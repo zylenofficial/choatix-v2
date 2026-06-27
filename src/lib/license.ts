@@ -2,7 +2,7 @@ import { LicenseTier } from '@/types'
 
 const VALID_PREFIXES = ['CHOATIX', 'CHTX']
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'
+const BACKEND_URL = 'https://choatix-v2.onrender.com'
 
 interface LicenseValidation {
   valid: boolean
