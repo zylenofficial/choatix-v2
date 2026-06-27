@@ -3,7 +3,7 @@ const http = require('http');
 
 const BOT_TOKEN = process.env.DISCORD_BOT_TOKEN || 'YOUR_BOT_TOKEN_HERE';
 const CLIENT_ID = process.env.DISCORD_CLIENT_ID || 'YOUR_CLIENT_ID_HERE';
-const API_URL = 'http://localhost:3001';
+const API_URL = process.env.BACKEND_URL || 'http://localhost:3001';
 
 // Send API request
 function apiRequest(method, path, body) {

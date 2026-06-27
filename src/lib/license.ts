@@ -2,6 +2,8 @@ import { LicenseTier } from '@/types'
 
 const VALID_PREFIXES = ['CHOATIX', 'CHTX']
 
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'
+
 interface LicenseValidation {
   valid: boolean
   tier: LicenseTier | null
@@ -32,7 +34,7 @@ export function validateLicenseKey(key: string): LicenseValidation {
 
 export async function verifyWithBackend(discordId: string): Promise<{ valid: boolean; tier: LicenseTier | null; error: string | null }> {
   try {
-    const res = await fetch(`http://localhost:3001/api/license/${discordId}`)
+    const res = await fetch(`${BACKEND_URL}/api/license/${discordId}`)
     if (!res.ok) {
       return { valid: false, tier: null, error: 'No license found for this Discord ID' }
     }
@@ -45,13 +47,13 @@ export async function verifyWithBackend(discordId: string): Promise<{ valid: boo
     const tier = tierMap[data.tier] || null
     return { valid: true, tier, error: null }
   } catch {
-    return { valid: false, tier: null, error: 'Cannot reach license server. Is the backend running?' }
+    return { valid: false, tier: null, error: 'Cannot reach license server.' }
   }
 }
 
 export async function activateByKeyAndDiscord(key: string, discordId: string): Promise<{ valid: boolean; tier: LicenseTier | null; error: string | null }> {
   try {
-    const res = await fetch('http://localhost:3001/api/license/verify-key', {
+    const res = await fetch(`${BACKEND_URL}/api/license/verify-key`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ key: key.trim().toUpperCase(), discordId }),
@@ -68,6 +70,6 @@ export async function activateByKeyAndDiscord(key: string, discordId: string): P
     const tier = tierMap[data.tier] || null
     return { valid: true, tier, error: null }
   } catch {
-    return { valid: false, tier: null, error: 'Cannot reach license server. Is the backend running?' }
+    return { valid: false, tier: null, error: 'Cannot reach license server.' }
   }
 }
