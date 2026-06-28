@@ -1,23 +1,23 @@
 const { Client, GatewayIntentBits, SlashCommandBuilder, REST, Routes } = require('discord.js');
-const http = require('http');
+const https = require('https');
 
 const BOT_TOKEN = process.env.DISCORD_BOT_TOKEN || 'YOUR_BOT_TOKEN_HERE';
 const CLIENT_ID = process.env.DISCORD_CLIENT_ID || 'YOUR_CLIENT_ID_HERE';
 const API_URL = process.env.BACKEND_URL || 'http://localhost:3001';
 
-// Send API request
 function apiRequest(method, path, body) {
   return new Promise((resolve, reject) => {
     const url = new URL(path, API_URL);
     const options = {
       hostname: url.hostname,
-      port: url.port,
+      port: url.port || (url.protocol === 'https:' ? 443 : 80),
       path: url.pathname,
       method,
       headers: { 'Content-Type': 'application/json' },
     };
 
-    const req = http.request(options, (res) => {
+    const lib = url.protocol === 'https:' ? https : require('http');
+    const req = lib.request(options, (res) => {
       let data = '';
       res.on('data', (chunk) => { data += chunk; });
       res.on('end', () => {
