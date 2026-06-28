@@ -33,7 +33,7 @@ function apiRequest(method, path, body) {
 
 // Create bot client
 const client = new Client({
-  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent],
+  intents: [GatewayIntentBits.Guilds],
 });
 
 // Register slash commands
