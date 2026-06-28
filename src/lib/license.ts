@@ -42,6 +42,7 @@ export async function verifyWithBackend(discordId: string): Promise<{ valid: boo
     const tierMap: Record<string, LicenseTier> = {
       'FREE': LicenseTier.FREE,
       'PRO': LicenseTier.PRO,
+      'PREMIUM': LicenseTier.PREMIUM,
       'PREMIUM_PRO': LicenseTier.PREMIUM,
     }
     const tier = tierMap[data.tier] || null
@@ -65,6 +66,7 @@ export async function activateByKeyAndDiscord(key: string, discordId: string): P
     const tierMap: Record<string, LicenseTier> = {
       'FREE': LicenseTier.FREE,
       'PRO': LicenseTier.PRO,
+      'PREMIUM': LicenseTier.PREMIUM,
       'PREMIUM_PRO': LicenseTier.PREMIUM,
     }
     const tier = tierMap[data.tier] || null
