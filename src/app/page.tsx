@@ -66,7 +66,13 @@ export default function Home() {
   }, [])
 
   const handleUpgrade = useCallback(() => { setShowUpgradeModal(false) }, [])
-  const handleNavigate = useCallback((page: Page) => { setActivePage(page) }, [])
+  const handleNavigate = useCallback((page: Page) => {
+    if (page === 'ai-optimizer' && license.tier !== 'PREMIUM') {
+      setShowUpgradeModal(true)
+      return
+    }
+    setActivePage(page)
+  }, [license.tier])
 
   const ActiveComponent = PAGES[activePage]
 
@@ -75,8 +81,11 @@ export default function Home() {
     <div className="flex flex-col h-[calc(100vh-32px)] bg-mesh">
       {/* Title Bar */}
       <div className="h-8 flex items-center justify-between px-3 shrink-0" style={{ WebkitAppRegion: 'drag', borderBottom: '1px solid var(--border-subtle)' } as any}>
-        <div className="flex items-center gap-2">
-          <span className="text-[9px] font-bold tracking-[0.18em]" style={{ color: 'var(--text-muted)' }}>CHOATIX</span>
+        <div className="flex items-center gap-2.5">
+          <div className="w-[18px] h-[18px] border border-white/10 flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.02)' }}>
+            <span className="text-[8px] font-light" style={{ color: 'rgba(255,255,255,0.4)', fontFamily: "'Cascadia Code', 'Consolas', monospace" }}>C</span>
+          </div>
+          <span className="text-[9px] font-light tracking-[0.2em]" style={{ color: 'rgba(255,255,255,0.4)', fontFamily: "'Cascadia Code', 'Consolas', monospace" }}>CHOATIX</span>
         </div>
         <div className="flex items-center gap-0.5" style={{ WebkitAppRegion: 'no-drag' } as any}>
           <button onClick={() => window.electronAPI?.minimize()} className="w-7 h-7 rounded-md flex items-center justify-center hover:bg-white/5 transition-colors" style={{ color: 'var(--text-muted)' }}>

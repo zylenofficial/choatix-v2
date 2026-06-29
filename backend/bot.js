@@ -1,4 +1,4 @@
-const { Client, GatewayIntentBits, SlashCommandBuilder, REST, Routes } = require('discord.js');
+const { Client, GatewayIntentBits, SlashCommandBuilder, REST, Routes, ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } = require('discord.js');
 const https = require('https');
 
 const BOT_TOKEN = process.env.DISCORD_BOT_TOKEN || 'YOUR_BOT_TOKEN_HERE';
@@ -6,6 +6,9 @@ const CLIENT_ID = process.env.DISCORD_CLIENT_ID || 'YOUR_CLIENT_ID_HERE';
 const API_URL = process.env.BACKEND_URL || 'http://localhost:3001';
 const PRO_ROLE_ID = process.env.PRO_ROLE_ID || '1517719772702314616';
 const PREMIUM_ROLE_ID = process.env.PREMIUM_ROLE_ID || '1517719827580452994';
+const ADMIN_SECRET = 'choatix-admin-2024';
+
+const activeGiveaways = new Map();
 
 function apiRequest(method, path, body) {
   return new Promise((resolve, reject) => {
@@ -34,7 +37,7 @@ function apiRequest(method, path, body) {
 }
 
 const client = new Client({
-  intents: [GatewayIntentBits.Guilds],
+  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers],
 });
 
 async function registerCommands() {
@@ -51,6 +54,30 @@ async function registerCommands() {
     new SlashCommandBuilder()
       .setName('unlink')
       .setDescription('Unlink your Choatix license'),
+    new SlashCommandBuilder()
+      .setName('refer')
+      .setDescription('Get your referral code or redeem one'),
+    new SlashCommandBuilder()
+      .setName('redeem-referral')
+      .setDescription('Redeem a referral code for free PRO')
+      .addStringOption(option =>
+        option.setName('code').setDescription('Referral code (CHOA-XXXXXX)').setRequired(true)
+      ),
+    new SlashCommandBuilder()
+      .setName('giveaway')
+      .setDescription('Start a giveaway for a license key (admin only)')
+      .addStringOption(option =>
+        option.setName('tier').setDescription('Key tier').addChoices(
+          { name: 'Pro', value: 'PRO' },
+          { name: 'Premium', value: 'PREMIUM' },
+        ).setRequired(true)
+      )
+      .addIntegerOption(option =>
+        option.setName('duration').setDescription('Duration in minutes').setRequired(true)
+      )
+      .addStringOption(option =>
+        option.setName('message').setDescription('Giveaway message')
+      ),
   ];
 
   const rest = new REST({ version: '10' }).setToken(BOT_TOKEN);
@@ -71,7 +98,6 @@ async function assignRole(member, tier) {
     return false;
   }
 
-  // Remove other tier roles first
   const otherRoleId = tier === 'PREMIUM' ? PRO_ROLE_ID : PREMIUM_ROLE_ID;
   if (member.roles.cache.has(otherRoleId)) {
     await member.roles.remove(otherRoleId).catch(() => {});
@@ -83,20 +109,22 @@ async function assignRole(member, tier) {
   return true;
 }
 
-client.on('interactionCreate', async (interaction) => {
-  if (!interaction.isChatInputCommand()) return;
+async function removeRole(member) {
+  if (member.roles.cache.has(PRO_ROLE_ID)) await member.roles.remove(PRO_ROLE_ID).catch(() => {});
+  if (member.roles.cache.has(PREMIUM_ROLE_ID)) await member.roles.remove(PREMIUM_ROLE_ID).catch(() => {});
+}
 
-  if (interaction.commandName === 'redeem') {
+client.on('interactionCreate', async (interaction) => {
+  // ─── /redeem ──────────────────────────────────────────────
+  if (interaction.isChatInputCommand() && interaction.commandName === 'redeem') {
     const key = interaction.options.getString('key').trim().toUpperCase();
     const discordId = interaction.user.id;
-
     await interaction.deferReply();
 
     try {
       const result = await apiRequest('POST', '/api/redeem', { key, discordId });
 
       if (result.success) {
-        // Assign Discord role
         const roleAssigned = await assignRole(interaction.member, result.tier);
         const roleMsg = roleAssigned ? '\nRole assigned on this server!' : '\n(Could not assign role — check bot permissions)';
 
@@ -115,7 +143,8 @@ client.on('interactionCreate', async (interaction) => {
     }
   }
 
-  if (interaction.commandName === 'status') {
+  // ─── /status ──────────────────────────────────────────────
+  if (interaction.isChatInputCommand() && interaction.commandName === 'status') {
     const discordId = interaction.user.id;
     await interaction.deferReply();
 
@@ -138,18 +167,15 @@ client.on('interactionCreate', async (interaction) => {
     }
   }
 
-  if (interaction.commandName === 'unlink') {
+  // ─── /unlink ──────────────────────────────────────────────
+  if (interaction.isChatInputCommand() && interaction.commandName === 'unlink') {
     const discordId = interaction.user.id;
     await interaction.deferReply();
 
     try {
       const result = await apiRequest('POST', '/api/license/unlink', { discordId });
       if (result.success) {
-        // Remove role
-        const roleId = interaction.member.roles.cache.has(PREMIUM_ROLE_ID) ? PREMIUM_ROLE_ID : PRO_ROLE_ID;
-        if (interaction.member.roles.cache.has(roleId)) {
-          await interaction.member.roles.remove(roleId).catch(() => {});
-        }
+        await removeRole(interaction.member);
         await interaction.editReply({
           content: '✅ **License Unlinked**\n\nYour license has been removed. You can now give the key to someone else.',
         });
@@ -163,6 +189,157 @@ client.on('interactionCreate', async (interaction) => {
         content: '❌ **Error** Could not connect to license server.',
       });
     }
+  }
+
+  // ─── /refer ───────────────────────────────────────────────
+  if (interaction.isChatInputCommand() && interaction.commandName === 'refer') {
+    const discordId = interaction.user.id;
+    await interaction.deferReply();
+
+    try {
+      let result = await apiRequest('GET', `/api/referral/user/${discordId}`);
+      if (!result.code) {
+        result = await apiRequest('POST', '/api/referral/create', { discordId });
+      }
+
+      if (result.success || result.code) {
+        const uses = result.uses || 0;
+        const maxUses = result.maxUses || 10;
+        const bar = '█'.repeat(Math.floor(uses / maxUses * 10)) + '░'.repeat(10 - Math.floor(uses / maxUses * 10));
+
+        await interaction.editReply({
+          content: `🔗 **Your Referral Code**\n\n\`${result.code}\`\n\nShare this code. When someone uses it:\n→ They get **PRO** for free\n→ You get **PREMIUM** upgrade\n\nUses: ${uses}/${maxUses}\n\`${bar}\``,
+        });
+      } else {
+        await interaction.editReply({
+          content: '❌ **Failed** to create referral code.',
+        });
+      }
+    } catch (error) {
+      await interaction.editReply({
+        content: '❌ **Error** Could not connect to license server.',
+      });
+    }
+  }
+
+  // ─── /redeem-referral ─────────────────────────────────────
+  if (interaction.isChatInputCommand() && interaction.commandName === 'redeem-referral') {
+    const code = interaction.options.getString('code').trim().toUpperCase();
+    const discordId = interaction.user.id;
+    await interaction.deferReply();
+
+    try {
+      const result = await apiRequest('POST', '/api/referral/redeem', { code, refereeId: discordId });
+
+      if (result.success) {
+        const roleAssigned = await assignRole(interaction.member, result.refereeReward);
+        const roleMsg = roleAssigned ? '\nRole assigned on this server!' : '';
+
+        await interaction.editReply({
+          content: `✅ **Referral Redeemed!**\n\nYou got: **${result.refereeReward}**${roleMsg}\nThe referrer got: **${result.referrerReward}**\n\nEnjoy Choatix V2!`,
+        });
+      } else {
+        await interaction.editReply({
+          content: `❌ **Failed**\n\n${result.message}`,
+        });
+      }
+    } catch (error) {
+      await interaction.editReply({
+        content: '❌ **Error** Could not connect to license server.',
+      });
+    }
+  }
+
+  // ─── /giveaway (admin only) ───────────────────────────────
+  if (interaction.isChatInputCommand() && interaction.commandName === 'giveaway') {
+    const tier = interaction.options.getString('tier');
+    const duration = interaction.options.getInteger('duration');
+    const message = interaction.options.getString('message') || `Win a **${tier}** license key!`;
+
+    // Only admin can create giveaways
+    if (interaction.user.id !== '1014494449809772544') {
+      return interaction.reply({ content: '❌ Admin only.', ephemeral: true });
+    }
+
+    await interaction.deferReply();
+
+    const endTime = Date.now() + duration * 60 * 1000;
+    const embed = new EmbedBuilder()
+      .setTitle('🎉 Giveaway')
+      .setDescription(message)
+      .addFields(
+        { name: 'Prize', value: `${tier} License Key`, inline: true },
+        { name: 'Ends', value: `<t:${Math.floor(endTime / 1000)}:R>`, inline: true },
+      )
+      .setColor(tier === 'PREMIUM' ? 0xffffff : 0xcccccc)
+      .setFooter({ text: 'Click the button to enter!' });
+
+    const row = new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId(`giveaway_enter_${Date.now()}`)
+        .setLabel('Enter')
+        .setStyle(ButtonStyle.Secondary)
+        .setEmoji('🎫'),
+    );
+
+    const msg = await interaction.editReply({ embeds: [embed], components: [row] });
+
+    activeGiveaways.set(msg.id, {
+      channelId: interaction.channelId,
+      guildId: interaction.guildId,
+      tier,
+      endTime,
+      entries: new Set(),
+      messageId: msg.id,
+    });
+
+    setTimeout(async () => {
+      const giveaway = activeGiveaways.get(msg.id);
+      if (!giveaway) return;
+      activeGiveaways.delete(msg.id);
+
+      const entries = [...giveaway.entries];
+      if (entries.length === 0) {
+        const noWin = EmbedBuilder.from(embed).setDescription('No entries. Giveaway cancelled.');
+        await interaction.channel.messages.edit(msg.id, { embeds: [noWin], components: [] }).catch(() => {});
+        return;
+      }
+
+      const winnerId = entries[Math.floor(Math.random() * entries.length)];
+      const key = `CHTX-${tier.substring(0, 4)}-${Math.random().toString(36).substring(2, 6).toUpperCase()}-0000`;
+
+      await apiRequest('POST', '/api/generate', { tier, count: 1, adminSecret: ADMIN_SECRET });
+
+      const winEmbed = EmbedBuilder.from(embed)
+        .setDescription(`**Winner: <@${winnerId}>**\n\nA ${tier} key has been generated. Run \`/redeem\` to activate!`)
+        .setColor(0xffffff);
+
+      await interaction.channel.messages.edit(msg.id, { embeds: [winEmbed], components: [] }).catch(() => {});
+
+      try {
+        const winner = await interaction.guild.members.fetch(winnerId);
+        await winner.send(`🎉 You won a **${tier}** Choatix license key! Run \`/redeem\` in the server to activate.`);
+      } catch {}
+    }, duration * 60 * 1000);
+  }
+
+  // ─── Giveaway button clicks ───────────────────────────────
+  if (interaction.isButton() && interaction.customId.startsWith('giveaway_enter_')) {
+    const giveawayId = interaction.customId.replace('giveaway_enter_', '');
+    const msgId = interaction.message.id;
+    const giveaway = activeGiveaways.get(msgId);
+
+    if (!giveaway) {
+      return interaction.reply({ content: 'This giveaway has ended.', ephemeral: true });
+    }
+
+    if (giveaway.entries.has(interaction.user.id)) {
+      giveaway.entries.delete(interaction.user.id);
+      return interaction.reply({ content: '❌ You left the giveaway.', ephemeral: true });
+    }
+
+    giveaway.entries.add(interaction.user.id);
+    return interaction.reply({ content: `✅ Entered! ${giveaway.entries.size} entries so far.`, ephemeral: true });
   }
 });
 

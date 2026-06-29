@@ -1,6 +1,6 @@
 'use client'
 
-import { LayoutDashboard, ScanSearch, Zap, Gauge, History, Settings, Gamepad2, Sparkles, Bot } from 'lucide-react'
+import { LayoutDashboard, ScanSearch, Zap, Gauge, History, Settings, Gamepad2, Sparkles, Bot, Lock } from 'lucide-react'
 
 export type Page = 'dashboard' | 'scan' | 'optimizer' | 'best-tweaks' | 'autopilot' | 'performance' | 'rollback' | 'settings' | 'ai-optimizer'
 
@@ -12,13 +12,13 @@ interface SidebarProps {
   rollbackCount: number
 }
 
-const NAV: { id: Page; label: string; icon: any }[] = [
+const NAV: { id: Page; label: string; icon: any; premium?: boolean }[] = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { id: 'scan', label: 'Scan', icon: ScanSearch },
   { id: 'best-tweaks', label: 'Best Tweaks', icon: Sparkles },
   { id: 'optimizer', label: 'Optimizer', icon: Zap },
   { id: 'autopilot', label: 'AutoPilot', icon: Gamepad2 },
-  { id: 'ai-optimizer', label: 'AI Optimizer', icon: Bot },
+  { id: 'ai-optimizer', label: 'AI Optimizer', icon: Bot, premium: true },
   { id: 'performance', label: 'Performance', icon: Gauge },
   { id: 'rollback', label: 'Rollback', icon: History },
   { id: 'settings', label: 'Settings', icon: Settings },
@@ -47,7 +47,10 @@ export function Sidebar({ active, onNavigate, tier, onUpgrade, rollbackCount }: 
           return (
             <button
               key={item.id}
-              onClick={() => onNavigate(item.id)}
+              onClick={() => {
+                if (item.premium && tier !== 'PREMIUM') { onUpgrade(); return }
+                onNavigate(item.id)
+              }}
               className="sidebar-item w-full"
             >
               {isActive && (
@@ -55,6 +58,7 @@ export function Sidebar({ active, onNavigate, tier, onUpgrade, rollbackCount }: 
               )}
               <Icon className="w-4 h-4" strokeWidth={isActive ? 2 : 1.5} />
               <span className={isActive ? 'font-semibold' : ''}>{item.label}</span>
+              {item.premium && tier !== 'PREMIUM' && <Lock className="w-3 h-3 ml-auto text-[var(--text-muted)]" />}
               {item.id === 'rollback' && rollbackCount > 0 && (
                 <span className="ml-auto text-[8px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center" style={{ background: 'var(--accent-dim)', color: 'var(--accent)', border: '1px solid rgba(255,255,255,0.10)' }}>
                   {rollbackCount}

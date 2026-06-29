@@ -8,10 +8,10 @@ export default function Disclaimer({ onAccept }: { onAccept: () => void }) {
   const [exiting, setExiting] = useState(false)
 
   const lines = [
-    { label: 'NOTICE', text: 'CHOATIX is a system optimization tool.' },
+    { label: 'NOTICE', text: 'CHOATIX is a system optimization tool for Windows.' },
     { label: 'WARNING', text: 'Modifying system settings carries inherent risk.' },
-    { label: 'BACKUP', text: 'Always create a restore point before applying tweaks.' },
-    { label: 'LIABILITY', text: 'Use at your own discretion. We are not responsible for damage.' },
+    { label: 'BACKUP', text: 'Create a restore point before applying tweaks.' },
+    { label: 'REVERT', text: 'All changes can be reverted from the Rollback tab.' },
     { label: 'LICENSE', text: 'This software is provided as-is without warranty.' },
   ]
 
@@ -42,88 +42,93 @@ export default function Disclaimer({ onAccept }: { onAccept: () => void }) {
       opacity: exiting ? 0 : 1,
       transition: 'opacity 0.6s ease-out',
     }}>
-      {/* Grid bg */}
+      {/* Background effects */}
       <div style={{
         position: 'absolute', inset: 0,
-        backgroundImage: 'linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px)',
-        backgroundSize: '50px 50px',
+        backgroundImage: 'linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px)',
+        backgroundSize: '40px 40px',
       }} />
-
-      {/* Scan lines */}
       <div style={{
         position: 'absolute', inset: 0, pointerEvents: 'none',
-        background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.1) 2px, rgba(0,0,0,0.1) 4px)',
+        background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.08) 2px, rgba(0,0,0,0.08) 4px)',
       }} />
-
-      {/* Vignette */}
       <div style={{
         position: 'absolute', inset: 0, pointerEvents: 'none',
-        background: 'radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.7) 100%)',
+        background: 'radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.8) 100%)',
       }} />
 
       {/* Content */}
       <div style={{
-        position: 'relative', zIndex: 2, maxWidth: 520, width: '100%',
-        padding: '0 24px',
+        position: 'relative', zIndex: 2, maxWidth: 480, width: '100%',
+        padding: '0 32px',
         opacity: visible ? 1 : 0,
-        transform: visible ? 'translateY(0)' : 'translateY(20px)',
-        transition: 'all 0.5s ease-out',
+        transform: visible ? 'translateY(0)' : 'translateY(30px)',
+        transition: 'all 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
       }}>
-        {/* Header */}
+        {/* Logo */}
         <div style={{
-          display: 'flex', alignItems: 'center', gap: 12, marginBottom: 32,
+          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, marginBottom: 48,
           opacity: visible ? 1 : 0,
-          transition: 'opacity 0.4s 0.2s',
+          transition: 'opacity 0.5s 0.3s',
         }}>
-          <div style={{
-            width: 32, height: 32, border: '1.5px solid rgba(255,255,255,0.3)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 14, fontWeight: 700, color: '#fff',
-          }}>
-            !
-          </div>
-          <div>
-            <div style={{ fontSize: 14, fontWeight: 700, letterSpacing: 4, color: '#fff' }}>
-              DISCLAIMER
+          <div style={{ textAlign: 'center' }}>
+            <div style={{
+              fontSize: 22, fontWeight: 300, letterSpacing: 12, color: '#fff',
+              fontFamily: "'Cascadia Code', 'Consolas', monospace",
+            }}>
+              CHOATIX
             </div>
-            <div style={{ fontSize: 9, letterSpacing: 3, color: 'rgba(255,255,255,0.3)', marginTop: 2 }}>
-              TERMS OF USE
+            <div style={{
+              fontSize: 8, letterSpacing: 5, color: 'rgba(255,255,255,0.2)',
+              marginTop: 8,
+              fontFamily: "'Cascadia Code', 'Consolas', monospace",
+            }}>
+              GAMING OPTIMIZER v2.0
             </div>
           </div>
         </div>
 
+        {/* Section label */}
+        <div style={{
+          fontSize: 8, fontWeight: 600, letterSpacing: 4,
+          color: 'rgba(255,255,255,0.25)', marginBottom: 20,
+          fontFamily: "'Cascadia Code', 'Consolas', monospace",
+        }}>
+          DISCLAIMER
+        </div>
+
         {/* Divider */}
         <div style={{
-          height: 1, background: 'linear-gradient(90deg, rgba(255,255,255,0.2), transparent)',
-          marginBottom: 24,
+          height: 1, background: 'rgba(255,255,255,0.08)', marginBottom: 0,
         }} />
 
         {/* Lines */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
           {lines.map((line, i) => (
             <div key={i} style={{
-              display: 'flex', gap: 12, padding: '12px 0',
+              display: 'flex', gap: 16, padding: '16px 0',
               borderBottom: i < lines.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
               opacity: i < typedLines ? 1 : 0,
-              transform: i < typedLines ? 'translateX(0)' : 'translateX(-8px)',
+              transform: i < typedLines ? 'translateX(0)' : 'translateX(-12px)',
               transition: 'all 0.3s ease-out',
             }}>
               <div style={{
-                fontSize: 8, fontWeight: 700, letterSpacing: 2,
-                color: line.label === 'WARNING' ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.25)',
-                minWidth: 52, paddingTop: 2, flexShrink: 0,
+                fontSize: 7, fontWeight: 700, letterSpacing: 2,
+                color: line.label === 'WARNING' ? 'rgba(255,255,255,0.6)' : 'rgba(255,255,255,0.2)',
+                minWidth: 60, paddingTop: 3, flexShrink: 0,
+                fontFamily: "'Cascadia Code', 'Consolas', monospace",
               }}>
-                [{line.label}]
+                {line.label}
               </div>
               <div style={{
-                fontSize: 12, lineHeight: 1.6, color: 'rgba(255,255,255,0.6)',
+                fontSize: 12, lineHeight: 1.6, color: 'rgba(255,255,255,0.5)',
                 fontFamily: "'Cascadia Code', 'Consolas', monospace",
               }}>
                 {i < typedLines ? line.text : ''}
                 {i === typedLines && phase === 'typing' && (
                   <span style={{
                     display: 'inline-block', width: 7, height: 14,
-                    background: 'rgba(255,255,255,0.6)', marginLeft: 2,
+                    background: 'rgba(255,255,255,0.5)', marginLeft: 2,
                     animation: 'cursorBlink 0.8s step-end infinite',
                   }} />
                 )}
@@ -134,7 +139,7 @@ export default function Disclaimer({ onAccept }: { onAccept: () => void }) {
 
         {/* Button */}
         <div style={{
-          marginTop: 32, opacity: phase === 'done' || phase === 'lines' ? 1 : 0,
+          marginTop: 40, opacity: phase === 'done' || phase === 'lines' ? 1 : 0,
           transform: phase === 'done' || phase === 'lines' ? 'translateY(0)' : 'translateY(10px)',
           transition: 'all 0.4s ease-out',
         }}>
@@ -143,7 +148,7 @@ export default function Disclaimer({ onAccept }: { onAccept: () => void }) {
             onMouseEnter={e => {
               e.currentTarget.style.background = '#fff'
               e.currentTarget.style.color = '#000'
-              e.currentTarget.style.boxShadow = '0 0 30px rgba(255,255,255,0.15)'
+              e.currentTarget.style.boxShadow = '0 0 40px rgba(255,255,255,0.1)'
             }}
             onMouseLeave={e => {
               e.currentTarget.style.background = 'transparent'
@@ -151,24 +156,25 @@ export default function Disclaimer({ onAccept }: { onAccept: () => void }) {
               e.currentTarget.style.boxShadow = 'none'
             }}
             style={{
-              width: '100%', padding: '14px 0',
-              border: '1px solid rgba(255,255,255,0.25)',
+              width: '100%', padding: '16px 0',
+              border: '1px solid rgba(255,255,255,0.2)',
               background: 'transparent', color: '#fff',
-              fontSize: 11, fontWeight: 600, letterSpacing: 4,
-              cursor: 'pointer', transition: 'all 0.25s ease',
+              fontSize: 10, fontWeight: 500, letterSpacing: 6,
+              cursor: 'pointer', transition: 'all 0.3s ease',
               fontFamily: "'Cascadia Code', 'Consolas', monospace",
             }}
           >
-            I UNDERSTAND
+            CONTINUE
           </button>
         </div>
 
-        {/* Bottom line */}
+        {/* Footer */}
         <div style={{
-          marginTop: 20, textAlign: 'center',
-          fontSize: 8, letterSpacing: 2, color: 'rgba(255,255,255,0.15)',
+          marginTop: 24, textAlign: 'center',
+          fontSize: 7, letterSpacing: 3, color: 'rgba(255,255,255,0.12)',
+          fontFamily: "'Cascadia Code', 'Consolas', monospace",
         }}>
-          CONTINUING IMPLIES ACCEPTANCE OF THESE TERMS
+          CONTINUING IMPLIES ACCEPTANCE
         </div>
       </div>
 

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useStore } from '@/store/useStore'
-import { Cpu, MemoryStick, Monitor, HardDrive, Wifi, Gauge, Zap, TrendingUp } from 'lucide-react'
+import { Cpu, MemoryStick, Monitor, HardDrive, Wifi, Gauge, Zap, TrendingUp, Activity, Gamepad2 } from 'lucide-react'
 import { ProcessOptimizer } from '@/components/ProcessOptimizer'
 import type { RealtimeStats } from '@/types'
 
@@ -48,108 +48,125 @@ export function PerformancePage() {
   const startupCount = info?.startup?.count ?? 0
 
   return (
-    <div className="p-5 lg:p-6 space-y-6 fade-in overflow-y-auto h-full">
-      <div>
-        <h1 className="text-[18px] font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>Performance</h1>
-        <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-muted)' }}>Real-time system metrics and optimization targets</p>
-      </div>
+    <div className="h-full overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
+      <div className="max-w-5xl mx-auto p-6 space-y-6 fade-in">
 
-      {/* Resource gauges */}
-      <div className="grid grid-cols-4 gap-3 stagger">
-        <GaugeCard icon={Cpu} label="CPU Usage" value={`${cpuUsage.toFixed(0)}%`} pct={cpuUsage} color={cpuUsage > 80 ? 'var(--danger)' : cpuUsage > 50 ? 'var(--warning)' : 'var(--success)'} sub={info?.cpu?.model?.split(' ').slice(0, 3).join(' ') || 'Not detected'} detail={`${info?.cpu?.cores ?? 0} cores / ${info?.cpu?.threads ?? 0} threads`} />
-        <GaugeCard icon={MemoryStick} label="Memory" value={`${ramPct}%`} pct={ramPct} color={ramPct > 85 ? 'var(--danger)' : ramPct > 60 ? 'var(--warning)' : 'var(--success)'} sub={`${(ramUsed / 1024).toFixed(1)} / ${(ramTotal / 1024).toFixed(1)} GB`} detail="Physical RAM" />
-        <GaugeCard icon={HardDrive} label="Storage" value={`${diskPct}%`} pct={diskPct} color={diskPct > 85 ? 'var(--danger)' : diskPct > 60 ? 'var(--warning)' : 'var(--success)'} sub={`${(diskUsed / 1024).toFixed(0)} / ${(diskTotal / 1024).toFixed(0)} GB`} detail="Disk space" />
-        <GaugeCard icon={Wifi} label="Network" value={info?.network?.latencyMs != null ? `${info.network.latencyMs}ms` : 'N/A'} pct={info?.network?.latencyMs ? Math.min(100, info.network.latencyMs / 2) : 0} color={info?.network?.latencyMs && info.network.latencyMs > 80 ? 'var(--danger)' : 'var(--success)'} sub={info?.network?.adapterName || 'Not detected'} detail="Ping to 8.8.8.8" />
-      </div>
-
-      {/* Gaming optimization targets */}
-      <div>
-        <div className="flex items-center gap-2.5 mb-3">
-          <div className="w-6 h-6 rounded-md flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.08)' }}>
-            <Zap className="w-3.5 h-3.5" style={{ color: 'var(--warning)' }} />
+        {/* Header */}
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ background: '#ffffff' }}>
+            <Activity className="w-6 h-6 text-black" />
           </div>
-          <span className="text-[11px] font-bold tracking-widest uppercase" style={{ color: 'var(--text-secondary)' }}>Gaming Optimization Targets</span>
+          <div>
+            <h1 className="text-xl font-bold text-white tracking-tight">Performance</h1>
+            <p className="text-xs text-[var(--text-tertiary)] mt-0.5">Real-time system metrics</p>
+          </div>
         </div>
-        <div className="grid grid-cols-3 gap-3 stagger">
-          <OptTarget label="Background Processes" value={`${bgProcs}`} max={150} current={bgProcs} color={bgProcs > 80 ? 'var(--danger)' : 'var(--success)'} desc="Processes without windows" />
-          <OptTarget label="Startup Programs" value={`${startupCount}`} max={20} current={startupCount} color={startupCount > 8 ? 'var(--danger)' : 'var(--success)'} desc="Launch at boot" />
-          <OptTarget label="Power Plan" value={info?.powerPlan || 'Not detected'} current={info?.powerPlan?.toLowerCase().includes('high') ? 0 : 100} max={100} color={info?.powerPlan?.toLowerCase().includes('high') ? 'var(--success)' : 'var(--warning)'} desc="CPU power management" />
-        </div>
-      </div>
 
-      {/* GPU + FPS */}
-      <div className="grid grid-cols-2 gap-4">
-        <div className="card-widget p-5 card-glow">
-          <div className="flex items-center gap-2.5 mb-4">
-            <div className="w-6 h-6 rounded-md flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.08)' }}>
-              <Monitor className="w-3.5 h-3.5" style={{ color: 'var(--success)' }} />
+        {/* Resource Gauges */}
+        <div className="grid grid-cols-4 gap-3 stagger">
+          {[
+            { icon: Cpu, label: 'CPU', value: `${cpuUsage.toFixed(0)}%`, pct: cpuUsage, sub: info?.cpu?.model?.split(' ').slice(0, 3).join(' ') || 'Unknown', detail: `${info?.cpu?.cores ?? 0}C / ${info?.cpu?.threads ?? 0}T` },
+            { icon: MemoryStick, label: 'RAM', value: `${ramPct}%`, pct: ramPct, sub: `${(ramUsed / 1024).toFixed(1)} / ${(ramTotal / 1024).toFixed(1)} GB`, detail: 'Physical memory' },
+            { icon: HardDrive, label: 'Disk', value: `${diskPct}%`, pct: diskPct, sub: `${(diskUsed / 1024).toFixed(0)} / ${(diskTotal / 1024).toFixed(0)} GB`, detail: 'Storage space' },
+            { icon: Wifi, label: 'Ping', value: info?.network?.latencyMs != null ? `${info.network.latencyMs}ms` : 'N/A', pct: info?.network?.latencyMs ? Math.min(100, info.network.latencyMs / 2) : 0, sub: info?.network?.adapterName || 'Unknown', detail: 'Network latency' },
+          ].map((item, i) => (
+            <div key={i} className="rounded-2xl p-5" style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)' }}>
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'var(--accent-dim)' }}>
+                  <item.icon className="w-3.5 h-3.5 text-white" />
+                </div>
+                <span className="text-[9px] uppercase tracking-widest text-[var(--text-muted)] font-medium">{item.label}</span>
+              </div>
+              <div className="text-2xl font-black text-white mb-0.5">{item.value}</div>
+              <div className="text-[10px] text-[var(--text-tertiary)] truncate mb-3">{item.sub}</div>
+              <div className="h-1.5 rounded-full mb-1.5" style={{ background: 'var(--bg-elevated)' }}>
+                <div className="h-full rounded-full transition-all duration-700" style={{
+                  width: `${item.pct}%`,
+                  background: item.pct > 80 ? '#999' : item.pct > 50 ? '#ccc' : '#fff',
+                }} />
+              </div>
+              <div className="text-[9px] text-[var(--text-muted)]">{item.detail}</div>
             </div>
-            <span className="text-[11px] font-bold tracking-widest uppercase" style={{ color: 'var(--text-secondary)' }}>GPU</span>
-          </div>
-          <div className="space-y-3">
-            <Row label="Model" value={info?.gpu?.model || 'Not detected'} />
-            <Row label="Vendor" value={info?.gpu?.vendor && info.gpu.vendor !== 'unknown' ? info.gpu.vendor.toUpperCase() : 'Not detected'} />
-            <Row label="VRAM" value={info?.gpu?.vram ? `${info.gpu.vram} MB` : 'Not detected'} />
-          </div>
+          ))}
         </div>
-        <div className="card-widget p-5 card-glow">
+
+        {/* Gaming Targets */}
+        <div className="rounded-2xl p-6" style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)' }}>
           <div className="flex items-center gap-2.5 mb-4">
-            <div className="w-6 h-6 rounded-md flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.08)' }}>
-              <TrendingUp className="w-3.5 h-3.5" style={{ color: 'var(--accent)' }} />
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'var(--accent-dim)' }}>
+              <Gamepad2 className="w-4 h-4 text-white" />
             </div>
-            <span className="text-[11px] font-bold tracking-widest uppercase" style={{ color: 'var(--text-secondary)' }}>FPS Optimization</span>
+            <span className="text-xs font-bold text-white">Gaming Optimization Targets</span>
           </div>
-          <div className="space-y-3">
-            <Row label="Game Mode" value={info?.gameMode === true || info?.gameMode === "1" ? 'Enabled' : info?.gameMode === false || info?.gameMode === "0" ? 'Disabled' : 'Not detected'} />
-            <Row label="Mouse Acceleration" value={info?.mouse?.enhancePointerPrecision ? 'ON (bad)' : 'OFF (good)'} />
+          <div className="grid grid-cols-3 gap-3">
+            {[
+              { label: 'Background Processes', value: `${bgProcs}`, pct: Math.min(100, (bgProcs / 150) * 100), desc: 'Processes without windows' },
+              { label: 'Startup Programs', value: `${startupCount}`, pct: Math.min(100, (startupCount / 20) * 100), desc: 'Launch at boot' },
+              { label: 'Power Plan', value: info?.powerPlan || 'Unknown', pct: info?.powerPlan?.toLowerCase().includes('high') ? 10 : 80, desc: 'CPU power management' },
+            ].map((item, i) => (
+              <div key={i} className="p-4 rounded-xl" style={{ background: 'var(--bg-tertiary)', border: '1px solid var(--border-subtle)' }}>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[11px] font-semibold text-white">{item.label}</span>
+                  <span className="text-xs font-bold text-white">{item.value}</span>
+                </div>
+                <div className="h-1.5 rounded-full mb-1.5" style={{ background: 'var(--bg-elevated)' }}>
+                  <div className="h-full rounded-full transition-all duration-500" style={{
+                    width: `${item.pct}%`,
+                    background: item.pct > 60 ? '#999' : '#fff',
+                  }} />
+                </div>
+                <div className="text-[9px] text-[var(--text-muted)]">{item.desc}</div>
+              </div>
+            ))}
           </div>
         </div>
-      </div>
 
-      {/* Process Optimizer */}
-      <ProcessOptimizer />
-    </div>
-  )
-}
+        {/* GPU + FPS */}
+        <div className="grid grid-cols-2 gap-3">
+          <div className="rounded-2xl p-5" style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)' }}>
+            <div className="flex items-center gap-2.5 mb-4">
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'var(--accent-dim)' }}>
+                <Monitor className="w-4 h-4 text-white" />
+              </div>
+              <span className="text-xs font-bold text-white">GPU</span>
+            </div>
+            <div className="space-y-3">
+              {[
+                { label: 'Model', value: info?.gpu?.model || 'Unknown' },
+                { label: 'Vendor', value: info?.gpu?.vendor && info.gpu.vendor !== 'unknown' ? info.gpu.vendor.toUpperCase() : 'Unknown' },
+                { label: 'VRAM', value: info?.gpu?.vram ? `${info.gpu.vram} MB` : 'Unknown' },
+              ].map((row, i) => (
+                <div key={i} className="flex items-center justify-between">
+                  <span className="text-[11px] text-[var(--text-tertiary)]">{row.label}</span>
+                  <span className="text-[11px] font-medium text-white truncate ml-4">{row.value}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="rounded-2xl p-5" style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)' }}>
+            <div className="flex items-center gap-2.5 mb-4">
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'var(--accent-dim)' }}>
+                <TrendingUp className="w-4 h-4 text-white" />
+              </div>
+              <span className="text-xs font-bold text-white">FPS Optimization</span>
+            </div>
+            <div className="space-y-3">
+              {[
+                { label: 'Game Mode', value: info?.gameMode === true || info?.gameMode === "1" ? 'Enabled' : info?.gameMode === false || info?.gameMode === "0" ? 'Disabled' : 'Unknown' },
+                { label: 'Mouse Accel', value: info?.mouse?.enhancePointerPrecision ? 'ON (bad)' : 'OFF (good)' },
+              ].map((row, i) => (
+                <div key={i} className="flex items-center justify-between">
+                  <span className="text-[11px] text-[var(--text-tertiary)]">{row.label}</span>
+                  <span className="text-[11px] font-medium text-white">{row.value}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
 
-function GaugeCard({ icon: Icon, label, value, pct, color, sub, detail }: { icon: any; label: string; value: string; pct: number; color: string; sub: string; detail: string }) {
-  return (
-    <div className="card-widget p-4 card-glow">
-      <div className="flex items-center gap-2 mb-3">
-        <Icon className="w-3.5 h-3.5" style={{ color }} />
-        <span className="text-[9px] font-bold tracking-widest uppercase" style={{ color: 'var(--text-muted)' }}>{label}</span>
+        {/* Process Optimizer */}
+        <ProcessOptimizer />
       </div>
-      <div className="text-2xl font-bold mb-0.5 count-animate" style={{ color: 'var(--text-primary)' }}>{value}</div>
-      <div className="text-[10px] mb-3 truncate" style={{ color: 'var(--text-tertiary)' }}>{sub}</div>
-      <div className="progress-bar progress-bar-glow mb-1" style={{ '--bar-color': color } as any}>
-        <div className="fill" style={{ width: `${pct}%`, background: color }} />
-      </div>
-      <div className="text-[9px]" style={{ color: 'var(--text-muted)' }}>{detail}</div>
-    </div>
-  )
-}
-
-function OptTarget({ label, value, max, current, color, desc }: { label: string; value: string; max: number; current: number; color: string; desc: string }) {
-  const pct = max > 0 ? Math.min(100, (current / max) * 100) : 0
-  return (
-    <div className="card-widget p-4 card-glow">
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-[11px] font-semibold" style={{ color: 'var(--text-primary)' }}>{label}</span>
-        <span className="text-[12px] font-bold count-animate" style={{ color }}>{value}</span>
-      </div>
-      <div className="progress-bar progress-bar-glow mb-1" style={{ '--bar-color': color } as any}>
-        <div className="fill" style={{ width: `${pct}%`, background: color }} />
-      </div>
-      <div className="text-[10px]" style={{ color: 'var(--text-muted)' }}>{desc}</div>
-    </div>
-  )
-}
-
-function Row({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex items-center justify-between">
-      <span className="text-[11px]" style={{ color: 'var(--text-tertiary)' }}>{label}</span>
-      <span className="text-[11px] font-medium" style={{ color: 'var(--text-secondary)' }}>{value}</span>
     </div>
   )
 }

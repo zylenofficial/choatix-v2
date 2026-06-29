@@ -142,6 +142,10 @@
     box-shadow: inset 0 0 24px rgba(255,255,255,0.02);
   }
 
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
   .scan-pulse {
     animation: scanPulse 2s ease-in-out infinite;
   }

@@ -1,11 +1,11 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import { useStore } from '@/store/useStore'
 import { availableTweaks } from '@/data/tweaks'
 import { canAccessTier } from '@/lib/featureAccess'
 import { useToast } from '@/components/Toast'
-import { Zap, Lock, CheckCircle2, Loader2, Shield, Cpu, Mouse, Keyboard, Wifi, HardDrive, Monitor, Volume2, Power, Sparkles, ArrowRight, RotateCcw } from 'lucide-react'
+import { Zap, Lock, CheckCircle2, Loader2, Shield, Cpu, Mouse, Wifi, HardDrive, Monitor, Volume2, Power, Sparkles, ArrowRight, RotateCcw } from 'lucide-react'
 import { LicenseTier } from '@/types'
 import type { Tweak } from '@/types'
 
@@ -14,8 +14,6 @@ interface TweakGroup {
   label: string
   description: string
   icon: any
-  color: string
-  gradient: string
   tweaks: string[]
 }
 
@@ -25,8 +23,6 @@ const GROUPS: TweakGroup[] = [
     label: 'Essential',
     description: 'Must-have optimizations for every gamer. Free and safe.',
     icon: Shield,
-    color: '#ffffff',
-    gradient: 'from-blue-500/10 to-blue-600/5',
     tweaks: [
       'sys-high-performance', 'sys-enable-game-mode', 'sys-disable-fullscreen-opt',
       'sys-visual-effects', 'mouse-disable-acceleration', 'mouse-raw-input',
@@ -46,8 +42,6 @@ const GROUPS: TweakGroup[] = [
     label: 'Pro Boost',
     description: 'Advanced tweaks for competitive edge. Unlock with Pro key.',
     icon: Cpu,
-    color: '#ffffff',
-    gradient: 'from-violet-500/10 to-purple-600/5',
     tweaks: [
       'sys-cpu-priority',
       'nv-optimize-shader-cache', 'nv-low-latency', 'nv-texture-filtering',
@@ -66,8 +60,6 @@ const GROUPS: TweakGroup[] = [
     label: 'Premium Elite',
     description: 'Maximum performance with full system restore. Premium only.',
     icon: Sparkles,
-    color: '#cccccc',
-    gradient: 'from-amber-500/10 to-orange-600/5',
     tweaks: [
       'nv-hardware-scheduling',
       'net-reset-tcp',
@@ -80,24 +72,23 @@ const GROUPS: TweakGroup[] = [
 function TweakRow({ tweak, isApplied, isApplying, isReverting, hasAccess, onApply, onRevert }: {
   tweak: Tweak; isApplied: boolean; isApplying: boolean; isReverting: boolean; hasAccess: boolean; onApply: () => void; onRevert: () => void
 }) {
-  const impactColor = tweak.impact === 'high' ? 'var(--success)' : tweak.impact === 'medium' ? 'var(--warning)' : 'var(--text-muted)'
-  const riskColor = tweak.risk === 'medium' ? 'var(--danger)' : tweak.risk === 'low' ? 'var(--warning)' : 'var(--text-muted)'
-
   return (
-    <div className="flex items-center gap-3 px-3 py-2 rounded-lg transition-all group" style={{
-      background: isApplied ? 'rgba(255,255,255,0.04)' : 'transparent',
-      border: `1px solid ${isApplied ? 'rgba(255,255,255,0.08)' : 'transparent'}`,
-    }}>
+    <div className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200"
+      style={{
+        background: isApplied ? 'rgba(255,255,255,0.04)' : 'var(--bg-tertiary)',
+        border: `1px solid ${isApplied ? 'rgba(255,255,255,0.1)' : 'var(--border-subtle)'}`,
+        opacity: !hasAccess ? 0.4 : 1,
+      }}>
       {/* Status */}
       <div className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0">
         {isApplied ? (
-          <CheckCircle2 className="w-4 h-4" style={{ color: 'var(--success)' }} />
+          <CheckCircle2 className="w-4 h-4 text-white" />
         ) : isApplying ? (
-          <Loader2 className="w-4 h-4 animate-spin" style={{ color: 'var(--accent)' }} />
+          <Loader2 className="w-4 h-4 animate-spin text-white" />
         ) : !hasAccess ? (
-          <Lock className="w-3.5 h-3.5" style={{ color: 'var(--text-muted)' }} />
+          <Lock className="w-3.5 h-3.5 text-[var(--text-muted)]" />
         ) : (
-          <button onClick={onApply} className="w-5 h-5 rounded-full border transition-all hover:scale-110" style={{ borderColor: 'var(--border-strong)' }} />
+          <button onClick={onApply} className="w-5 h-5 rounded-full border transition-all hover:scale-110 hover:border-white/40" style={{ borderColor: 'var(--border-strong)' }} />
         )}
       </div>
 
@@ -108,42 +99,46 @@ function TweakRow({ tweak, isApplied, isApplying, isReverting, hasAccess, onAppl
             {tweak.name}
           </span>
           {!hasAccess && (
-            <span className="text-[7px] font-bold tracking-wider uppercase px-1.5 py-0.5 rounded" style={{ background: 'rgba(255,255,255,0.08)', color: 'var(--warning)' }}>
+            <span className="text-[7px] font-bold tracking-wider uppercase px-1.5 py-0.5 rounded-lg shrink-0"
+              style={{ background: 'rgba(255,255,255,0.04)', color: 'var(--text-muted)' }}>
               {tweak.requiredTier}
             </span>
           )}
         </div>
-        <div className="text-[9px] truncate" style={{ color: 'var(--text-tertiary)' }}>{tweak.description}</div>
+        <div className="text-[9px] truncate mt-0.5" style={{ color: 'var(--text-tertiary)' }}>{tweak.description}</div>
       </div>
 
       {/* Badges */}
       <div className="flex items-center gap-1.5 flex-shrink-0">
-        <span className="text-[7px] font-bold tracking-wider uppercase px-1.5 py-0.5 rounded" style={{ background: `${impactColor}10`, color: impactColor }}>
-          {tweak.impact}
-        </span>
+        {tweak.impact === 'high' && (
+          <span className="text-[7px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-lg" style={{ background: 'rgba(255,255,255,0.06)', color: '#fff' }}>
+            High
+          </span>
+        )}
         {tweak.risk !== 'none' && (
-          <span className="text-[7px] font-bold tracking-wider uppercase px-1.5 py-0.5 rounded" style={{ background: `${riskColor}10`, color: riskColor }}>
-            {tweak.risk} risk
+          <span className="text-[7px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-lg"
+            style={{ background: tweak.risk === 'medium' ? 'rgba(153,153,153,0.06)' : 'rgba(204,204,204,0.06)', color: tweak.risk === 'medium' ? '#999' : '#ccc' }}>
+            {tweak.risk}
           </span>
         )}
       </div>
 
-      {/* Gaming impact */}
-      <div className="text-[9px] text-right max-w-[140px] truncate flex-shrink-0" style={{ color: 'var(--text-secondary)' }}>
+      {/* Gaming effect */}
+      <div className="text-[9px] text-right max-w-[130px] truncate flex-shrink-0" style={{ color: 'var(--text-tertiary)' }}>
         {tweak.gamingImpact}
       </div>
 
-      {/* Action buttons */}
+      {/* Actions */}
       {hasAccess && !isApplying && (
         isApplied ? (
           <button onClick={onRevert} disabled={isReverting}
-            className="px-2.5 py-1 rounded-md text-[9px] font-bold flex items-center gap-1 transition-all"
-            style={{ background: 'rgba(255,255,255,0.06)', color: 'var(--warning)', border: '1px solid rgba(255,255,255,0.10)' }}>
+            className="px-2.5 py-1 rounded-lg text-[9px] font-bold flex items-center gap-1 transition-all shrink-0"
+            style={{ background: 'rgba(255,255,255,0.06)', color: '#ccc', border: '1px solid rgba(255,255,255,0.1)' }}>
             <RotateCcw className="w-3 h-3" />
             Revert
           </button>
         ) : (
-          <button onClick={onApply} className="px-2.5 py-1 rounded-md text-[9px] font-bold transition-all btn-primary">
+          <button onClick={onApply} className="px-2.5 py-1 rounded-lg text-[9px] font-bold transition-all btn-primary shrink-0">
             Apply
           </button>
         )
@@ -159,6 +154,12 @@ export function BestTweaksPage() {
   const [reverting, setReverting] = useState<string | null>(null)
   const [expandedGroup, setExpandedGroup] = useState<string | null>('essential')
   const appliedSet = new Set(appliedTweaks)
+
+  const tierCounts = useMemo(() => ({
+    [LicenseTier.FREE]: availableTweaks.filter(t => t.requiredTier === LicenseTier.FREE).length,
+    [LicenseTier.PRO]: availableTweaks.filter(t => t.requiredTier === LicenseTier.PRO).length,
+    [LicenseTier.PREMIUM]: availableTweaks.filter(t => t.requiredTier === LicenseTier.PREMIUM).length,
+  }), [])
 
   const handleApply = useCallback(async (tweakId: string) => {
     if (!window.electronAPI) return
@@ -220,107 +221,122 @@ export function BestTweaksPage() {
   }, [appliedTweaks, setAppliedTweaks, addToast])
 
   return (
-    <div className="p-5 lg:p-6 space-y-5 fade-in overflow-y-auto h-full">
-      {/* Header */}
-      <div>
-        <h1 className="text-[18px] font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>Best Tweaks</h1>
-        <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-muted)' }}>Curated optimizations tested by our team and community</p>
-      </div>
+    <div className="h-full overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
+      <div className="max-w-5xl mx-auto p-6 space-y-6">
 
-      {/* Tier summary */}
-      <div className="grid grid-cols-3 gap-3">
-        {[
-          { tier: 'FREE', label: 'Free', count: availableTweaks.filter(t => t.requiredTier === LicenseTier.FREE).length, color: 'var(--text-muted)', icon: Shield },
-          { tier: 'PRO', label: 'Pro', count: availableTweaks.filter(t => t.requiredTier === LicenseTier.PRO).length, color: 'var(--accent)', icon: Zap },
-          { tier: 'PREMIUM', label: 'Premium', count: availableTweaks.filter(t => t.requiredTier === LicenseTier.PREMIUM).length, color: '#cccccc', icon: Sparkles },
-        ].map(({ tier, label, count, color, icon: Icon }) => {
-          const isActive = license.tier === tier || (tier === 'FREE')
-          return (
-            <div key={tier} className="card-widget p-3.5 flex items-center gap-3 card-glow" style={{ opacity: isActive ? 1 : 0.5 }}>
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: `${color}10`, border: `1px solid ${color}15` }}>
-                <Icon className="w-4 h-4" style={{ color }} />
-              </div>
-              <div>
-                <div className="text-[10px] font-bold tracking-widest uppercase" style={{ color }}>{label}</div>
-                <div className="text-[9px]" style={{ color: 'var(--text-muted)' }}>{count} tweaks</div>
-              </div>
+        {/* Header */}
+        <div className="flex items-center gap-4 fade-in">
+          <div className="relative">
+            <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ background: '#ffffff' }}>
+              <Sparkles className="w-6 h-6 text-black" />
             </div>
-          )
-        })}
-      </div>
+          </div>
+          <div>
+            <h1 className="text-xl font-bold text-white tracking-tight">Best Tweaks</h1>
+            <p className="text-xs text-[var(--text-tertiary)] mt-0.5">Curated optimizations tested by our team</p>
+          </div>
+        </div>
 
-      {/* Tweak groups */}
-      <div className="space-y-3">
-        {GROUPS.map(group => {
-          const Icon = group.icon
-          const isExpanded = expandedGroup === group.id
-          const groupTweaks = group.tweaks
-            .map(id => availableTweaks.find(t => t.id === id))
-            .filter(Boolean) as Tweak[]
-          const appliedCount = groupTweaks.filter(t => appliedSet.has(t.id)).length
-          const accessibleCount = groupTweaks.filter(t => canAccessTier(license.tier, t.requiredTier)).length
-
-          return (
-            <div key={group.id} className="card-widget overflow-hidden card-glow">
-              {/* Group header */}
-              <button
-                onClick={() => setExpandedGroup(isExpanded ? null : group.id)}
-                className="w-full flex items-center gap-4 px-5 py-4 text-left transition-all hover:bg-white/[0.01]"
-              >
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: `${group.color}10`, border: `1px solid ${group.color}15` }}>
-                  <Icon className="w-5 h-5" style={{ color: group.color }} />
+        {/* Tier summary */}
+        <div className="grid grid-cols-3 gap-3 stagger">
+          {[
+            { tier: LicenseTier.FREE, label: 'Free', count: tierCounts[LicenseTier.FREE], icon: Shield, desc: 'Essential tweaks' },
+            { tier: LicenseTier.PRO, label: 'Pro', count: tierCounts[LicenseTier.PRO], icon: Zap, desc: 'Advanced tweaks' },
+            { tier: LicenseTier.PREMIUM, label: 'Premium', count: tierCounts[LicenseTier.PREMIUM], icon: Sparkles, desc: 'Elite tweaks' },
+          ].map(({ tier, label, count, icon: Icon, desc }) => {
+            const isActive = tier === LicenseTier.FREE || license.tier === tier
+            return (
+              <div key={tier} className="card-widget p-5 flex items-center gap-4" style={{ opacity: isActive ? 1 : 0.4 }}>
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'var(--accent-dim)' }}>
+                  <Icon className="w-5 h-5 text-white" />
                 </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[12px] font-bold" style={{ color: 'var(--text-primary)' }}>{group.label}</span>
-                    <span className="text-[8px] font-bold px-1.5 py-0.5 rounded" style={{ background: `${group.color}10`, color: group.color }}>
-                      {appliedCount}/{groupTweaks.length}
-                    </span>
+                <div>
+                  <div className="text-[10px] font-bold tracking-widest uppercase text-white">{label}</div>
+                  <div className="text-[9px] text-[var(--text-muted)] mt-0.5">{count} tweaks • {desc}</div>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+
+        {/* Tweak groups */}
+        <div className="space-y-3">
+          {GROUPS.map(group => {
+            const Icon = group.icon
+            const isExpanded = expandedGroup === group.id
+            const groupTweaks = group.tweaks
+              .map(id => availableTweaks.find(t => t.id === id))
+              .filter(Boolean) as Tweak[]
+            const appliedCount = groupTweaks.filter(t => appliedSet.has(t.id)).length
+            const accessibleCount = groupTweaks.filter(t => canAccessTier(license.tier, t.requiredTier)).length
+            const progress = groupTweaks.length > 0 ? (appliedCount / groupTweaks.length) * 100 : 0
+
+            return (
+              <div key={group.id} className="rounded-2xl overflow-hidden transition-all duration-300"
+                style={{ background: 'var(--bg-secondary)', border: `1px solid ${isExpanded ? 'var(--border-default)' : 'var(--border-subtle)'}` }}>
+                {/* Group header */}
+                <button onClick={() => setExpandedGroup(isExpanded ? null : group.id)}
+                  className="w-full px-6 py-5 flex items-center justify-between hover:bg-white/[0.015] transition-colors">
+                  <div className="flex items-center gap-4">
+                    <div className="w-11 h-11 rounded-xl flex items-center justify-center" style={{ background: 'var(--accent-dim)' }}>
+                      <Icon className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2.5">
+                        <span className="text-sm font-bold text-white">{group.label}</span>
+                        <span className="text-[9px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-lg"
+                          style={{ background: 'rgba(255,255,255,0.06)', color: '#fff' }}>
+                          {appliedCount}/{groupTweaks.length}
+                        </span>
+                      </div>
+                      <div className="text-[10px] text-[var(--text-muted)] mt-0.5">{group.description}</div>
+                    </div>
                   </div>
-                  <div className="text-[10px] mt-0.5" style={{ color: 'var(--text-muted)' }}>{group.description}</div>
-                </div>
-                <div className="flex items-center gap-2">
-                  {isExpanded && (
-                    <button
-                      onClick={(e) => { e.stopPropagation(); handleApplyGroup(group) }}
-                      disabled={applying !== null}
-                      className="h-8 px-4 rounded-lg text-[10px] font-bold flex items-center gap-1.5 btn-primary disabled:opacity-50"
-                    >
-                      {applying ? <Loader2 className="w-3 h-3 animate-spin" /> : <Zap className="w-3 h-3" />}
-                      Apply All
-                    </button>
-                  )}
-                  <ArrowRight className="w-4 h-4 transition-transform" style={{ color: 'var(--text-muted)', transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)' }} />
-                </div>
-              </button>
-
-              {/* Tweak list */}
-              {isExpanded && (
-                <div className="px-3 pb-3 space-y-0.5 stagger" style={{ borderTop: '1px solid var(--border-subtle)' }}>
-                  <div className="py-2 px-3 flex items-center gap-3 text-[8px] font-bold tracking-widest uppercase" style={{ color: 'var(--text-muted)' }}>
-                    <div className="w-5" />
-                    <div className="flex-1">Tweak</div>
-                    <div className="w-20 text-center">Impact</div>
-                    <div className="w-[140px] text-right">Gaming Effect</div>
-                    <div className="w-16" />
+                  <div className="flex items-center gap-4">
+                    {isExpanded && (
+                      <button onClick={(e) => { e.stopPropagation(); handleApplyGroup(group) }}
+                        disabled={applying !== null}
+                        className="h-9 px-5 rounded-xl text-[10px] font-bold flex items-center gap-2 btn-primary disabled:opacity-50">
+                        {applying ? <Loader2 className="w-3 h-3 animate-spin" /> : <Zap className="w-3 h-3" />}
+                        Apply All
+                      </button>
+                    )}
+                    {/* Mini progress */}
+                    <div className="w-20 h-1.5 rounded-full" style={{ background: 'var(--bg-elevated)' }}>
+                      <div className="h-full rounded-full transition-all duration-500" style={{ width: `${progress}%`, background: '#fff' }} />
+                    </div>
+                    <ArrowRight className="w-4 h-4 transition-transform duration-200" style={{ color: 'var(--text-muted)', transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)' }} />
                   </div>
-                  {groupTweaks.map(tweak => (
-                    <TweakRow
-                      key={tweak.id}
-                      tweak={tweak}
-                      isApplied={appliedSet.has(tweak.id)}
-                      isApplying={applying === tweak.id}
-                      isReverting={reverting === tweak.id}
-                      hasAccess={canAccessTier(license.tier, tweak.requiredTier)}
-                      onApply={() => handleApply(tweak.id)}
-                      onRevert={() => handleRevert(tweak.id)}
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
-          )
-        })}
+                </button>
+
+                {/* Tweak list */}
+                {isExpanded && (
+                  <div className="px-4 pb-4 space-y-1.5 stagger" style={{ borderTop: '1px solid var(--border-subtle)' }}>
+                    <div className="py-2 px-4 flex items-center gap-3 text-[8px] font-bold tracking-widest uppercase" style={{ color: 'var(--text-muted)' }}>
+                      <div className="w-5" />
+                      <div className="flex-1">Tweak</div>
+                      <div className="w-20 text-center">Impact</div>
+                      <div className="w-[130px] text-right">Gaming Effect</div>
+                      <div className="w-16" />
+                    </div>
+                    {groupTweaks.map(tweak => (
+                      <TweakRow
+                        key={tweak.id}
+                        tweak={tweak}
+                        isApplied={appliedSet.has(tweak.id)}
+                        isApplying={applying === tweak.id}
+                        isReverting={reverting === tweak.id}
+                        hasAccess={canAccessTier(license.tier, tweak.requiredTier)}
+                        onApply={() => handleApply(tweak.id)}
+                        onRevert={() => handleRevert(tweak.id)}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
       </div>
     </div>
   )

@@ -1365,30 +1365,69 @@ ipcMain.handle("load-app-state", () => {
 ipcMain.handle("send-feedback", async (_e, feedback) => {
   if (!FEEDBACK_WEBHOOK) return { success: false, error: "Feedback webhook not configured" };
   try {
-    const colorMap = { bug: 0xFF0000, feature: 0x00AAFF, general: 0xFFAA00 };
-    const iconMap = { bug: "🐛", feature: "💡", general: "💬" };
-    const stars = "★".repeat(feedback.rating || 0) + "☆".repeat(5 - (feedback.rating || 0));
-    const payload = JSON.stringify({
+    var colorMap = { bug: 0xED4245, feature: 0x5865F2, general: 0x57F287 };
+    var emojiMap = { bug: "\ud83d\udc1b", feature: "\ud83d\udca1", general: "\ud83d\udcac" };
+    var labelMap = { bug: "Bug Report", feature: "Feature Request", general: "General Feedback" };
+
+    var cpuInfo = os.cpus();
+    var totalMemGB = (os.totalmem() / 1073741824).toFixed(1);
+    var memUsedGB = ((os.totalmem() - os.freemem()) / 1073741824).toFixed(1);
+    var memPct = Math.round(((os.totalmem() - os.freemem()) / os.totalmem()) * 100);
+    var cpuModel = (cpuInfo[0]?.model || "Unknown").replace(/\s+/g, " ").trim();
+
+    var description = "";
+    if (feedback.rating) {
+      var stars = "\u2b50".repeat(feedback.rating) + "\u2606".repeat(5 - feedback.rating);
+      description += stars + "\n\n";
+    }
+    description += feedback.message.substring(0, 2000);
+
+    var fields = [
+      { name: "Type", value: (emojiMap[feedback.type] || "") + " " + (labelMap[feedback.type] || "Feedback"), inline: true },
+      { name: "Version", value: "v" + CURRENT_VERSION, inline: true },
+    ];
+
+    if (feedback.discordId) {
+      fields.push({ name: "User", value: "<@" + feedback.discordId + ">", inline: true });
+    }
+
+    fields.push(
+      { name: "\u200b", value: "\u200b", inline: false },
+      { name: "System", value:
+        "**OS** " + os.platform() + " " + os.release() + "\n" +
+        "**CPU** " + cpuModel.substring(0, 40) + "\n" +
+        "**RAM** " + memUsedGB + " / " + totalMemGB + " GB (" + memPct + "%)\n" +
+        "**Cores** " + cpuInfo.length, inline: false }
+    );
+
+    var payload = JSON.stringify({
+      username: "Choatix",
+      avatar_url: "https://cdn-icons-png.flaticon.com/512/190/190411.png",
       embeds: [{
-        title: `${iconMap[feedback.type] || "💬"} Feedback: ${feedback.subject}`,
-        color: colorMap[feedback.type] || 0xFFAA00,
-        fields: [
-          { name: "Type", value: feedback.type.charAt(0).toUpperCase() + feedback.type.slice(1), inline: true },
-          { name: "Version", value: CURRENT_VERSION, inline: true },
-          { name: "Platform", value: `${os.platform()} ${os.release()}`, inline: true },
-          ...(feedback.rating ? [{ name: "Rating", value: `${stars} (${feedback.rating}/5)`, inline: true }] : []),
-          { name: "Message", value: feedback.message.substring(0, 1000) },
-          ...(feedback.email ? [{ name: "Email", value: feedback.email, inline: true }] : []),
-        ],
+        color: colorMap[feedback.type] || 0x57F287,
+        title: feedback.subject,
+        description: description,
+        fields: fields,
         timestamp: new Date().toISOString(),
-        footer: { text: "Choatix Feedback" }
-      }]
+        footer: {
+          text: "Choatix v" + CURRENT_VERSION,
+          icon_url: "https://cdn-icons-png.flaticon.com/512/190/190411.png"
+        },
+      }],
     });
-    const url = new URL(FEEDBACK_WEBHOOK);
-    const mod = url.protocol === "https:" ? https : http;
-    await new Promise((resolve, reject) => {
-      const req = mod.request({ hostname: url.hostname, path: url.pathname + (url.search || ""), method: "POST", headers: { "Content-Type": "application/json", "Content-Length": Buffer.byteLength(payload) } }, (res) => { res.resume(); resolve(); });
-      req.on("error", reject); req.write(payload); req.end();
+
+    var url = new URL(FEEDBACK_WEBHOOK);
+    var mod = url.protocol === "https:" ? https : http;
+    await new Promise(function (resolve, reject) {
+      var req = mod.request({
+        hostname: url.hostname,
+        path: url.pathname + (url.search || ""),
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Content-Length": Buffer.byteLength(payload) },
+      }, function (res) { res.resume(); resolve(); });
+      req.on("error", reject);
+      req.write(payload);
+      req.end();
     });
     return { success: true };
   } catch (e) {
