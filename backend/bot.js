@@ -37,7 +37,7 @@ function apiRequest(method, path, body) {
 }
 
 const client = new Client({
-  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers],
+  intents: [GatewayIntentBits.Guilds],
 });
 
 async function registerCommands() {
@@ -317,8 +317,8 @@ client.on('interactionCreate', async (interaction) => {
       await interaction.channel.messages.edit(msg.id, { embeds: [winEmbed], components: [] }).catch(() => {});
 
       try {
-        const winner = await interaction.guild.members.fetch(winnerId);
-        await winner.send(`🎉 You won a **${tier}** Choatix license key! Run \`/redeem\` in the server to activate.`);
+        const winner = interaction.guild.members.cache.get(winnerId);
+        if (winner) await winner.send(`🎉 You won a **${tier}** Choatix license key! Run \`/redeem\` in the server to activate.`);
       } catch {}
     }, duration * 60 * 1000);
   }
