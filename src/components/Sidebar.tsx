@@ -1,8 +1,8 @@
 'use client'
 
-import { LayoutDashboard, ScanSearch, Zap, Gauge, History, Settings, Gamepad2, Sparkles } from 'lucide-react'
+import { LayoutDashboard, ScanSearch, Zap, Gauge, History, Settings, Gamepad2, Sparkles, Bot } from 'lucide-react'
 
-export type Page = 'dashboard' | 'scan' | 'optimizer' | 'best-tweaks' | 'autopilot' | 'performance' | 'rollback' | 'settings'
+export type Page = 'dashboard' | 'scan' | 'optimizer' | 'best-tweaks' | 'autopilot' | 'performance' | 'rollback' | 'settings' | 'ai-optimizer'
 
 interface SidebarProps {
   active: Page
@@ -18,6 +18,7 @@ const NAV: { id: Page; label: string; icon: any }[] = [
   { id: 'best-tweaks', label: 'Best Tweaks', icon: Sparkles },
   { id: 'optimizer', label: 'Optimizer', icon: Zap },
   { id: 'autopilot', label: 'AutoPilot', icon: Gamepad2 },
+  { id: 'ai-optimizer', label: 'AI Optimizer', icon: Bot },
   { id: 'performance', label: 'Performance', icon: Gauge },
   { id: 'rollback', label: 'Rollback', icon: History },
   { id: 'settings', label: 'Settings', icon: Settings },

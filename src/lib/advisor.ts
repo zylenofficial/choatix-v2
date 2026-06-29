@@ -72,9 +72,6 @@ export function generateRecommendations(info: SystemInfo, tier: LicenseTier): Ad
   // --- MOUSE ---
   analyzeMouse(info, issues)
 
-  // --- KEYBOARD ---
-  analyzeKeyboard(info, issues)
-
   // --- NVIDIA ---
   analyzeNvidiaBasic(info, issues)
   if (tier === LicenseTier.PRO || tier === LicenseTier.PREMIUM) {
@@ -206,36 +203,6 @@ function analyzeMouse(info: SystemInfo, issues: AdvisorIssue[]) {
       severity: 'high',
       category: 'mouse',
       tweakId: 'mouse-disable-acceleration',
-      requiredTier: LicenseTier.FREE,
-      undoable: true,
-    })
-  }
-}
-
-function analyzeKeyboard(info: SystemInfo, issues: AdvisorIssue[]) {
-  if (info.keyboard.filterKeys) {
-    issues.push({
-      id: 'advisor-filter-keys',
-      title: 'Filter Keys is enabled',
-      description: 'Filter Keys ignores brief or repeated keystrokes. In fast-paced games, this causes missed inputs and delayed responses.',
-      gamingImpact: 'All key presses register immediately',
-      severity: 'high',
-      category: 'keyboard',
-      tweakId: 'kb-disable-filter-keys',
-      requiredTier: LicenseTier.FREE,
-      undoable: true,
-    })
-  }
-
-  if (info.keyboard.stickyKeys) {
-    issues.push({
-      id: 'advisor-sticky-keys',
-      title: 'Sticky Keys is active',
-      description: 'Sticky Keys can intercept key combinations (Shift, Ctrl, Alt) during gameplay and trigger unexpected popups.',
-      gamingImpact: 'Uninterrupted key combinations',
-      severity: 'medium',
-      category: 'keyboard',
-      tweakId: 'kb-disable-sticky-keys',
       requiredTier: LicenseTier.FREE,
       undoable: true,
     })

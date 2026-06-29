@@ -30,7 +30,6 @@ const GROUPS: TweakGroup[] = [
     tweaks: [
       'sys-high-performance', 'sys-enable-game-mode', 'sys-disable-fullscreen-opt',
       'sys-visual-effects', 'mouse-disable-acceleration', 'mouse-raw-input',
-      'kb-disable-filter-keys', 'kb-disable-sticky-keys', 'kb-disable-toggle-keys',
       'nv-max-power', 'nv-disable-vsync',
       'debloat-disable-startup', 'debloat-remove-background', 'debloat-superfetch',
       'net-disable-background-updates', 'net-optimize-dns',

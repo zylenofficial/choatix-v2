@@ -270,20 +270,6 @@ async function getMouse() {
   return { name: name || "Unavailable", enhancePointerPrecision, pollingRateDetected: false };
 }
 
-// ── Keyboard ──
-async function getKeyboard() {
-  const [filterKeys, stickyKeys, repeatDelay] = await Promise.all([
-    psAsync("(Get-ItemProperty -Path 'HKCU:\\Control Panel\\Accessibility\\Keyboard Response' -Name 'Flags' -EA 0).Flags"),
-    psAsync("(Get-ItemProperty -Path 'HKCU:\\Control Panel\\Accessibility\\StickyKeys' -Name 'Flags' -EA 0).Flags"),
-    psAsync("(Get-ItemProperty -Path 'HKCU:\\Control Panel\\Keyboard' -Name 'KeyboardDelay' -EA 0).KeyboardDelay"),
-  ]);
-  return {
-    filterKeys: filterKeys ? (parseInt(filterKeys) & 1) === 0 : false,
-    stickyKeys: stickyKeys ? (parseInt(stickyKeys) & 1) === 1 : false,
-    repeatDelay: repeatDelay || "1",
-  };
-}
-
 // ── Device Type Detection ──
 async function getDeviceType() {
   const raw = await psAsync("(Get-CimInstance Win32_SystemEnclosure | Select-Object -First 1).ChassisTypes");
@@ -666,18 +652,17 @@ ipcMain.handle("scan-system", async () => {
       startup: getStartup(),
       processes: getProcesses(),
       mouse: getMouse(),
-      keyboard: getKeyboard(),
     },
   };
 });
 
 // ── Advisor: Full system scan with device type ──
 ipcMain.handle("advisor-scan", async () => {
-  const [cpu, gpu, ram, disk, os, uptime, powerPlan, gameMode, network, startup, processes, mouse, keyboard, deviceType] = await Promise.all([
-    getCPU(), getGPU(), getRAM(), getDisk(), getOS(), getUptime(), getPowerPlan(), getGameMode(), getNetwork(), getStartup(), getProcesses(), getMouse(), getKeyboard(), getDeviceType()
+  const [cpu, gpu, ram, disk, os, uptime, powerPlan, gameMode, network, startup, processes, mouse, deviceType] = await Promise.all([
+    getCPU(), getGPU(), getRAM(), getDisk(), getOS(), getUptime(), getPowerPlan(), getGameMode(), getNetwork(), getStartup(), getProcesses(), getMouse(), getDeviceType()
   ]);
   return {
-    systemInfo: { cpu, gpu, ram, disk, os, uptime, powerPlan, gameMode, network, startup, processes, mouse, keyboard },
+    systemInfo: { cpu, gpu, ram, disk, os, uptime, powerPlan, gameMode, network, startup, processes, mouse },
     deviceType,
   };
 });
@@ -1016,9 +1001,7 @@ const TWEAK_COMMANDS = {
   'mouse-optimize-pointer': 'reg add "HKCU\\Control Panel\\Mouse" /v MouseSensitivity /t REG_SZ /d "10" /f',
 
   // KEYBOARD
-  'kb-disable-filter-keys': 'reg add "HKCU\\Control Panel\\Accessibility\\Keyboard Response" /v Flags /t REG_SZ /d "0" /f',
-  'kb-disable-sticky-keys': 'reg add "HKCU\\Control Panel\\Accessibility\\Sticky Keys" /v Flags /t REG_SZ /d "0" /f',
-  'kb-disable-toggle-keys': 'reg add "HKCU\\Control Panel\\Accessibility\\ToggleKeys" /v Flags /t REG_SZ /d "0" /f',
+
 
   // AMD
   'amd-max-power': 'powershell -Command "if(Get-Command radeontop -ErrorAction SilentlyContinue){radeontop -l 100}"',
@@ -1108,9 +1091,7 @@ const TWEAK_RESTORE_COMMANDS = {
   'mouse-raw-input': 'reg delete "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\PrecisionTouchPad" /v AAPThreshold /f',
   'mouse-optimize-pointer': 'reg add "HKCU\\Control Panel\\Mouse" /v MouseSensitivity /t REG_SZ /d "10" /f',
       // KEYBOARD
-  'kb-disable-filter-keys': 'reg add "HKCU\\Control Panel\\Accessibility\\Keyboard Response" /v Flags /t REG_SZ /d "1" /f',
-  'kb-disable-sticky-keys': 'reg add "HKCU\\Control Panel\\Accessibility\\Sticky Keys" /v Flags /t REG_SZ /d "1" /f',
-  'kb-disable-toggle-keys': 'reg add "HKCU\\Control Panel\\Accessibility\\ToggleKeys" /v Flags /t REG_SZ /d "1" /f',
+
 
   // AMD
   'amd-max-power': 'echo "AMD power restored to default"',
@@ -1179,7 +1160,7 @@ ipcMain.handle("restore-category", async (_event, category) => {
       'debloat-disable-startup': 'debloat', 'debloat-remove-background': 'debloat', 'debloat-superfetch': 'debloat',
       'debloat-disable-telemetry': 'debloat', 'debloat-disable-services': 'debloat', 'debloat-windows-features': 'debloat',
       'mouse-disable-acceleration': 'mouse', 'mouse-raw-input': 'mouse', 'mouse-optimize-pointer': 'mouse',
-      'kb-disable-filter-keys': 'keyboard', 'kb-disable-sticky-keys': 'keyboard', 'kb-disable-toggle-keys': 'keyboard',
+
       'amd-max-power': 'amd',
       'intel-max-power': 'intel',
       'cpu-core-parking-disable': 'cpu', 'cpu-smt-enable': 'cpu', 'cpu-interrupt-affinity': 'cpu',

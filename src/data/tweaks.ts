@@ -214,40 +214,6 @@ export const availableTweaks: Tweak[] = [
     risk: 'none',
     gamingImpact: 'Consistent sensitivity across games'
   },
-  // KEYBOARD
-  {
-    id: 'kb-disable-filter-keys',
-    name: 'Disable Filter Keys',
-    description: 'Disables Windows Filter Keys that cause input delay',
-    category: 'keyboard',
-    requiredTier: LicenseTier.FREE,
-    applied: false,
-    impact: 'high',
-    risk: 'none',
-    gamingImpact: 'Faster key response, no missed inputs'
-  },
-  {
-    id: 'kb-disable-sticky-keys',
-    name: 'Disable Sticky Keys',
-    description: 'Prevents Sticky Keys popup during gaming',
-    category: 'keyboard',
-    requiredTier: LicenseTier.FREE,
-    applied: false,
-    impact: 'medium',
-    risk: 'none',
-    gamingImpact: 'Uninterrupted gameplay'
-  },
-  {
-    id: 'kb-disable-toggle-keys',
-    name: 'Disable Toggle Keys',
-    description: 'Prevents Toggle Keys popup during gaming',
-    category: 'keyboard',
-    requiredTier: LicenseTier.FREE,
-    applied: false,
-    impact: 'medium',
-    risk: 'none',
-    gamingImpact: 'Uninterrupted gameplay'
-  },
   // SYSTEM
   {
     id: 'sys-high-performance',

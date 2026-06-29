@@ -21,7 +21,6 @@ export async function scanSystem(userTier: LicenseTier = LicenseTier.FREE): Prom
   analyzeNvidia(systemInfo, userTier, issues)
   analyzeDebloat(systemInfo, userTier, issues)
   analyzeMouse(systemInfo, userTier, issues)
-  analyzeKeyboard(systemInfo, userTier, issues)
   analyzeSystem(systemInfo, userTier, issues)
 
   const score = calculateScore(issues)
@@ -219,47 +218,6 @@ function analyzeMouse(info: SystemInfo, tier: LicenseTier, issues: ScanIssue[]) 
       gamingImpact: 'Consistent sensitivity across games',
       requiredTier: LicenseTier.PRO,
       tweakId: 'mouse-optimize-pointer',
-    })
-  }
-}
-
-function analyzeKeyboard(info: SystemInfo, tier: LicenseTier, issues: ScanIssue[]) {
-  if (info.keyboard.filterKeys) {
-    issues.push({
-      id: 'kb-filter-keys',
-      title: 'Filter Keys is enabled',
-      description: 'Filter Keys ignores brief or repeated keystrokes, causing missed inputs.',
-      category: 'keyboard',
-      severity: 'high',
-      gamingImpact: 'Faster key response, no missed inputs',
-      requiredTier: LicenseTier.FREE,
-      tweakId: 'kb-disable-filter-keys',
-    })
-  }
-
-  if (info.keyboard.stickyKeys) {
-    issues.push({
-      id: 'kb-sticky-keys',
-      title: 'Sticky Keys is enabled',
-      description: 'Sticky Keys can intercept key combinations during gameplay.',
-      category: 'keyboard',
-      severity: 'medium',
-      gamingImpact: 'Uninterrupted gameplay',
-      requiredTier: LicenseTier.FREE,
-      tweakId: 'kb-disable-sticky-keys',
-    })
-  }
-
-  if (tier === LicenseTier.PRO || tier === LicenseTier.PREMIUM) {
-    issues.push({
-      id: 'kb-repeat',
-      title: 'Key repeat settings not optimized',
-      description: 'Default repeat delay may be too slow for fast input scenarios.',
-      category: 'keyboard',
-      severity: 'low',
-      gamingImpact: 'Faster repeated inputs',
-      requiredTier: LicenseTier.PRO,
-      tweakId: 'kb-optimize-repeat',
     })
   }
 }

@@ -15,7 +15,6 @@ const CATEGORY_META: Record<string, { color: string; label: string; icon: string
   network: { color: '#cccccc', label: 'Network', icon: '🌐' },
   debloat: { color: '#cccccc', label: 'Debloat', icon: '🧹' },
   mouse: { color: '#ffffff', label: 'Mouse', icon: '🖱' },
-  keyboard: { color: '#ffffff', label: 'Keyboard', icon: '⌨' },
   amd: { color: '#ffffff', label: 'AMD', icon: '🔴' },
   intel: { color: '#ffffff', label: 'Intel', icon: '🔵' },
   cpu: { color: '#ffffff', label: 'CPU', icon: '💻' },
@@ -30,7 +29,7 @@ const CATEGORY_META: Record<string, { color: string; label: string; icon: string
 
 const CATEGORY_ORDER: TweakCategory[] = [
   'system', 'cpu', 'memory', 'nvidia', 'amd', 'intel',
-  'network', 'keyboard', 'mouse', 'usb', 'storage',
+  'network', 'mouse', 'usb', 'storage',
   'windows', 'debloat', 'gaming', 'audio', 'services',
 ]
 

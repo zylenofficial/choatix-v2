@@ -29,7 +29,6 @@ export const featureRegistry: Feature[] = [
   { id: 'tweak_nvidia', name: 'NVIDIA Tweaks', description: 'GPU optimization for NVIDIA cards', tier: LicenseTier.PRO, gamingImpact: 'FPS stability and input lag reduction', category: 'tweak' },
   { id: 'tweak_debloat', name: 'System Debloat', description: 'Remove background bloat', tier: LicenseTier.PRO, gamingImpact: 'More resources for games', category: 'tweak' },
   { id: 'tweak_mouse', name: 'Mouse Optimization', description: 'Raw input and acceleration fixes', tier: LicenseTier.PRO, gamingImpact: 'Better aim stability', category: 'tweak' },
-  { id: 'tweak_keyboard', name: 'Keyboard Optimization', description: 'Input delay reduction', tier: LicenseTier.PRO, gamingImpact: 'Faster key response', category: 'tweak' },
   { id: 'tweak_advanced', name: 'Advanced Tweaks', description: 'Premium system optimizations', tier: LicenseTier.PREMIUM, gamingImpact: 'Maximum performance gains', category: 'tweak' },
   { id: 'scan_basic', name: 'Basic Scan', description: 'Quick system analysis', tier: LicenseTier.FREE, gamingImpact: 'Identifies performance bottlenecks', category: 'scan' },
   { id: 'scan_advanced', name: 'Advanced Scan', description: 'Deep system analysis', tier: LicenseTier.PRO, gamingImpact: 'Detailed bottleneck detection', category: 'scan' },

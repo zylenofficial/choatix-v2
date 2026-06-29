@@ -35,7 +35,6 @@ export function PerformancePage() {
     powerPlan: stats.system.powerPlan,
     gameMode: stats.system.gameMode,
     mouse: scanInfo?.mouse ?? { enhancePointerPrecision: false, pollingRateDetected: false },
-    keyboard: scanInfo?.keyboard ?? { filterKeys: false, stickyKeys: false, repeatDelay: 'Normal' },
   } : scanInfo
 
   const cpuUsage = info?.cpu?.usage ?? 0
@@ -103,8 +102,6 @@ export function PerformancePage() {
           <div className="space-y-3">
             <Row label="Game Mode" value={info?.gameMode === true || info?.gameMode === "1" ? 'Enabled' : info?.gameMode === false || info?.gameMode === "0" ? 'Disabled' : 'Not detected'} />
             <Row label="Mouse Acceleration" value={info?.mouse?.enhancePointerPrecision ? 'ON (bad)' : 'OFF (good)'} />
-            <Row label="Filter Keys" value={info?.keyboard?.filterKeys ? 'ON (bad)' : 'OFF (good)'} />
-            <Row label="Sticky Keys" value={info?.keyboard?.stickyKeys ? 'ON (bad)' : 'OFF (good)'} />
           </div>
         </div>
       </div>

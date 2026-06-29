@@ -16,6 +16,7 @@ const AutoPilotPage = dynamic(() => import('@/components/pages/AutoPilotPage').t
 const PerformancePage = dynamic(() => import('@/components/pages/PerformancePage').then(m => ({ default: m.PerformancePage })), { ssr: false })
 const RollbackPage = dynamic(() => import('@/components/pages/RollbackPage').then(m => ({ default: m.RollbackPage })), { ssr: false })
 const SettingsPage = dynamic(() => import('@/components/pages/SettingsPage').then(m => ({ default: m.SettingsPage })), { ssr: false })
+const AIOptimizerPage = dynamic(() => import('@/components/pages/AIOptimizerPage').then(m => ({ default: m.AIOptimizerPage })), { ssr: false })
 
 const PAGES: Record<Page, React.ComponentType> = {
   dashboard: DashboardPage,
@@ -26,6 +27,7 @@ const PAGES: Record<Page, React.ComponentType> = {
   performance: PerformancePage,
   rollback: RollbackPage,
   settings: SettingsPage,
+  'ai-optimizer': AIOptimizerPage,
 }
 
 export default function Home() {

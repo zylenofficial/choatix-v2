@@ -4,7 +4,7 @@ export enum LicenseTier {
   PREMIUM = 'PREMIUM'
 }
 
-export type TweakCategory = 'network' | 'nvidia' | 'debloat' | 'mouse' | 'keyboard' | 'system' | 'amd' | 'intel' | 'cpu' | 'memory' | 'storage' | 'windows' | 'gaming' | 'audio' | 'usb' | 'services'
+export type TweakCategory = 'network' | 'nvidia' | 'debloat' | 'mouse' | 'system' | 'amd' | 'intel' | 'cpu' | 'memory' | 'storage' | 'windows' | 'gaming' | 'audio' | 'usb' | 'services'
 
 declare global {
   interface Window {
@@ -197,11 +197,6 @@ export interface SystemInfo {
     name: string
     enhancePointerPrecision: boolean
     pollingRateDetected: boolean
-  }
-  keyboard: {
-    filterKeys: boolean
-    stickyKeys: boolean
-    repeatDelay: string
   }
 }
 
