@@ -15,9 +15,8 @@ type Tab = 'games' | 'autopilot'
 const GAME_GENRES: Record<string, string> = {
   'fortnite': 'Battle Royale', 'valorant': 'Tactical FPS', 'league-of-legends': 'MOBA',
   'cs2': 'Competitive FPS', 'apex-legends': 'Battle Royale', 'warzone': 'Battle Royale',
-  'overwatch-2': 'Hero Shooter', 'minecraft': 'Sandbox', 'roblox': 'Sandbox',
-  'fivem': 'Multiplayer', 'gta-v': 'Open World', 'rocket-league': 'Sports',
-  'rainbow-six-siege': 'Tactical FPS', 'pubg': 'Battle Royale', 'destiny-2': 'Looter Shooter',
+  'minecraft': 'Sandbox', 'fivem': 'Multiplayer', 'gta-v': 'Open World',
+  'rainbow-six-siege': 'Tactical FPS', 'pubg': 'Battle Royale',
 }
 
 export function AutoPilotPage() {

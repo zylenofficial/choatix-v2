@@ -105,23 +105,7 @@ export const gameProfiles: GameProfile[] = [
     ],
     priority: 1
   },
-  {
-    id: 'overwatch-2',
-    name: 'Overwatch 2',
-    executable: 'Overwatch.exe',
-    imagePath: '/Assets/Games/overwatch-2.jpg',
-    tweaks: [
-      'power-high-performance',
-      'game-mode',
-      'disable-fullscreen-optimizations',
-      'visual-effects-performance',
-      'network-latency-tuning',
-      'disable-background-apps',
-      'gpu-hardware-scheduling',
-      'disable-game-dvr'
-    ],
-    priority: 1
-  },
+
   {
     id: 'minecraft',
     name: 'Minecraft',
@@ -136,19 +120,7 @@ export const gameProfiles: GameProfile[] = [
     ],
     priority: 2
   },
-  {
-    id: 'roblox',
-    name: 'Roblox',
-    executable: 'RobloxPlayerBeta.exe',
-    imagePath: '/Assets/Games/roblox.jpg',
-    tweaks: [
-      'power-high-performance',
-      'game-mode',
-      'visual-effects-performance',
-      'disable-background-apps'
-    ],
-    priority: 2
-  },
+
   {
     id: 'fivem',
     name: 'FiveM',
@@ -182,23 +154,7 @@ export const gameProfiles: GameProfile[] = [
     ],
     priority: 1
   },
-  {
-    id: 'rocket-league',
-    name: 'Rocket League',
-    executable: 'RocketLeague.exe',
-    imagePath: '/Assets/Games/rocket-league.jpg',
-    tweaks: [
-      'power-high-performance',
-      'game-mode',
-      'disable-fullscreen-optimizations',
-      'visual-effects-performance',
-      'network-latency-tuning',
-      'disable-background-apps',
-      'gpu-hardware-scheduling',
-      'disable-game-dvr'
-    ],
-    priority: 1
-  },
+
   {
     id: 'rainbow-six-siege',
     name: 'Rainbow Six Siege',
@@ -234,21 +190,4 @@ export const gameProfiles: GameProfile[] = [
     ],
     priority: 1
   },
-  {
-    id: 'destiny-2',
-    name: 'Destiny 2',
-    executable: 'destiny2.exe',
-    imagePath: '/Assets/Games/destiny-2.jpg',
-    tweaks: [
-      'power-high-performance',
-      'game-mode',
-      'disable-fullscreen-optimizations',
-      'visual-effects-performance',
-      'network-latency-tuning',
-      'disable-background-apps',
-      'gpu-hardware-scheduling',
-      'disable-game-dvr'
-    ],
-    priority: 1
-  }
 ]
