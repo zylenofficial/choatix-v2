@@ -1,9 +1,9 @@
-const { BrowserWindow } = require('electron');
+const { BrowserWindow, ipcMain } = require('electron');
 const https = require('https');
 const http = require('http');
 
 const BACKEND_URL = process.env.BACKEND_URL || 'https://choatix-v2.onrender.com';
-const REDIRECT_URI = 'http://localhost:3001/api/auth/discord/callback';
+const REDIRECT_URI = 'https://choatix-v2.onrender.com/api/auth/discord/callback';
 
 class AuthService {
   constructor() {
@@ -31,48 +31,37 @@ class AuthService {
       return new Promise((resolve, reject) => {
         let resolved = false;
 
-        authWindow.webContents.on('will-navigate', (event, url) => {
-          if (url.startsWith(REDIRECT_URI) || url.includes('auth=success')) {
+        authWindow.webContents.on('page-title-updated', (event, title) => {
+          if (resolved) return;
+          if (title && title.startsWith('CHOATIX_AUTH:')) {
+            event.preventDefault();
             resolved = true;
             authWindow.close();
-            const parsed = new URL(url);
-            const discordId = parsed.searchParams.get('discordId');
-            const username = parsed.searchParams.get('username');
-            if (discordId) {
-              this._fetchLicense(discordId).then(license => {
-                this.currentUser = { discordId, username };
+            try {
+              const payload = JSON.parse(Buffer.from(title.replace('CHOATIX_AUTH:', ''), 'base64').toString());
+              if (payload.auth === 'success' && payload.discordId) {
+                const license = { tier: payload.tier || 'FREE', expires: null, active: true };
+                this.currentUser = { discordId: payload.discordId, username: payload.username };
                 this.licenseCache = license;
                 this.cacheExpiry = Date.now() + this.CACHE_TTL;
-                resolve({ success: true, discordId, username, license });
-              }).catch(err => {
-                resolve({ success: true, discordId, username, license: { tier: 'FREE', expires: null, active: true } });
-              });
-            } else {
-              reject(new Error('No Discord ID in callback'));
+                resolve({ success: true, discordId: payload.discordId, username: payload.username, license });
+              } else {
+                reject(new Error('Auth failed'));
+              }
+            } catch (e) {
+              reject(new Error('Invalid auth response'));
             }
+          } else if (title === 'CHOATIX_AUTH_ERROR') {
+            event.preventDefault();
+            resolved = true;
+            authWindow.close();
+            reject(new Error('Exchange failed'));
           }
         });
 
-        authWindow.webContents.on('did-navigate', (event, url) => {
-          if (resolved) return;
-          if (url.startsWith(REDIRECT_URI) || url.includes('auth=success')) {
-            resolved = true;
-            authWindow.close();
-            const parsed = new URL(url);
-            const discordId = parsed.searchParams.get('discordId');
-            const username = parsed.searchParams.get('username');
-            if (discordId) {
-              this._fetchLicense(discordId).then(license => {
-                this.currentUser = { discordId, username };
-                this.licenseCache = license;
-                this.cacheExpiry = Date.now() + this.CACHE_TTL;
-                resolve({ success: true, discordId, username, license });
-              }).catch(err => {
-                resolve({ success: true, discordId, username, license: { tier: 'FREE', expires: null, active: true } });
-              });
-            } else {
-              reject(new Error('No Discord ID in callback'));
-            }
+        authWindow.webContents.on('will-navigate', (event, url) => {
+          if (url.startsWith(REDIRECT_URI)) {
+            event.preventDefault();
           }
         });
 

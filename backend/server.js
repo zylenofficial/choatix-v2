@@ -484,6 +484,38 @@ app.get('/api/auth/discord/url', (req, res) => {
   res.json({ url, state });
 });
 
+app.get('/api/auth/discord/callback', async (req, res) => {
+  const { code } = req.query;
+  if (!code) {
+    return res.send('<html><body><p>No code provided.</p><script>window.close()</script></body></html>');
+  }
+  try {
+    const tokenData = await exchangeCode(code);
+    const userInfo = await fetchDiscordUser(tokenData.access_token);
+    const license = await getLicense(userInfo.id);
+    const now = new Date().toISOString();
+    if (!license) {
+      await saveLicense(userInfo.id, { tier: 'FREE', expiresAt: null, active: true, createdAt: now, updatedAt: now });
+    }
+    await saveOAuthToken(userInfo.id, {
+      accessToken: tokenData.access_token,
+      refreshToken: tokenData.refresh_token,
+      expiresAt: new Date(Date.now() + (tokenData.expires_in || 604800) * 1000).toISOString(),
+    });
+    const finalLicense = await getLicense(userInfo.id);
+    const payload = Buffer.from(JSON.stringify({
+      auth: 'success',
+      discordId: userInfo.id,
+      username: userInfo.username,
+      tier: finalLicense?.tier || 'FREE',
+    })).toString('base64');
+    res.send(`<html><body><p>Login successful. You may close this window.</p><script>document.title='CHOATIX_AUTH:${payload}';window.close();</script></body></html>`);
+  } catch (err) {
+    console.error('[OAuth] Callback error:', err.message);
+    res.send(`<html><body><p>Login failed. You may close this window.</p><script>document.title='CHOATIX_AUTH_ERROR';window.close();</script></body></html>`);
+  }
+});
+
 app.post('/api/auth/discord/token', async (req, res) => {
   const { code } = req.body;
   if (!code) return res.status(400).json({ error: 'Code required' });
