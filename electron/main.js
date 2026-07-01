@@ -7,8 +7,6 @@ const os = require("os");
 const { execSync, exec } = require("child_process");
 const { promisify } = require("util");
 const execAsync = promisify(exec);
-const authService = require("./auth");
-const powerPlanManager = require("./powerplan");
 
 function isAdmin() {
   try { execSync('net session', { windowsHide: true, stdio: 'ignore' }); return true; } catch { return false; }
@@ -1349,65 +1347,6 @@ process.on("unhandledRejection", (reason) => {
   console.error("Unhandled rejection:", reason);
 });
 
-// ══════════════════════════════════════
-// ── Discord Auth IPC ──
-// ══════════════════════════════════════
-ipcMain.handle("discord-login", async () => {
-  try {
-    const result = await authService.login(mainWindow);
-    if (result.success && result.license) {
-      await powerPlanManager.activateForTier(result.license.tier);
-    }
-    return result;
-  } catch (err) {
-    return { success: false, error: err.message };
-  }
-});
-
-ipcMain.handle("discord-logout", async (_event, discordId) => {
-  try {
-    await powerPlanManager.removeUnauthorizedPlans('FREE');
-    await powerPlanManager.activateForTier('FREE');
-    return await authService.logout(discordId);
-  } catch (err) {
-    return { success: false, error: err.message };
-  }
-});
-
-ipcMain.handle("check-license", async (_event, discordId) => {
-  if (!discordId) return { tier: 'FREE', expires: null, active: true };
-  try {
-    const license = await authService.getLicense(discordId);
-    return license;
-  } catch {
-    return { tier: 'FREE', expires: null, active: true };
-  }
-});
-
-ipcMain.handle("activate-power-plan", async (_event, tier) => {
-  try {
-    return await powerPlanManager.activateForTier(tier);
-  } catch (err) {
-    return { success: false, error: err.message };
-  }
-});
-
-ipcMain.handle("get-power-plan-status", async () => {
-  try {
-    return await powerPlanManager.getPlanStatus();
-  } catch (err) {
-    return {};
-  }
-});
-
-ipcMain.handle("remove-unauthorized-plans", async (_event, tier) => {
-  try {
-    await powerPlanManager.removeUnauthorizedPlans(tier);
-    return { success: true };
-  } catch (err) {
-    return { success: false, error: err.message };
-  }
-});
 
 app.whenReady().then(async () => {
   if (isDev) createWindow(0);

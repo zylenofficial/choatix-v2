@@ -48,13 +48,6 @@ declare global {
       loadAppState: () => Promise<{ success: boolean; state: any }>
       sendFeedback: (feedback: FeedbackData) => Promise<{ success: boolean; error?: string }>
       onSaveStateRequest: (cb: () => void) => void
-      // Discord Auth
-      discordLogin: () => Promise<{ success: boolean; discordId?: string; username?: string; license?: { tier: string; expires: string | null; active: boolean }; error?: string }>
-      discordLogout: (discordId: string) => Promise<{ success: boolean; error?: string }>
-      checkLicense: (discordId: string) => Promise<{ tier: string; expires: string | null; active: boolean }>
-      activatePowerPlan: (tier: string) => Promise<{ success: boolean; tier?: string; planName?: string; guid?: string; error?: string }>
-      getPowerPlanStatus: () => Promise<Record<string, { exists: boolean; guid: string | null; active: boolean }>>
-      removeUnauthorizedPlans: (tier: string) => Promise<{ success: boolean; error?: string }>
       isElectron: boolean
     }
   }
@@ -153,9 +146,6 @@ export interface LicenseInfo {
   key: string | null
   activated: boolean
   expiryDate: Date | null
-  discordId?: string | null
-  username?: string | null
-  lastVerified?: number | null
 }
 
 export interface SystemInfo {

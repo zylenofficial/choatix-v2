@@ -1,15 +1,9 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-const https = require('https');
-const http = require('http');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
-const CLIENT_ID = process.env.DISCORD_CLIENT_ID || '';
-const CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET || '';
-const REDIRECT_URI = process.env.DISCORD_REDIRECT_URI || 'http://localhost:3001/api/auth/discord/callback';
-const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
 
 app.use(cors());
 app.use(express.json());
@@ -19,8 +13,6 @@ let memKeys = {};
 let memUsers = {};
 let memReferrals = {};
 let memPartners = {};
-let memLicenses = {};
-let memOAuthTokens = {};
 
 function hashCode(str) {
   let hash = 0;
@@ -94,20 +86,6 @@ async function initDB() {
       code TEXT,
       referee_id TEXT,
       used_at TEXT
-    );
-    CREATE TABLE IF NOT EXISTS licenses_table (
-      discord_id TEXT PRIMARY KEY,
-      tier TEXT NOT NULL DEFAULT 'FREE',
-      expires_at TEXT,
-      active BOOLEAN DEFAULT true,
-      created_at TEXT,
-      updated_at TEXT
-    );
-    CREATE TABLE IF NOT EXISTS oauth_tokens_table (
-      discord_id TEXT PRIMARY KEY,
-      access_token TEXT,
-      refresh_token TEXT,
-      expires_at TEXT
     );
   `);
   console.log('PostgreSQL connected');
@@ -228,133 +206,6 @@ async function getUserReferral(discordId) {
   return Object.values(memReferrals).find(r => r.referrerId === discordId) || null;
 }
 
-// ─── License DB helpers ────────────────────────────────────────
-async function getLicense(discordId) {
-  if (app.locals.pool) {
-    const r = await app.locals.pool.query('SELECT * FROM licenses_table WHERE discord_id = $1', [discordId]);
-    return r.rows[0] || null;
-  }
-  return memLicenses[discordId] || null;
-}
-
-async function saveLicense(discordId, data) {
-  if (app.locals.pool) {
-    await app.locals.pool.query(
-      'INSERT INTO licenses_table (discord_id, tier, expires_at, active, created_at, updated_at) VALUES ($1,$2,$3,$4,$5,$6) ON CONFLICT (discord_id) DO UPDATE SET tier=$2, expires_at=$3, active=$4, updated_at=$6',
-      [discordId, data.tier, data.expiresAt, data.active, data.createdAt, data.updatedAt]
-    );
-  } else {
-    memLicenses[discordId] = data;
-  }
-}
-
-async function deleteLicense(discordId) {
-  if (app.locals.pool) {
-    await app.locals.pool.query('DELETE FROM licenses_table WHERE discord_id = $1', [discordId]);
-  } else {
-    delete memLicenses[discordId];
-  }
-}
-
-async function getOAuthToken(discordId) {
-  if (app.locals.pool) {
-    const r = await app.locals.pool.query('SELECT * FROM oauth_tokens_table WHERE discord_id = $1', [discordId]);
-    return r.rows[0] || null;
-  }
-  return memOAuthTokens[discordId] || null;
-}
-
-async function saveOAuthToken(discordId, data) {
-  if (app.locals.pool) {
-    await app.locals.pool.query(
-      'INSERT INTO oauth_tokens_table (discord_id, access_token, refresh_token, expires_at) VALUES ($1,$2,$3,$4) ON CONFLICT (discord_id) DO UPDATE SET access_token=$2, refresh_token=$3, expires_at=$4',
-      [discordId, data.accessToken, data.refreshToken, data.expiresAt]
-    );
-  } else {
-    memOAuthTokens[discordId] = data;
-  }
-}
-
-async function hasUsedReferral(refereeId) {
-  if (app.locals.pool) {
-    const r = await app.locals.pool.query('SELECT * FROM referral_uses_table WHERE referee_id = $1', [refereeId]);
-    return r.rows.length > 0;
-  }
-  return false;
-}
-
-const SECRET = 'choatix-v2-secret-2024';
-
-// ─── Discord OAuth helpers ──────────────────────────────────
-function discordApiRequest(method, path, body, token) {
-  return new Promise((resolve, reject) => {
-    const options = {
-      hostname: 'discord.com',
-      path,
-      method,
-      headers: { 'Content-Type': 'application/json' },
-    };
-    if (token) options.headers['Authorization'] = `Bearer ${token}`;
-    const req = https.request(options, (res) => {
-      let data = '';
-      res.on('data', (chunk) => { data += chunk; });
-      res.on('end', () => {
-        try { resolve(JSON.parse(data)); } catch { reject(new Error('Invalid JSON')); }
-      });
-    });
-    req.on('error', reject);
-    if (body) req.write(JSON.stringify(body));
-    req.end();
-  });
-}
-
-async function exchangeCode(code) {
-  const data = await discordApiRequest('POST', '/api/oauth2/token', null);
-  const params = new URLSearchParams({
-    client_id: CLIENT_ID,
-    client_secret: CLIENT_SECRET,
-    grant_type: 'authorization_code',
-    code,
-    redirect_uri: REDIRECT_URI,
-  });
-  return new Promise((resolve, reject) => {
-    const req = https.request({
-      hostname: 'discord.com',
-      path: '/api/oauth2/token',
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    }, (res) => {
-      let d = '';
-      res.on('data', (chunk) => { d += chunk; });
-      res.on('end', () => {
-        try { resolve(JSON.parse(d)); } catch { reject(new Error('Invalid JSON from Discord')); }
-      });
-    });
-    req.on('error', reject);
-    req.write(params.toString());
-    req.end();
-  });
-}
-
-async function fetchDiscordUser(accessToken) {
-  return new Promise((resolve, reject) => {
-    const req = https.request({
-      hostname: 'discord.com',
-      path: '/api/users/@me',
-      method: 'GET',
-      headers: { 'Authorization': `Bearer ${accessToken}` },
-    }, (res) => {
-      let d = '';
-      res.on('data', (chunk) => { d += chunk; });
-      res.on('end', () => {
-        try { resolve(JSON.parse(d)); } catch { reject(new Error('Invalid JSON from Discord')); }
-      });
-    });
-    req.on('error', reject);
-    req.end();
-  });
-}
-
 // ─── Health ────────────────────────────────────────────────────
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', db: DB_URL ? 'postgresql' : 'memory', uptime: process.uptime() });
@@ -449,9 +300,6 @@ app.post('/api/referral/redeem', async (req, res) => {
   if (referral.referrer_id === refereeId) return res.json({ success: false, message: "You can't use your own referral code" });
   if (referral.uses >= referral.max_uses) return res.json({ success: false, message: 'Referral code has reached max uses' });
 
-  const alreadyUsed = await hasUsedReferral(refereeId);
-  if (alreadyUsed) return res.json({ success: false, message: 'You already used a referral code' });
-
   await useReferral(code.toUpperCase(), refereeId);
 
   const key = generateKey('PRO');
@@ -474,136 +322,6 @@ app.get('/api/referral/user/:discordId', async (req, res) => {
   const referral = await getUserReferral(req.params.discordId);
   if (!referral) return res.status(404).json({ error: 'No referral code found' });
   res.json({ code: referral.code, uses: referral.uses, maxUses: referral.max_uses });
-});
-
-// ─── Discord OAuth2 ──────────────────────────────────────────
-app.get('/api/auth/discord/url', (req, res) => {
-  if (!CLIENT_ID) return res.status(500).json({ error: 'Discord client ID not configured' });
-  const state = Math.random().toString(36).substring(2);
-  const url = `https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&scope=identify&state=${state}`;
-  res.json({ url, state });
-});
-
-app.get('/api/auth/discord/callback', async (req, res) => {
-  const { code } = req.query;
-  if (!code) {
-    return res.send('<html><body><p>No code provided.</p><script>window.close()</script></body></html>');
-  }
-  try {
-    const tokenData = await exchangeCode(code);
-    const userInfo = await fetchDiscordUser(tokenData.access_token);
-    const license = await getLicense(userInfo.id);
-    const now = new Date().toISOString();
-    if (!license) {
-      await saveLicense(userInfo.id, { tier: 'FREE', expiresAt: null, active: true, createdAt: now, updatedAt: now });
-    }
-    await saveOAuthToken(userInfo.id, {
-      accessToken: tokenData.access_token,
-      refreshToken: tokenData.refresh_token,
-      expiresAt: new Date(Date.now() + (tokenData.expires_in || 604800) * 1000).toISOString(),
-    });
-    const finalLicense = await getLicense(userInfo.id);
-    const payload = Buffer.from(JSON.stringify({
-      auth: 'success',
-      discordId: userInfo.id,
-      username: userInfo.username,
-      tier: finalLicense?.tier || 'FREE',
-    })).toString('base64');
-    res.send(`<html><body><p>Login successful. You may close this window.</p><script>document.title='CHOATIX_AUTH:${payload}';window.close();</script></body></html>`);
-  } catch (err) {
-    console.error('[OAuth] Callback error:', err.message);
-    res.send(`<html><body><p>Login failed. You may close this window.</p><script>document.title='CHOATIX_AUTH_ERROR';window.close();</script></body></html>`);
-  }
-});
-
-app.post('/api/auth/discord/token', async (req, res) => {
-  const { code } = req.body;
-  if (!code) return res.status(400).json({ error: 'Code required' });
-  try {
-    const tokenData = await exchangeCode(code);
-    const userInfo = await fetchDiscordUser(tokenData.access_token);
-    const license = await getLicense(userInfo.id);
-    const now = new Date().toISOString();
-    if (!license) {
-      await saveLicense(userInfo.id, { tier: 'FREE', expiresAt: null, active: true, createdAt: now, updatedAt: now });
-    }
-    await saveOAuthToken(userInfo.id, {
-      accessToken: tokenData.access_token,
-      refreshToken: tokenData.refresh_token,
-      expiresAt: new Date(Date.now() + (tokenData.expires_in || 604800) * 1000).toISOString(),
-    });
-    const finalLicense = await getLicense(userInfo.id);
-    res.json({
-      success: true,
-      discordId: userInfo.id,
-      username: userInfo.username,
-      discriminator: userInfo.discriminator || '0',
-      avatar: userInfo.avatar,
-      license: {
-        tier: finalLicense?.tier || 'FREE',
-        expires: finalLicense?.expires_at || null,
-        active: finalLicense?.active !== false,
-      },
-    });
-  } catch (err) {
-    console.error('[OAuth] Token exchange error:', err.message);
-    res.status(500).json({ error: 'Failed to exchange code' });
-  }
-});
-
-app.post('/api/auth/discord/logout', async (req, res) => {
-  const { discordId } = req.body;
-  if (!discordId) return res.status(400).json({ error: 'Discord ID required' });
-  try {
-    if (app.locals.pool) {
-      await app.locals.pool.query('DELETE FROM oauth_tokens_table WHERE discord_id = $1', [discordId]);
-    } else {
-      delete memOAuthTokens[discordId];
-    }
-  } catch {}
-  res.json({ success: true });
-});
-
-// ─── License endpoints ────────────────────────────────────────
-app.get('/api/license/:discordId', async (req, res) => {
-  const user = await getUser(req.params.discordId);
-  const license = await getLicense(req.params.discordId);
-  const tier = license?.tier || user?.tier || null;
-  if (!tier) return res.status(404).json({ error: 'No license found' });
-  const isActive = license?.active !== false;
-  const expires = license?.expires_at || user?.activated_at || null;
-  res.json({ success: true, plan: tier, expires, active: isActive });
-});
-
-app.post('/api/license/activate', async (req, res) => {
-  const { discordId, tier, expiresInDays } = req.body;
-  if (!discordId || !tier) return res.status(400).json({ error: 'discordId and tier required' });
-  if (!['FREE', 'PRO', 'PREMIUM'].includes(tier)) return res.status(400).json({ error: 'Invalid tier' });
-  const now = new Date().toISOString();
-  const expiresAt = expiresInDays ? new Date(Date.now() + expiresInDays * 86400000).toISOString() : null;
-  await saveLicense(discordId, { tier, expiresAt, active: true, createdAt: now, updatedAt: now });
-  res.json({ success: true, plan: tier, expires: expiresAt, active: true });
-});
-
-app.post('/api/license/deactivate', async (req, res) => {
-  const { discordId } = req.body;
-  if (!discordId) return res.status(400).json({ error: 'discordId required' });
-  const license = await getLicense(discordId);
-  if (!license) return res.status(404).json({ error: 'No license found' });
-  const now = new Date().toISOString();
-  await saveLicense(discordId, { ...license, active: false, updatedAt: now });
-  res.json({ success: true });
-});
-
-app.post('/api/license/change-tier', async (req, res) => {
-  const { discordId, tier, expiresInDays, adminSecret } = req.body;
-  if (adminSecret !== 'choatix-admin-2024') return res.status(403).json({ error: 'Unauthorized' });
-  if (!discordId || !tier) return res.status(400).json({ error: 'discordId and tier required' });
-  if (!['FREE', 'PRO', 'PREMIUM'].includes(tier)) return res.status(400).json({ error: 'Invalid tier' });
-  const now = new Date().toISOString();
-  const expiresAt = expiresInDays ? new Date(Date.now() + expiresInDays * 86400000).toISOString() : null;
-  await saveLicense(discordId, { tier, expiresAt, active: true, createdAt: now, updatedAt: now });
-  res.json({ success: true, plan: tier, expires: expiresAt, active: true });
 });
 
 // ─── Key / Redeem (legacy) ──────────────────────────────────
@@ -633,13 +351,6 @@ app.post('/api/license/verify-key', async (req, res) => {
       tier: stored.tier,
       key: key.trim().toUpperCase(),
       activatedAt: new Date().toISOString(),
-    });
-    await saveLicense(discordId, {
-      tier: stored.tier,
-      expiresAt: stored.expiry,
-      active: true,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
     });
   }
 
@@ -705,8 +416,7 @@ app.get('/api/admin/keys', async (req, res) => {
     const users = await app.locals.pool.query('SELECT * FROM users_table');
     const partners = await app.locals.pool.query('SELECT * FROM partners_table');
     const referrals = await app.locals.pool.query('SELECT * FROM referrals_table');
-    const licenses = await app.locals.pool.query('SELECT * FROM licenses_table');
-    res.json({ keys: keys.rows, users: users.rows, partners: partners.rows, referrals: referrals.rows, licenses: licenses.rows });
+    res.json({ keys: keys.rows, users: users.rows, partners: partners.rows, referrals: referrals.rows });
   } else {
     res.json({ keys: memKeys, users: memUsers, partners: memPartners, referrals: memReferrals });
   }
