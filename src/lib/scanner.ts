@@ -19,7 +19,7 @@ export async function scanSystem(userTier: LicenseTier = LicenseTier.FREE): Prom
   const issues: ScanIssue[] = []
   analyzeNetwork(systemInfo, userTier, issues)
   analyzeNvidia(systemInfo, userTier, issues)
-  analyzeDebloat(systemInfo, userTier, issues)
+  analyzeSystemHealth(systemInfo, userTier, issues)
   analyzeMouse(systemInfo, userTier, issues)
   analyzeSystem(systemInfo, userTier, issues)
 
@@ -82,17 +82,6 @@ function analyzeNetwork(info: SystemInfo, tier: LicenseTier, issues: ScanIssue[]
 function analyzeNvidia(info: SystemInfo, tier: LicenseTier, issues: ScanIssue[]) {
   if (info.gpu.vendor === 'nvidia') {
     issues.push({
-      id: 'nv-power-mode',
-      title: 'GPU power mode may limit performance',
-      description: `NVIDIA GPU detected: ${info.gpu.model}. Power management may not be set to maximum performance.`,
-      category: 'nvidia',
-      severity: 'high',
-      gamingImpact: 'FPS stability, eliminates power throttling',
-      requiredTier: LicenseTier.FREE,
-      tweakId: 'nv-max-power',
-    })
-
-    issues.push({
       id: 'nv-vsync',
       title: 'V-Sync may cause input lag',
       description: 'Vertical sync adds frame delay. Disabling it reduces input latency.',
@@ -131,54 +120,28 @@ function analyzeNvidia(info: SystemInfo, tier: LicenseTier, issues: ScanIssue[])
   }
 }
 
-function analyzeDebloat(info: SystemInfo, tier: LicenseTier, issues: ScanIssue[]) {
+function analyzeSystemHealth(info: SystemInfo, tier: LicenseTier, issues: ScanIssue[]) {
   if (info.startup.count > 8) {
     issues.push({
-      id: 'debloat-startup-high',
+      id: 'system-startup-high',
       title: `${info.startup.count} startup programs detected`,
       description: `Programs: ${info.startup.programs.slice(0, 5).join(', ')}${info.startup.count > 5 ? '...' : ''}`,
-      category: 'debloat',
+      category: 'system',
       severity: info.startup.count > 15 ? 'high' : 'medium',
       gamingImpact: 'Faster boot, more available RAM',
       requiredTier: LicenseTier.FREE,
-      tweakId: 'debloat-disable-startup',
     })
   }
 
   if (info.processes.background > 80) {
     issues.push({
-      id: 'debloat-background-high',
+      id: 'system-background-high',
       title: `${info.processes.background} background processes running`,
       description: 'High background process count consumes CPU and RAM resources.',
-      category: 'debloat',
+      category: 'system',
       severity: info.processes.background > 120 ? 'high' : 'medium',
       gamingImpact: 'More CPU/RAM available for games',
       requiredTier: LicenseTier.FREE,
-      tweakId: 'debloat-remove-background',
-    })
-  }
-
-  issues.push({
-    id: 'debloat-superfetch',
-    title: 'Superfetch/SysMain may be consuming resources',
-    description: 'Windows prefetching service can use disk and RAM during gaming.',
-    category: 'debloat',
-    severity: 'low',
-    gamingImpact: 'Reduced disk usage during gaming',
-    requiredTier: LicenseTier.FREE,
-    tweakId: 'debloat-superfetch',
-  })
-
-  if (tier === LicenseTier.PRO || tier === LicenseTier.PREMIUM) {
-    issues.push({
-      id: 'debloat-telemetry',
-      title: 'Telemetry services running in background',
-      description: 'Windows telemetry data collection uses CPU and network resources.',
-      category: 'debloat',
-      severity: 'medium',
-      gamingImpact: 'Reduced background CPU usage',
-      requiredTier: LicenseTier.PRO,
-      tweakId: 'debloat-disable-telemetry',
     })
   }
 }
@@ -196,17 +159,6 @@ function analyzeMouse(info: SystemInfo, tier: LicenseTier, issues: ScanIssue[]) 
       tweakId: 'mouse-disable-acceleration',
     })
   }
-
-  issues.push({
-    id: 'mouse-raw-input',
-    title: 'Raw input mode recommended',
-    description: 'Forcing raw mouse input bypasses Windows processing for direct response.',
-    category: 'mouse',
-    severity: 'medium',
-    gamingImpact: 'Direct mouse-to-game response',
-    requiredTier: LicenseTier.FREE,
-    tweakId: 'mouse-raw-input',
-  })
 
   if (tier === LicenseTier.PRO || tier === LicenseTier.PREMIUM) {
     issues.push({
@@ -259,7 +211,6 @@ function analyzeSystem(info: SystemInfo, tier: LicenseTier, issues: ScanIssue[])
       severity: 'high',
       gamingImpact: 'More resources for games',
       requiredTier: LicenseTier.FREE,
-      tweakId: 'debloat-remove-background',
     })
   }
 

@@ -18,7 +18,7 @@ const NAV: { id: Page; label: string; icon: any; premium?: boolean }[] = [
   { id: 'best-tweaks', label: 'Best Tweaks', icon: Sparkles },
   { id: 'optimizer', label: 'Optimizer', icon: Zap },
   { id: 'autopilot', label: 'AutoPilot', icon: Gamepad2 },
-  { id: 'ai-optimizer', label: 'AI Optimizer', icon: Bot, premium: true },
+  { id: 'ai-optimizer', label: 'Suggestion Optimizer', icon: Bot, premium: true },
   { id: 'performance', label: 'Performance', icon: Gauge },
   { id: 'rollback', label: 'Rollback', icon: History },
   { id: 'settings', label: 'Settings', icon: Settings },
@@ -28,13 +28,8 @@ export function Sidebar({ active, onNavigate, tier, onUpgrade, rollbackCount }: 
   return (
     <aside className="w-56 h-full flex flex-col relative" style={{ background: '#000000', borderRight: '1px solid var(--border-subtle)' }}>
       {/* Logo */}
-      <div className="h-14 flex items-center px-5 relative">
-        <div className="flex items-center gap-3">
-          <div>
-            <div className="text-[13px] font-bold tracking-[0.06em]" style={{ color: 'var(--text-primary)' }}>CHOATIX</div>
-            <div className="text-[8px] font-medium" style={{ color: 'var(--text-muted)' }}>v2.0</div>
-          </div>
-        </div>
+      <div className="flex items-center px-5 py-4 relative">
+        <img src="/choatix-logo.png" alt="CHOATIX" style={{ height: 100, width: 'auto', objectFit: 'contain', filter: 'brightness(0) invert(1)' }} />
       </div>
 
       <div className="mx-4 separator" />

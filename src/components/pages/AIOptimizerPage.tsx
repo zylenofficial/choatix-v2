@@ -1,6 +1,8 @@
 'use client'
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
+import { useStore } from '@/store/useStore'
+import { createRollbackEntry } from '@/lib/tweaks'
 import { Bot, Cpu, Monitor, Zap, RotateCcw, CheckCircle, Loader2, Sparkles, Download, TrendingUp, Shield, AlertTriangle, ArrowRight, ChevronDown, ChevronRight, Gamepad2, Target, Crosshair, HardDrive, Wifi, MousePointer, MemoryStick, Gauge } from 'lucide-react'
 
 interface Spec {
@@ -69,7 +71,7 @@ function toSpec(data: any): Spec {
     cpu: si.cpu?.model || 'Unknown', cpuCores: si.cpu?.cores || 0, cpuThreads: si.cpu?.threads || 0,
     cpuClock: si.cpu?.maxClockMhz || 0, cpuUsage: si.cpu?.usage || 0,
     gpu: si.gpu?.model || 'Unknown', gpuVram: si.gpu?.vram || 0, gpuVendor: si.gpu?.vendor || '',
-    ramTotal: si.ram?.total || 0, ramUsed: si.ram?.used || 0,
+    ramTotal: Math.round((si.ram?.total || 0) / 1024), ramUsed: Math.round(((si.ram?.total || 0) - (si.ram?.available || si.ram?.free || 0)) / 1024),
     powerPlan: si.powerPlan || 'Unknown', gameMode: si.gameMode,
     networkLatency: si.network?.latencyMs ?? null, mouseAccel: si.mouse?.enhancePointerPrecision || false,
     bgProcesses: si.processes?.background || 0, startupCount: si.startup?.count || 0,
@@ -89,41 +91,22 @@ function generateFixes(s: Spec): Fix[] {
     f.push({ id: `${++n}`, title: 'Enable Windows Game Mode', category: 'System', before: 'Disabled', after: 'Enabled', fps: '+1–3', fpsNum: [1, 3], risk: 'Safe', tweakId: 'sys-enable-game-mode', why: 'Game Mode prioritizes your game and blocks Windows Update during gameplay.', priority: 6 })
   }
   f.push({ id: `${++n}`, title: 'Disable fullscreen optimizations', category: 'System', before: 'Enabled', after: 'Disabled', fps: '+1–4', fpsNum: [1, 4], risk: 'Safe', tweakId: 'sys-disable-fullscreen-opt', why: 'Windows overlay adds latency in fullscreen games. Disabling gives cleaner frame delivery.', priority: 7 })
-  f.push({ id: `${++n}`, title: 'Set visual effects to Best Performance', category: 'System', before: 'Let Windows choose', after: 'Best Performance', fps: '+2–8', fpsNum: [2, 8], risk: 'Safe', tweakId: 'sys-visual-effects', why: 'Disables transparency, shadows, and animations. Frees GPU/CPU for your game.', priority: 8 })
-  if (s.bgProcesses > 20) {
-    f.push({ id: `${++n}`, title: `Remove bloatware apps (Bing Weather, News, Sports)`, category: 'Performance', before: 'Installed', after: 'Removed', fps: '+2–8', fpsNum: [2, 8], risk: 'Safe', tweakId: 'debloat-remove-background', why: `You have ${s.bgProcesses} background processes. Removing unused bloatware apps frees RAM and CPU.`, priority: 9 })
-  }
-  if (s.startupCount > 5) {
-    f.push({ id: `${++n}`, title: `Disable ${s.startupCount} startup programs`, category: 'Performance', before: `${s.startupCount} programs`, after: '< 5', fps: '+2–8', fpsNum: [2, 8], risk: 'Safe', tweakId: 'debloat-disable-startup', why: 'Too many startup programs slow your PC and waste RAM.', priority: 5 })
-  }
-  f.push({ id: `${++n}`, title: 'Disable SysMain (Superfetch)', category: 'Performance', before: 'Running', after: 'Disabled', fps: '+2–6', fpsNum: [2, 6], risk: 'Safe', tweakId: 'debloat-superfetch', why: 'Superfetch preloads apps into RAM, competing with games for memory.', priority: 4 })
   if (gpu.includes('nvidia') || gpu.includes('geforce') || gpu.includes('rtx') || gpu.includes('gtx')) {
-    f.push({ id: `${++n}`, title: 'Set GPU power to Maximum Performance', category: 'GPU', before: 'Optimal Power', after: 'Max Performance', fps: '+3–12', fpsNum: [3, 12], risk: 'Safe', tweakId: 'nv-max-power', why: 'GPU drops clock speed to save power. Max Performance keeps it at peak during gaming.', priority: 9 })
     f.push({ id: `${++n}`, title: 'Disable driver V-Sync', category: 'GPU', before: 'Enabled', after: 'Off', fps: '+1–5', fpsNum: [1, 5], risk: 'Safe', tweakId: 'nv-disable-vsync', why: 'Driver V-Sync adds input lag. Use G-Sync or in-game V-Sync instead.', priority: 6 })
     f.push({ id: `${++n}`, title: 'Enable Low Latency Mode', category: 'GPU', before: 'Off', after: 'On', fps: '+0–2', fpsNum: [0, 2], risk: 'Safe', tweakId: 'nv-low-latency', why: 'Reduces render queue to minimum frames. Less input lag.', priority: 5 })
-    f.push({ id: `${++n}`, title: 'Set texture filtering to Performance', category: 'GPU', before: 'Quality', after: 'Performance', fps: '+2–6', fpsNum: [2, 6], risk: 'Safe', tweakId: 'nv-texture-filtering', why: 'Reduces anisotropic filtering. Almost no visual difference, small FPS boost.', priority: 4 })
   }
   if (gpu.includes('radeon') || gpu.includes('rx') || gpu.includes('amd')) {
     f.push({ id: `${++n}`, title: 'Disable Radeon Chill', category: 'GPU', before: 'Unknown', after: 'Off', fps: '+5–20', fpsNum: [5, 20], risk: 'Safe', why: 'Radeon Chill caps FPS to save power. Turn it off for maximum performance.', priority: 8 })
     f.push({ id: `${++n}`, title: 'Enable Radeon Anti-Lag', category: 'GPU', before: 'Unknown', after: 'On', fps: '+0–3', fpsNum: [0, 3], risk: 'Safe', why: 'Reduces CPU-GPU frame pacing delay.', priority: 5 })
   }
-  f.push({ id: `${++n}`, title: 'Disable CPU core parking', category: 'CPU', before: 'Some parked', after: 'All cores active', fps: '+3–12', fpsNum: [3, 12], risk: 'Safe', tweakId: 'cpu-core-parking-disable', why: 'Parked cores cannot process game threads. Unparking gives full CPU power.', priority: 8 })
-  f.push({ id: `${++n}`, title: 'Set game to High CPU priority', category: 'CPU', before: 'Normal', after: 'High', fps: '+3–10', fpsNum: [3, 10], risk: 'Low', tweakId: 'sys-cpu-priority', why: 'Game gets CPU time before background processes.', priority: 7 })
-  f.push({ id: `${++n}`, title: 'Clean stale memory pages', category: 'RAM', before: 'Idle pages', after: 'Cleaned', fps: '+2–8', fpsNum: [2, 8], risk: 'Safe', tweakId: 'memory-wake-cleaner', why: 'Frees unused RAM pages so your game has more memory available.', priority: 5 })
-  if (s.ramTotal <= 8) {
-    f.push({ id: `${++n}`, title: 'Optimize page file for low RAM', category: 'RAM', before: 'System Managed', after: '1.5x RAM', fps: '+3–10', fpsNum: [3, 10], risk: 'Low', tweakId: 'memory-pagefile-manager', why: `Only ${s.ramTotal}GB RAM. Proper page file prevents crashes.`, priority: 7 })
-  }
   f.push({ id: `${++n}`, title: 'Enable SSD TRIM', category: 'Storage', before: 'Unknown', after: 'Enabled', fps: '+0–2', fpsNum: [0, 2], risk: 'Safe', tweakId: 'storage-trim-optimization', why: 'Keeps your SSD fast over time.', priority: 2 })
-  f.push({ id: `${++n}`, title: 'Enable write cache', category: 'Storage', before: 'Unknown', after: 'Enabled', fps: '+1–4', fpsNum: [1, 4], risk: 'Safe', tweakId: 'storage-write-cache', why: 'Buffers disk writes in RAM. Reduces I/O stutter.', priority: 3 })
   f.push({ id: `${++n}`, title: 'Optimize DNS servers', category: 'Network', before: 'ISP default', after: 'Cloudflare/Google', fps: 'Ping only', fpsNum: [0, 0], risk: 'Safe', tweakId: 'net-optimize-dns', why: 'Faster DNS = faster game server connections.', priority: 3 })
-  f.push({ id: `${++n}`, title: 'Block background updates while gaming', category: 'Network', before: 'Enabled', after: 'Disabled', fps: 'Ping only', fpsNum: [0, 0], risk: 'Safe', tweakId: 'net-disable-background-updates', why: 'Windows Update steals bandwidth during matches.', priority: 4 })
   if (s.networkLatency && s.networkLatency > 30) {
     f.push({ id: `${++n}`, title: `Network latency is ${s.networkLatency}ms (should be < 20ms)`, category: 'Network', before: `${s.networkLatency}ms`, after: '< 20ms', fps: 'Ping only', fpsNum: [0, 0], risk: 'Info', why: 'Use Ethernet cable instead of WiFi. Close bandwidth-heavy apps.', priority: 7 })
   }
   if (s.mouseAccel) {
     f.push({ id: `${++n}`, title: 'Disable mouse acceleration', category: 'Input', before: 'ON', after: 'OFF', fps: 'Aim fix', fpsNum: [0, 0], risk: 'Safe', tweakId: 'mouse-disable-acceleration', why: 'Mouse acceleration makes aiming inconsistent. Raw input gives 1:1 movement.', priority: 7 })
   }
-  f.push({ id: `${++n}`, title: 'Force raw mouse input', category: 'Input', before: 'Default', after: 'Raw Input ON', fps: 'Aim fix', fpsNum: [0, 0], risk: 'Safe', tweakId: 'mouse-raw-input', why: 'Bypasses Windows mouse processing for lowest input lag.', priority: 5 })
   if (s.ramTotal < 8) {
     f.push({ id: `${++n}`, title: `Only ${s.ramTotal}GB RAM — UPGRADE NEEDED`, category: 'Hardware', before: `${s.ramTotal}GB`, after: '16GB minimum', fps: '+10–30', fpsNum: [10, 30], risk: 'Info', why: 'Modern games need 16GB RAM. This is your biggest bottleneck.', priority: 10 })
   } else if (s.ramTotal < 16) {
@@ -148,6 +131,7 @@ const SCAN_STEPS = [
 ]
 
 export function AIOptimizerPage() {
+  const { addRollbackEntry } = useStore()
   const [spec, setSpec] = useState<Spec | null>(null)
   const [scanning, setScanning] = useState(false)
   const [game, setGame] = useState<string>('')
@@ -202,7 +186,13 @@ export function AIOptimizerPage() {
 
   const applyFix = async (tweakId: string) => {
     if (!window.electronAPI?.applyTweak) return
-    try { await window.electronAPI.applyTweak(tweakId); setDone(p => new Set(p).add(tweakId)) } catch {}
+    try {
+      const result = await window.electronAPI.applyTweak(tweakId)
+      if (result.success) {
+        addRollbackEntry(createRollbackEntry(tweakId))
+        setDone(p => new Set(p).add(tweakId))
+      }
+    } catch {}
   }
 
   const applyAll = async () => {
@@ -248,7 +238,7 @@ export function AIOptimizerPage() {
 
   const exportReport = () => {
     if (!fixes || !spec) return
-    let r = `CHOATIX AI FPS OPTIMIZER REPORT\n${'='.repeat(40)}\n\n`
+    let r = `CHOATIX OPTIMIZATION REPORT\n${'='.repeat(40)}\n\n`
     r += `CPU: ${spec.cpu} (${spec.cpuCores}C/${spec.cpuThreads}T)\nGPU: ${spec.gpu} (${spec.gpuVram}GB)\nRAM: ${spec.ramTotal}GB\n`
     r += `Power: ${spec.powerPlan} | Game Mode: ${spec.gameMode ? 'On' : 'Off'}\n`
     r += `Score: ${score}/100 | Potential: +${totalFps[0]}–${totalFps[1]} FPS\n\n`
@@ -275,7 +265,7 @@ export function AIOptimizerPage() {
               </div>
             </div>
             <div>
-              <h1 className="text-xl font-bold text-white tracking-tight">AI FPS Optimizer</h1>
+              <h1 className="text-xl font-bold text-white tracking-tight">Suggestion Optimizer</h1>
               <p className="text-xs text-[var(--text-tertiary)] mt-0.5">Scan your system → Identify bottlenecks → Maximize FPS</p>
             </div>
           </div>
@@ -369,7 +359,7 @@ export function AIOptimizerPage() {
                 {[
                   { label: 'Processor', icon: <Cpu className="w-4 h-4" />, name: spec.cpu, sub: `${spec.cpuCores}C / ${spec.cpuThreads}T • ${spec.cpuClock}MHz`, usage: spec.cpuUsage },
                   { label: 'Graphics', icon: <Monitor className="w-4 h-4" />, name: spec.gpu, sub: `${spec.gpuVram}GB VRAM • ${spec.gpuVendor}`, usage: null },
-                  { label: 'Memory', icon: <MemoryStick className="w-4 h-4" />, name: `${spec.ramTotal} GB`, sub: `${Math.round(spec.ramUsed)}GB used • ${spec.bgProcesses} bg processes`, usage: (spec.ramUsed / spec.ramTotal) * 100 },
+                  { label: 'Memory', icon: <MemoryStick className="w-4 h-4" />, name: `${spec.ramTotal} GB`, sub: `${Math.max(0, Math.round(spec.ramUsed))}GB used • ${spec.bgProcesses} bg processes`, usage: Math.max(0, Math.min(100, (spec.ramUsed / spec.ramTotal) * 100)) },
                 ].map((item, i) => (
                   <div key={i} className="card-widget p-5 flex flex-col justify-between" style={{ animationDelay: `${i * 80}ms` }}>
                     <div>

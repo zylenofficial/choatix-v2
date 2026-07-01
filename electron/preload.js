@@ -40,5 +40,12 @@ contextBridge.exposeInMainWorld("electronAPI", {
   loadAppState: () => ipcRenderer.invoke("load-app-state"),
   sendFeedback: (feedback) => ipcRenderer.invoke("send-feedback", feedback),
   onSaveStateRequest: (cb) => ipcRenderer.on("save-state-request", () => cb()),
+  // Discord Auth
+  discordLogin: () => ipcRenderer.invoke("discord-login"),
+  discordLogout: (discordId) => ipcRenderer.invoke("discord-logout", discordId),
+  checkLicense: (discordId) => ipcRenderer.invoke("check-license", discordId),
+  activatePowerPlan: (tier) => ipcRenderer.invoke("activate-power-plan", tier),
+  getPowerPlanStatus: () => ipcRenderer.invoke("get-power-plan-status"),
+  removeUnauthorizedPlans: (tier) => ipcRenderer.invoke("remove-unauthorized-plans", tier),
   isElectron: true,
 });

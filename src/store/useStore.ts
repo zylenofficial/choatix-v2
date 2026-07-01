@@ -63,6 +63,10 @@ interface AppState {
   // Discord
   discordId: string
   setDiscordId: (id: string) => void
+  discordUsername: string
+  setDiscordUsername: (name: string) => void
+  isLoggedIn: boolean
+  setIsLoggedIn: (v: boolean) => void
 
   // Health Score History
   healthScoreHistory: HealthScoreEntry[]
@@ -152,6 +156,10 @@ export const useStore = create<AppState>()(
       // Discord
       discordId: '',
       setDiscordId: (id) => set({ discordId: id }),
+      discordUsername: '',
+      setDiscordUsername: (name) => set({ discordUsername: name }),
+      isLoggedIn: false,
+      setIsLoggedIn: (v) => set({ isLoggedIn: v }),
 
       // Health Score History
       healthScoreHistory: [],

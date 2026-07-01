@@ -7,6 +7,8 @@ const os = require("os");
 const { execSync, exec } = require("child_process");
 const { promisify } = require("util");
 const execAsync = promisify(exec);
+const authService = require("./auth");
+const powerPlanManager = require("./powerplan");
 
 function isAdmin() {
   try { execSync('net session', { windowsHide: true, stdio: 'ignore' }); return true; } catch { return false; }
@@ -694,6 +696,8 @@ const CRITICAL_PROCESSES = [
   "system", "smss", "csrss", "wininit", "winlogon", "services", "lsass",
   "svchost", "dwm", "conhost", "fontdrvhost", "sihost", "ctfmon",
   "dusm", "Memory Compression", "Registry", "Idle",
+  "NvContainerLocalSystem", "NVIDIA Display Container", "nvdisplay.container",
+  "NvTelemetryContainer", "NvBackend", "NVDisplay.Container",
 ];
 
 const SAFE_TO_DISABLE = [
@@ -724,7 +728,7 @@ const AGGRESSIVE_EXTRA = [
 
 function isCritical(name) {
   const lower = name.toLowerCase();
-  return CRITICAL_PROCESSES.some(c => lower === c.toLowerCase() || lower.includes("windows") || lower.includes("microsoft.windows"));
+  return CRITICAL_PROCESSES.some(c => lower === c.toLowerCase() || lower.includes("windows") || lower.includes("microsoft.windows") || lower.includes("nvidia") || lower.includes("nvdisplay"));
 }
 
 ipcMain.handle("scan-processes", async () => {
@@ -967,75 +971,33 @@ const TWEAK_COMMANDS = {
   // SYSTEM
   'sys-high-performance': 'powercfg /setactive 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c',
   'sys-enable-game-mode': 'reg add "HKCU\\Software\\Microsoft\\GameBar" /v AutoGameModeEnabled /t REG_DWORD /d 1 /f',
-  'sys-disk-cleanup': 'cleanmgr /sagerun:1',
   'sys-disable-fullscreen-opt': 'reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer" /v DisableFullscreenOptimization /t REG_DWORD /d 1 /f',
-  'sys-visual-effects': 'reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\VisualEffects" /v VisualFXSetting /t REG_DWORD /d 2 /f && reg add "HKCU\\Control Panel\\Desktop\\WindowMetrics" /v MinAnimate /t REG_SZ /d "0" /f',
+  'sys-disk-cleanup': 'cleanmgr /sagerun:1',
   'sys-cpu-priority': 'reg add "HKLM\\SYSTEM\\CurrentControlSet\\Control\\PriorityControl" /v Win32PrioritySeparation /t REG_DWORD /d 38 /f',
-
-  // NETWORK
-  'net-disable-background-updates': 'reg add "HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate\\AU" /v NoAutoUpdate /t REG_DWORD /d 1 /f',
-  'net-disable-throttling': 'netsh int tcp set global autotuninglevel=normal',
-  'net-optimize-dns': 'netsh int ip set dnsservers "Ethernet" static 1.1.1.1 primary',
-  'net-reduce-congestion': 'powershell -Command "Set-NetTCPSetting -SettingName Internet -CongestionProvider CTCP -EA SilentlyContinue"',
-  'net-reset-tcp': 'netsh int ip reset && netsh winsock reset',
+  'cpu-core-parking-disable': 'powercfg /setacvalueindex scheme_current sub_processor CPMINCORES 100',
+  'memory-working-set': 'reg add "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management" /v LargeSystemCache /t REG_DWORD /d 0 /f',
 
   // NVIDIA
-  'nv-max-power': 'powershell -Command "if(Get-Command nvidia-smi -ErrorAction SilentlyContinue){nvidia-smi -pl 100}"',
+  'nv-disable-vsync': 'reg add "HKCU\\Software\\NVIDIA Corporation\\Global\\NVTweak" /v VSyncMode /t REG_DWORD /d 0 /f',
   'nv-low-latency': 'reg add "HKCU\\Software\\NVIDIA Corporation\\Global\\NVTweak" /v DisableP4BC /t REG_DWORD /d 1 /f',
   'nv-hardware-scheduling': 'reg add "HKLM\\SYSTEM\\CurrentControlSet\\Control\\GraphicsDrivers" /v HwSchMode /t REG_DWORD /d 2 /f',
-  'nv-disable-vsync': 'reg add "HKCU\\Software\\NVIDIA Corporation\\Global\\NVTweak" /v VSyncMode /t REG_DWORD /d 0 /f',
-  'nv-optimize-shader-cache': 'powershell -Command "if(Test-Path \"$env:APPDATA\\NVIDIA\\GLCache\"){Remove-Item \"$env:APPDATA\\NVIDIA\\GLCache\" -Recurse -Force -EA SilentlyContinue}"',
   'nv-texture-filtering': 'reg add "HKCU\\Software\\NVIDIA Corporation\\Global\\NVTweak" /v TextureFilteringQuality /t REG_DWORD /d 1 /f',
 
-  // DEBLOAT
-  'debloat-disable-startup': 'powershell -Command "Get-CimInstance Win32_StartupCommand | Select-Object Name,Command | Format-Table -AutoSize"',
-  'debloat-remove-background': 'powershell -Command "Get-AppxPackage *BingWeather* | Remove-AppxPackage -ErrorAction SilentlyContinue; Get-AppxPackage *BingNews* | Remove-AppxPackage -ErrorAction SilentlyContinue; Get-AppxPackage *BingSports* | Remove-AppxPackage -ErrorAction SilentlyContinue"',
-  'debloat-superfetch': 'powershell -Command "Stop-Service -Name SysMain -Force -ErrorAction SilentlyContinue; Set-Service -Name SysMain -StartupType Disabled -ErrorAction SilentlyContinue"',
-  'debloat-disable-telemetry': 'reg add "HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\DataCollection" /v AllowTelemetry /t REG_DWORD /d 0 /f',
-  'debloat-disable-services': 'powershell -Command "Set-Service -Name DiagTrack,WSearch,SysMain,WpnService,WpnUserService,CDPSvc,CDPUserSvc,lfsvc,TrkWks,RetailDemo,MapsBroker -StartupType Manual -EA SilentlyContinue"',
-  'debloat-windows-features': 'powershell -Command "Disable-WindowsOptionalFeature -Online -FeatureName Printing-PrintToPDFServices,Printing-XPSServices -EA SilentlyContinue"',
+  // NETWORK
+  'net-optimize-dns': 'netsh int ip set dnsservers "Ethernet" static 1.1.1.1 primary',
+  'net-reduce-congestion': 'powershell -Command "Set-NetTCPSetting -SettingName Internet -CongestionProvider CTCP -EA SilentlyContinue"',
 
   // MOUSE
   'mouse-disable-acceleration': 'reg add "HKCU\\Control Panel\\Mouse" /v MouseSpeed /t REG_SZ /d "0" /f && reg add "HKCU\\Control Panel\\Mouse" /v MouseThreshold1 /t REG_SZ /d "0" /f && reg add "HKCU\\Control Panel\\Mouse" /v MouseThreshold2 /t REG_SZ /d "0" /f',
-  'mouse-raw-input': 'reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\PrecisionTouchPad" /v AAPThreshold /t REG_DWORD /d 0 /f',
-  'mouse-optimize-pointer': 'reg add "HKCU\\Control Panel\\Mouse" /v MouseSensitivity /t REG_SZ /d "10" /f',
-
-  // KEYBOARD
-
-
-  // AMD
-  'amd-max-power': 'powershell -Command "if(Get-Command radeontop -ErrorAction SilentlyContinue){radeontop -l 100}"',
-
-  // INTEL
-  'intel-max-power': 'powershell -Command "powercfg /setactive 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c"',
-
-  // CPU
-  'cpu-core-parking-disable': 'powercfg /setacvalueindex scheme_current sub_processor CPMINCORES 100',
-  'cpu-smt-enable': 'bcdedit /set disabledynamictick no',
-  'cpu-interrupt-affinity': 'reg add "HKLM\\SYSTEM\\CurrentControlSet\\Control\\PriorityControl" /v Win32PrioritySeparation /t REG_DWORD /d 38 /f',
-
-  // MEMORY
-  'memory-wake-cleaner': 'powershell -Command "Clear-RecycleBin -Force -EA SilentlyContinue"',
-  'memory-page-prefetch': 'reg add "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management\\PrefetchParameters" /v EnablePrefetcher /t REG_DWORD /d 0 /f',
-  'memory-virtual-memory': 'reg add "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management" /v DisablePagingExecutive /t REG_DWORD /d 1 /f',
-  'memory-pagefile-manager': 'powershell -Command "$cs = Get-WmiObject Win32_ComputerSystem; if($cs.AutomaticManagedPagefile){$cs.AutomaticManagedPagefile=$false; $cs.Put()}"',
-  'memory-working-set': 'reg add "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management" /v LargeSystemCache /t REG_DWORD /d 0 /f',
 
   // STORAGE
   'storage-ssd-optimization': 'fsutil behavior set disablelastaccess 1',
-  'storage-nvme-optimization': 'reg add "HKLM\\SYSTEM\\CurrentControlSet\\Services\\stornvme\\Parameters\\Device" /v NumberOfWriteBufferQueues /t REG_DWORD /d 4 /f',
   'storage-trim-optimization': 'powershell -Command "Optimize-Volume -DriveLetter C -ReTrim -EA SilentlyContinue"',
-  'storage-prefetch-manager': 'reg add "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management\\PrefetchParameters" /v EnableSuperfetch /t REG_DWORD /d 0 /f',
-  'storage-write-cache': 'reg add "HKLM\\SYSTEM\\CurrentControlSet\\Disk" /v ForcePagingFile /t REG_DWORD /d 0 /f',
-  'storage-temp-file-cleaner': 'powershell -Command "Remove-Item $env:TEMP\\* -Recurse -Force -EA SilentlyContinue"',
+  'storage-nvme-optimization': 'reg add "HKLM\\SYSTEM\\CurrentControlSet\\Services\\stornvme\\Parameters\\Device" /v NumberOfWriteBufferQueues /t REG_DWORD /d 4 /f',
+  'storage-prefetch-manager': 'powershell -Command "Stop-Service -Name SysMain -Force -EA SilentlyContinue; Set-Service -Name SysMain -StartupType Disabled -EA SilentlyContinue"',
 
   // WINDOWS
   'windows-explorer-optimization': 'reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced" /v LaunchTo /t REG_DWORD /d 1 /f',
-  'windows-animation-optimization': 'reg add "HKCU\\Control Panel\\Desktop\\WindowMetrics" /v MinAnimate /t REG_SZ /d "0" /f',
-  'windows-context-menu-cleanup': 'reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer" /v ShowRecent /t REG_DWORD /d 0 /f',
-  'windows-scheduled-task-optimizer': 'powershell -Command "Get-ScheduledTask | Where-Object {$_.State -eq \'Ready\' -and $_.TaskPath -notlike \'\\Microsoft\\\'} | Disable-ScheduledTask -EA SilentlyContinue"',
-  'windows-search-index-optimizer': 'powershell -Command "Stop-Service -Name WSearch -Force -EA SilentlyContinue; Set-Service -Name WSearch -StartupType Manual -EA SilentlyContinue"',
-  'windows-notification-optimization': 'reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\PushNotifications" /v ToastEnabled /t REG_DWORD /d 0 /f',
 
   // AUDIO
   'audio-disable-enhancements': 'reg add "HKCU\\Software\\Microsoft\\MMSys\\Default\\AudioEffects\\AudioEnhancementSceneGraph" /v Enabled /t REG_DWORD /d 0 /f',
@@ -1044,11 +1006,9 @@ const TWEAK_COMMANDS = {
   // USB
   'usb-selective-suspend-disable': 'reg add "HKLM\\SYSTEM\\CurrentControlSet\\Services\\USB" /v DisableSelectiveSuspend /t REG_DWORD /d 1 /f',
 
-  // SERVICES
-  'services-gaming-preset': 'powershell -Command "Set-Service -Name SysMain,DiagTrack,WSearch -StartupType Manual -EA SilentlyContinue"',
-  'services-streaming-preset': 'powershell -Command "Set-Service -Name SysMain,WSearch -StartupType Manual -EA SilentlyContinue; Set-Service -Name WpnService -StartupType Automatic -EA SilentlyContinue"',
-  'services-editing-preset': 'powershell -Command "Set-Service -Name SysMain -StartupType Automatic -EA SilentlyContinue; Set-Service -Name DiagTrack -StartupType Manual -EA SilentlyContinue"',
-  'services-workstation-preset': 'powershell -Command "Set-Service -Name SysMain,DiagTrack,WSearch,WpnService -StartupType Manual -EA SilentlyContinue"',
+  // KEYBOARD
+  'keyboard-disable-filter': 'powershell -Command "$p=\'HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e96b-e325-11ce-bfc1-08002be10318}\';$v=(Get-ItemProperty -Path $p -Name UpperFilters -EA 0).UpperFilters; if($v){$n=$v | Where-Object {$_ -ne \'kbdhid\'}; if($n){Set-ItemProperty -Path $p -Name UpperFilters -Value $n -Type MultiString}else{Remove-ItemProperty -Path $p -Name UpperFilters -Force}}"',
+  'keyboard-usb-power-mgmt': 'powershell -Command "Get-ChildItem \'HKLM:\\SYSTEM\\CurrentControlSet\\Enum\\USB\\*\*\\Device Parameters\\WDF\' -EA 0 | ForEach-Object{Set-ItemProperty -Path $_.PSPath -Name IdleTimeout -Value 0 -Type DWord -EA 0}; Get-ChildItem \'HKLM:\\SYSTEM\\CurrentControlSet\\Enum\\HID\\*\*\\Device Parameters\\WDF\' -EA 0 | ForEach-Object{Set-ItemProperty -Path $_.PSPath -Name IdleTimeout -Value 0 -Type DWord -EA 0}}"',
 };
 
 // ═══════════════════════════════════════════
@@ -1058,74 +1018,33 @@ const TWEAK_RESTORE_COMMANDS = {
   // SYSTEM
   'sys-high-performance': 'powercfg /setactive 381b4222-f694-41f0-9685-ff5bb260df2e',
   'sys-enable-game-mode': 'reg add "HKCU\\Software\\Microsoft\\GameBar" /v AutoGameModeEnabled /t REG_DWORD /d 0 /f',
-  'sys-disk-cleanup': 'echo "Disk cleanup cannot be undone"',
   'sys-disable-fullscreen-opt': 'reg delete "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer" /v DisableFullscreenOptimization /f',
-  'sys-visual-effects': 'reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\VisualEffects" /v VisualFXSetting /t REG_DWORD /d 0 /f && reg add "HKCU\\Control Panel\\Desktop\\WindowMetrics" /v MinAnimate /t REG_SZ /d "1" /f',
+  'sys-disk-cleanup': 'echo "Disk cleanup cannot be undone"',
   'sys-cpu-priority': 'reg add "HKLM\\SYSTEM\\CurrentControlSet\\Control\\PriorityControl" /v Win32PrioritySeparation /t REG_DWORD /d 2 /f',
-
-  // NETWORK
-  'net-disable-background-updates': 'reg delete "HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate\\AU" /v NoAutoUpdate /f',
-  'net-disable-throttling': 'netsh int tcp set global autotuninglevel=normal',
-  'net-optimize-dns': 'netsh int ip set dnsservers "Ethernet" dhcp',
-  'net-reduce-congestion': 'powershell -Command "Set-NetTCPSetting -SettingName Internet -CongestionProvider CUBIC -EA SilentlyContinue"',
-  'net-reset-tcp': 'echo "TCP/IP reset cannot be undone"',
+  'cpu-core-parking-disable': 'powercfg /setacvalueindex scheme_current sub_processor CPMINCORES 0',
+  'memory-working-set': 'reg add "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management" /v LargeSystemCache /t REG_DWORD /d 1 /f',
 
   // NVIDIA
-  'nv-max-power': 'powershell -Command "if(Get-Command nvidia-smi -ErrorAction SilentlyContinue){nvidia-smi -pl 0}"',
+  'nv-disable-vsync': 'reg delete "HKCU\\Software\\NVIDIA Corporation\\Global\\NVTweak" /v VSyncMode /f',
   'nv-low-latency': 'reg delete "HKCU\\Software\\NVIDIA Corporation\\Global\\NVTweak" /v DisableP4BC /f',
   'nv-hardware-scheduling': 'reg add "HKLM\\SYSTEM\\CurrentControlSet\\Control\\GraphicsDrivers" /v HwSchMode /t REG_DWORD /d 1 /f',
-  'nv-disable-vsync': 'reg delete "HKCU\\Software\\NVIDIA Corporation\\Global\\NVTweak" /v VSyncMode /f',
-  'nv-optimize-shader-cache': 'echo "Shader cache will rebuild automatically"',
   'nv-texture-filtering': 'reg delete "HKCU\\Software\\NVIDIA Corporation\\Global\\NVTweak" /v TextureFilteringQuality /f',
 
-  // DEBLOAT
-  'debloat-disable-startup': 'echo "Startup items restored manually"',
-  'debloat-remove-background': 'echo "App packages restored manually"',
-  'debloat-superfetch': 'powershell -Command "Set-Service -Name SysMain -StartupType Automatic -EA SilentlyContinue; Start-Service -Name SysMain -EA SilentlyContinue"',
-  'debloat-disable-telemetry': 'reg delete "HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\DataCollection" /v AllowTelemetry /f',
-  'debloat-disable-services': 'powershell -Command "Set-Service -Name DiagTrack,WSearch,SysMain,WpnService -StartupType Automatic -EA SilentlyContinue"',
-  'debloat-windows-features': 'powershell -Command "Enable-WindowsOptionalFeature -Online -FeatureName Printing-PrintToPDFServices,Printing-XPSServices -EA SilentlyContinue"',
+  // NETWORK
+  'net-optimize-dns': 'netsh int ip set dnsservers "Ethernet" dhcp',
+  'net-reduce-congestion': 'powershell -Command "Set-NetTCPSetting -SettingName Internet -CongestionProvider CUBIC -EA SilentlyContinue"',
 
   // MOUSE
   'mouse-disable-acceleration': 'reg add "HKCU\\Control Panel\\Mouse" /v MouseSpeed /t REG_SZ /d "1" /f && reg add "HKCU\\Control Panel\\Mouse" /v MouseThreshold1 /t REG_SZ /d "6" /f && reg add "HKCU\\Control Panel\\Mouse" /v MouseThreshold2 /t REG_SZ /d "10" /f',
-  'mouse-raw-input': 'reg delete "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\PrecisionTouchPad" /v AAPThreshold /f',
-  'mouse-optimize-pointer': 'reg add "HKCU\\Control Panel\\Mouse" /v MouseSensitivity /t REG_SZ /d "10" /f',
-      // KEYBOARD
-
-
-  // AMD
-  'amd-max-power': 'echo "AMD power restored to default"',
-
-  // INTEL
-  'intel-max-power': 'powercfg /setactive 381b4222-f694-41f0-9685-ff5bb260df2e',
-
-  // CPU
-  'cpu-core-parking-disable': 'powercfg /setacvalueindex scheme_current sub_processor CPMINCORES 0',
-  'cpu-smt-enable': 'bcdedit /set disabledynamictick yes',
-  'cpu-interrupt-affinity': 'reg add "HKLM\\SYSTEM\\CurrentControlSet\\Control\\PriorityControl" /v Win32PrioritySeparation /t REG_DWORD /d 2 /f',
-
-  // MEMORY
-  'memory-wake-cleaner': 'echo "Memory cleanup is not reversible"',
-  'memory-page-prefetch': 'reg add "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management\\PrefetchParameters" /v EnablePrefetcher /t REG_DWORD /d 3 /f',
-  'memory-virtual-memory': 'reg add "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management" /v DisablePagingExecutive /t REG_DWORD /d 0 /f',
-  'memory-pagefile-manager': 'powershell -Command "$cs = Get-WmiObject Win32_ComputerSystem; $cs.AutomaticManagedPagefile=$true; $cs.Put()"',
-  'memory-working-set': 'reg add "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management" /v LargeSystemCache /t REG_DWORD /d 1 /f',
 
   // STORAGE
   'storage-ssd-optimization': 'fsutil behavior set disablelastaccess 0',
+  'storage-trim-optimization': 'echo "TRIM runs automatically on modern Windows"',
   'storage-nvme-optimization': 'reg delete "HKLM\\SYSTEM\\CurrentControlSet\\Services\\stornvme\\Parameters\\Device" /v NumberOfWriteBufferQueues /f',
-  'storage-trim-optimization': 'echo "TRIM runs automatically"',
-  'storage-prefetch-manager': 'reg add "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management\\PrefetchParameters" /v EnableSuperfetch /t REG_DWORD /d 3 /f',
-  'storage-write-cache': 'reg delete "HKLM\\SYSTEM\\CurrentControlSet\\Disk" /v ForcePagingFile /f',
-  'storage-temp-file-cleaner': 'echo "Temp files are not recoverable"',
+  'storage-prefetch-manager': 'powershell -Command "Set-Service -Name SysMain -StartupType Automatic -EA SilentlyContinue; Start-Service -Name SysMain -EA SilentlyContinue"',
 
   // WINDOWS
   'windows-explorer-optimization': 'reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced" /v LaunchTo /t REG_DWORD /d 2 /f',
-  'windows-animation-optimization': 'reg add "HKCU\\Control Panel\\Desktop\\WindowMetrics" /v MinAnimate /t REG_SZ /d "1" /f',
-  'windows-context-menu-cleanup': 'reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer" /v ShowRecent /t REG_DWORD /d 1 /f',
-  'windows-scheduled-task-optimizer': 'echo "Scheduled tasks restored manually"',
-  'windows-search-index-optimizer': 'powershell -Command "Set-Service -Name WSearch -StartupType Automatic -EA SilentlyContinue; Start-Service -Name WSearch -EA SilentlyContinue"',
-  'windows-notification-optimization': 'reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\PushNotifications" /v ToastEnabled /t REG_DWORD /d 1 /f',
 
   // AUDIO
   'audio-disable-enhancements': 'reg add "HKCU\\Software\\Microsoft\\MMSys\\Default\\AudioEffects\\AudioEnhancementSceneGraph" /v Enabled /t REG_DWORD /d 1 /f',
@@ -1134,11 +1053,9 @@ const TWEAK_RESTORE_COMMANDS = {
   // USB
   'usb-selective-suspend-disable': 'reg add "HKLM\\SYSTEM\\CurrentControlSet\\Services\\USB" /v DisableSelectiveSuspend /t REG_DWORD /d 0 /f',
 
-  // SERVICES
-  'services-gaming-preset': 'powershell -Command "Set-Service -Name SysMain,DiagTrack,WSearch -StartupType Automatic -EA SilentlyContinue"',
-  'services-streaming-preset': 'powershell -Command "Set-Service -Name SysMain,WSearch -StartupType Automatic -EA SilentlyContinue"',
-  'services-editing-preset': 'powershell -Command "Set-Service -Name SysMain -StartupType Automatic -EA SilentlyContinue"',
-  'services-workstation-preset': 'powershell -Command "Set-Service -Name SysMain,DiagTrack,WSearch,WpnService -StartupType Automatic -EA SilentlyContinue"',
+  // KEYBOARD
+  'keyboard-disable-filter': 'powershell -Command "$p=\'HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e96b-e325-11ce-bfc1-08002be10318}\';$v=(Get-ItemProperty -Path $p -Name UpperFilters -EA 0).UpperFilters; if($v -and $v -notcontains \'kbdhid\'){Set-ItemProperty -Path $p -Name UpperFilters -Value ($v+\'kbdhid\') -Type MultiString}elseif(!$v){New-ItemProperty -Path $p -Name UpperFilters -Value @(\'kbdhid\') -Type MultiString -Force}}"',
+  'keyboard-usb-power-mgmt': 'powershell -Command "Get-ChildItem \'HKLM:\\SYSTEM\\CurrentControlSet\\Enum\\USB\\*\*\\Device Parameters\\WDF\' -EA 0 | ForEach-Object{Remove-ItemProperty -Path $_.PSPath -Name IdleTimeout -EA 0}; Get-ChildItem \'HKLM:\\SYSTEM\\CurrentControlSet\\Enum\\HID\\*\*\\Device Parameters\\WDF\' -EA 0 | ForEach-Object{Remove-ItemProperty -Path $_.PSPath -Name IdleTimeout -EA 0}}"',
 };
 
 ipcMain.handle("restore-tweak", async (_event, tweakId) => {
@@ -1151,30 +1068,19 @@ ipcMain.handle("restore-category", async (_event, category) => {
   const categoryTweaks = Object.keys(TWEAK_COMMANDS).filter(id => {
     // Map tweak IDs to categories
     const categories = {
-      'sys-high-performance': 'system', 'sys-enable-game-mode': 'system', 'sys-disk-cleanup': 'system',
-      'sys-disable-fullscreen-opt': 'system', 'sys-visual-effects': 'system', 'sys-cpu-priority': 'system',
-      'net-disable-background-updates': 'network', 'net-disable-throttling': 'network', 'net-optimize-dns': 'network',
-      'net-reduce-congestion': 'network', 'net-reset-tcp': 'network',
-      'nv-max-power': 'nvidia', 'nv-low-latency': 'nvidia', 'nv-hardware-scheduling': 'nvidia',
-      'nv-disable-vsync': 'nvidia', 'nv-optimize-shader-cache': 'nvidia', 'nv-texture-filtering': 'nvidia',
-      'debloat-disable-startup': 'debloat', 'debloat-remove-background': 'debloat', 'debloat-superfetch': 'debloat',
-      'debloat-disable-telemetry': 'debloat', 'debloat-disable-services': 'debloat', 'debloat-windows-features': 'debloat',
-      'mouse-disable-acceleration': 'mouse', 'mouse-raw-input': 'mouse', 'mouse-optimize-pointer': 'mouse',
-
-      'amd-max-power': 'amd',
-      'intel-max-power': 'intel',
-      'cpu-core-parking-disable': 'cpu', 'cpu-smt-enable': 'cpu', 'cpu-interrupt-affinity': 'cpu',
-      'memory-wake-cleaner': 'memory', 'memory-page-prefetch': 'memory', 'memory-virtual-memory': 'memory',
-      'memory-pagefile-manager': 'memory', 'memory-working-set': 'memory',
-      'storage-ssd-optimization': 'storage', 'storage-nvme-optimization': 'storage', 'storage-trim-optimization': 'storage',
-      'storage-prefetch-manager': 'storage', 'storage-write-cache': 'storage', 'storage-temp-file-cleaner': 'storage',
-      'windows-explorer-optimization': 'windows', 'windows-animation-optimization': 'windows',
-      'windows-context-menu-cleanup': 'windows', 'windows-scheduled-task-optimizer': 'windows',
-      'windows-search-index-optimizer': 'windows', 'windows-notification-optimization': 'windows',
+      'sys-high-performance': 'system', 'sys-enable-game-mode': 'system', 'sys-disable-fullscreen-opt': 'system',
+      'sys-disk-cleanup': 'system', 'sys-cpu-priority': 'system', 'cpu-core-parking-disable': 'system',
+      'memory-working-set': 'system',
+      'nv-disable-vsync': 'nvidia', 'nv-low-latency': 'nvidia', 'nv-hardware-scheduling': 'nvidia',
+      'nv-texture-filtering': 'nvidia',
+      'net-optimize-dns': 'network', 'net-reduce-congestion': 'network',
+      'mouse-disable-acceleration': 'mouse',
+      'storage-ssd-optimization': 'storage', 'storage-trim-optimization': 'storage',
+      'storage-nvme-optimization': 'storage', 'storage-prefetch-manager': 'storage',
+      'windows-explorer-optimization': 'windows',
       'audio-disable-enhancements': 'audio', 'audio-usb-optimization': 'audio',
       'usb-selective-suspend-disable': 'usb',
-      'services-gaming-preset': 'services', 'services-streaming-preset': 'services',
-      'services-editing-preset': 'services', 'services-workstation-preset': 'services',
+      'keyboard-disable-filter': 'keyboard', 'keyboard-usb-power-mgmt': 'keyboard',
     };
     return categories[id] === category;
   });
@@ -1441,6 +1347,66 @@ process.on("uncaughtException", (err) => {
 });
 process.on("unhandledRejection", (reason) => {
   console.error("Unhandled rejection:", reason);
+});
+
+// ══════════════════════════════════════
+// ── Discord Auth IPC ──
+// ══════════════════════════════════════
+ipcMain.handle("discord-login", async () => {
+  try {
+    const result = await authService.login(mainWindow);
+    if (result.success && result.license) {
+      await powerPlanManager.activateForTier(result.license.tier);
+    }
+    return result;
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+});
+
+ipcMain.handle("discord-logout", async (_event, discordId) => {
+  try {
+    await powerPlanManager.removeUnauthorizedPlans('FREE');
+    await powerPlanManager.activateForTier('FREE');
+    return await authService.logout(discordId);
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+});
+
+ipcMain.handle("check-license", async (_event, discordId) => {
+  if (!discordId) return { tier: 'FREE', expires: null, active: true };
+  try {
+    const license = await authService.getLicense(discordId);
+    return license;
+  } catch {
+    return { tier: 'FREE', expires: null, active: true };
+  }
+});
+
+ipcMain.handle("activate-power-plan", async (_event, tier) => {
+  try {
+    return await powerPlanManager.activateForTier(tier);
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+});
+
+ipcMain.handle("get-power-plan-status", async () => {
+  try {
+    return await powerPlanManager.getPlanStatus();
+  } catch (err) {
+    return {};
+  }
+});
+
+ipcMain.handle("remove-unauthorized-plans", async (_event, tier) => {
+  try {
+    await powerPlanManager.removeUnauthorizedPlans(tier);
+    return { success: true };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
 });
 
 app.whenReady().then(async () => {

@@ -2,39 +2,32 @@
 
 import { useState, useCallback, useEffect, useMemo } from 'react'
 import { useStore } from '@/store/useStore'
-import { Zap, Lock, CheckCircle2, Loader2, XCircle, ShieldAlert, RotateCcw, Shield, Cpu, Monitor, Wifi, MousePointer, HardDrive, Volume2, Power, Gamepad2, Gauge, ArrowRight } from 'lucide-react'
+import { Zap, Lock, CheckCircle2, Loader2, XCircle, ShieldAlert, RotateCcw, Shield, Monitor, Wifi, MousePointer, HardDrive, Volume2, Power, Gamepad2, ArrowRight, Keyboard, Info } from 'lucide-react'
 import { canAccessTier } from '@/lib/featureAccess'
 import { availableTweaks } from '@/data/tweaks'
 import { createRollbackEntry } from '@/lib/tweaks'
 import { useToast } from '@/components/Toast'
+import { TweakInfoModal } from '@/components/TweakInfoModal'
 import type { Tweak, TweakCategory } from '@/types'
 
 const CATEGORY_META: Record<string, { label: string; icon: React.ReactNode; desc: string }> = {
-  system: { label: 'System', icon: <Shield className="w-4 h-4" />, desc: 'Power, game mode, visual effects' },
-  cpu: { label: 'CPU', icon: <Cpu className="w-4 h-4" />, desc: 'Core parking, SMT, priority' },
-  memory: { label: 'Memory', icon: <Gauge className="w-4 h-4" />, desc: 'RAM cleanup, pagefile, prefetch' },
-  nvidia: { label: 'NVIDIA', icon: <Monitor className="w-4 h-4" />, desc: 'GPU power, V-Sync, latency' },
-  amd: { label: 'AMD', icon: <Monitor className="w-4 h-4" />, desc: 'Radeon power, Anti-Lag' },
-  intel: { label: 'Intel', icon: <Cpu className="w-4 h-4" />, desc: 'Intel GPU power settings' },
-  network: { label: 'Network', icon: <Wifi className="w-4 h-4" />, desc: 'DNS, throttling, TCP' },
-  mouse: { label: 'Mouse', icon: <MousePointer className="w-4 h-4" />, desc: 'Acceleration, raw input' },
+  system: { label: 'System', icon: <Shield className="w-4 h-4" />, desc: 'Power plan, CPU priority, core parking' },
+  nvidia: { label: 'NVIDIA', icon: <Monitor className="w-4 h-4" />, desc: 'V-Sync, latency, GPU scheduling, texture filtering' },
+  network: { label: 'Network', icon: <Wifi className="w-4 h-4" />, desc: 'DNS, TCP congestion' },
+  mouse: { label: 'Mouse', icon: <MousePointer className="w-4 h-4" />, desc: 'Acceleration, pointer precision' },
+  storage: { label: 'Storage', icon: <HardDrive className="w-4 h-4" />, desc: 'SSD, NVMe, TRIM, Superfetch' },
+  windows: { label: 'Windows', icon: <Gamepad2 className="w-4 h-4" />, desc: 'Explorer settings' },
+  audio: { label: 'Audio', icon: <Volume2 className="w-4 h-4" />, desc: 'Audio enhancements, USB audio' },
   usb: { label: 'USB', icon: <Power className="w-4 h-4" />, desc: 'Selective suspend' },
-  storage: { label: 'Storage', icon: <HardDrive className="w-4 h-4" />, desc: 'TRIM, NVMe, write cache' },
-  windows: { label: 'Windows', icon: <Gamepad2 className="w-4 h-4" />, desc: 'Explorer, animations, search' },
-  debloat: { label: 'Debloat', icon: <Gauge className="w-4 h-4" />, desc: 'Startup, telemetry, services' },
-  gaming: { label: 'Gaming', icon: <Gamepad2 className="w-4 h-4" />, desc: 'Game-specific optimizations' },
-  audio: { label: 'Audio', icon: <Volume2 className="w-4 h-4" />, desc: 'Audio enhancements' },
-  services: { label: 'Services', icon: <Power className="w-4 h-4" />, desc: 'Service presets' },
+  keyboard: { label: 'Keyboard', icon: <Keyboard className="w-4 h-4" />, desc: 'Filter driver, USB power mgmt' },
 }
 
 const CATEGORY_ORDER: TweakCategory[] = [
-  'system', 'cpu', 'memory', 'nvidia', 'amd', 'intel',
-  'network', 'mouse', 'usb', 'storage',
-  'windows', 'debloat', 'gaming', 'audio', 'services',
+  'system', 'nvidia', 'network', 'mouse', 'keyboard', 'storage', 'windows', 'audio', 'usb',
 ]
 
-function TweakRow({ tweak, isApplied, isFailed, isApplying, isReverting, hasAccess, onApply, onRevert }: {
-  tweak: Tweak; isApplied: boolean; isFailed: boolean; isApplying: boolean; isReverting: boolean; hasAccess: boolean; onApply: () => void; onRevert: () => void
+function TweakRow({ tweak, isApplied, isFailed, isApplying, isReverting, hasAccess, onApply, onRevert, onInfo }: {
+  tweak: Tweak; isApplied: boolean; isFailed: boolean; isApplying: boolean; isReverting: boolean; hasAccess: boolean; onApply: () => void; onRevert: () => void; onInfo: () => void
 }) {
   const riskColor = tweak.risk === 'medium' ? '#999' : tweak.risk === 'low' ? '#ccc' : '#666'
 
@@ -46,6 +39,9 @@ function TweakRow({ tweak, isApplied, isFailed, isApplying, isReverting, hasAcce
           <div className="text-[11px] font-semibold text-[var(--text-muted)] truncate">{tweak.name}</div>
           <div className="text-[9px] text-[var(--text-muted)] mt-0.5">{tweak.description}</div>
         </div>
+        <button onClick={onInfo} className="shrink-0 flex items-center justify-center w-6 h-6 rounded-lg transition-all hover:bg-white/10" style={{ border: '1px solid rgba(255,255,255,0.15)' }} title="Tweak info">
+          <Info className="w-3.5 h-3.5" style={{ color: 'rgba(255,255,255,0.6)' }} />
+        </button>
         <span className="text-[7px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-lg shrink-0"
           style={{ background: 'rgba(255,255,255,0.04)', color: 'var(--text-muted)' }}>
           {tweak.requiredTier}
@@ -96,6 +92,11 @@ function TweakRow({ tweak, isApplied, isFailed, isApplying, isReverting, hasAcce
         {tweak.gamingImpact}
       </div>
 
+      {/* Info */}
+      <button onClick={onInfo} className="shrink-0 flex items-center justify-center w-6 h-6 rounded-lg transition-all hover:bg-white/10" style={{ border: '1px solid rgba(255,255,255,0.15)' }} title="Tweak info">
+        <Info className="w-3.5 h-3.5" style={{ color: 'rgba(255,255,255,0.6)' }} />
+      </button>
+
       {/* Actions */}
       <div className="shrink-0">
         {isApplied ? (
@@ -129,6 +130,7 @@ export function OptimizerPage() {
   const [failed, setFailed] = useState<Set<string>>(new Set())
   const [isRunningAsAdmin, setIsRunningAsAdmin] = useState<boolean | null>(null)
   const [expandedCat, setExpandedCat] = useState<string | null>(null)
+  const [infoTweak, setInfoTweak] = useState<Tweak | null>(null)
 
   useEffect(() => {
     window.electronAPI?.isAdmin().then(setIsRunningAsAdmin)
@@ -166,7 +168,7 @@ export function OptimizerPage() {
       addToast(`Error: ${e.message}`, 'error')
     }
     setApplying(null)
-  }, [addToast, addAppliedTweak])
+  }, [addToast, addAppliedTweak, addRollbackEntry])
 
   const handleApplyAll = useCallback(async () => {
     if (!window.electronAPI) return
@@ -179,6 +181,7 @@ export function OptimizerPage() {
           const result = await window.electronAPI.applyTweak(tweak.id)
           if (result.success) {
             addAppliedTweak(tweak.id)
+            addRollbackEntry(createRollbackEntry(tweak.id))
             setFailed(prev => { const n = new Set(prev); n.delete(tweak.id); return n })
             successCount++
           } else {
@@ -193,7 +196,7 @@ export function OptimizerPage() {
     }
     setApplying(null)
     addToast(`Done: ${successCount} applied, ${failCount} failed`, successCount > 0 ? 'success' : 'error')
-  }, [license.tier, appliedSet, addToast, addAppliedTweak])
+  }, [license.tier, appliedSet, addToast, addAppliedTweak, addRollbackEntry])
 
   const handleRevert = useCallback(async (tweakId: string) => {
     if (!window.electronAPI) return
@@ -317,6 +320,7 @@ export function OptimizerPage() {
                           hasAccess={hasAccess}
                           onApply={() => handleApply(tweak.id)}
                           onRevert={() => handleRevert(tweak.id)}
+                          onInfo={() => setInfoTweak(tweak)}
                         />
                       )
                     })}
@@ -327,6 +331,8 @@ export function OptimizerPage() {
           })}
         </div>
       </div>
+
+      <TweakInfoModal isOpen={!!infoTweak} onClose={() => setInfoTweak(null)} tweak={infoTweak} />
     </div>
   )
 }

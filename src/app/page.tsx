@@ -78,14 +78,11 @@ export default function Home() {
 
   return (
     <ToastProvider>
-    <div className="flex flex-col h-[calc(100vh-32px)] bg-mesh">
+    <div className="flex flex-col h-[calc(100vh-40px)] bg-mesh">
       {/* Title Bar */}
-      <div className="h-8 flex items-center justify-between px-3 shrink-0" style={{ WebkitAppRegion: 'drag', borderBottom: '1px solid var(--border-subtle)' } as any}>
+      <div className="h-10 flex items-center justify-between px-3 shrink-0" style={{ WebkitAppRegion: 'drag', borderBottom: '1px solid var(--border-subtle)' } as any}>
         <div className="flex items-center gap-2.5">
-          <div className="w-[18px] h-[18px] border border-white/10 flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.02)' }}>
-            <span className="text-[8px] font-light" style={{ color: 'rgba(255,255,255,0.4)', fontFamily: "'Cascadia Code', 'Consolas', monospace" }}>C</span>
-          </div>
-          <span className="text-[9px] font-light tracking-[0.2em]" style={{ color: 'rgba(255,255,255,0.4)', fontFamily: "'Cascadia Code', 'Consolas', monospace" }}>CHOATIX</span>
+          <img src="/choatix-logo.png" alt="CHOATIX" style={{ height: 50, width: 'auto', objectFit: 'contain', filter: 'brightness(0) invert(1)' }} />
         </div>
         <div className="flex items-center gap-0.5" style={{ WebkitAppRegion: 'no-drag' } as any}>
           <button onClick={() => window.electronAPI?.minimize()} className="w-7 h-7 rounded-md flex items-center justify-center hover:bg-white/5 transition-colors" style={{ color: 'var(--text-muted)' }}>

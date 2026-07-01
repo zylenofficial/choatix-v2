@@ -18,7 +18,6 @@ function makeSystemInfo(overrides: Partial<SystemInfo> = {}): SystemInfo {
     startup: { count: 5, programs: [] },
     processes: { total: 100, background: 40 },
     mouse: { name: 'Test Mouse', enhancePointerPrecision: false, pollingRateDetected: false },
-    keyboard: { filterKeys: false, stickyKeys: false, repeatDelay: '1' },
     ...overrides,
   }
 }
@@ -239,53 +238,6 @@ console.log('Testing: generateRecommendations')
   console.log('  PASS: Mouse acceleration OFF - no issue')
 }
 
-// Test: Filter keys detected
-{
-  const info = makeSystemInfo({
-    keyboard: { filterKeys: true, stickyKeys: false, repeatDelay: '1' }
-  })
-  const issues = generateRecommendations(info, LicenseTier.FREE)
-  const fkIssue = issues.find(i => i.id === 'advisor-filter-keys')
-  assert.ok(fkIssue, 'Should detect Filter Keys')
-  assert.equal(fkIssue!.severity, 'high')
-  console.log('  PASS: Filter Keys detected')
-}
-
-// Test: Sticky keys detected
-{
-  const info = makeSystemInfo({
-    keyboard: { filterKeys: false, stickyKeys: true, repeatDelay: '1' }
-  })
-  const issues = generateRecommendations(info, LicenseTier.FREE)
-  const skIssue = issues.find(i => i.id === 'advisor-sticky-keys')
-  assert.ok(skIssue, 'Should detect Sticky Keys')
-  assert.equal(skIssue!.severity, 'medium')
-  console.log('  PASS: Sticky Keys detected')
-}
-
-// Test: NVIDIA GPU generates power mode issue (FREE tier)
-{
-  const info = makeSystemInfo({
-    gpu: { model: 'RTX 4070', vram: 12288, usage: 60, vendor: 'nvidia' }
-  })
-  const issues = generateRecommendations(info, LicenseTier.FREE)
-  const gpuIssue = issues.find(i => i.id === 'advisor-gpu-power')
-  assert.ok(gpuIssue, 'Should detect NVIDIA GPU power mode issue')
-  assert.equal(gpuIssue!.severity, 'high')
-  console.log('  PASS: NVIDIA GPU power mode issue')
-}
-
-// Test: Non-NVIDIA GPU does NOT generate GPU power issue
-{
-  const info = makeSystemInfo({
-    gpu: { model: 'RX 7800 XT', vram: 16384, usage: 60, vendor: 'amd' }
-  })
-  const issues = generateRecommendations(info, LicenseTier.FREE)
-  const gpuIssue = issues.find(i => i.id === 'advisor-gpu-power')
-  assert.equal(gpuIssue, undefined, 'Should NOT generate NVIDIA GPU issue for AMD')
-  console.log('  PASS: AMD GPU - no NVIDIA issue')
-}
-
 // Test: NVIDIA low latency issue only for PRO+ tier
 {
   const infoFree = makeSystemInfo({
@@ -373,7 +325,6 @@ console.log('Testing: generateRecommendations')
     startup: { count: 3, programs: [] },
     processes: { total: 60, background: 20 },
     mouse: { name: 'Mouse', enhancePointerPrecision: false, pollingRateDetected: false },
-    keyboard: { filterKeys: false, stickyKeys: false, repeatDelay: '1' },
     gpu: { model: 'Intel UHD', vram: 0, usage: 0, vendor: 'intel' },
     network: { latencyMs: 20, adapterName: 'Ethernet' },
   })

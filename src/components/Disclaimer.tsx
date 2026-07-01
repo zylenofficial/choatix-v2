@@ -3,16 +3,17 @@ import { useState, useEffect } from 'react'
 
 export default function Disclaimer({ onAccept }: { onAccept: () => void }) {
   const [visible, setVisible] = useState(false)
-  const [phase, setPhase] = useState<'typing' | 'lines' | 'done'>('typing')
-  const [typedLines, setTypedLines] = useState(0)
+  const [phase, setPhase] = useState<'enter' | 'lines' | 'done'>('enter')
+  const [showLines, setShowLines] = useState(0)
   const [exiting, setExiting] = useState(false)
 
   const lines = [
-    { label: 'NOTICE', text: 'CHOATIX is a system optimization tool for Windows.' },
-    { label: 'WARNING', text: 'Modifying system settings carries inherent risk.' },
-    { label: 'BACKUP', text: 'Create a restore point before applying tweaks.' },
-    { label: 'REVERT', text: 'All changes can be reverted from the Rollback tab.' },
-    { label: 'LICENSE', text: 'This software is provided as-is without warranty.' },
+    { icon: '⚠', text: 'CHOATIX is a system optimization tool for Windows.' },
+    { icon: '⚠', text: 'Modifying system settings carries inherent risk.' },
+    { icon: '↺', text: 'Create a restore point before applying tweaks.' },
+    { icon: '✓', text: 'All changes can be reverted from the Rollback tab.' },
+    { icon: '✕', text: 'We are not responsible for any damage caused by misuse.' },
+    { icon: '—', text: 'This software is provided as-is without warranty.' },
   ]
 
   useEffect(() => {
@@ -21,18 +22,24 @@ export default function Disclaimer({ onAccept }: { onAccept: () => void }) {
   }, [])
 
   useEffect(() => {
-    if (!visible || phase !== 'typing') return
-    if (typedLines >= lines.length) {
-      setTimeout(() => setPhase('lines'), 600)
+    if (!visible || phase !== 'enter') return
+    const t = setTimeout(() => setPhase('lines'), 400)
+    return () => clearTimeout(t)
+  }, [visible, phase])
+
+  useEffect(() => {
+    if (phase !== 'lines') return
+    if (showLines >= lines.length) {
+      setTimeout(() => setPhase('done'), 500)
       return
     }
-    const t = setTimeout(() => setTypedLines(typedLines + 1), 180)
+    const t = setTimeout(() => setShowLines(showLines + 1), 200)
     return () => clearTimeout(t)
-  }, [visible, phase, typedLines])
+  }, [phase, showLines])
 
   const handleAccept = () => {
     setExiting(true)
-    setTimeout(onAccept, 600)
+    setTimeout(onAccept, 500)
   }
 
   return (
@@ -40,138 +47,125 @@ export default function Disclaimer({ onAccept }: { onAccept: () => void }) {
       position: 'fixed', inset: 0, zIndex: 10000, background: '#000',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       opacity: exiting ? 0 : 1,
-      transition: 'opacity 0.6s ease-out',
+      transition: 'opacity 0.5s ease-out',
     }}>
-      {/* Background effects */}
+      {/* Subtle grid */}
       <div style={{
         position: 'absolute', inset: 0,
-        backgroundImage: 'linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px)',
-        backgroundSize: '40px 40px',
-      }} />
-      <div style={{
-        position: 'absolute', inset: 0, pointerEvents: 'none',
-        background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.08) 2px, rgba(0,0,0,0.08) 4px)',
-      }} />
-      <div style={{
-        position: 'absolute', inset: 0, pointerEvents: 'none',
-        background: 'radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.8) 100%)',
+        backgroundImage: 'linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px)',
+        backgroundSize: '60px 60px',
       }} />
 
-      {/* Content */}
+      {/* Center content */}
       <div style={{
-        position: 'relative', zIndex: 2, maxWidth: 480, width: '100%',
-        padding: '0 32px',
+        position: 'relative', zIndex: 2, width: '100%', maxWidth: 500, padding: '0 24px',
         opacity: visible ? 1 : 0,
-        transform: visible ? 'translateY(0)' : 'translateY(30px)',
+        transform: visible ? 'translateY(0) scale(1)' : 'translateY(20px) scale(0.98)',
         transition: 'all 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
       }}>
         {/* Logo */}
+        <div style={{ textAlign: 'center', marginBottom: 40, display: 'flex', justifyContent: 'center' }}>
+          <img src="/choatix-logo.png" alt="CHOATIX" style={{
+            height: 56, width: 'auto', objectFit: 'contain',
+            filter: 'brightness(0) invert(1)',
+            opacity: visible ? 1 : 0,
+            transition: 'opacity 0.6s 0.2s',
+          }} />
+        </div>
+
+        {/* Warning box */}
         <div style={{
-          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, marginBottom: 48,
-          opacity: visible ? 1 : 0,
-          transition: 'opacity 0.5s 0.3s',
+          border: '1px solid rgba(255,255,255,0.06)',
+          borderRadius: 16,
+          overflow: 'hidden',
+          background: 'rgba(255,255,255,0.015)',
         }}>
-          <div style={{ textAlign: 'center' }}>
+          {/* Header */}
+          <div style={{
+            padding: '16px 20px',
+            borderBottom: '1px solid rgba(255,255,255,0.04)',
+            display: 'flex', alignItems: 'center', gap: 10,
+          }}>
             <div style={{
-              fontSize: 22, fontWeight: 300, letterSpacing: 12, color: '#fff',
+              width: 6, height: 6, borderRadius: '50%',
+              background: 'rgba(255,255,255,0.3)',
+              animation: 'dotPulse 2s ease-in-out infinite',
+            }} />
+            <span style={{
+              fontSize: 9, fontWeight: 600, letterSpacing: 3,
+              color: 'rgba(255,255,255,0.3)',
               fontFamily: "'Cascadia Code', 'Consolas', monospace",
             }}>
-              CHOATIX
-            </div>
-            <div style={{
-              fontSize: 8, letterSpacing: 5, color: 'rgba(255,255,255,0.2)',
-              marginTop: 8,
-              fontFamily: "'Cascadia Code', 'Consolas', monospace",
-            }}>
-              GAMING OPTIMIZER v2.0
-            </div>
+              BEFORE YOU CONTINUE
+            </span>
           </div>
-        </div>
 
-        {/* Section label */}
-        <div style={{
-          fontSize: 8, fontWeight: 600, letterSpacing: 4,
-          color: 'rgba(255,255,255,0.25)', marginBottom: 20,
-          fontFamily: "'Cascadia Code', 'Consolas', monospace",
-        }}>
-          DISCLAIMER
-        </div>
-
-        {/* Divider */}
-        <div style={{
-          height: 1, background: 'rgba(255,255,255,0.08)', marginBottom: 0,
-        }} />
-
-        {/* Lines */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
-          {lines.map((line, i) => (
-            <div key={i} style={{
-              display: 'flex', gap: 16, padding: '16px 0',
-              borderBottom: i < lines.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
-              opacity: i < typedLines ? 1 : 0,
-              transform: i < typedLines ? 'translateX(0)' : 'translateX(-12px)',
-              transition: 'all 0.3s ease-out',
-            }}>
-              <div style={{
-                fontSize: 7, fontWeight: 700, letterSpacing: 2,
-                color: line.label === 'WARNING' ? 'rgba(255,255,255,0.6)' : 'rgba(255,255,255,0.2)',
-                minWidth: 60, paddingTop: 3, flexShrink: 0,
-                fontFamily: "'Cascadia Code', 'Consolas', monospace",
+          {/* Lines */}
+          <div style={{ padding: '4px 0' }}>
+            {lines.map((line, i) => (
+              <div key={i} style={{
+                display: 'flex', alignItems: 'center', gap: 14,
+                padding: '12px 20px',
+                opacity: i < showLines ? 1 : 0,
+                transform: i < showLines ? 'translateX(0)' : 'translateX(-16px)',
+                transition: 'all 0.35s cubic-bezier(0.16, 1, 0.3, 1)',
+                transitionDelay: `${i * 40}ms`,
               }}>
-                {line.label}
+                <span style={{
+                  fontSize: 11, width: 16, textAlign: 'center',
+                  color: 'rgba(255,255,255,0.2)',
+                  fontFamily: "'Cascadia Code', 'Consolas', monospace",
+                }}>
+                  {line.icon}
+                </span>
+                <span style={{
+                  fontSize: 11.5, lineHeight: 1.5,
+                  color: 'rgba(255,255,255,0.45)',
+                  fontFamily: "'Cascadia Code', 'Consolas', monospace",
+                }}>
+                  {line.text}
+                </span>
               </div>
-              <div style={{
-                fontSize: 12, lineHeight: 1.6, color: 'rgba(255,255,255,0.5)',
-                fontFamily: "'Cascadia Code', 'Consolas', monospace",
-              }}>
-                {i < typedLines ? line.text : ''}
-                {i === typedLines && phase === 'typing' && (
-                  <span style={{
-                    display: 'inline-block', width: 7, height: 14,
-                    background: 'rgba(255,255,255,0.5)', marginLeft: 2,
-                    animation: 'cursorBlink 0.8s step-end infinite',
-                  }} />
-                )}
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
 
         {/* Button */}
         <div style={{
-          marginTop: 40, opacity: phase === 'done' || phase === 'lines' ? 1 : 0,
-          transform: phase === 'done' || phase === 'lines' ? 'translateY(0)' : 'translateY(10px)',
-          transition: 'all 0.4s ease-out',
+          marginTop: 24,
+          opacity: phase === 'done' ? 1 : 0,
+          transform: phase === 'done' ? 'translateY(0)' : 'translateY(8px)',
+          transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
         }}>
           <button
             onClick={handleAccept}
             onMouseEnter={e => {
               e.currentTarget.style.background = '#fff'
               e.currentTarget.style.color = '#000'
-              e.currentTarget.style.boxShadow = '0 0 40px rgba(255,255,255,0.1)'
+              e.currentTarget.style.borderColor = '#fff'
             }}
             onMouseLeave={e => {
               e.currentTarget.style.background = 'transparent'
               e.currentTarget.style.color = '#fff'
-              e.currentTarget.style.boxShadow = 'none'
+              e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)'
             }}
             style={{
-              width: '100%', padding: '16px 0',
-              border: '1px solid rgba(255,255,255,0.2)',
-              background: 'transparent', color: '#fff',
-              fontSize: 10, fontWeight: 500, letterSpacing: 6,
-              cursor: 'pointer', transition: 'all 0.3s ease',
+              width: '100%', padding: '14px 0',
+              border: '1px solid rgba(255,255,255,0.15)',
+              borderRadius: 12, background: 'transparent', color: '#fff',
+              fontSize: 10, fontWeight: 600, letterSpacing: 5,
+              cursor: 'pointer', transition: 'all 0.25s ease',
               fontFamily: "'Cascadia Code', 'Consolas', monospace",
             }}
           >
-            CONTINUE
+            I UNDERSTAND
           </button>
         </div>
 
         {/* Footer */}
         <div style={{
-          marginTop: 24, textAlign: 'center',
-          fontSize: 7, letterSpacing: 3, color: 'rgba(255,255,255,0.12)',
+          marginTop: 16, textAlign: 'center',
+          fontSize: 8, letterSpacing: 2, color: 'rgba(255,255,255,0.1)',
           fontFamily: "'Cascadia Code', 'Consolas', monospace",
         }}>
           CONTINUING IMPLIES ACCEPTANCE
@@ -179,9 +173,9 @@ export default function Disclaimer({ onAccept }: { onAccept: () => void }) {
       </div>
 
       <style>{`
-        @keyframes cursorBlink {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0; }
+        @keyframes dotPulse {
+          0%, 100% { opacity: 0.3; }
+          50% { opacity: 0.8; }
         }
       `}</style>
     </div>

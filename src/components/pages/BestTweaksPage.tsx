@@ -4,9 +4,11 @@ import { useState, useCallback, useMemo } from 'react'
 import { useStore } from '@/store/useStore'
 import { availableTweaks } from '@/data/tweaks'
 import { canAccessTier } from '@/lib/featureAccess'
+import { createRollbackEntry } from '@/lib/tweaks'
 import { useToast } from '@/components/Toast'
-import { Zap, Lock, CheckCircle2, Loader2, Shield, Cpu, Mouse, Wifi, HardDrive, Monitor, Volume2, Power, Sparkles, ArrowRight, RotateCcw } from 'lucide-react'
+import { Zap, Lock, CheckCircle2, Loader2, Shield, Cpu, Mouse, Wifi, HardDrive, Monitor, Volume2, Power, Sparkles, ArrowRight, RotateCcw, Info } from 'lucide-react'
 import { LicenseTier } from '@/types'
+import { TweakInfoModal } from '@/components/TweakInfoModal'
 import type { Tweak } from '@/types'
 
 interface TweakGroup {
@@ -25,16 +27,13 @@ const GROUPS: TweakGroup[] = [
     icon: Shield,
     tweaks: [
       'sys-high-performance', 'sys-enable-game-mode', 'sys-disable-fullscreen-opt',
-      'sys-visual-effects', 'mouse-disable-acceleration', 'mouse-raw-input',
-      'nv-max-power', 'nv-disable-vsync',
-      'debloat-disable-startup', 'debloat-remove-background', 'debloat-superfetch',
-      'net-disable-background-updates', 'net-optimize-dns',
-      'cpu-core-parking-disable', 'cpu-smt-enable',
-      'memory-wake-cleaner', 'memory-page-prefetch',
-      'storage-ssd-optimization', 'storage-trim-optimization', 'storage-temp-file-cleaner',
+      'sys-disk-cleanup', 'cpu-core-parking-disable',
+      'mouse-disable-acceleration', 'nv-disable-vsync',
+      'net-optimize-dns',
+      'storage-ssd-optimization', 'storage-trim-optimization',
       'audio-disable-enhancements', 'usb-selective-suspend-disable',
-      'windows-explorer-optimization', 'windows-animation-optimization', 'windows-notification-optimization',
-      'amd-max-power', 'intel-max-power',
+      'windows-explorer-optimization',
+      'keyboard-disable-filter', 'keyboard-usb-power-mgmt',
     ],
   },
   {
@@ -44,15 +43,10 @@ const GROUPS: TweakGroup[] = [
     icon: Cpu,
     tweaks: [
       'sys-cpu-priority',
-      'nv-optimize-shader-cache', 'nv-low-latency', 'nv-texture-filtering',
-      'net-reduce-congestion', 'net-disable-throttling',
-      'debloat-disable-telemetry', 'debloat-disable-services',
-      'mouse-optimize-pointer',
-      'cpu-interrupt-affinity',
-      'memory-virtual-memory', 'memory-pagefile-manager',
-      'storage-nvme-optimization', 'storage-prefetch-manager', 'storage-write-cache',
-      'windows-context-menu-cleanup', 'windows-scheduled-task-optimizer', 'windows-search-index-optimizer',
-      'services-gaming-preset',
+      'nv-low-latency', 'nv-texture-filtering',
+      'net-reduce-congestion',
+      'storage-nvme-optimization', 'storage-prefetch-manager',
+      'audio-usb-optimization',
     ],
   },
   {
@@ -62,15 +56,13 @@ const GROUPS: TweakGroup[] = [
     icon: Sparkles,
     tweaks: [
       'nv-hardware-scheduling',
-      'net-reset-tcp',
       'memory-working-set',
-      'services-streaming-preset', 'services-editing-preset', 'services-workstation-preset',
     ],
   },
 ]
 
-function TweakRow({ tweak, isApplied, isApplying, isReverting, hasAccess, onApply, onRevert }: {
-  tweak: Tweak; isApplied: boolean; isApplying: boolean; isReverting: boolean; hasAccess: boolean; onApply: () => void; onRevert: () => void
+function TweakRow({ tweak, isApplied, isApplying, isReverting, hasAccess, onApply, onRevert, onInfo }: {
+  tweak: Tweak; isApplied: boolean; isApplying: boolean; isReverting: boolean; hasAccess: boolean; onApply: () => void; onRevert: () => void; onInfo: () => void
 }) {
   return (
     <div className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200"
@@ -128,6 +120,11 @@ function TweakRow({ tweak, isApplied, isApplying, isReverting, hasAccess, onAppl
         {tweak.gamingImpact}
       </div>
 
+      {/* Info */}
+      <button onClick={onInfo} className="shrink-0 flex items-center justify-center w-6 h-6 rounded-lg transition-all hover:bg-white/10" style={{ border: '1px solid rgba(255,255,255,0.15)' }} title="Tweak info">
+        <Info className="w-3.5 h-3.5" style={{ color: 'rgba(255,255,255,0.6)' }} />
+      </button>
+
       {/* Actions */}
       {hasAccess && !isApplying && (
         isApplied ? (
@@ -148,11 +145,12 @@ function TweakRow({ tweak, isApplied, isApplying, isReverting, hasAccess, onAppl
 }
 
 export function BestTweaksPage() {
-  const { license, appliedTweaks, setAppliedTweaks, addAppliedTweak } = useStore()
+  const { license, appliedTweaks, setAppliedTweaks, addAppliedTweak, addRollbackEntry } = useStore()
   const { addToast } = useToast()
   const [applying, setApplying] = useState<string | null>(null)
   const [reverting, setReverting] = useState<string | null>(null)
   const [expandedGroup, setExpandedGroup] = useState<string | null>('essential')
+  const [infoTweak, setInfoTweak] = useState<Tweak | null>(null)
   const appliedSet = new Set(appliedTweaks)
 
   const tierCounts = useMemo(() => ({
@@ -169,6 +167,7 @@ export function BestTweaksPage() {
       const tweak = availableTweaks.find(t => t.id === tweakId)
       if (result.success) {
         addAppliedTweak(tweakId)
+        addRollbackEntry(createRollbackEntry(tweakId))
         addToast(`${tweak?.name || tweakId} applied`, 'success')
       } else {
         addToast(`${tweak?.name || tweakId} failed`, 'error')
@@ -177,7 +176,7 @@ export function BestTweaksPage() {
       addToast(`Error: ${e.message}`, 'error')
     }
     setApplying(null)
-  }, [addToast, addAppliedTweak])
+  }, [addToast, addAppliedTweak, addRollbackEntry])
 
   const handleApplyGroup = useCallback(async (group: TweakGroup) => {
     if (!window.electronAPI) return
@@ -191,6 +190,7 @@ export function BestTweaksPage() {
         const result = await window.electronAPI.applyTweak(tweakId)
         if (result.success) {
           addAppliedTweak(tweakId)
+          addRollbackEntry(createRollbackEntry(tweakId))
           successCount++
         } else {
           failCount++
@@ -201,7 +201,7 @@ export function BestTweaksPage() {
     }
     setApplying(null)
     addToast(`${group.label}: ${successCount} applied, ${failCount} failed`, successCount > 0 ? 'success' : 'error')
-  }, [license.tier, appliedSet, addToast, addAppliedTweak])
+  }, [license.tier, appliedSet, addToast, addAppliedTweak, addRollbackEntry])
 
   const handleRevert = useCallback(async (tweakId: string) => {
     if (!window.electronAPI) return
@@ -317,6 +317,7 @@ export function BestTweaksPage() {
                       <div className="flex-1">Tweak</div>
                       <div className="w-20 text-center">Impact</div>
                       <div className="w-[130px] text-right">Gaming Effect</div>
+                      <div className="w-10" />
                       <div className="w-16" />
                     </div>
                     {groupTweaks.map(tweak => (
@@ -329,6 +330,7 @@ export function BestTweaksPage() {
                         hasAccess={canAccessTier(license.tier, tweak.requiredTier)}
                         onApply={() => handleApply(tweak.id)}
                         onRevert={() => handleRevert(tweak.id)}
+                        onInfo={() => setInfoTweak(tweak)}
                       />
                     ))}
                   </div>
@@ -338,6 +340,8 @@ export function BestTweaksPage() {
           })}
         </div>
       </div>
+
+      <TweakInfoModal isOpen={!!infoTweak} onClose={() => setInfoTweak(null)} tweak={infoTweak} />
     </div>
   )
 }

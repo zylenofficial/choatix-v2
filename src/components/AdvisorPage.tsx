@@ -68,6 +68,7 @@ export function AdvisorPage() {
   }, [license.tier, setAdvisorResult, setAdvisorScanStatus])
 
   const handleFix = useCallback(async (issue: AdvisorIssue) => {
+    if (!issue.tweakId) return
     if (!canAccessTier(license.tier, issue.requiredTier)) {
       setShowUpgradeModal(true)
       return
@@ -86,12 +87,12 @@ export function AdvisorPage() {
 
   const handleOptimizeAll = useCallback(async () => {
     const fixableIssues = visibleIssues.filter(i => {
-      return canAccessTier(license.tier, i.requiredTier) && !appliedIssues.has(i.id)
+      return i.tweakId && canAccessTier(license.tier, i.requiredTier) && !appliedIssues.has(i.id)
     })
     for (const issue of fixableIssues) {
       setFixingIssue(issue.id)
       try {
-        const result = await applyAdvisorFix(issue.tweakId)
+        const result = await applyAdvisorFix(issue.tweakId!)
         if (result.success) setAppliedIssues(prev => new Set(prev).add(issue.id))
       } catch {}
       setFixingIssue(null)

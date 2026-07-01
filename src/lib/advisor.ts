@@ -85,7 +85,7 @@ export function generateRecommendations(info: SystemInfo, tier: LicenseTier): Ad
 
   // --- DEBLOAT (advanced) ---
   if (tier === LicenseTier.PRO || tier === LicenseTier.PREMIUM) {
-    analyzeDebloatAdvanced(info, tier, issues)
+    analyzeTelemetry(info, tier, issues)
   }
 
   return issues
@@ -152,10 +152,9 @@ function analyzeRamUsage(info: SystemInfo, issues: AdvisorIssue[]) {
         description: `${(info.ram.used / 1024).toFixed(1)} GB of ${(info.ram.total / 1024).toFixed(1)} GB in use. High memory usage leaves fewer resources for games, causing stutters and texture streaming issues.`,
         gamingImpact: 'More available memory for game assets and smoother gameplay',
         severity: ramPercent > 92 ? 'high' : 'medium',
-        category: 'debloat',
-        tweakId: 'debloat-remove-background',
+        category: 'system',
         requiredTier: LicenseTier.FREE,
-        undoable: true,
+        undoable: false,
       })
     }
   }
@@ -169,10 +168,9 @@ function analyzeStartupApps(info: SystemInfo, issues: AdvisorIssue[]) {
       description: `Programs launching at boot: ${info.startup.programs.slice(0, 5).join(', ')}${info.startup.count > 5 ? '...' : ''}. These consume RAM and CPU cycles even when not in use.`,
       gamingImpact: 'Faster boot, more free RAM for gaming',
       severity: info.startup.count > 15 ? 'high' : 'medium',
-      category: 'debloat',
-      tweakId: 'debloat-disable-startup',
+      category: 'system',
       requiredTier: LicenseTier.FREE,
-      undoable: true,
+      undoable: false,
     })
   }
 }
@@ -185,10 +183,9 @@ function analyzeBackgroundProcesses(info: SystemInfo, issues: AdvisorIssue[]) {
       description: `Out of ${info.processes.total} total processes, ${info.processes.background} are running in the background. High background load causes CPU contention and input lag.`,
       gamingImpact: 'Frees CPU cores and reduces micro-stutters',
       severity: info.processes.background > 120 ? 'high' : 'medium',
-      category: 'debloat',
-      tweakId: 'debloat-remove-background',
+      category: 'system',
       requiredTier: LicenseTier.FREE,
-      undoable: true,
+      undoable: false,
     })
   }
 }
@@ -211,18 +208,6 @@ function analyzeMouse(info: SystemInfo, issues: AdvisorIssue[]) {
 
 function analyzeNvidiaBasic(info: SystemInfo, issues: AdvisorIssue[]) {
   if (info.gpu.vendor !== 'nvidia') return
-
-  issues.push({
-    id: 'advisor-gpu-power',
-    title: 'GPU power mode not maximized',
-    description: `NVIDIA ${info.gpu.model} detected. The GPU may be using "Optimal Power" instead of "Prefer Maximum Performance", causing clock speed drops during gameplay.`,
-    gamingImpact: 'Stable GPU clock, eliminates power-state transitions',
-    severity: 'high',
-    category: 'nvidia',
-    tweakId: 'nv-max-power',
-    requiredTier: LicenseTier.FREE,
-    undoable: true,
-  })
 }
 
 function analyzeNvidiaAdvanced(info: SystemInfo, tier: LicenseTier, issues: AdvisorIssue[]) {
@@ -273,7 +258,7 @@ function analyzeNetworkAdvanced(info: SystemInfo, tier: LicenseTier, issues: Adv
   }
 }
 
-function analyzeDebloatAdvanced(info: SystemInfo, tier: LicenseTier, issues: AdvisorIssue[]) {
+function analyzeTelemetry(info: SystemInfo, tier: LicenseTier, issues: AdvisorIssue[]) {
   if (tier === LicenseTier.PRO || tier === LicenseTier.PREMIUM) {
     issues.push({
       id: 'advisor-telemetry',
@@ -281,10 +266,9 @@ function analyzeDebloatAdvanced(info: SystemInfo, tier: LicenseTier, issues: Adv
       description: 'Windows telemetry data collection runs periodically, consuming CPU and network resources in the background.',
       gamingImpact: 'Fewer background CPU spikes',
       severity: 'low',
-      category: 'debloat',
-      tweakId: 'debloat-disable-telemetry',
+      category: 'system',
       requiredTier: LicenseTier.PRO,
-      undoable: true,
+      undoable: false,
     })
   }
 }

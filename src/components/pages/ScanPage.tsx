@@ -37,6 +37,7 @@ export function ScanPage() {
   }, [license.tier, setAdvisorResult, setAdvisorScanStatus])
 
   const handleFix = useCallback(async (issue: AdvisorIssue) => {
+    if (!issue.tweakId) return
     if (!canAccessTier(license.tier, issue.requiredTier)) return
     setFixingIssue(issue.id)
     try {

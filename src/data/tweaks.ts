@@ -1,78 +1,90 @@
 import { Tweak, LicenseTier } from '@/types'
 
 export const availableTweaks: Tweak[] = [
-  // NETWORK
+  // ── SYSTEM ──
   {
-    id: 'net-disable-background-updates',
-    name: 'Disable Background Updates',
-    description: 'Prevents Windows Update from consuming bandwidth during gaming',
-    category: 'network',
+    id: 'sys-high-performance',
+    name: 'High Performance Power Plan',
+    description: 'Switches to High Performance power plan for maximum CPU/GPU performance',
+    category: 'system',
     requiredTier: LicenseTier.FREE,
     applied: false,
     impact: 'high',
-    risk: 'low',
-    gamingImpact: 'Latency reduction, ping stability'
+    risk: 'none',
+    gamingImpact: 'Maximum CPU performance, eliminates power throttling'
   },
   {
-    id: 'net-optimize-dns',
-    name: 'Optimize DNS Settings',
-    description: 'Switches to faster DNS servers for lower connection latency',
-    category: 'network',
+    id: 'sys-enable-game-mode',
+    name: 'Enable Game Mode',
+    description: 'Enables Windows Game Mode to prioritize gaming resources and reduce background interference',
+    category: 'system',
     requiredTier: LicenseTier.FREE,
     applied: false,
     impact: 'medium',
     risk: 'none',
-    gamingImpact: 'Faster game server connections'
+    gamingImpact: 'Reduced background interference during gaming'
   },
   {
-    id: 'net-reduce-congestion',
-    name: 'Reduce Network Congestion',
-    description: 'Prioritizes gaming traffic over background network usage',
-    category: 'network',
+    id: 'sys-disable-fullscreen-opt',
+    name: 'Disable Fullscreen Optimizations',
+    description: 'Disables Windows fullscreen optimization overlay for lower input lag in exclusive fullscreen',
+    category: 'system',
+    requiredTier: LicenseTier.FREE,
+    applied: false,
+    impact: 'medium',
+    risk: 'low',
+    gamingImpact: 'Lower fullscreen input lag'
+  },
+  {
+    id: 'sys-disk-cleanup',
+    name: 'Disk Cleanup',
+    description: 'Removes temporary files and frees disk space using Windows built-in utility',
+    category: 'system',
+    requiredTier: LicenseTier.FREE,
+    applied: false,
+    impact: 'low',
+    risk: 'none',
+    gamingImpact: 'More storage for game installations'
+  },
+  {
+    id: 'sys-cpu-priority',
+    name: 'CPU Priority Boost',
+    description: 'Optimizes Win32PrioritySeparation to give foreground processes shorter, variable CPU intervals',
+    category: 'system',
     requiredTier: LicenseTier.PRO,
     applied: false,
     impact: 'high',
     risk: 'low',
-    gamingImpact: 'Stable ping, less packet loss'
+    gamingImpact: 'More responsive foreground applications and games'
   },
   {
-    id: 'net-disable-throttling',
-    name: 'Disable Network Throttling',
-    description: 'Removes Windows network throttling mechanism',
-    category: 'network',
-    requiredTier: LicenseTier.PRO,
+    id: 'cpu-core-parking-disable',
+    name: 'Disable Core Parking',
+    description: 'Sets minimum active cores to 100% to prevent Windows from parking CPU cores',
+    category: 'system',
+    requiredTier: LicenseTier.FREE,
     applied: false,
     impact: 'medium',
-    risk: 'low',
-    gamingImpact: 'Reduced network jitter'
+    risk: 'none',
+    gamingImpact: 'All CPU cores available, no park/unpark latency'
   },
   {
-    id: 'net-reset-tcp',
-    name: 'Reset TCP/IP Stack',
-    description: 'Resets network stack to clean state',
-    category: 'network',
+    id: 'memory-working-set',
+    name: 'Optimize Working Set',
+    description: 'Disables LargeSystemCache to prioritize application memory over file system cache',
+    category: 'system',
     requiredTier: LicenseTier.PREMIUM,
     applied: false,
-    impact: 'high',
-    risk: 'medium',
-    gamingImpact: 'Fixes persistent network issues'
+    impact: 'medium',
+    risk: 'low',
+    gamingImpact: 'More RAM available for game processes'
   },
-  // NVIDIA
-  {
-    id: 'nv-max-power',
-    name: 'NVIDIA Power Management Max',
-    description: 'Sets NVIDIA power management to prefer maximum performance',
-    category: 'nvidia',
-    requiredTier: LicenseTier.FREE,
-    applied: false,
-    impact: 'high',
-    risk: 'none',
-    gamingImpact: 'FPS stability, eliminates power throttling'
-  },
+
+  // ── NVIDIA ──
   {
     id: 'nv-disable-vsync',
     name: 'Disable V-Sync',
-    description: 'Disables vertical sync to reduce input lag',
+    description: 'Disables vertical sync to reduce input lag (enable in-game if you see screen tearing)',
     category: 'nvidia',
     requiredTier: LicenseTier.FREE,
     applied: false,
@@ -81,20 +93,9 @@ export const availableTweaks: Tweak[] = [
     gamingImpact: 'Input lag reduction'
   },
   {
-    id: 'nv-optimize-shader-cache',
-    name: 'Optimize Shader Cache',
-    description: 'Clears and optimizes shader cache for faster loading',
-    category: 'nvidia',
-    requiredTier: LicenseTier.PRO,
-    applied: false,
-    impact: 'medium',
-    risk: 'none',
-    gamingImpact: 'Faster game loading, less stutter'
-  },
-  {
     id: 'nv-low-latency',
     name: 'Ultra Low Latency Mode',
-    description: 'Enables NVIDIA Ultra Low Latency mode',
+    description: 'Enables NVIDIA Ultra Low Latency mode for minimum render queue delay',
     category: 'nvidia',
     requiredTier: LicenseTier.PRO,
     applied: false,
@@ -105,9 +106,9 @@ export const availableTweaks: Tweak[] = [
   {
     id: 'nv-hardware-scheduling',
     name: 'Hardware GPU Scheduling',
-    description: 'Enables hardware GPU scheduling for better frame pacing',
+    description: 'Enables hardware-accelerated GPU scheduling for better frame pacing (Windows 10 2004+)',
     category: 'nvidia',
-    requiredTier: LicenseTier.PREMIUM,
+    requiredTier: LicenseTier.PRO,
     applied: false,
     impact: 'high',
     risk: 'medium',
@@ -115,76 +116,45 @@ export const availableTweaks: Tweak[] = [
   },
   {
     id: 'nv-texture-filtering',
-    name: 'Texture Filtering Quality',
-    description: 'Sets texture filtering to high performance for better FPS',
+    name: 'Texture Filtering Performance',
+    description: 'Sets NVIDIA texture filtering to high performance for higher FPS with minor visual trade-off',
     category: 'nvidia',
     requiredTier: LicenseTier.PRO,
     applied: false,
     impact: 'medium',
     risk: 'low',
-    gamingImpact: 'Improved FPS with minimal visual impact'
+    gamingImpact: 'Higher FPS, minimal visual quality loss'
   },
-  // DEBLOAT
+
+  // ── NETWORK ──
   {
-    id: 'debloat-disable-startup',
-    name: 'Disable Unnecessary Startup Apps',
-    description: 'Prevents non-essential programs from launching at boot',
-    category: 'debloat',
+    id: 'net-optimize-dns',
+    name: 'Optimize DNS Settings',
+    description: 'Switches to Cloudflare DNS (1.1.1.1) for lower connection latency',
+    category: 'network',
     requiredTier: LicenseTier.FREE,
     applied: false,
-    impact: 'high',
+    impact: 'medium',
     risk: 'none',
-    gamingImpact: 'Faster boot, more available RAM'
+    gamingImpact: 'Faster game server connections'
   },
   {
-    id: 'debloat-remove-background',
-    name: 'Stop Background Bloat Processes',
-    description: 'Terminates unnecessary background processes',
-    category: 'debloat',
-    requiredTier: LicenseTier.FREE,
-    applied: false,
-    impact: 'high',
-    risk: 'low',
-    gamingImpact: 'More CPU/RAM available for games'
-  },
-  {
-    id: 'debloat-disable-telemetry',
-    name: 'Disable Telemetry Services',
-    description: 'Stops Windows telemetry data collection',
-    category: 'debloat',
+    id: 'net-reduce-congestion',
+    name: 'Optimize TCP Congestion',
+    description: 'Switches to CTCP congestion control for better throughput on high-bandwidth connections',
+    category: 'network',
     requiredTier: LicenseTier.PRO,
     applied: false,
     impact: 'medium',
     risk: 'low',
-    gamingImpact: 'Reduced background CPU usage'
+    gamingImpact: 'Stable ping, better throughput'
   },
-  {
-    id: 'debloat-disable-services',
-    name: 'Disable Non-Critical Services',
-    description: 'Disables Windows services not needed for gaming',
-    category: 'debloat',
-    requiredTier: LicenseTier.PRO,
-    applied: false,
-    impact: 'high',
-    risk: 'low',
-    gamingImpact: 'Lower RAM and CPU overhead'
-  },
-  {
-    id: 'debloat-superfetch',
-    name: 'Disable Superfetch/SysMain',
-    description: 'Disables prefetching service that consumes disk and RAM',
-    category: 'debloat',
-    requiredTier: LicenseTier.FREE,
-    applied: false,
-    impact: 'medium',
-    risk: 'low',
-    gamingImpact: 'Reduced disk usage during gaming'
-  },
-  // MOUSE
+
+  // ── MOUSE ──
   {
     id: 'mouse-disable-acceleration',
     name: 'Disable Mouse Acceleration',
-    description: 'Disables Enhance Pointer Precision for raw mouse input',
+    description: 'Disables Enhance Pointer Precision for raw, consistent mouse input',
     category: 'mouse',
     requiredTier: LicenseTier.FREE,
     applied: false,
@@ -192,348 +162,71 @@ export const availableTweaks: Tweak[] = [
     risk: 'none',
     gamingImpact: 'Better aim stability, consistent aim'
   },
-  {
-    id: 'mouse-raw-input',
-    name: 'Enable Raw Input Mode',
-    description: 'Forces games to use raw mouse input bypassing Windows',
-    category: 'mouse',
-    requiredTier: LicenseTier.FREE,
-    applied: false,
-    impact: 'medium',
-    risk: 'none',
-    gamingImpact: 'Direct mouse-to-game response'
-  },
-  {
-    id: 'mouse-optimize-pointer',
-    name: 'Optimize Pointer Settings',
-    description: 'Sets pointer speed to optimal level',
-    category: 'mouse',
-    requiredTier: LicenseTier.PRO,
-    applied: false,
-    impact: 'medium',
-    risk: 'none',
-    gamingImpact: 'Consistent sensitivity across games'
-  },
-  // SYSTEM
-  {
-    id: 'sys-high-performance',
-    name: 'High Performance Power Plan',
-    description: 'Switches to High Performance power plan for maximum CPU',
-    category: 'system',
-    requiredTier: LicenseTier.FREE,
-    applied: false,
-    impact: 'high',
-    risk: 'none',
-    gamingImpact: 'Maximum CPU performance'
-  },
-  {
-    id: 'sys-enable-game-mode',
-    name: 'Enable Game Mode',
-    description: 'Enables Windows Game Mode to prioritize gaming resources',
-    category: 'system',
-    requiredTier: LicenseTier.FREE,
-    applied: false,
-    impact: 'medium',
-    risk: 'none',
-    gamingImpact: 'Reduced background interference'
-  },
-  {
-    id: 'sys-disable-fullscreen-opt',
-    name: 'Disable Fullscreen Optimizations',
-    description: 'Disables Windows fullscreen optimization overlay',
-    category: 'system',
-    requiredTier: LicenseTier.FREE,
-    applied: false,
-    impact: 'medium',
-    risk: 'low',
-    gamingImpact: 'Lower fullscreen input lag'
-  },
-  {
-    id: 'sys-visual-effects',
-    name: 'Optimize Visual Effects',
-    description: 'Disables unnecessary Windows animations to free GPU/CPU',
-    category: 'system',
-    requiredTier: LicenseTier.FREE,
-    applied: false,
-    impact: 'medium',
-    risk: 'none',
-    gamingImpact: 'More resources for games'
-  },
-  {
-    id: 'sys-cpu-priority',
-    name: 'CPU Priority Boost',
-    description: 'Boosts CPU priority for foreground game processes',
-    category: 'system',
-    requiredTier: LicenseTier.PRO,
-    applied: false,
-    impact: 'high',
-    risk: 'low',
-    gamingImpact: 'Better CPU time allocation'
-  },
-  {
-    id: 'sys-disk-cleanup',
-    name: 'Disk Cleanup',
-    description: 'Removes temporary files and frees disk space',
-    category: 'system',
-    requiredTier: LicenseTier.FREE,
-    applied: false,
-    impact: 'low',
-    risk: 'none',
-    gamingImpact: 'More storage for game installations'
-  },
-  // AMD
-  {
-    id: 'amd-max-power',
-    name: 'AMD Power Management Max',
-    description: 'Sets AMD power management to prefer maximum performance',
-    category: 'amd',
-    requiredTier: LicenseTier.FREE,
-    applied: false,
-    impact: 'high',
-    risk: 'none',
-    gamingImpact: 'FPS stability, eliminates power throttling'
-  },
-  // INTEL
-  {
-    id: 'intel-max-power',
-    name: 'Intel Power Management Max',
-    description: 'Sets Intel power management to prefer maximum performance',
-    category: 'intel',
-    requiredTier: LicenseTier.FREE,
-    applied: false,
-    impact: 'high',
-    risk: 'none',
-    gamingImpact: 'Maximum GPU performance'
-  },
-  // CPU
-  {
-    id: 'cpu-core-parking-disable',
-    name: 'Disable Core Parking',
-    description: 'Disables Windows core parking for maximum performance',
-    category: 'cpu',
-    requiredTier: LicenseTier.FREE,
-    applied: false,
-    impact: 'high',
-    risk: 'none',
-    gamingImpact: 'More available CPU cores'
-  },
-  {
-    id: 'cpu-smt-enable',
-    name: 'Enable Simultaneous Multi-Threading',
-    description: 'Ensures SMT is enabled for optimal performance',
-    category: 'cpu',
-    requiredTier: LicenseTier.FREE,
-    applied: false,
-    impact: 'high',
-    risk: 'none',
-    gamingImpact: 'Better parallel task handling'
-  },
-  {
-    id: 'cpu-interrupt-affinity',
-    name: 'Optimize Interrupt Affinity',
-    description: 'Optimizes CPU interrupt affinity for gaming',
-    category: 'cpu',
-    requiredTier: LicenseTier.PRO,
-    applied: false,
-    impact: 'medium',
-    risk: 'low',
-    gamingImpact: 'Reduced interrupt latency'
-  },
-  // MEMORY
-  {
-    id: 'memory-wake-cleaner',
-    name: 'Wake Clean Standby Memory',
-    description: 'Forces immediate cleanup of standby memory for gaming',
-    category: 'memory',
-    requiredTier: LicenseTier.FREE,
-    applied: false,
-    impact: 'high',
-    risk: 'none',
-    gamingImpact: 'More available RAM for games'
-  },
-  {
-    id: 'memory-page-prefetch',
-    name: 'Optimize Page Prefetch',
-    description: 'Optimizes page prefetch for better memory access',
-    category: 'memory',
-    requiredTier: LicenseTier.FREE,
-    applied: false,
-    impact: 'medium',
-    risk: 'none',
-    gamingImpact: 'Faster memory access'
-  },
-  {
-    id: 'memory-virtual-memory',
-    name: 'Virtual Memory Optimizer',
-    description: 'Optimizes virtual memory settings for gaming',
-    category: 'memory',
-    requiredTier: LicenseTier.PRO,
-    applied: false,
-    impact: 'medium',
-    risk: 'low',
-    gamingImpact: 'Better memory handling'
-  },
-  {
-    id: 'memory-pagefile-manager',
-    name: 'Pagefile Manager',
-    description: 'Optimizes pagefile for gaming performance',
-    category: 'memory',
-    requiredTier: LicenseTier.PRO,
-    applied: false,
-    impact: 'medium',
-    risk: 'low',
-    gamingImpact: 'Stable memory management'
-  },
-  {
-    id: 'memory-working-set',
-    name: 'Working Set Optimizer',
-    description: 'Optimizes working set sizes for gaming',
-    category: 'memory',
-    requiredTier: LicenseTier.PREMIUM,
-    applied: false,
-    impact: 'medium',
-    risk: 'low',
-    gamingImpact: 'Better memory allocation'
-  },
-  // STORAGE
+
+  // ── STORAGE ──
   {
     id: 'storage-ssd-optimization',
-    name: 'SSD Optimization',
-    description: 'Optimizes SSD settings for gaming performance',
+    name: 'Disable Last Access Time',
+    description: 'Disables last access time tracking on NTFS volumes to reduce disk I/O',
     category: 'storage',
     requiredTier: LicenseTier.FREE,
     applied: false,
-    impact: 'high',
+    impact: 'medium',
     risk: 'none',
-    gamingImpact: 'Faster game loading'
-  },
-  {
-    id: 'storage-nvme-optimization',
-    name: 'NVMe Optimization',
-    description: 'Optimizes NVMe settings for maximum speed',
-    category: 'storage',
-    requiredTier: LicenseTier.PRO,
-    applied: false,
-    impact: 'high',
-    risk: 'low',
-    gamingImpact: 'Highest possible storage speed'
+    gamingImpact: 'Lower disk overhead'
   },
   {
     id: 'storage-trim-optimization',
-    name: 'TRIM Optimization',
-    description: 'Optimizes TRIM operations for SSD health',
+    name: 'Force TRIM',
+    description: 'Runs manual TRIM on all SSD volumes to maintain peak write performance',
     category: 'storage',
     requiredTier: LicenseTier.FREE,
     applied: false,
     impact: 'medium',
     risk: 'none',
-    gamingImpact: 'Maintains SSD performance'
+    gamingImpact: 'Maintains SSD performance over time'
+  },
+  {
+    id: 'storage-nvme-optimization',
+    name: 'NVMe Write Buffer',
+    description: 'Increases NVMe write buffer queues for higher write throughput on Samsung NVMe drives',
+    category: 'storage',
+    requiredTier: LicenseTier.PRO,
+    applied: false,
+    impact: 'high',
+    risk: 'low',
+    gamingImpact: 'Faster game installs and level loading'
   },
   {
     id: 'storage-prefetch-manager',
-    name: 'Prefetch Manager',
-    description: 'Optimizes prefetch for better read performance',
+    name: 'Disable Superfetch',
+    description: 'Disables Windows Superfetch prefetching service on SSD/NVMe systems where it adds overhead',
     category: 'storage',
     requiredTier: LicenseTier.PRO,
     applied: false,
     impact: 'medium',
     risk: 'low',
-    gamingImpact: 'Faster file access'
+    gamingImpact: 'Lower disk usage during gaming on SSD systems'
   },
-  {
-    id: 'storage-write-cache',
-    name: 'Write Cache Optimization',
-    description: 'Optimizes write cache settings for gaming',
-    category: 'storage',
-    requiredTier: LicenseTier.PRO,
-    applied: false,
-    impact: 'medium',
-    risk: 'low',
-    gamingImpact: 'Better write performance'
-  },
-  {
-    id: 'storage-temp-file-cleaner',
-    name: 'Temporary File Cleaner',
-    description: 'Removes temporary files that slow down storage',
-    category: 'storage',
-    requiredTier: LicenseTier.FREE,
-    applied: false,
-    impact: 'low',
-    risk: 'none',
-    gamingImpact: 'Faster file operations'
-  },
-  // WINDOWS
+
+  // ── WINDOWS ──
   {
     id: 'windows-explorer-optimization',
-    name: 'Explorer Optimization',
-    description: 'Optimizes Windows Explorer for gaming performance',
+    name: 'Explorer Opens to This PC',
+    description: 'Sets Windows Explorer to open to This PC instead of Quick Access',
     category: 'windows',
     requiredTier: LicenseTier.FREE,
-    applied: false,
-    impact: 'high',
-    risk: 'none',
-    gamingImpact: 'Faster file operations'
-  },
-  {
-    id: 'windows-animation-optimization',
-    name: 'Animation Optimization',
-    description: 'Disables unnecessary animations to reduce load',
-    category: 'windows',
-    requiredTier: LicenseTier.FREE,
-    applied: false,
-    impact: 'medium',
-    risk: 'none',
-    gamingImpact: 'More available resources'
-  },
-  {
-    id: 'windows-context-menu-cleanup',
-    name: 'Context Menu Cleanup',
-    description: 'Removes unnecessary context menu items',
-    category: 'windows',
-    requiredTier: LicenseTier.PRO,
     applied: false,
     impact: 'low',
     risk: 'none',
-    gamingImpact: 'Faster UI interaction'
+    gamingImpact: 'Faster file navigation'
   },
-  {
-    id: 'windows-scheduled-task-optimizer',
-    name: 'Scheduled Task Optimizer',
-    description: 'Disables unnecessary scheduled tasks',
-    category: 'windows',
-    requiredTier: LicenseTier.PRO,
-    applied: false,
-    impact: 'medium',
-    risk: 'low',
-    gamingImpact: 'Reduced background activity'
-  },
-  {
-    id: 'windows-search-index-optimizer',
-    name: 'Search Index Optimizer',
-    description: 'Optimizes search indexing for reduced disk usage',
-    category: 'windows',
-    requiredTier: LicenseTier.PRO,
-    applied: false,
-    impact: 'medium',
-    risk: 'low',
-    gamingImpact: 'Lower disk I/O during search'
-  },
-  {
-    id: 'windows-notification-optimization',
-    name: 'Notification Optimization',
-    description: 'Optimizes notification system for gaming',
-    category: 'windows',
-    requiredTier: LicenseTier.FREE,
-    applied: false,
-    impact: 'medium',
-    risk: 'none',
-    gamingImpact: 'Fewer distractions during gaming'
-  },
-  // AUDIO
+
+  // ── AUDIO ──
   {
     id: 'audio-disable-enhancements',
     name: 'Disable Audio Enhancements',
-    description: 'Disables unnecessary audio enhancements for lower latency',
+    description: 'Disables Windows audio processing enhancements for lower audio latency',
     category: 'audio',
     requiredTier: LicenseTier.FREE,
     applied: false,
@@ -544,69 +237,49 @@ export const availableTweaks: Tweak[] = [
   {
     id: 'audio-usb-optimization',
     name: 'USB Audio Optimization',
-    description: 'Optimizes USB audio devices for gaming',
+    description: 'Disables selective suspend on USB audio devices to prevent dropouts',
     category: 'audio',
     requiredTier: LicenseTier.FREE,
     applied: false,
     impact: 'low',
     risk: 'none',
-    gamingImpact: 'Stable USB audio'
+    gamingImpact: 'Stable USB audio, no dropouts'
   },
-  // USB
+
+  // ── USB ──
   {
     id: 'usb-selective-suspend-disable',
     name: 'Disable USB Selective Suspend',
-    description: 'Disables USB selective suspend for better responsiveness',
+    description: 'Prevents USB devices from entering sleep mode for instant response',
     category: 'usb',
     requiredTier: LicenseTier.FREE,
     applied: false,
     impact: 'high',
     risk: 'none',
-    gamingImpact: 'Faster USB device response'
+    gamingImpact: 'Faster USB device response, no wake delay'
   },
-  // SERVICES
+
+  // ── KEYBOARD ──
   {
-    id: 'services-gaming-preset',
-    name: 'Gaming Service Preset',
-    description: 'Applies optimized service configuration for gaming',
-    category: 'services',
-    requiredTier: LicenseTier.PRO,
-    applied: false,
-    impact: 'high',
-    risk: 'low',
-    gamingImpact: 'Optimized background services'
-  },
-  {
-    id: 'services-streaming-preset',
-    name: 'Streaming Service Preset',
-    description: 'Optimized service settings for streaming',
-    category: 'services',
-    requiredTier: LicenseTier.PREMIUM,
+    id: 'keyboard-disable-filter',
+    name: 'Disable Keyboard Filter',
+    description: 'Removes the kbdhid filter driver overhead between HID and keyboard, reducing micro-latency',
+    category: 'keyboard',
+    requiredTier: LicenseTier.FREE,
     applied: false,
     impact: 'medium',
-    risk: 'low',
-    gamingImpact: 'Better streaming performance'
+    risk: 'none',
+    gamingImpact: 'Lower keyboard input latency'
   },
   {
-    id: 'services-editing-preset',
-    name: 'Editing Service Preset',
-    description: 'Optimized service settings for video editing',
-    category: 'services',
-    requiredTier: LicenseTier.PREMIUM,
+    id: 'keyboard-usb-power-mgmt',
+    name: 'Disable USB Power Management',
+    description: 'Prevents USB root hubs from entering power-save states, eliminating keyboard wake-up lag',
+    category: 'keyboard',
+    requiredTier: LicenseTier.FREE,
     applied: false,
     impact: 'medium',
-    risk: 'low',
-    gamingImpact: 'Better editing performance'
+    risk: 'none',
+    gamingImpact: 'No keyboard wake-up delay after idle'
   },
-  {
-    id: 'services-workstation-preset',
-    name: 'Workstation Service Preset',
-    description: 'Optimized service settings for workstation performance',
-    category: 'services',
-    requiredTier: LicenseTier.PREMIUM,
-    applied: false,
-    impact: 'high',
-    risk: 'low',
-    gamingImpact: 'Maximum workstation performance'
-  }
 ]

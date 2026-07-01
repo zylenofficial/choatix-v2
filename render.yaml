@@ -10,3 +10,9 @@ services:
         value: 10000
       - key: DATABASE_URL
         sync: false
+      - key: DISCORD_CLIENT_ID
+        value: "1520450575831929083"
+      - key: DISCORD_CLIENT_SECRET
+        value: "ObLYdB6waUtVREgUPI6KZiSVCYaN4FV1"
+      - key: DISCORD_REDIRECT_URI
+        value: "https://choatix-v2.onrender.com/api/auth/discord/callback"

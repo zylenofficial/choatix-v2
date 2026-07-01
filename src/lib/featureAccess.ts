@@ -27,7 +27,7 @@ export const featureRegistry: Feature[] = [
   { id: 'tweak_basic', name: 'Basic Tweaks', description: 'Essential gaming optimizations', tier: LicenseTier.FREE, gamingImpact: 'Improves FPS and reduces latency', category: 'tweak' },
   { id: 'tweak_network', name: 'Network Tweaks', description: 'Network latency optimization', tier: LicenseTier.PRO, gamingImpact: 'Lower ping and stable connection', category: 'tweak' },
   { id: 'tweak_nvidia', name: 'NVIDIA Tweaks', description: 'GPU optimization for NVIDIA cards', tier: LicenseTier.PRO, gamingImpact: 'FPS stability and input lag reduction', category: 'tweak' },
-  { id: 'tweak_debloat', name: 'System Debloat', description: 'Remove background bloat', tier: LicenseTier.PRO, gamingImpact: 'More resources for games', category: 'tweak' },
+  { id: 'tweak_nv_low_latency', name: 'NVIDIA Low Latency', description: 'Ultra low latency mode', tier: LicenseTier.PRO, gamingImpact: 'Reduced input lag', category: 'tweak' },
   { id: 'tweak_mouse', name: 'Mouse Optimization', description: 'Raw input and acceleration fixes', tier: LicenseTier.PRO, gamingImpact: 'Better aim stability', category: 'tweak' },
   { id: 'tweak_advanced', name: 'Advanced Tweaks', description: 'Premium system optimizations', tier: LicenseTier.PREMIUM, gamingImpact: 'Maximum performance gains', category: 'tweak' },
   { id: 'scan_basic', name: 'Basic Scan', description: 'Quick system analysis', tier: LicenseTier.FREE, gamingImpact: 'Identifies performance bottlenecks', category: 'scan' },
