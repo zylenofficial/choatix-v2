@@ -5,7 +5,7 @@ export const gameProfiles: GameProfile[] = [
     id: 'fortnite',
     name: 'Fortnite',
     executable: 'FortniteClient-Win64-Shipping.exe',
-    imagePath: '/Assets/Games/fortnite.jpg',
+    imagePath: '/Assets/Games/fortnite.png',
     tweaks: [
       'power-high-performance',
       'game-mode',
@@ -40,7 +40,7 @@ export const gameProfiles: GameProfile[] = [
     id: 'league-of-legends',
     name: 'League of Legends',
     executable: 'League of Legends.exe',
-    imagePath: '/Assets/Games/league-of-legends.jpg',
+    imagePath: '/Assets/Games/league-of-legends.png',
     tweaks: [
       'power-high-performance',
       'game-mode',
@@ -55,7 +55,7 @@ export const gameProfiles: GameProfile[] = [
     id: 'cs2',
     name: 'Counter-Strike 2',
     executable: 'cs2.exe',
-    imagePath: '/Assets/Games/cs2.jpg',
+    imagePath: '/Assets/Games/cs2.png',
     tweaks: [
       'power-high-performance',
       'game-mode',
@@ -142,7 +142,7 @@ export const gameProfiles: GameProfile[] = [
     id: 'gta-v',
     name: 'Grand Theft Auto V',
     executable: 'GTA5.exe',
-    imagePath: '/Assets/Games/gta-v.jpg',
+    imagePath: '/Assets/Games/gta-v.jfif',
     tweaks: [
       'power-high-performance',
       'game-mode',
@@ -177,7 +177,7 @@ export const gameProfiles: GameProfile[] = [
     id: 'pubg',
     name: 'PUBG',
     executable: 'TslGame.exe',
-    imagePath: '/Assets/Games/pubg.jpg',
+    imagePath: '/Assets/Games/pubg.png',
     tweaks: [
       'power-high-performance',
       'game-mode',

@@ -151,6 +151,7 @@ function GameCard({ game, genre, selected, locked, isCompetitive, onClick }: {
         boxShadow: selected ? '0 0 20px rgba(255,255,255,0.15)' : 'none',
         opacity: locked ? 0.35 : 1,
         cursor: locked ? 'not-allowed' : 'pointer',
+        background: '#111',
       }}>
 
       {/* Banner image or placeholder */}

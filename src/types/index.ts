@@ -4,7 +4,7 @@ export enum LicenseTier {
   PREMIUM = 'PREMIUM'
 }
 
-export type TweakCategory = 'network' | 'nvidia' | 'mouse' | 'system' | 'storage' | 'windows' | 'audio' | 'usb' | 'keyboard'
+export type TweakCategory = 'network' | 'nvidia' | 'mouse' | 'system' | 'storage' | 'windows' | 'audio' | 'usb' | 'keyboard' | 'privacy'
 
 declare global {
   interface Window {
@@ -231,7 +231,7 @@ export interface Tweak {
   requiredTier: LicenseTier
   applied: boolean
   impact: 'low' | 'medium' | 'high'
-  risk: 'none' | 'low' | 'medium'
+  risk: 'none' | 'low' | 'medium' | 'high'
   gamingImpact: string
 }
 
