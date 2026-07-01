@@ -292,4 +292,19 @@
   .tab-active-glow {
     box-shadow: 0 0 20px rgba(255,255,255,0.10);
   }
+
+  /* Game cards */
+  .game-card {
+    transition: transform 200ms ease, box-shadow 200ms ease;
+  }
+  .game-card:hover {
+    transform: scale(1.03);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  }
+  .game-card:hover .game-card-image {
+    transform: scale(1.08);
+  }
+  .game-card-image {
+    transition: transform 200ms ease;
+  }
 }

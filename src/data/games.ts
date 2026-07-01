@@ -5,6 +5,7 @@ export const gameProfiles: GameProfile[] = [
     id: 'fortnite',
     name: 'Fortnite',
     executable: 'FortniteClient-Win64-Shipping.exe',
+    imagePath: '/Assets/Games/fortnite.jpg',
     tweaks: [
       'power-high-performance',
       'game-mode',
@@ -21,6 +22,7 @@ export const gameProfiles: GameProfile[] = [
     id: 'valorant',
     name: 'Valorant',
     executable: 'VALORANT-Win64-Shipping.exe',
+    imagePath: '/Assets/Games/valorant.jpg',
     tweaks: [
       'power-high-performance',
       'game-mode',
@@ -38,6 +40,7 @@ export const gameProfiles: GameProfile[] = [
     id: 'league-of-legends',
     name: 'League of Legends',
     executable: 'League of Legends.exe',
+    imagePath: '/Assets/Games/league-of-legends.jpg',
     tweaks: [
       'power-high-performance',
       'game-mode',
@@ -52,6 +55,7 @@ export const gameProfiles: GameProfile[] = [
     id: 'cs2',
     name: 'Counter-Strike 2',
     executable: 'cs2.exe',
+    imagePath: '/Assets/Games/cs2.jpg',
     tweaks: [
       'power-high-performance',
       'game-mode',
@@ -70,6 +74,7 @@ export const gameProfiles: GameProfile[] = [
     id: 'apex-legends',
     name: 'Apex Legends',
     executable: 'r5apex.exe',
+    imagePath: '/Assets/Games/apex-legends.jpg',
     tweaks: [
       'power-high-performance',
       'game-mode',
@@ -86,6 +91,7 @@ export const gameProfiles: GameProfile[] = [
     id: 'warzone',
     name: 'Call of Duty: Warzone',
     executable: 'ModernWarfare.exe',
+    imagePath: '/Assets/Games/warzone.jpg',
     tweaks: [
       'power-high-performance',
       'game-mode',
@@ -103,6 +109,7 @@ export const gameProfiles: GameProfile[] = [
     id: 'overwatch-2',
     name: 'Overwatch 2',
     executable: 'Overwatch.exe',
+    imagePath: '/Assets/Games/overwatch-2.jpg',
     tweaks: [
       'power-high-performance',
       'game-mode',
@@ -119,6 +126,7 @@ export const gameProfiles: GameProfile[] = [
     id: 'minecraft',
     name: 'Minecraft',
     executable: 'minecraft.exe',
+    imagePath: '/Assets/Games/minecraft.jpg',
     tweaks: [
       'power-high-performance',
       'game-mode',
@@ -132,6 +140,7 @@ export const gameProfiles: GameProfile[] = [
     id: 'roblox',
     name: 'Roblox',
     executable: 'RobloxPlayerBeta.exe',
+    imagePath: '/Assets/Games/roblox.jpg',
     tweaks: [
       'power-high-performance',
       'game-mode',
@@ -144,6 +153,7 @@ export const gameProfiles: GameProfile[] = [
     id: 'fivem',
     name: 'FiveM',
     executable: 'FiveM.exe',
+    imagePath: '/Assets/Games/fivem.jpg',
     tweaks: [
       'power-high-performance',
       'game-mode',
@@ -160,6 +170,7 @@ export const gameProfiles: GameProfile[] = [
     id: 'gta-v',
     name: 'Grand Theft Auto V',
     executable: 'GTA5.exe',
+    imagePath: '/Assets/Games/gta-v.jpg',
     tweaks: [
       'power-high-performance',
       'game-mode',
@@ -175,6 +186,7 @@ export const gameProfiles: GameProfile[] = [
     id: 'rocket-league',
     name: 'Rocket League',
     executable: 'RocketLeague.exe',
+    imagePath: '/Assets/Games/rocket-league.jpg',
     tweaks: [
       'power-high-performance',
       'game-mode',
@@ -191,6 +203,7 @@ export const gameProfiles: GameProfile[] = [
     id: 'rainbow-six-siege',
     name: 'Rainbow Six Siege',
     executable: 'RainbowSix.exe',
+    imagePath: '/Assets/Games/rainbow-six-siege.jpg',
     tweaks: [
       'power-high-performance',
       'game-mode',
@@ -208,6 +221,7 @@ export const gameProfiles: GameProfile[] = [
     id: 'pubg',
     name: 'PUBG',
     executable: 'TslGame.exe',
+    imagePath: '/Assets/Games/pubg.jpg',
     tweaks: [
       'power-high-performance',
       'game-mode',
@@ -224,6 +238,7 @@ export const gameProfiles: GameProfile[] = [
     id: 'destiny-2',
     name: 'Destiny 2',
     executable: 'destiny2.exe',
+    imagePath: '/Assets/Games/destiny-2.jpg',
     tweaks: [
       'power-high-performance',
       'game-mode',

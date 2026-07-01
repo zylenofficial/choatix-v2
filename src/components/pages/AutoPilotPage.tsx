@@ -12,14 +12,7 @@ import {
 
 type Tab = 'games' | 'autopilot'
 
-const GAME_ICONS: Record<string, string> = {
-  'fortnite': '🎯', 'valorant': '🔫', 'league-of-legends': '⚔️', 'cs2': '💣',
-  'apex-legends': '🪂', 'warzone': '⚔️', 'overwatch-2': '🎯', 'minecraft': '⛏️',
-  'roblox': '🏗️', 'fivem': '🚗', 'gta-v': '🏙️', 'rocket-league': '⚽',
-  'rainbow-six-siege': '🔫', 'pubg': '🪖', 'destiny-2': '🌟',
-}
-
-const GAME_TYPES: Record<string, string> = {
+const GAME_GENRES: Record<string, string> = {
   'fortnite': 'Battle Royale', 'valorant': 'Tactical FPS', 'league-of-legends': 'MOBA',
   'cs2': 'Competitive FPS', 'apex-legends': 'Battle Royale', 'warzone': 'Battle Royale',
   'overwatch-2': 'Hero Shooter', 'minecraft': 'Sandbox', 'roblox': 'Sandbox',
@@ -118,60 +111,106 @@ function GamesTab({ hasMulti, selectedGames, setSelectedGames }: { hasMulti: boo
         {gameProfiles.map(game => {
           const selected = selectedIds.has(game.id)
           const locked = !hasMulti && !selected && selectedGames.length >= 1
-          const icon = GAME_ICONS[game.id] || '🎮'
-          const type = GAME_TYPES[game.id] || 'Game'
+          const genre = GAME_GENRES[game.id] || 'Game'
+          const isCompetitive = game.priority === 1
 
           return (
-            <button key={game.id} onClick={() => !locked && toggle(game)}
-              className="group relative p-5 rounded-2xl text-left transition-all duration-300 hover-lift"
-              style={{
-                background: selected ? 'rgba(255,255,255,0.08)' : 'var(--bg-secondary)',
-                border: `1px solid ${selected ? 'rgba(255,255,255,0.2)' : 'var(--border-subtle)'}`,
-                opacity: locked ? 0.35 : 1,
-                cursor: locked ? 'not-allowed' : 'pointer',
-              }}>
-              {/* Selection indicator */}
-              <div className="absolute top-4 right-4">
-                {selected ? (
-                  <div className="w-6 h-6 rounded-full flex items-center justify-center" style={{ background: '#fff' }}>
-                    <CheckCircle className="w-3.5 h-3.5 text-black" />
-                  </div>
-                ) : (
-                  <div className="w-6 h-6 rounded-full border transition-all group-hover:border-white/30" style={{ borderColor: 'var(--border-subtle)' }} />
-                )}
-              </div>
-
-              {/* Game icon + name */}
-              <div className="text-2xl mb-3">{icon}</div>
-              <div className="text-sm font-bold text-white mb-1">{game.name}</div>
-              <div className="text-[10px] text-[var(--text-muted)] mb-3">{type}</div>
-
-              {/* Stats */}
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-1.5">
-                  <Settings2 className="w-3 h-3 text-[var(--text-muted)]" />
-                  <span className="text-[9px] text-[var(--text-muted)]">{game.tweaks.length} tweaks</span>
-                </div>
-                <span className="text-[8px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-full"
-                  style={{
-                    background: game.priority === 1 ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.04)',
-                    color: game.priority === 1 ? '#fff' : '#999',
-                  }}>
-                  {game.priority === 1 ? 'Competitive' : 'Casual'}
-                </span>
-              </div>
-
-              {/* Locked overlay */}
-              {locked && (
-                <div className="absolute inset-0 rounded-2xl flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.4)' }}>
-                  <Lock className="w-5 h-5 text-[var(--text-muted)]" />
-                </div>
-              )}
-            </button>
+            <GameCard
+              key={game.id}
+              game={game}
+              genre={genre}
+              selected={selected}
+              locked={locked}
+              isCompetitive={isCompetitive}
+              onClick={() => !locked && toggle(game)}
+            />
           )
         })}
       </div>
     </div>
+  )
+}
+
+function GameCard({ game, genre, selected, locked, isCompetitive, onClick }: {
+  game: GameProfile
+  genre: string
+  selected: boolean
+  locked: boolean
+  isCompetitive: boolean
+  onClick: () => void
+}) {
+  const [imgError, setImgError] = useState(false)
+  const imagePath = game.imagePath || `/Assets/Games/${game.id}.jpg`
+  const showImage = !imgError && imagePath
+
+  return (
+    <button onClick={onClick}
+      className="game-card group relative rounded-2xl overflow-hidden text-left transition-all duration-200"
+      style={{
+        aspectRatio: '16/10',
+        border: selected ? '2px solid #fff' : '2px solid transparent',
+        boxShadow: selected ? '0 0 20px rgba(255,255,255,0.15)' : 'none',
+        opacity: locked ? 0.35 : 1,
+        cursor: locked ? 'not-allowed' : 'pointer',
+      }}>
+
+      {/* Banner image or placeholder */}
+      {showImage ? (
+        <img
+          src={imagePath}
+          alt={game.name}
+          className="game-card-image absolute inset-0 w-full h-full object-cover"
+          onError={() => setImgError(true)}
+          draggable={false}
+        />
+      ) : (
+        <div className="absolute inset-0 flex items-center justify-center" style={{ background: '#1a1a1a' }}>
+          <span className="text-lg font-bold text-white/20 tracking-widest uppercase">{game.name}</span>
+        </div>
+      )}
+
+      {/* Gradient overlay */}
+      <div className="absolute inset-0 pointer-events-none" style={{
+        background: 'linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.4) 50%, rgba(0,0,0,0.85) 100%)',
+      }} />
+
+      {/* Selection indicator (top-right) */}
+      <div className="absolute top-3 right-3 z-10">
+        {selected ? (
+          <div className="w-6 h-6 rounded-full flex items-center justify-center" style={{ background: '#fff' }}>
+            <CheckCircle className="w-3.5 h-3.5 text-black" />
+          </div>
+        ) : (
+          <div className="w-6 h-6 rounded-full border transition-all duration-200 group-hover:border-white/40" style={{ borderColor: 'rgba(255,255,255,0.25)' }} />
+        )}
+      </div>
+
+      {/* Content (bottom-left) */}
+      <div className="absolute bottom-0 left-0 right-0 p-3 z-10">
+        <div className="text-[13px] font-bold text-white leading-tight mb-0.5">{game.name}</div>
+        <div className="text-[10px] text-white/50 mb-1.5">{genre}</div>
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
+            <Settings2 className="w-2.5 h-2.5 text-white/40" />
+            <span className="text-[9px] text-white/50">{game.tweaks.length}</span>
+          </div>
+          <span className="text-[8px] font-bold tracking-wider uppercase px-1.5 py-0.5 rounded"
+            style={{
+              background: isCompetitive ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.06)',
+              color: isCompetitive ? '#fff' : 'rgba(255,255,255,0.45)',
+            }}>
+            {isCompetitive ? 'Competitive' : 'Casual'}
+          </span>
+        </div>
+      </div>
+
+      {/* Locked overlay */}
+      {locked && (
+        <div className="absolute inset-0 z-20 flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.5)' }}>
+          <Lock className="w-5 h-5 text-white/30" />
+        </div>
+      )}
+    </button>
   )
 }
 
@@ -265,7 +304,7 @@ function AutoPilotTab({ hasMulti, selectedGames, autopilotStatus, setAutopilotSt
             Monitoring <span className="text-white font-bold">{selectedGames.length}</span> game{selectedGames.length !== 1 ? 's' : ''}:
             <span className="text-[var(--text-secondary)]"> {selectedGames.map(g => g.name).join(', ') || 'None selected'}</span>
           </div>
-          <div className="text-[9px] text-[var(--text-muted)] mt-1">Checks every 3 seconds • Tweaks applied on launch • Reverted on close</div>
+          <div className="text-[9px] text-[var(--text-muted)] mt-1">Checks every 3 seconds &bull; Tweaks applied on launch &bull; Reverted on close</div>
         </div>
 
         {/* Toggle button */}

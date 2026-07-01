@@ -250,6 +250,7 @@ export interface GameProfile {
   executable: string
   tweaks: string[]
   priority: number
+  imagePath?: string
 }
 
 export interface PerformanceSnapshot {
