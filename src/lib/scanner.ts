@@ -39,7 +39,7 @@ function analyzeNetwork(info: SystemInfo, tier: LicenseTier, issues: ScanIssue[]
       severity: info.network.latencyMs > 150 ? 'high' : 'medium',
       gamingImpact: 'Latency reduction, ping stability',
       requiredTier: LicenseTier.FREE,
-      tweakId: 'net-disable-background-updates',
+      tweakId: 'net-optimize-performance',
     })
   }
 
@@ -51,7 +51,7 @@ function analyzeNetwork(info: SystemInfo, tier: LicenseTier, issues: ScanIssue[]
     severity: 'medium',
     gamingImpact: 'Stable ping, less packet loss',
     requiredTier: LicenseTier.FREE,
-    tweakId: 'net-disable-background-updates',
+    tweakId: 'sys-disable-delivery-optimization',
   })
 
   issues.push({
@@ -74,7 +74,7 @@ function analyzeNetwork(info: SystemInfo, tier: LicenseTier, issues: ScanIssue[]
       severity: 'medium',
       gamingImpact: 'Reduced network jitter',
       requiredTier: LicenseTier.PRO,
-      tweakId: 'net-disable-throttling',
+      tweakId: 'net-optimize-performance',
     })
   }
 }
@@ -169,7 +169,7 @@ function analyzeMouse(info: SystemInfo, tier: LicenseTier, issues: ScanIssue[]) 
       severity: 'medium',
       gamingImpact: 'Consistent sensitivity across games',
       requiredTier: LicenseTier.PRO,
-      tweakId: 'mouse-optimize-pointer',
+      tweakId: 'mouse-disable-acceleration',
     })
   }
 }

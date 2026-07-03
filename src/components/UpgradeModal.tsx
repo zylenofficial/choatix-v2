@@ -59,26 +59,26 @@ export function UpgradeModal({ isOpen, onClose, currentTier }: UpgradeModalProps
   }
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center z-50 p-4" style={{ background: 'rgba(0,0,0,0.85)' }}>
-      <div className="w-full max-w-2xl fade-in-scale" style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-xl)' }}>
+    <div className="fixed inset-0 flex items-center justify-center z-50 p-4 modal-overlay" style={{ background: 'rgba(0,0,0,0.85)' }} onClick={onClose}>
+      <div className="w-full max-w-2xl modal-content" style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-xl)' }} onClick={e => e.stopPropagation()}>
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
           <div>
             <h2 className="text-[14px] font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>Choose Your Plan</h2>
             <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-muted)' }}>Unlock the full power of Choatix</p>
           </div>
-          <button onClick={onClose} className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-white/5" style={{ color: 'var(--text-muted)' }}>
+          <button onClick={onClose} className="w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-150 hover:bg-white/[0.06]" style={{ color: 'var(--text-muted)' }}>
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Plan cards */}
-        <div className="grid grid-cols-3 gap-3 p-5">
+        <div className="grid grid-cols-3 gap-3 p-5 stagger">
           {PLANS.map(plan => {
             const Icon = plan.icon
             const current = isCurrent(plan.tier)
             return (
-              <div key={plan.tier} className="rounded-xl p-5 relative transition-all" style={{
+              <div key={plan.tier} className="rounded-xl p-5 relative transition-all duration-300 hover-lift" style={{
                 border: plan.recommended ? `2px solid ${plan.color}` : `1px solid ${current ? 'var(--border-strong)' : 'var(--border-subtle)'}`,
                 background: plan.recommended ? `linear-gradient(145deg, ${plan.color}08 0%, var(--bg-primary) 60%)` : current ? 'var(--bg-tertiary)' : 'var(--bg-primary)',
               }}>
@@ -109,7 +109,7 @@ export function UpgradeModal({ isOpen, onClose, currentTier }: UpgradeModalProps
                   </div>
                   <button
                     disabled={current}
-                    className="w-full h-9 rounded-lg text-[11px] font-bold transition-all"
+                    className="w-full h-9 rounded-lg text-[11px] font-bold transition-all duration-200"
                     style={{
                       background: current ? 'var(--bg-elevated)' : plan.recommended ? '#000' : 'var(--accent)',
                       color: current ? 'var(--text-muted)' : plan.recommended ? '#fff' : '#000',

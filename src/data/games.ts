@@ -7,15 +7,31 @@ export const gameProfiles: GameProfile[] = [
     executable: 'FortniteClient-Win64-Shipping.exe',
     imagePath: '/Assets/Games/fortnite.png',
     tweaks: [
-      'power-high-performance',
-      'game-mode',
-      'disable-fullscreen-optimizations',
-      'visual-effects-performance',
-      'network-latency-tuning',
-      'disable-background-apps',
-      'gpu-hardware-scheduling',
-      'disable-game-dvr'
+      'sys-high-performance', 'sys-enable-game-mode', 'sys-disable-fullscreen-opt',
+      'sys-disable-gamebar', 'sys-reduce-background', 'sys-disable-vbs',
+      'sys-disable-mitigations', 'sys-optimize-fps', 'sys-realtime-priority-games',
+      'sys-foreground-boost', 'nv-hardware-scheduling', 'nv-texture-filtering',
+      'gpu-disable-ulps', 'mouse-disable-acceleration', 'net-optimize-dns',
+      'game-disable-dvr', 'game-disable-game-bar-complete', 'game-optimize-priority',
+      'game-optimize-fullscreen', 'net-disable-nagle', 'sys-disable-animations',
+      'input-gaming-mode',
     ],
+    tweakTiers: {
+      free: [
+        'sys-high-performance', 'sys-enable-game-mode', 'sys-disable-gamebar',
+        'game-disable-dvr', 'game-disable-game-bar-complete', 'sys-disable-animations',
+      ],
+      pro: [
+        'sys-disable-fullscreen-opt', 'sys-reduce-background', 'sys-disable-vbs',
+        'nv-hardware-scheduling', 'nv-texture-filtering', 'mouse-disable-acceleration',
+        'net-optimize-dns', 'game-optimize-priority', 'game-optimize-fullscreen', 'net-disable-nagle',
+        'input-gaming-mode',
+      ],
+      premium: [
+        'sys-disable-mitigations', 'sys-optimize-fps', 'sys-realtime-priority-games',
+        'sys-foreground-boost', 'gpu-disable-ulps',
+      ],
+    },
     priority: 1
   },
   {
@@ -24,16 +40,30 @@ export const gameProfiles: GameProfile[] = [
     executable: 'VALORANT-Win64-Shipping.exe',
     imagePath: '/Assets/Games/valorant.jpg',
     tweaks: [
-      'power-high-performance',
-      'game-mode',
-      'disable-fullscreen-optimizations',
-      'visual-effects-performance',
-      'network-latency-tuning',
-      'disable-background-apps',
-      'gpu-hardware-scheduling',
-      'disable-game-dvr',
-      'network-throttling-disable'
+      'sys-high-performance', 'sys-enable-game-mode', 'sys-disable-fullscreen-opt',
+      'sys-disable-gamebar', 'sys-reduce-background', 'sys-disable-vbs',
+      'sys-disable-mitigations', 'sys-optimize-fps', 'sys-realtime-priority-games',
+      'sys-foreground-boost', 'nv-hardware-scheduling', 'nv-texture-filtering',
+      'gpu-disable-ulps', 'mouse-disable-acceleration', 'net-optimize-dns',
+      'net-optimize-performance', 'game-disable-dvr', 'game-disable-game-bar-complete',
+      'game-optimize-fullscreen', 'sys-cpu-priority', 'input-gaming-mode',
     ],
+    tweakTiers: {
+      free: [
+        'sys-high-performance', 'sys-enable-game-mode', 'sys-disable-gamebar',
+        'game-disable-dvr', 'game-disable-game-bar-complete', 'sys-disable-animations',
+      ],
+      pro: [
+        'sys-disable-fullscreen-opt', 'sys-reduce-background', 'sys-disable-vbs',
+        'nv-hardware-scheduling', 'nv-texture-filtering', 'mouse-disable-acceleration',
+        'net-optimize-dns', 'net-optimize-performance', 'game-optimize-fullscreen', 'sys-cpu-priority',
+        'input-gaming-mode',
+      ],
+      premium: [
+        'sys-disable-mitigations', 'sys-optimize-fps', 'sys-realtime-priority-games',
+        'sys-foreground-boost', 'gpu-disable-ulps',
+      ],
+    },
     priority: 1
   },
   {
@@ -42,13 +72,27 @@ export const gameProfiles: GameProfile[] = [
     executable: 'League of Legends.exe',
     imagePath: '/Assets/Games/league-of-legends.png',
     tweaks: [
-      'power-high-performance',
-      'game-mode',
-      'disable-fullscreen-optimizations',
-      'visual-effects-performance',
-      'network-latency-tuning',
-      'disable-background-apps'
+      'sys-high-performance', 'sys-enable-game-mode', 'sys-disable-fullscreen-opt',
+      'sys-disable-gamebar', 'sys-reduce-background', 'sys-disable-vbs',
+      'sys-optimize-fps', 'sys-realtime-priority-games', 'sys-foreground-boost',
+      'nv-hardware-scheduling', 'nv-texture-filtering', 'mouse-disable-acceleration',
+      'net-optimize-dns', 'game-disable-dvr', 'game-disable-game-bar-complete',
+      'game-optimize-priority', 'sys-disable-animations', 'input-gaming-mode',
     ],
+    tweakTiers: {
+      free: [
+        'sys-high-performance', 'sys-enable-game-mode', 'sys-disable-gamebar',
+        'game-disable-dvr', 'game-disable-game-bar-complete', 'sys-disable-animations',
+      ],
+      pro: [
+        'sys-disable-fullscreen-opt', 'sys-reduce-background', 'sys-disable-vbs',
+        'nv-hardware-scheduling', 'nv-texture-filtering', 'mouse-disable-acceleration',
+        'net-optimize-dns', 'game-optimize-priority', 'input-gaming-mode',
+      ],
+      premium: [
+        'sys-optimize-fps', 'sys-realtime-priority-games', 'sys-foreground-boost',
+      ],
+    },
     priority: 1
   },
   {
@@ -57,17 +101,32 @@ export const gameProfiles: GameProfile[] = [
     executable: 'cs2.exe',
     imagePath: '/Assets/Games/cs2.png',
     tweaks: [
-      'power-high-performance',
-      'game-mode',
-      'disable-fullscreen-optimizations',
-      'visual-effects-performance',
-      'network-latency-tuning',
-      'disable-background-apps',
-      'gpu-hardware-scheduling',
-      'disable-game-dvr',
-      'network-throttling-disable',
-      'cpu-priority-boost'
+      'sys-high-performance', 'sys-enable-game-mode', 'sys-disable-fullscreen-opt',
+      'sys-disable-gamebar', 'sys-reduce-background', 'sys-disable-vbs',
+      'sys-disable-mitigations', 'sys-optimize-fps', 'sys-realtime-priority-games',
+      'sys-foreground-boost', 'nv-hardware-scheduling', 'nv-texture-filtering',
+      'gpu-disable-ulps', 'mouse-disable-acceleration', 'net-optimize-dns',
+      'net-optimize-performance', 'sys-cpu-priority', 'game-disable-dvr',
+      'game-disable-game-bar-complete', 'game-optimize-priority', 'game-optimize-fullscreen',
+      'net-disable-nagle', 'sys-disable-animations', 'input-gaming-mode',
     ],
+    tweakTiers: {
+      free: [
+        'sys-high-performance', 'sys-enable-game-mode', 'sys-disable-gamebar',
+        'game-disable-dvr', 'game-disable-game-bar-complete', 'sys-disable-animations',
+      ],
+      pro: [
+        'sys-disable-fullscreen-opt', 'sys-reduce-background', 'sys-disable-vbs',
+        'nv-hardware-scheduling', 'nv-texture-filtering', 'mouse-disable-acceleration',
+        'net-optimize-dns', 'net-optimize-performance', 'sys-cpu-priority',
+        'game-optimize-priority', 'game-optimize-fullscreen', 'net-disable-nagle',
+        'input-gaming-mode',
+      ],
+      premium: [
+        'sys-disable-mitigations', 'sys-optimize-fps', 'sys-realtime-priority-games',
+        'sys-foreground-boost', 'gpu-disable-ulps',
+      ],
+    },
     priority: 1
   },
   {
@@ -76,15 +135,30 @@ export const gameProfiles: GameProfile[] = [
     executable: 'r5apex.exe',
     imagePath: '/Assets/Games/apex-legends.jpg',
     tweaks: [
-      'power-high-performance',
-      'game-mode',
-      'disable-fullscreen-optimizations',
-      'visual-effects-performance',
-      'network-latency-tuning',
-      'disable-background-apps',
-      'gpu-hardware-scheduling',
-      'disable-game-dvr'
+      'sys-high-performance', 'sys-enable-game-mode', 'sys-disable-fullscreen-opt',
+      'sys-disable-gamebar', 'sys-reduce-background', 'sys-disable-vbs',
+      'sys-disable-mitigations', 'sys-optimize-fps', 'sys-realtime-priority-games',
+      'sys-foreground-boost', 'nv-hardware-scheduling', 'nv-texture-filtering',
+      'gpu-disable-ulps', 'mouse-disable-acceleration', 'net-optimize-dns',
+      'game-disable-dvr', 'game-disable-game-bar-complete', 'game-optimize-priority',
+      'net-disable-nagle', 'input-gaming-mode',
     ],
+    tweakTiers: {
+      free: [
+        'sys-high-performance', 'sys-enable-game-mode', 'sys-disable-gamebar',
+        'game-disable-dvr', 'game-disable-game-bar-complete', 'sys-disable-animations',
+      ],
+      pro: [
+        'sys-disable-fullscreen-opt', 'sys-reduce-background', 'sys-disable-vbs',
+        'nv-hardware-scheduling', 'nv-texture-filtering', 'mouse-disable-acceleration',
+        'net-optimize-dns', 'game-optimize-priority', 'net-disable-nagle',
+        'input-gaming-mode',
+      ],
+      premium: [
+        'sys-disable-mitigations', 'sys-optimize-fps', 'sys-realtime-priority-games',
+        'sys-foreground-boost', 'gpu-disable-ulps',
+      ],
+    },
     priority: 1
   },
   {
@@ -93,49 +167,88 @@ export const gameProfiles: GameProfile[] = [
     executable: 'ModernWarfare.exe',
     imagePath: '/Assets/Games/warzone.jpg',
     tweaks: [
-      'power-high-performance',
-      'game-mode',
-      'disable-fullscreen-optimizations',
-      'visual-effects-performance',
-      'network-latency-tuning',
-      'disable-background-apps',
-      'gpu-hardware-scheduling',
-      'disable-game-dvr',
-      'cpu-priority-boost'
+      'sys-high-performance', 'sys-enable-game-mode', 'sys-disable-fullscreen-opt',
+      'sys-disable-gamebar', 'sys-reduce-background', 'sys-disable-vbs',
+      'sys-disable-mitigations', 'sys-optimize-fps', 'sys-realtime-priority-games',
+      'sys-foreground-boost', 'nv-hardware-scheduling', 'nv-texture-filtering',
+      'gpu-disable-ulps', 'mouse-disable-acceleration', 'net-optimize-dns',
+      'sys-cpu-priority', 'game-disable-dvr', 'game-disable-game-bar-complete',
+      'game-optimize-priority', 'game-optimize-fullscreen', 'net-disable-nagle',
+      'sys-disable-animations', 'input-gaming-mode',
     ],
+    tweakTiers: {
+      free: [
+        'sys-high-performance', 'sys-enable-game-mode', 'sys-disable-gamebar',
+        'game-disable-dvr', 'game-disable-game-bar-complete', 'sys-disable-animations',
+      ],
+      pro: [
+        'sys-disable-fullscreen-opt', 'sys-reduce-background', 'sys-disable-vbs',
+        'nv-hardware-scheduling', 'nv-texture-filtering', 'mouse-disable-acceleration',
+        'net-optimize-dns', 'sys-cpu-priority', 'game-optimize-priority',
+        'game-optimize-fullscreen', 'net-disable-nagle', 'input-gaming-mode',
+      ],
+      premium: [
+        'sys-disable-mitigations', 'sys-optimize-fps', 'sys-realtime-priority-games',
+        'sys-foreground-boost', 'gpu-disable-ulps',
+      ],
+    },
     priority: 1
   },
-
   {
     id: 'minecraft',
     name: 'Minecraft',
     executable: 'minecraft.exe',
-    imagePath: '/Assets/Games/minecraft.jpg',
+    imagePath: '',
     tweaks: [
-      'power-high-performance',
-      'game-mode',
-      'visual-effects-performance',
-      'disable-background-apps',
-      'gpu-hardware-scheduling'
+      'sys-high-performance', 'sys-enable-game-mode', 'sys-disable-gamebar',
+      'sys-reduce-background', 'sys-disable-vbs', 'sys-optimize-fps',
+      'nv-hardware-scheduling', 'game-disable-dvr', 'game-disable-game-bar-complete',
+      'game-optimize-priority', 'sys-disable-animations', 'input-gaming-mode',
     ],
+    tweakTiers: {
+      free: [
+        'sys-high-performance', 'sys-enable-game-mode', 'sys-disable-gamebar',
+        'game-disable-dvr', 'game-disable-game-bar-complete', 'sys-disable-animations',
+      ],
+      pro: [
+        'sys-reduce-background', 'sys-disable-vbs', 'nv-hardware-scheduling', 'game-optimize-priority',
+        'input-gaming-mode',
+      ],
+      premium: [
+        'sys-optimize-fps',
+      ],
+    },
     priority: 2
   },
-
   {
     id: 'fivem',
     name: 'FiveM',
     executable: 'FiveM.exe',
     imagePath: '/Assets/Games/fivem.jpg',
     tweaks: [
-      'power-high-performance',
-      'game-mode',
-      'disable-fullscreen-optimizations',
-      'visual-effects-performance',
-      'network-latency-tuning',
-      'disable-background-apps',
-      'gpu-hardware-scheduling',
-      'disable-game-dvr'
+      'sys-high-performance', 'sys-enable-game-mode', 'sys-disable-fullscreen-opt',
+      'sys-disable-gamebar', 'sys-reduce-background', 'sys-disable-vbs',
+      'sys-disable-mitigations', 'sys-optimize-fps', 'sys-realtime-priority-games',
+      'sys-foreground-boost', 'nv-hardware-scheduling', 'gpu-disable-ulps',
+      'mouse-disable-acceleration', 'net-optimize-dns', 'game-disable-dvr',
+      'game-disable-game-bar-complete', 'game-optimize-priority', 'sys-cpu-priority',
+      'sys-disable-animations', 'input-gaming-mode',
     ],
+    tweakTiers: {
+      free: [
+        'sys-high-performance', 'sys-enable-game-mode', 'sys-disable-gamebar',
+        'game-disable-dvr', 'game-disable-game-bar-complete', 'sys-disable-animations',
+      ],
+      pro: [
+        'sys-disable-fullscreen-opt', 'sys-reduce-background', 'sys-disable-vbs',
+        'nv-hardware-scheduling', 'mouse-disable-acceleration', 'net-optimize-dns',
+        'game-optimize-priority', 'sys-cpu-priority', 'input-gaming-mode',
+      ],
+      premium: [
+        'sys-disable-mitigations', 'sys-optimize-fps', 'sys-realtime-priority-games',
+        'sys-foreground-boost', 'gpu-disable-ulps',
+      ],
+    },
     priority: 1
   },
   {
@@ -144,33 +257,61 @@ export const gameProfiles: GameProfile[] = [
     executable: 'GTA5.exe',
     imagePath: '/Assets/Games/gta-v.jfif',
     tweaks: [
-      'power-high-performance',
-      'game-mode',
-      'disable-fullscreen-optimizations',
-      'visual-effects-performance',
-      'disable-background-apps',
-      'gpu-hardware-scheduling',
-      'disable-game-dvr'
+      'sys-high-performance', 'sys-enable-game-mode', 'sys-disable-fullscreen-opt',
+      'sys-disable-gamebar', 'sys-reduce-background', 'sys-disable-vbs',
+      'sys-disable-mitigations', 'sys-optimize-fps', 'sys-realtime-priority-games',
+      'sys-foreground-boost', 'nv-hardware-scheduling', 'gpu-disable-ulps',
+      'mouse-disable-acceleration', 'game-disable-dvr', 'game-disable-game-bar-complete',
+      'game-optimize-priority', 'sys-disable-animations', 'input-gaming-mode',
     ],
+    tweakTiers: {
+      free: [
+        'sys-high-performance', 'sys-enable-game-mode', 'sys-disable-gamebar',
+        'game-disable-dvr', 'game-disable-game-bar-complete', 'sys-disable-animations',
+      ],
+      pro: [
+        'sys-disable-fullscreen-opt', 'sys-reduce-background', 'sys-disable-vbs',
+        'nv-hardware-scheduling', 'mouse-disable-acceleration', 'game-optimize-priority',
+        'input-gaming-mode',
+      ],
+      premium: [
+        'sys-disable-mitigations', 'sys-optimize-fps', 'sys-realtime-priority-games',
+        'sys-foreground-boost', 'gpu-disable-ulps',
+      ],
+    },
     priority: 1
   },
-
   {
     id: 'rainbow-six-siege',
     name: 'Rainbow Six Siege',
     executable: 'RainbowSix.exe',
-    imagePath: '/Assets/Games/rainbow-six-siege.jpg',
+    imagePath: '',
     tweaks: [
-      'power-high-performance',
-      'game-mode',
-      'disable-fullscreen-optimizations',
-      'visual-effects-performance',
-      'network-latency-tuning',
-      'disable-background-apps',
-      'gpu-hardware-scheduling',
-      'disable-game-dvr',
-      'network-throttling-disable'
+      'sys-high-performance', 'sys-enable-game-mode', 'sys-disable-fullscreen-opt',
+      'sys-disable-gamebar', 'sys-reduce-background', 'sys-disable-vbs',
+      'sys-disable-mitigations', 'sys-optimize-fps', 'sys-realtime-priority-games',
+      'sys-foreground-boost', 'nv-hardware-scheduling', 'nv-texture-filtering',
+      'gpu-disable-ulps', 'mouse-disable-acceleration', 'net-optimize-dns',
+      'net-optimize-performance', 'game-disable-dvr', 'game-disable-game-bar-complete',
+      'game-optimize-priority', 'game-optimize-fullscreen', 'sys-cpu-priority',
+      'input-gaming-mode',
     ],
+    tweakTiers: {
+      free: [
+        'sys-high-performance', 'sys-enable-game-mode', 'sys-disable-gamebar',
+        'game-disable-dvr', 'game-disable-game-bar-complete', 'sys-disable-animations',
+      ],
+      pro: [
+        'sys-disable-fullscreen-opt', 'sys-reduce-background', 'sys-disable-vbs',
+        'nv-hardware-scheduling', 'nv-texture-filtering', 'mouse-disable-acceleration',
+        'net-optimize-dns', 'net-optimize-performance', 'game-optimize-priority',
+        'game-optimize-fullscreen', 'sys-cpu-priority', 'input-gaming-mode',
+      ],
+      premium: [
+        'sys-disable-mitigations', 'sys-optimize-fps', 'sys-realtime-priority-games',
+        'sys-foreground-boost', 'gpu-disable-ulps',
+      ],
+    },
     priority: 1
   },
   {
@@ -179,15 +320,30 @@ export const gameProfiles: GameProfile[] = [
     executable: 'TslGame.exe',
     imagePath: '/Assets/Games/pubg.png',
     tweaks: [
-      'power-high-performance',
-      'game-mode',
-      'disable-fullscreen-optimizations',
-      'visual-effects-performance',
-      'network-latency-tuning',
-      'disable-background-apps',
-      'gpu-hardware-scheduling',
-      'disable-game-dvr'
+      'sys-high-performance', 'sys-enable-game-mode', 'sys-disable-fullscreen-opt',
+      'sys-disable-gamebar', 'sys-reduce-background', 'sys-disable-vbs',
+      'sys-disable-mitigations', 'sys-optimize-fps', 'sys-realtime-priority-games',
+      'sys-foreground-boost', 'nv-hardware-scheduling', 'nv-texture-filtering',
+      'gpu-disable-ulps', 'mouse-disable-acceleration', 'net-optimize-dns',
+      'game-disable-dvr', 'game-disable-game-bar-complete', 'game-optimize-priority',
+      'net-disable-nagle', 'sys-disable-animations', 'input-gaming-mode',
     ],
+    tweakTiers: {
+      free: [
+        'sys-high-performance', 'sys-enable-game-mode', 'sys-disable-gamebar',
+        'game-disable-dvr', 'game-disable-game-bar-complete', 'sys-disable-animations',
+      ],
+      pro: [
+        'sys-disable-fullscreen-opt', 'sys-reduce-background', 'sys-disable-vbs',
+        'nv-hardware-scheduling', 'nv-texture-filtering', 'mouse-disable-acceleration',
+        'net-optimize-dns', 'game-optimize-priority', 'net-disable-nagle',
+        'input-gaming-mode',
+      ],
+      premium: [
+        'sys-disable-mitigations', 'sys-optimize-fps', 'sys-realtime-priority-games',
+        'sys-foreground-boost', 'gpu-disable-ulps',
+      ],
+    },
     priority: 1
   },
 ]

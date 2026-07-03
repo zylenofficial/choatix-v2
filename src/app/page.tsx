@@ -17,12 +17,14 @@ const PerformancePage = dynamic(() => import('@/components/pages/PerformancePage
 const RollbackPage = dynamic(() => import('@/components/pages/RollbackPage').then(m => ({ default: m.RollbackPage })), { ssr: false })
 const SettingsPage = dynamic(() => import('@/components/pages/SettingsPage').then(m => ({ default: m.SettingsPage })), { ssr: false })
 const AIOptimizerPage = dynamic(() => import('@/components/pages/AIOptimizerPage').then(m => ({ default: m.AIOptimizerPage })), { ssr: false })
+const ProcessOptimizerPage = dynamic(() => import('@/components/pages/ProcessOptimizerPage').then(m => ({ default: m.ProcessOptimizerPage })), { ssr: false })
 
 const PAGES: Record<Page, React.ComponentType> = {
   dashboard: DashboardPage,
   scan: ScanPage,
   'best-tweaks': BestTweaksPage,
   optimizer: OptimizerPage,
+  'process-optimizer': ProcessOptimizerPage,
   autopilot: AutoPilotPage,
   performance: PerformancePage,
   rollback: RollbackPage,
@@ -65,6 +67,15 @@ export default function Home() {
     })
   }, [])
 
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const page = (e as CustomEvent).detail as Page
+      if (page) setActivePage(page)
+    }
+    window.addEventListener('choatix-navigate', handler)
+    return () => window.removeEventListener('choatix-navigate', handler)
+  }, [])
+
   const handleUpgrade = useCallback(() => { setShowUpgradeModal(false) }, [])
   const handleNavigate = useCallback((page: Page) => {
     if (page === 'ai-optimizer' && license.tier !== 'PREMIUM') {
@@ -85,13 +96,13 @@ export default function Home() {
           <img src="/choatix-logo.png" alt="CHOATIX" style={{ height: 50, width: 'auto', objectFit: 'contain', filter: 'brightness(0) invert(1)' }} />
         </div>
         <div className="flex items-center gap-0.5" style={{ WebkitAppRegion: 'no-drag' } as any}>
-          <button onClick={() => window.electronAPI?.minimize()} className="w-7 h-7 rounded-md flex items-center justify-center hover:bg-white/5 transition-colors" style={{ color: 'var(--text-muted)' }}>
+          <button onClick={() => window.electronAPI?.minimize()} className="w-7 h-7 rounded-md flex items-center justify-center hover:bg-white/5 transition-all duration-150" style={{ color: 'var(--text-muted)' }}>
             <svg width="10" height="1" viewBox="0 0 10 1" fill="currentColor"><rect width="10" height="1"/></svg>
           </button>
-          <button onClick={() => window.electronAPI?.maximize()} className="w-7 h-7 rounded-md flex items-center justify-center hover:bg-white/5 transition-colors" style={{ color: 'var(--text-muted)' }}>
+          <button onClick={() => window.electronAPI?.maximize()} className="w-7 h-7 rounded-md flex items-center justify-center hover:bg-white/5 transition-all duration-150" style={{ color: 'var(--text-muted)' }}>
             <svg width="9" height="9" viewBox="0 0 9 9" fill="none" stroke="currentColor" strokeWidth="1"><rect x="0.5" y="0.5" width="8" height="8"/></svg>
           </button>
-          <button onClick={() => window.electronAPI?.close()} className="w-7 h-7 rounded-md flex items-center justify-center hover:bg-white/5 transition-colors" style={{ color: 'var(--text-muted)' }}>
+          <button onClick={() => window.electronAPI?.close()} className="w-7 h-7 rounded-md flex items-center justify-center hover:bg-white/[0.08] transition-all duration-150" style={{ color: 'var(--text-muted)' }}>
             <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.2"><line x1="1" y1="1" x2="9" y2="9"/><line x1="9" y1="1" x2="1" y2="9"/></svg>
           </button>
         </div>
@@ -107,7 +118,9 @@ export default function Home() {
       />
       <div className="flex-1 flex flex-col overflow-hidden">
         <main className="flex-1 overflow-y-auto">
-          <ActiveComponent />
+          <div key={activePage} className="page-transition">
+            <ActiveComponent />
+          </div>
         </main>
       </div>
       <UpgradeModal isOpen={showUpgradeModal} onClose={() => setShowUpgradeModal(false)} currentTier={license.tier} />

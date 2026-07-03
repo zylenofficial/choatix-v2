@@ -101,7 +101,7 @@ export function SettingsPage() {
   }, [feedbackType, feedbackSubject, feedbackMessage, feedbackEmail, feedbackIncludeLogs, feedbackRating])
 
   return (
-    <div className="h-full overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
+    <div className="h-full overflow-y-auto page-transition" style={{ scrollbarWidth: 'thin' }}>
       <div className="max-w-3xl mx-auto p-6 space-y-6 fade-in">
 
         {/* Header */}

@@ -20,10 +20,14 @@ const CATEGORY_META: Record<string, { label: string; icon: React.ReactNode; desc
   audio: { label: 'Audio', icon: <Volume2 className="w-4 h-4" />, desc: 'Audio enhancements, USB audio' },
   usb: { label: 'USB', icon: <Power className="w-4 h-4" />, desc: 'Selective suspend' },
   keyboard: { label: 'Keyboard', icon: <Keyboard className="w-4 h-4" />, desc: 'Filter driver, USB power mgmt' },
+  debloat: { label: 'Debloat', icon: <Gamepad2 className="w-4 h-4" />, desc: 'Remove bloatware, telemetry, and unused features' },
+  gpu: { label: 'GPU', icon: <Monitor className="w-4 h-4" />, desc: 'GPU power, shader cache, render scheduling' },
+  gaming: { label: 'Gaming', icon: <Gamepad2 className="w-4 h-4" />, desc: 'Game DVR, priority, scheduler optimization' },
+  input: { label: 'Input', icon: <Keyboard className="w-4 h-4" />, desc: 'Zero-delay keyboard, raw mouse, accessibility' },
 }
 
 const CATEGORY_ORDER: TweakCategory[] = [
-  'system', 'nvidia', 'network', 'mouse', 'keyboard', 'storage', 'windows', 'audio', 'usb',
+  'system', 'nvidia', 'gpu', 'gaming', 'input', 'network', 'mouse', 'keyboard', 'storage', 'windows', 'audio', 'usb', 'debloat', 'privacy',
 ]
 
 function TweakRow({ tweak, isApplied, isFailed, isApplying, isReverting, hasAccess, onApply, onRevert, onInfo }: {
@@ -216,7 +220,7 @@ export function OptimizerPage() {
   }, [appliedTweaks, setAppliedTweaks, addToast])
 
   return (
-    <div className="h-full overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
+    <div className="h-full overflow-y-auto page-transition" style={{ scrollbarWidth: 'thin' }}>
       <div className="max-w-5xl mx-auto p-6 space-y-6">
 
         {/* Header */}

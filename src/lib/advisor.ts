@@ -208,6 +208,18 @@ function analyzeMouse(info: SystemInfo, issues: AdvisorIssue[]) {
 
 function analyzeNvidiaBasic(info: SystemInfo, issues: AdvisorIssue[]) {
   if (info.gpu.vendor !== 'nvidia') return
+
+  issues.push({
+    id: 'advisor-nv-vsync',
+    title: 'V-Sync may cause input lag',
+    description: 'Vertical sync adds frame delay. Disabling it in favor of G-Sync or frame limiting reduces input latency.',
+    gamingImpact: 'Lower input lag, more responsive aiming',
+    severity: 'medium',
+    category: 'nvidia',
+    tweakId: 'nv-disable-vsync',
+    requiredTier: LicenseTier.FREE,
+    undoable: true,
+  })
 }
 
 function analyzeNvidiaAdvanced(info: SystemInfo, tier: LicenseTier, issues: AdvisorIssue[]) {
@@ -237,7 +249,7 @@ function analyzeNetworkAdvanced(info: SystemInfo, tier: LicenseTier, issues: Adv
       gamingImpact: 'Lower ping, more stable online matches',
       severity: info.network.latencyMs > 150 ? 'high' : 'medium',
       category: 'network',
-      tweakId: 'net-disable-background-updates',
+      tweakId: 'net-optimize-performance',
       requiredTier: LicenseTier.FREE,
       undoable: true,
     })
@@ -251,7 +263,7 @@ function analyzeNetworkAdvanced(info: SystemInfo, tier: LicenseTier, issues: Adv
       gamingImpact: 'Full network throughput, less jitter',
       severity: 'medium',
       category: 'network',
-      tweakId: 'net-disable-throttling',
+      tweakId: 'net-optimize-performance',
       requiredTier: LicenseTier.PRO,
       undoable: true,
     })

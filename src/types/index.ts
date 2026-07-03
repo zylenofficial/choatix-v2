@@ -4,7 +4,7 @@ export enum LicenseTier {
   PREMIUM = 'PREMIUM'
 }
 
-export type TweakCategory = 'network' | 'nvidia' | 'mouse' | 'system' | 'storage' | 'windows' | 'audio' | 'usb' | 'keyboard' | 'privacy'
+export type TweakCategory = 'network' | 'nvidia' | 'mouse' | 'system' | 'storage' | 'windows' | 'audio' | 'usb' | 'keyboard' | 'privacy' | 'debloat' | 'gpu' | 'gaming' | 'input'
 
 declare global {
   interface Window {
@@ -24,6 +24,8 @@ declare global {
       optimizeProcesses: (mode: 'safe' | 'aggressive') => Promise<{ success: boolean; killed: number; savedRam: number; mode: string; processes: ProcessInfo[] }>
       restoreProcesses: () => Promise<{ success: boolean; restored: number; message: string }>
       detectGames: (executables: string[]) => Promise<{ running: { name: string; pid: number }[] }>
+      applyGameTweaks: (tweakIds: string[]) => Promise<{ success: boolean; applied: number }>
+      restoreGameTweaks: (tweakIds: string[]) => Promise<{ success: boolean; restored: number }>
       startAutopilot: (games: GameProfile[]) => Promise<{ success: boolean }>
       stopAutopilot: () => Promise<{ success: boolean }>
       getAutopilotStatus: () => Promise<{ active: boolean; currentGame: string | null; games: string[] }>
@@ -42,6 +44,7 @@ declare global {
       applyTweak: (tweakId: string) => Promise<{ success: boolean; error?: string }>
       restoreTweak: (tweakId: string) => Promise<{ success: boolean; error?: string }>
       restoreAll: () => Promise<{ success: boolean; restored: number }>
+      restoreCategory: (category: string) => Promise<{ success: boolean; restored: number }>
       isAdmin: () => Promise<boolean>
       onCrashEvent: (cb: (event: { error: string; stack: string }) => void) => void
       saveAppState: (state: any) => Promise<{ success: boolean }>
@@ -244,11 +247,18 @@ export interface RollbackEntry {
   reverted: boolean
 }
 
+export interface GameTweakTiers {
+  free: string[]
+  pro: string[]
+  premium: string[]
+}
+
 export interface GameProfile {
   id: string
   name: string
   executable: string
   tweaks: string[]
+  tweakTiers: GameTweakTiers
   priority: number
   imagePath?: string
 }
@@ -337,4 +347,31 @@ export interface FeedbackData {
   message: string
   email?: string
   includeLogs: boolean
+}
+
+export interface ProofEntry {
+  timestamp: number
+  cpu: { usage: number; clock: number }
+  gpu: { usage: number; vram: number; temp: number }
+  ram: { used: number; total: number; percent: number }
+  disk: { read: number; write: number }
+}
+
+export interface ProofResult {
+  timestamp: number
+  tweaksApplied: string[]
+  metrics: {
+    cpu: { avg: number; max: number; min: number }
+    gpu: { avg: number; max: number; min: number }
+    ram: { avg: number; max: number; min: number }
+    storage: { read: number; write: number }
+  }
+  systemInfo: {
+    cpu: string
+    gpu: string
+    ram: string
+    os: string
+    driver: string
+  }
+  notes: string
 }

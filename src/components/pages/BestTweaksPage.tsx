@@ -19,47 +19,16 @@ interface TweakGroup {
   tweaks: string[]
 }
 
-const GROUPS: TweakGroup[] = [
-  {
-    id: 'essential',
-    label: 'Essential',
-    description: 'Must-have optimizations for every gamer. Free and safe.',
-    icon: Shield,
-    tweaks: [
-      'sys-high-performance', 'sys-enable-game-mode', 'sys-disable-fullscreen-opt',
-      'sys-disk-cleanup', 'cpu-core-parking-disable',
-      'mouse-disable-acceleration', 'nv-disable-vsync',
-      'net-optimize-dns',
-      'storage-ssd-optimization', 'storage-trim-optimization',
-      'audio-disable-enhancements', 'usb-selective-suspend-disable',
-      'windows-explorer-optimization',
-      'keyboard-disable-filter', 'keyboard-usb-power-mgmt',
-    ],
-  },
-  {
-    id: 'pro',
-    label: 'Pro Boost',
-    description: 'Advanced tweaks for competitive edge. Unlock with Pro key.',
-    icon: Cpu,
-    tweaks: [
-      'sys-cpu-priority',
-      'nv-low-latency', 'nv-texture-filtering',
-      'net-reduce-congestion',
-      'storage-nvme-optimization', 'storage-prefetch-manager',
-      'audio-usb-optimization',
-    ],
-  },
-  {
-    id: 'premium',
-    label: 'Premium Elite',
-    description: 'Maximum performance with full system restore. Premium only.',
-    icon: Sparkles,
-    tweaks: [
-      'nv-hardware-scheduling',
-      'memory-working-set',
-    ],
-  },
-]
+function buildGroups(): TweakGroup[] {
+  const free = availableTweaks.filter(t => t.requiredTier === LicenseTier.FREE).map(t => t.id)
+  const pro = availableTweaks.filter(t => t.requiredTier === LicenseTier.PRO).map(t => t.id)
+  const premium = availableTweaks.filter(t => t.requiredTier === LicenseTier.PREMIUM).map(t => t.id)
+  return [
+    { id: 'essential', label: 'Essential', description: 'Must-have optimizations for every gamer. Free and safe.', icon: Shield, tweaks: free },
+    { id: 'pro', label: 'Pro Boost', description: 'Advanced tweaks for competitive edge. Unlock with Pro key.', icon: Cpu, tweaks: pro },
+    { id: 'premium', label: 'Premium Elite', description: 'Maximum performance with full system restore. Premium only.', icon: Sparkles, tweaks: premium },
+  ]
+}
 
 function TweakRow({ tweak, isApplied, isApplying, isReverting, hasAccess, onApply, onRevert, onInfo }: {
   tweak: Tweak; isApplied: boolean; isApplying: boolean; isReverting: boolean; hasAccess: boolean; onApply: () => void; onRevert: () => void; onInfo: () => void
@@ -152,6 +121,7 @@ export function BestTweaksPage() {
   const [expandedGroup, setExpandedGroup] = useState<string | null>('essential')
   const [infoTweak, setInfoTweak] = useState<Tweak | null>(null)
   const appliedSet = new Set(appliedTweaks)
+  const GROUPS = useMemo(() => buildGroups(), [])
 
   const tierCounts = useMemo(() => ({
     [LicenseTier.FREE]: availableTweaks.filter(t => t.requiredTier === LicenseTier.FREE).length,
@@ -221,7 +191,7 @@ export function BestTweaksPage() {
   }, [appliedTweaks, setAppliedTweaks, addToast])
 
   return (
-    <div className="h-full overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
+    <div className="h-full overflow-y-auto page-transition" style={{ scrollbarWidth: 'thin' }}>
       <div className="max-w-5xl mx-auto p-6 space-y-6">
 
         {/* Header */}

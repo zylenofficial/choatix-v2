@@ -8,7 +8,27 @@ const PRO_ROLE_ID = process.env.PRO_ROLE_ID || '1517719772702314616';
 const PREMIUM_ROLE_ID = process.env.PREMIUM_ROLE_ID || '1517719827580452994';
 const ADMIN_SECRET = 'choatix-admin-2024';
 
+const OWNER_DISCORD_ID = '1014494449809772544';
+
 const activeGiveaways = new Map();
+
+function hashCode(str) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) - hash) + str.charCodeAt(i);
+    hash |= 0;
+  }
+  return Math.abs(hash);
+}
+
+function generateKeyLocal(tier) {
+  const nonce = Math.random().toString(36).substring(2, 6).toUpperCase();
+  const expiry = new Date(Date.now() + 365 * 86400000).toISOString().split('T')[0];
+  const SECRET = 'choatix-secret-key-2024';
+  const hash = hashCode(`${tier}:${expiry}:${nonce}:${SECRET}`);
+  const checksum = hash.toString(36).toUpperCase().padStart(4, '0').substring(0, 4);
+  return `CHTX-${tier.substring(0, 4)}-${nonce}-${checksum}`;
+}
 
 function apiRequest(method, path, body) {
   return new Promise((resolve, reject) => {
@@ -77,6 +97,18 @@ async function registerCommands() {
       )
       .addStringOption(option =>
         option.setName('message').setDescription('Giveaway message')
+      ),
+    new SlashCommandBuilder()
+      .setName('generate-key')
+      .setDescription('Generate license keys (admin only)')
+      .addStringOption(option =>
+        option.setName('tier').setDescription('Key tier').addChoices(
+          { name: 'Pro', value: 'PRO' },
+          { name: 'Premium', value: 'PREMIUM' },
+        ).setRequired(true)
+      )
+      .addIntegerOption(option =>
+        option.setName('count').setDescription('Number of keys to generate (1-10)').setMinValue(1).setMaxValue(10).setRequired(true)
       ),
   ];
 
@@ -257,7 +289,7 @@ client.on('interactionCreate', async (interaction) => {
     const message = interaction.options.getString('message') || `Win a **${tier}** license key!`;
 
     // Only admin can create giveaways
-    if (interaction.user.id !== '1014494449809772544') {
+    if (interaction.user.id !== OWNER_DISCORD_ID) {
       return interaction.reply({ content: '❌ Admin only.', ephemeral: true });
     }
 
@@ -340,6 +372,33 @@ client.on('interactionCreate', async (interaction) => {
 
     giveaway.entries.add(interaction.user.id);
     return interaction.reply({ content: `✅ Entered! ${giveaway.entries.size} entries so far.`, ephemeral: true });
+  }
+
+  // ─── /generate-key (admin only) ──────────────────────────
+  if (interaction.isChatInputCommand() && interaction.commandName === 'generate-key') {
+    if (interaction.user.id !== OWNER_DISCORD_ID) {
+      return interaction.reply({ content: '❌ Admin only.', ephemeral: true });
+    }
+
+    const tier = interaction.options.getString('tier');
+    const count = interaction.options.getInteger('count');
+    await interaction.deferReply({ ephemeral: true });
+
+    try {
+      const keys = [];
+      for (let i = 0; i < count; i++) {
+        keys.push(generateKeyLocal(tier));
+      }
+
+      const keyList = keys.join('\n');
+      await interaction.editReply({
+        content: '✅ **Keys Generated**\n\n' + '```' + keyList + '```' + '\n' + keys.length + ' key(s) ready to share.',
+      });
+    } catch (error) {
+      await interaction.editReply({
+        content: '❌ **Error** ' + error.message,
+      });
+    }
   }
 });
 

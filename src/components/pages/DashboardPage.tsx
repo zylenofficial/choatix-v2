@@ -237,7 +237,7 @@ export function DashboardPage() {
 
   if (!stats) {
     return (
-      <div className="h-full flex flex-col items-center justify-center">
+      <div className="h-full flex flex-col items-center justify-center page-transition">
         <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4 pulse-glow" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
           <Activity className="w-8 h-8 scan-pulse" style={{ color: '#ffffff' }} />
         </div>
@@ -257,7 +257,7 @@ export function DashboardPage() {
   const diskU = getUsageColor(diskPct)
 
   return (
-    <div className="p-6 space-y-5 h-full overflow-y-auto">
+    <div className="p-6 space-y-5 h-full overflow-y-auto page-transition">
       {/* Header */}
       <div className="flex items-end justify-between">
         <div>
@@ -275,7 +275,7 @@ export function DashboardPage() {
       {/* Hero: Score + 4 Gauges */}
       <div className="flex gap-4">
         {/* Health Score Hero */}
-          <div className="relative rounded-2xl p-6 flex flex-col items-center justify-center min-w-[180px] overflow-hidden" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)' }}>
+          <div className="relative rounded-2xl p-6 flex flex-col items-center justify-center min-w-[180px] overflow-hidden stat-card">
           <div className="absolute inset-0 pointer-events-none" style={{ background: `radial-gradient(circle at 50% 30%, ${scoreCol}12 0%, transparent 60%)` }} />
           <div className="relative" style={{ width: 130, height: 130 }}>
             <svg width={130} height={130} className="transform -rotate-90">
@@ -305,14 +305,14 @@ export function DashboardPage() {
         </div>
 
         {/* Resource Gauges */}
-        <div className="flex-1 grid grid-cols-4 gap-3">
+        <div className="flex-1 grid grid-cols-4 gap-3 stagger">
           {[
             { value: stats.cpu.usage, label: 'CPU', colors: [cpuU.color, cpuU.color + '60'] },
             { value: stats.ram.percentage, label: 'RAM', colors: [ramU.color, ramU.color + '60'] },
             { value: stats.gpu.usage, label: 'GPU', colors: [gpuU.color, gpuU.color + '60'] },
             { value: diskPct, label: 'DISK', colors: [diskU.color, diskU.color + '60'] },
           ].map((g, i) => (
-            <div key={i} className="rounded-2xl p-4 flex flex-col items-center" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)' }}>
+            <div key={i} className="stat-card p-4 flex flex-col items-center transition-all duration-300 hover:border-[rgba(255,255,255,0.10)]">
               <GradientRing value={g.value} colors={g.colors} label={g.label} size={90} strokeWidth={4} />
             </div>
           ))}
@@ -320,9 +320,9 @@ export function DashboardPage() {
       </div>
 
       {/* Detail Cards */}
-      <div className="grid grid-cols-4 gap-3">
+      <div className="grid grid-cols-4 gap-3 stagger">
         {/* CPU */}
-        <div className="rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)' }}>
+        <div className="stat-card overflow-hidden transition-all duration-300 hover:border-[rgba(255,255,255,0.10)]">
           <div className="px-4 py-3 flex items-center gap-2" style={{ borderBottom: '1px solid rgba(255,255,255,0.03)', background: cpuU.bg }}>
             <Cpu className="w-3 h-3" style={{ color: cpuU.color }} />
             <span className="text-[9px] tracking-[0.15em] font-semibold" style={{ color: cpuU.color }}>CPU</span>
@@ -335,7 +335,7 @@ export function DashboardPage() {
         </div>
 
         {/* RAM */}
-        <div className="rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)' }}>
+        <div className="stat-card overflow-hidden transition-all duration-300 hover:border-[rgba(255,255,255,0.10)]">
           <div className="px-4 py-3 flex items-center gap-2" style={{ borderBottom: '1px solid rgba(255,255,255,0.03)', background: ramU.bg }}>
             <MemoryStick className="w-3 h-3" style={{ color: ramU.color }} />
             <span className="text-[9px] tracking-[0.15em] font-semibold" style={{ color: ramU.color }}>MEMORY</span>
@@ -348,7 +348,7 @@ export function DashboardPage() {
         </div>
 
         {/* GPU */}
-        <div className="rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)' }}>
+        <div className="stat-card overflow-hidden transition-all duration-300 hover:border-[rgba(255,255,255,0.10)]">
           <div className="px-4 py-3 flex items-center gap-2" style={{ borderBottom: '1px solid rgba(255,255,255,0.03)', background: gpuU.bg }}>
             <Monitor className="w-3 h-3" style={{ color: gpuU.color }} />
             <span className="text-[9px] tracking-[0.15em] font-semibold" style={{ color: gpuU.color }}>GPU</span>
@@ -361,7 +361,7 @@ export function DashboardPage() {
         </div>
 
         {/* Storage */}
-        <div className="rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)' }}>
+        <div className="stat-card overflow-hidden transition-all duration-300 hover:border-[rgba(255,255,255,0.10)]">
           <div className="px-4 py-3 flex items-center gap-2" style={{ borderBottom: '1px solid rgba(255,255,255,0.03)', background: diskU.bg }}>
             <HardDrive className="w-3 h-3" style={{ color: diskU.color }} />
             <span className="text-[9px] tracking-[0.15em] font-semibold" style={{ color: diskU.color }}>STORAGE</span>
@@ -383,13 +383,13 @@ export function DashboardPage() {
       </div>
 
       {/* Charts */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-3 gap-3 stagger">
         {[
           { data: cpuHistory, label: 'CPU', colors: ['#ffffff', 'rgba(255,255,255,0.12)'] },
           { data: ramHistory, label: 'RAM', colors: ['#cccccc', 'rgba(200,200,200,0.10)'] },
           { data: gpuHistory, label: 'GPU', colors: ['#999999', 'rgba(150,150,150,0.08)'] },
         ].map((chart, i) => (
-          <div key={i} className="rounded-2xl p-4" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)' }}>
+          <div key={i} className="stat-card p-4 transition-all duration-300 hover:border-[rgba(255,255,255,0.10)]">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full" style={{ background: chart.colors[0], boxShadow: `0 0 8px ${chart.colors[0]}60` }} />
@@ -403,9 +403,9 @@ export function DashboardPage() {
       </div>
 
       {/* Bottom Row */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-3 gap-3 stagger">
         {/* System */}
-        <div className="rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)' }}>
+        <div className="stat-card overflow-hidden transition-all duration-300 hover:border-[rgba(255,255,255,0.10)]">
           <div className="px-4 py-3 flex items-center gap-2" style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
             <div className="w-5 h-5 rounded-md flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.04)' }}>
               <Gauge className="w-3 h-3" style={{ color: 'rgba(255,255,255,0.4)' }} />
@@ -422,7 +422,7 @@ export function DashboardPage() {
         </div>
 
         {/* Network */}
-        <div className="rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)' }}>
+        <div className="stat-card overflow-hidden transition-all duration-300 hover:border-[rgba(255,255,255,0.10)]">
           <div className="px-4 py-3 flex items-center gap-2" style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
             <div className="w-5 h-5 rounded-md flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.04)' }}>
               <Globe className="w-3 h-3" style={{ color: 'rgba(255,255,255,0.4)' }} />
@@ -437,7 +437,7 @@ export function DashboardPage() {
         </div>
 
         {/* Quick Actions */}
-        <div className="rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)' }}>
+        <div className="stat-card overflow-hidden transition-all duration-300 hover:border-[rgba(255,255,255,0.10)]">
           <div className="px-4 py-3 flex items-center gap-2" style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
             <div className="w-5 h-5 rounded-md flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.04)' }}>
               <Rocket className="w-3 h-3" style={{ color: 'rgba(255,255,255,0.4)' }} />
@@ -445,8 +445,8 @@ export function DashboardPage() {
             <span className="text-[9px] tracking-[0.15em] font-semibold" style={{ color: 'rgba(255,255,255,0.35)' }}>ACTIONS</span>
           </div>
           <div className="p-2 space-y-1.5">
-            <QuickAction icon={Shield} label="Scan System" desc="Detect issues" gradient="rgba(255,255,255,0.04)" onClick={() => window.location.reload()} />
-            <QuickAction icon={Zap} label="Optimize All" desc="Apply fixes" gradient="rgba(255,255,255,0.04)" onClick={() => window.location.reload()} />
+            <QuickAction icon={Shield} label="Scan System" desc="Detect issues" gradient="rgba(255,255,255,0.04)" onClick={() => window.dispatchEvent(new CustomEvent('choatix-navigate', { detail: 'scan' }))} />
+            <QuickAction icon={Zap} label="Optimize All" desc="Apply fixes" gradient="rgba(255,255,255,0.04)" onClick={() => window.dispatchEvent(new CustomEvent('choatix-navigate', { detail: 'optimizer' }))} />
             <QuickAction icon={Trash2} label={cacheStatus || 'Clear Cache'} desc="Remove temp files" gradient="rgba(255,255,255,0.04)" onClick={handleClearCache} />
             <QuickAction icon={Download} label="Update Drivers" desc="Latest GPU drivers" gradient="rgba(255,255,255,0.04)" onClick={handleUpdateDrivers} />
           </div>

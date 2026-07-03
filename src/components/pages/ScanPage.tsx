@@ -64,7 +64,7 @@ export function ScanPage() {
   // ─── IDLE ───
   if (advisorScanStatus === 'idle') {
     return (
-      <div className="h-full overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
+      <div className="h-full overflow-y-auto page-transition" style={{ scrollbarWidth: 'thin' }}>
         <div className="max-w-5xl mx-auto p-6 h-full flex flex-col items-center justify-center">
           <div className="text-center fade-in">
             {/* Icon */}
@@ -72,7 +72,7 @@ export function ScanPage() {
               <div className="w-28 h-28 rounded-3xl flex items-center justify-center pulse-glow" style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)' }}>
                 <Scan className="w-14 h-14 text-white" />
               </div>
-              <div className="absolute -bottom-2 -right-2 w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: '#fff', border: '2px solid #000' }}>
+              <div className="absolute -bottom-2 -right-2 w-9 h-9 rounded-xl flex items-center justify-center check-animate" style={{ background: '#fff', border: '2px solid #000' }}>
                 <Zap className="w-4 h-4 text-black" />
               </div>
             </div>
@@ -107,7 +107,7 @@ export function ScanPage() {
     const progress = ((scanStep + 1) / steps.length) * 100
 
     return (
-      <div className="h-full overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
+      <div className="h-full overflow-y-auto page-transition" style={{ scrollbarWidth: 'thin' }}>
         <div className="max-w-5xl mx-auto p-6 h-full flex flex-col items-center justify-center fade-in">
           <div className="rounded-3xl p-10 flex flex-col items-center gap-8 w-full max-w-2xl" style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)' }}>
             {/* Icon */}
@@ -161,7 +161,7 @@ export function ScanPage() {
   const scoreColor = advisorResult.score >= 70 ? '#fff' : advisorResult.score >= 40 ? '#ccc' : '#999'
 
   return (
-    <div className="h-full overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
+    <div className="h-full overflow-y-auto page-transition" style={{ scrollbarWidth: 'thin' }}>
       <div className="max-w-5xl mx-auto p-6 space-y-5 fade-in">
         {/* Header */}
         <div className="flex items-center justify-between">

@@ -22,8 +22,8 @@ interface Fix {
   category: string
   before: string
   after: string
-  fps: string
-  fpsNum: [number, number]
+  impact: string
+  impactLevel: number
   risk: string
   tweakId?: string
   why: string
@@ -31,14 +31,17 @@ interface Fix {
 }
 
 const GAMES = [
-  { id: 'fortnite', name: 'Fortnite', icon: '🎯', type: 'Battle Royale', est: (s: Spec) => estFps(s, 60, 40, 30, 15) },
-  { id: 'valorant', name: 'Valorant', icon: '🔫', type: 'Tactical FPS', est: (s: Spec) => estFps(s, 120, 60, 30, 15) },
-  { id: 'cs2', name: 'CS2', icon: '💣', type: 'Competitive', est: (s: Spec) => estFps(s, 150, 80, 40, 20) },
-  { id: 'apex', name: 'Apex Legends', icon: '🪂', type: 'Battle Royale', est: (s: Spec) => estFps(s, 80, 40, 20, 10) },
-  { id: 'warzone', name: 'Warzone', icon: '⚔️', type: 'Battle Royale', est: (s: Spec) => estFps(s, 50, 30, 25, 10) },
-  { id: 'rocketleague', name: 'Rocket League', icon: '⚽', type: 'Sports', est: (s: Spec) => estFps(s, 200, 100, 50, 20) },
-  { id: 'minecraft', name: 'Minecraft', icon: '⛏️', type: 'Sandbox', est: (s: Spec) => estFps(s, 80, 40, 30, 20) },
-  { id: 'genshin', name: 'Genshin Impact', icon: '🗡️', type: 'RPG', est: (s: Spec) => estFps(s, 45, 25, 10, 5) },
+  { id: 'fortnite', name: 'Fortnite', image: '/Assets/Games/fortnite.png', type: 'Battle Royale' },
+  { id: 'valorant', name: 'Valorant', image: '/Assets/Games/valorant.jpg', type: 'Tactical FPS' },
+  { id: 'cs2', name: 'CS2', image: '/Assets/Games/cs2.png', type: 'Competitive' },
+  { id: 'apex-legends', name: 'Apex Legends', image: '/Assets/Games/apex-legends.jpg', type: 'Battle Royale' },
+  { id: 'warzone', name: 'Warzone', image: '/Assets/Games/warzone.jpg', type: 'Battle Royale' },
+  { id: 'league-of-legends', name: 'League of Legends', image: '/Assets/Games/league-of-legends.png', type: 'MOBA' },
+  { id: 'minecraft', name: 'Minecraft', image: '', type: 'Sandbox' },
+  { id: 'fivem', name: 'FiveM', image: '/Assets/Games/fivem.jpg', type: 'Multiplayer' },
+  { id: 'gta-v', name: 'GTA V', image: '/Assets/Games/gta-v.jfif', type: 'Open World' },
+  { id: 'rainbow-six-siege', name: 'Rainbow Six Siege', image: '', type: 'Tactical FPS' },
+  { id: 'pubg', name: 'PUBG', image: '/Assets/Games/pubg.png', type: 'Battle Royale' },
 ]
 
 const CATEGORY_ICONS: Record<string, React.ReactNode> = {
@@ -51,18 +54,6 @@ const CATEGORY_ICONS: Record<string, React.ReactNode> = {
   Network: <Wifi className="w-3.5 h-3.5" />,
   Input: <MousePointer className="w-3.5 h-3.5" />,
   Hardware: <AlertTriangle className="w-3.5 h-3.5" />,
-}
-
-function estFps(s: Spec, base: number, cpuBonus: number, gpuBonus: number, ramBonus: number): [number, number] {
-  let fps = base
-  if (s.cpuCores >= 8) fps += cpuBonus
-  else if (s.cpuCores >= 6) fps += Math.round(cpuBonus * 0.5)
-  if (s.gpuVram >= 8) fps += gpuBonus
-  else if (s.gpuVram >= 6) fps += Math.round(gpuBonus * 0.5)
-  if (s.ramTotal >= 16) fps += ramBonus
-  else if (s.ramTotal >= 8) fps += Math.round(ramBonus * 0.3)
-  if (s.cpuClock >= 4500) fps += Math.round(cpuBonus * 0.3)
-  return [Math.round(fps * 0.7), Math.round(fps * 1.3)]
 }
 
 function toSpec(data: any): Spec {
@@ -85,35 +76,35 @@ function generateFixes(s: Spec): Fix[] {
   const gpu = s.gpu.toLowerCase()
 
   if (s.powerPlan !== 'High performance' && s.powerPlan !== 'Ultimate Performance') {
-    f.push({ id: `${++n}`, title: 'Switch to High Performance power plan', category: 'System', before: s.powerPlan, after: 'High Performance', fps: '+5–15', fpsNum: [5, 15], risk: 'Safe', tweakId: 'sys-high-performance', why: 'Your CPU is being throttled by the current power plan. High Performance keeps max clock speeds.', priority: 10 })
+    f.push({ id: `${++n}`, title: 'Switch to High Performance power plan', category: 'System', before: s.powerPlan, after: 'High Performance', impact: 'High', impactLevel: 3, risk: 'Safe', tweakId: 'sys-high-performance', why: 'Your CPU is being throttled by the current power plan. High Performance keeps max clock speeds.', priority: 10 })
   }
   if (s.gameMode === false) {
-    f.push({ id: `${++n}`, title: 'Enable Windows Game Mode', category: 'System', before: 'Disabled', after: 'Enabled', fps: '+1–3', fpsNum: [1, 3], risk: 'Safe', tweakId: 'sys-enable-game-mode', why: 'Game Mode prioritizes your game and blocks Windows Update during gameplay.', priority: 6 })
+    f.push({ id: `${++n}`, title: 'Enable Windows Game Mode', category: 'System', before: 'Disabled', after: 'Enabled', impact: 'Low', impactLevel: 1, risk: 'Safe', tweakId: 'sys-enable-game-mode', why: 'Game Mode prioritizes your game and blocks Windows Update during gameplay.', priority: 6 })
   }
-  f.push({ id: `${++n}`, title: 'Disable fullscreen optimizations', category: 'System', before: 'Enabled', after: 'Disabled', fps: '+1–4', fpsNum: [1, 4], risk: 'Safe', tweakId: 'sys-disable-fullscreen-opt', why: 'Windows overlay adds latency in fullscreen games. Disabling gives cleaner frame delivery.', priority: 7 })
+  f.push({ id: `${++n}`, title: 'Disable fullscreen optimizations', category: 'System', before: 'Enabled', after: 'Disabled', impact: 'Medium', impactLevel: 2, risk: 'Safe', tweakId: 'sys-disable-fullscreen-opt', why: 'Windows overlay adds latency in fullscreen games. Disabling gives cleaner frame delivery.', priority: 7 })
   if (gpu.includes('nvidia') || gpu.includes('geforce') || gpu.includes('rtx') || gpu.includes('gtx')) {
-    f.push({ id: `${++n}`, title: 'Disable driver V-Sync', category: 'GPU', before: 'Enabled', after: 'Off', fps: '+1–5', fpsNum: [1, 5], risk: 'Safe', tweakId: 'nv-disable-vsync', why: 'Driver V-Sync adds input lag. Use G-Sync or in-game V-Sync instead.', priority: 6 })
-    f.push({ id: `${++n}`, title: 'Enable Low Latency Mode', category: 'GPU', before: 'Off', after: 'On', fps: '+0–2', fpsNum: [0, 2], risk: 'Safe', tweakId: 'nv-low-latency', why: 'Reduces render queue to minimum frames. Less input lag.', priority: 5 })
+    f.push({ id: `${++n}`, title: 'Disable driver V-Sync', category: 'GPU', before: 'Enabled', after: 'Off', impact: 'Medium', impactLevel: 2, risk: 'Safe', tweakId: 'nv-disable-vsync', why: 'Driver V-Sync adds input lag. Use G-Sync or in-game V-Sync instead.', priority: 6 })
+    f.push({ id: `${++n}`, title: 'Enable Low Latency Mode', category: 'GPU', before: 'Off', after: 'On', impact: 'Medium', impactLevel: 2, risk: 'Safe', tweakId: 'nv-low-latency', why: 'Reduces render queue to minimum frames. Less input lag.', priority: 5 })
   }
   if (gpu.includes('radeon') || gpu.includes('rx') || gpu.includes('amd')) {
-    f.push({ id: `${++n}`, title: 'Disable Radeon Chill', category: 'GPU', before: 'Unknown', after: 'Off', fps: '+5–20', fpsNum: [5, 20], risk: 'Safe', why: 'Radeon Chill caps FPS to save power. Turn it off for maximum performance.', priority: 8 })
-    f.push({ id: `${++n}`, title: 'Enable Radeon Anti-Lag', category: 'GPU', before: 'Unknown', after: 'On', fps: '+0–3', fpsNum: [0, 3], risk: 'Safe', why: 'Reduces CPU-GPU frame pacing delay.', priority: 5 })
+    f.push({ id: `${++n}`, title: 'Disable Radeon Chill', category: 'GPU', before: 'Unknown', after: 'Off', impact: 'High', impactLevel: 3, risk: 'Safe', why: 'Radeon Chill caps FPS to save power. Turn it off for maximum performance.', priority: 8 })
+    f.push({ id: `${++n}`, title: 'Enable Radeon Anti-Lag', category: 'GPU', before: 'Unknown', after: 'On', impact: 'Medium', impactLevel: 2, risk: 'Safe', why: 'Reduces CPU-GPU frame pacing delay.', priority: 5 })
   }
-  f.push({ id: `${++n}`, title: 'Enable SSD TRIM', category: 'Storage', before: 'Unknown', after: 'Enabled', fps: '+0–2', fpsNum: [0, 2], risk: 'Safe', tweakId: 'storage-trim-optimization', why: 'Keeps your SSD fast over time.', priority: 2 })
-  f.push({ id: `${++n}`, title: 'Optimize DNS servers', category: 'Network', before: 'ISP default', after: 'Cloudflare/Google', fps: 'Ping only', fpsNum: [0, 0], risk: 'Safe', tweakId: 'net-optimize-dns', why: 'Faster DNS = faster game server connections.', priority: 3 })
+  f.push({ id: `${++n}`, title: 'Enable SSD TRIM', category: 'Storage', before: 'Unknown', after: 'Enabled', impact: 'Low', impactLevel: 1, risk: 'Safe', tweakId: 'storage-trim-optimization', why: 'Keeps your SSD fast over time.', priority: 2 })
+  f.push({ id: `${++n}`, title: 'Optimize DNS servers', category: 'Network', before: 'ISP default', after: 'Cloudflare/Google', impact: 'Ping', impactLevel: 1, risk: 'Safe', tweakId: 'net-optimize-dns', why: 'Faster DNS = faster game server connections.', priority: 3 })
   if (s.networkLatency && s.networkLatency > 30) {
-    f.push({ id: `${++n}`, title: `Network latency is ${s.networkLatency}ms (should be < 20ms)`, category: 'Network', before: `${s.networkLatency}ms`, after: '< 20ms', fps: 'Ping only', fpsNum: [0, 0], risk: 'Info', why: 'Use Ethernet cable instead of WiFi. Close bandwidth-heavy apps.', priority: 7 })
+    f.push({ id: `${++n}`, title: `Network latency is ${s.networkLatency}ms (should be < 20ms)`, category: 'Network', before: `${s.networkLatency}ms`, after: '< 20ms', impact: 'Ping', impactLevel: 1, risk: 'Info', why: 'Use Ethernet cable instead of WiFi. Close bandwidth-heavy apps.', priority: 7 })
   }
   if (s.mouseAccel) {
-    f.push({ id: `${++n}`, title: 'Disable mouse acceleration', category: 'Input', before: 'ON', after: 'OFF', fps: 'Aim fix', fpsNum: [0, 0], risk: 'Safe', tweakId: 'mouse-disable-acceleration', why: 'Mouse acceleration makes aiming inconsistent. Raw input gives 1:1 movement.', priority: 7 })
+    f.push({ id: `${++n}`, title: 'Disable mouse acceleration', category: 'Input', before: 'ON', after: 'OFF', impact: 'Aim', impactLevel: 2, risk: 'Safe', tweakId: 'mouse-disable-acceleration', why: 'Mouse acceleration makes aiming inconsistent. Raw input gives 1:1 movement.', priority: 7 })
   }
   if (s.ramTotal < 8) {
-    f.push({ id: `${++n}`, title: `Only ${s.ramTotal}GB RAM — UPGRADE NEEDED`, category: 'Hardware', before: `${s.ramTotal}GB`, after: '16GB minimum', fps: '+10–30', fpsNum: [10, 30], risk: 'Info', why: 'Modern games need 16GB RAM. This is your biggest bottleneck.', priority: 10 })
+    f.push({ id: `${++n}`, title: `Only ${s.ramTotal}GB RAM — UPGRADE NEEDED`, category: 'Hardware', before: `${s.ramTotal}GB`, after: '16GB minimum', impact: 'Critical', impactLevel: 3, risk: 'Info', why: 'Modern games need 16GB RAM. This is your biggest bottleneck.', priority: 10 })
   } else if (s.ramTotal < 16) {
-    f.push({ id: `${++n}`, title: `${s.ramTotal}GB RAM — consider upgrading to 16GB`, category: 'Hardware', before: `${s.ramTotal}GB`, after: '16GB', fps: '+5–15', fpsNum: [5, 15], risk: 'Info', why: '16GB is the sweet spot for gaming in 2026.', priority: 4 })
+    f.push({ id: `${++n}`, title: `${s.ramTotal}GB RAM — consider upgrading to 16GB`, category: 'Hardware', before: `${s.ramTotal}GB`, after: '16GB', impact: 'Medium', impactLevel: 2, risk: 'Info', why: '16GB is the sweet spot for gaming in 2026.', priority: 4 })
   }
   if (s.gpuVram > 0 && s.gpuVram < 4) {
-    f.push({ id: `${++n}`, title: `Only ${s.gpuVram}GB VRAM — UPGRADE NEEDED`, category: 'Hardware', before: `${s.gpuVram}GB`, after: '6GB+ minimum', fps: '+15–40', fpsNum: [15, 40], risk: 'Info', why: 'Many modern games need 6GB+ VRAM. This causes texture issues.', priority: 10 })
+    f.push({ id: `${++n}`, title: `Only ${s.gpuVram}GB VRAM — UPGRADE NEEDED`, category: 'Hardware', before: `${s.gpuVram}GB`, after: '6GB+ minimum', impact: 'Critical', impactLevel: 3, risk: 'Info', why: 'Many modern games need 6GB+ VRAM. This causes texture issues.', priority: 10 })
   }
 
   return f.sort((a, b) => b.priority - a.priority)
@@ -211,9 +202,9 @@ export function AIOptimizerPage() {
     return g
   }, [fixes])
 
-  const totalFps = useMemo(() => {
-    if (!fixes) return [0, 0] as [number, number]
-    return fixes.reduce<[number, number]>((acc, f) => [acc[0] + f.fpsNum[0], acc[1] + f.fpsNum[1]], [0, 0])
+  const totalImpact = useMemo(() => {
+    if (!fixes) return 0
+    return fixes.reduce<number>((acc, f) => acc + f.impactLevel, 0)
   }, [fixes])
 
   const score = useMemo(() => {
@@ -241,16 +232,16 @@ export function AIOptimizerPage() {
     let r = `CHOATIX OPTIMIZATION REPORT\n${'='.repeat(40)}\n\n`
     r += `CPU: ${spec.cpu} (${spec.cpuCores}C/${spec.cpuThreads}T)\nGPU: ${spec.gpu} (${spec.gpuVram}GB)\nRAM: ${spec.ramTotal}GB\n`
     r += `Power: ${spec.powerPlan} | Game Mode: ${spec.gameMode ? 'On' : 'Off'}\n`
-    r += `Score: ${score}/100 | Potential: +${totalFps[0]}–${totalFps[1]} FPS\n\n`
+    r += `Score: ${score}/100 | Impact: ${totalImpact >= 12 ? 'High' : totalImpact >= 6 ? 'Medium' : 'Low'}\n\n`
     r += `FIXES (${fixes.length}):\n${'-'.repeat(30)}\n`
-    fixes.forEach(f => { r += `\n[${f.category}] ${f.title}\n  ${f.before} → ${f.after}\n  FPS: ${f.fps} | Risk: ${f.risk}\n  ${f.why}\n` })
+    fixes.forEach(f => { r += `\n[${f.category}] ${f.title}\n  ${f.before} → ${f.after}\n  Impact: ${f.impact} | Risk: ${f.risk}\n  ${f.why}\n` })
     const b = new Blob([r], { type: 'text/plain' })
     const a = document.createElement('a')
     a.href = URL.createObjectURL(b); a.download = `choatix-report-${Date.now()}.txt`; a.click()
   }
 
   return (
-    <div className="h-full overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
+    <div className="h-full overflow-y-auto page-transition" style={{ scrollbarWidth: 'thin' }}>
       <div className="max-w-5xl mx-auto p-6 space-y-6">
 
         {/* Header */}
@@ -265,7 +256,7 @@ export function AIOptimizerPage() {
               </div>
             </div>
             <div>
-              <h1 className="text-xl font-bold text-white tracking-tight">Suggestion Optimizer</h1>
+              <h1 className="text-xl font-bold text-white tracking-tight">System Optimizer</h1>
               <p className="text-xs text-[var(--text-tertiary)] mt-0.5">Scan your system → Identify bottlenecks → Maximize FPS</p>
             </div>
           </div>
@@ -418,12 +409,18 @@ export function AIOptimizerPage() {
               <div className="grid grid-cols-4 gap-2.5">
                 {GAMES.map(g => (
                   <button key={g.id} onClick={() => setGame(game === g.id ? '' : g.id)}
-                    className="group relative p-3.5 rounded-2xl text-left transition-all duration-200"
+                    className="group relative p-3.5 rounded-2xl text-left transition-all duration-200 overflow-hidden"
                     style={{
                       background: game === g.id ? 'rgba(255,255,255,0.08)' : 'var(--bg-tertiary)',
                       border: `1px solid ${game === g.id ? 'rgba(255,255,255,0.2)' : 'var(--border-subtle)'}`,
                     }}>
-                    <div className="text-lg mb-1.5">{g.icon}</div>
+                    {g.image ? (
+                      <img src={g.image} alt={g.name} className="w-8 h-8 rounded-lg object-cover mb-1.5" style={{ background: '#1a1a1a' }} />
+                    ) : (
+                      <div className="w-8 h-8 rounded-lg flex items-center justify-center mb-1.5" style={{ background: '#1a1a1a' }}>
+                        <Gamepad2 className="w-4 h-4 text-white/20" />
+                      </div>
+                    )}
                     <div className="text-xs font-semibold text-white">{g.name}</div>
                     <div className="text-[10px] text-[var(--text-muted)] mt-0.5">{g.type}</div>
                   </button>
@@ -431,16 +428,18 @@ export function AIOptimizerPage() {
               </div>
               {selectedGame && spec && (
                 <div className="mt-4 p-4 rounded-2xl flex items-center justify-between" style={{ background: 'var(--bg-tertiary)', border: '1px solid var(--border-subtle)' }}>
-                  <div className="flex items-center gap-3">
-                    <div className="text-xl">{selectedGame.icon}</div>
+                    <div className="flex items-center gap-3">
+                    {selectedGame.image ? (
+                      <img src={selectedGame.image} alt={selectedGame.name} className="w-8 h-8 rounded-lg object-cover" style={{ background: '#1a1a1a' }} />
+                    ) : (
+                      <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: '#1a1a1a' }}>
+                        <Gamepad2 className="w-4 h-4 text-white/20" />
+                      </div>
+                    )}
                     <div>
                       <div className="text-sm font-bold text-white">{selectedGame.name}</div>
-                      <div className="text-[10px] text-[var(--text-muted)]">{selectedGame.type} • Estimated FPS</div>
+                      <div className="text-[10px] text-[var(--text-muted)]">{selectedGame.type}</div>
                     </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-xl font-black text-white">{selectedGame.est(spec)[0]}–{selectedGame.est(spec)[1]}</div>
-                    <div className="text-[9px] text-[var(--text-muted)] uppercase tracking-wider">FPS</div>
                   </div>
                 </div>
               )}
@@ -460,8 +459,8 @@ export function AIOptimizerPage() {
             {/* Summary Stats */}
             <div className="grid grid-cols-4 gap-3 stagger">
               <div className="card-widget p-5 text-center">
-                <div className="text-2xl font-black text-white count-animate">+{totalFps[0]}–{totalFps[1]}</div>
-                <div className="text-[10px] text-[var(--text-muted)] uppercase tracking-widest mt-1.5 font-medium">Potential FPS</div>
+                <div className="text-2xl font-black text-white count-animate">{totalImpact >= 12 ? 'High' : totalImpact >= 6 ? 'Medium' : 'Low'}</div>
+                <div className="text-[10px] text-[var(--text-muted)] uppercase tracking-widest mt-1.5 font-medium">Impact</div>
               </div>
               <div className="card-widget p-5 text-center">
                 <div className="flex items-center justify-center gap-1.5">
@@ -503,7 +502,7 @@ export function AIOptimizerPage() {
             <div className="space-y-3">
               {Object.entries(cats).map(([cat, catFixes], catIdx) => {
                 const catDone = catFixes.filter(f => f.tweakId && done.has(f.tweakId)).length
-                const catFps = catFixes.reduce<[number, number]>((a, f) => [a[0] + f.fpsNum[0], a[1] + f.fpsNum[1]], [0, 0])
+                    const catImpact = catFixes.reduce<number>((a, f) => a + f.impactLevel, 0)
                 const isOpen = openCat === cat
                 const allDone = catDone === catFixes.length
 
@@ -523,9 +522,9 @@ export function AIOptimizerPage() {
                         </div>
                       </div>
                       <div className="flex items-center gap-4">
-                        {(catFps[0] > 0 || catFps[1] > 0) && (
+                        {catImpact > 0 && (
                           <div className="px-3 py-1 rounded-lg text-[10px] font-bold" style={{ background: 'rgba(255,255,255,0.06)', color: '#fff' }}>
-                            +{catFps[0]}–{catFps[1]} FPS
+                            {catImpact >= 6 ? 'High' : catImpact >= 3 ? 'Medium' : 'Low'} Impact
                           </div>
                         )}
                         {allDone && (
@@ -581,7 +580,7 @@ export function AIOptimizerPage() {
                                   <div className="ml-2 flex flex-col items-center gap-1">
                                     <div className="w-24 h-1 rounded-full" style={{ background: 'var(--bg-elevated)' }} />
                                     <div className="text-[9px] uppercase tracking-widest text-[var(--text-muted)]">FPS Gain</div>
-                                    <div className="text-[11px] font-bold text-white">{fix.fps}</div>
+                                    <div className="text-[11px] font-bold text-white">{fix.impact}</div>
                                   </div>
                                 </div>
 
