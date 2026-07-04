@@ -18,6 +18,9 @@ const RollbackPage = dynamic(() => import('@/components/pages/RollbackPage').the
 const SettingsPage = dynamic(() => import('@/components/pages/SettingsPage').then(m => ({ default: m.SettingsPage })), { ssr: false })
 const AIOptimizerPage = dynamic(() => import('@/components/pages/AIOptimizerPage').then(m => ({ default: m.AIOptimizerPage })), { ssr: false })
 const ProcessOptimizerPage = dynamic(() => import('@/components/pages/ProcessOptimizerPage').then(m => ({ default: m.ProcessOptimizerPage })), { ssr: false })
+const BenchmarkPage = dynamic(() => import('@/components/pages/BenchmarkPage').then(m => ({ default: m.BenchmarkPage })), { ssr: false })
+const BIOSGuidePage = dynamic(() => import('@/components/pages/BIOSGuidePage').then(m => ({ default: m.BIOSGuidePage })), { ssr: false })
+const LiveOverlayPage = dynamic(() => import('@/components/pages/LiveOverlayPage').then(m => ({ default: m.LiveOverlayPage })), { ssr: false })
 
 const PAGES: Record<Page, React.ComponentType> = {
   dashboard: DashboardPage,
@@ -30,6 +33,9 @@ const PAGES: Record<Page, React.ComponentType> = {
   rollback: RollbackPage,
   settings: SettingsPage,
   'ai-optimizer': AIOptimizerPage,
+  benchmark: BenchmarkPage,
+  'bios-guide': BIOSGuidePage,
+  'live-overlay': LiveOverlayPage,
 }
 
 export default function Home() {
@@ -89,9 +95,16 @@ export default function Home() {
 
   return (
     <ToastProvider>
-    <div className="flex flex-col h-[calc(100vh-40px)] bg-mesh">
+    <div className="flex flex-col h-[calc(100vh-40px)]" style={{ position: 'relative' }}>
+      {/* Video Background */}
+      <video autoPlay muted loop playsInline
+        style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', objectFit: 'cover', zIndex: 0, filter: 'grayscale(100%) brightness(0.5) contrast(1.2)' }} />
+      {/* Vignette overlay */}
+      <div style={{ position: 'fixed', inset: 0, background: 'radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.7) 100%)', zIndex: 1 }} />
+      {/* Dark tint */}
+      <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.35)', zIndex: 1 }} />
       {/* Title Bar */}
-      <div className="h-10 flex items-center justify-between px-3 shrink-0" style={{ WebkitAppRegion: 'drag', borderBottom: '1px solid var(--border-subtle)' } as any}>
+      <div className="h-10 flex items-center justify-between px-3 shrink-0" style={{ WebkitAppRegion: 'drag', borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(16px)', position: 'relative', zIndex: 2 } as any}>
         <div className="flex items-center gap-2.5">
           <img src="/choatix-logo.png" alt="CHOATIX" style={{ height: 50, width: 'auto', objectFit: 'contain', filter: 'brightness(0) invert(1)' }} />
         </div>
@@ -108,7 +121,7 @@ export default function Home() {
         </div>
       </div>
       {/* Main */}
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 overflow-hidden" style={{ position: 'relative', zIndex: 2 }}>
       <Sidebar
         active={activePage}
         onNavigate={handleNavigate}

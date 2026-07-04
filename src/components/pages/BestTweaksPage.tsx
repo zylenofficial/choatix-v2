@@ -6,7 +6,7 @@ import { availableTweaks } from '@/data/tweaks'
 import { canAccessTier } from '@/lib/featureAccess'
 import { createRollbackEntry } from '@/lib/tweaks'
 import { useToast } from '@/components/Toast'
-import { Zap, Lock, CheckCircle2, Loader2, Shield, Cpu, Mouse, Wifi, HardDrive, Monitor, Volume2, Power, Sparkles, ArrowRight, RotateCcw, Info } from 'lucide-react'
+import { Zap, Lock, CheckCircle2, Loader2, Shield, Cpu, Mouse, Wifi, HardDrive, Monitor, Volume2, Power, Sparkles, ArrowRight, RotateCcw, Info, Crown } from 'lucide-react'
 import { LicenseTier } from '@/types'
 import { TweakInfoModal } from '@/components/TweakInfoModal'
 import type { Tweak } from '@/types'
@@ -33,17 +33,18 @@ function buildGroups(): TweakGroup[] {
 function TweakRow({ tweak, isApplied, isApplying, isReverting, hasAccess, onApply, onRevert, onInfo }: {
   tweak: Tweak; isApplied: boolean; isApplying: boolean; isReverting: boolean; hasAccess: boolean; onApply: () => void; onRevert: () => void; onInfo: () => void
 }) {
+  const tierColor = tweak.requiredTier === LicenseTier.FREE ? 'var(--success)' : tweak.requiredTier === LicenseTier.PRO ? 'var(--info)' : 'var(--warning)'
   return (
     <div className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200"
       style={{
-        background: isApplied ? 'rgba(255,255,255,0.04)' : 'var(--bg-tertiary)',
-        border: `1px solid ${isApplied ? 'rgba(255,255,255,0.1)' : 'var(--border-subtle)'}`,
+        background: isApplied ? 'var(--success-dim)' : 'var(--bg-tertiary)',
+        border: `1px solid ${isApplied ? 'rgba(74,222,128,0.2)' : 'var(--border-subtle)'}`,
         opacity: !hasAccess ? 0.4 : 1,
       }}>
       {/* Status */}
       <div className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0">
         {isApplied ? (
-          <CheckCircle2 className="w-4 h-4 text-white" />
+          <CheckCircle2 className="w-4 h-4" style={{ color: 'var(--success)' }} />
         ) : isApplying ? (
           <Loader2 className="w-4 h-4 animate-spin text-white" />
         ) : !hasAccess ? (
@@ -56,41 +57,39 @@ function TweakRow({ tweak, isApplied, isApplying, isReverting, hasAccess, onAppl
       {/* Info */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <span className="text-[11px] font-semibold truncate" style={{ color: hasAccess ? 'var(--text-primary)' : 'var(--text-muted)' }}>
+          <span className="text-xs font-semibold truncate" style={{ color: hasAccess ? 'var(--text-primary)' : 'var(--text-muted)' }}>
             {tweak.name}
           </span>
           {!hasAccess && (
-            <span className="text-[7px] font-bold tracking-wider uppercase px-1.5 py-0.5 rounded-lg shrink-0"
-              style={{ background: 'rgba(255,255,255,0.04)', color: 'var(--text-muted)' }}>
+            <span className="status-badge shrink-0" style={{ background: `${tierColor}15`, color: tierColor, border: `1px solid ${tierColor}30`, fontSize: '9px', padding: '1px 6px' }}>
               {tweak.requiredTier}
             </span>
           )}
         </div>
-        <div className="text-[9px] truncate mt-0.5" style={{ color: 'var(--text-tertiary)' }}>{tweak.description}</div>
+        <div className="text-[11px] truncate mt-0.5" style={{ color: 'var(--text-tertiary)' }}>{tweak.description}</div>
       </div>
 
       {/* Badges */}
       <div className="flex items-center gap-1.5 flex-shrink-0">
         {tweak.impact === 'high' && (
-          <span className="text-[7px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-lg" style={{ background: 'rgba(255,255,255,0.06)', color: '#fff' }}>
+          <span className="status-badge danger" style={{ fontSize: '9px', padding: '1px 6px' }}>
             High
           </span>
         )}
         {tweak.risk !== 'none' && (
-          <span className="text-[7px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-lg"
-            style={{ background: tweak.risk === 'medium' ? 'rgba(153,153,153,0.06)' : 'rgba(204,204,204,0.06)', color: tweak.risk === 'medium' ? '#999' : '#ccc' }}>
+          <span className="status-badge warning" style={{ fontSize: '9px', padding: '1px 6px' }}>
             {tweak.risk}
           </span>
         )}
       </div>
 
       {/* Gaming effect */}
-      <div className="text-[9px] text-right max-w-[130px] truncate flex-shrink-0" style={{ color: 'var(--text-tertiary)' }}>
+      <div className="text-[11px] text-right max-w-[130px] truncate flex-shrink-0" style={{ color: 'var(--text-tertiary)' }}>
         {tweak.gamingImpact}
       </div>
 
       {/* Info */}
-      <button onClick={onInfo} className="shrink-0 flex items-center justify-center w-6 h-6 rounded-lg transition-all hover:bg-white/10" style={{ border: '1px solid rgba(255,255,255,0.15)' }} title="Tweak info">
+      <button onClick={onInfo} className="shrink-0 flex items-center justify-center w-7 h-7 rounded-lg transition-all hover:bg-white/10" style={{ border: '1px solid rgba(255,255,255,0.15)' }} title="Tweak info">
         <Info className="w-3.5 h-3.5" style={{ color: 'rgba(255,255,255,0.6)' }} />
       </button>
 
@@ -98,13 +97,13 @@ function TweakRow({ tweak, isApplied, isApplying, isReverting, hasAccess, onAppl
       {hasAccess && !isApplying && (
         isApplied ? (
           <button onClick={onRevert} disabled={isReverting}
-            className="px-2.5 py-1 rounded-lg text-[9px] font-bold flex items-center gap-1 transition-all shrink-0"
+            className="px-3 py-1.5 rounded-lg text-[11px] font-bold flex items-center gap-1.5 transition-all shrink-0"
             style={{ background: 'rgba(255,255,255,0.06)', color: '#ccc', border: '1px solid rgba(255,255,255,0.1)' }}>
             <RotateCcw className="w-3 h-3" />
             Revert
           </button>
         ) : (
-          <button onClick={onApply} className="px-2.5 py-1 rounded-lg text-[9px] font-bold transition-all btn-primary shrink-0">
+          <button onClick={onApply} className="px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all btn-primary shrink-0">
             Apply
           </button>
         )
@@ -210,19 +209,19 @@ export function BestTweaksPage() {
         {/* Tier summary */}
         <div className="grid grid-cols-3 gap-3 stagger">
           {[
-            { tier: LicenseTier.FREE, label: 'Free', count: tierCounts[LicenseTier.FREE], icon: Shield, desc: 'Essential tweaks' },
-            { tier: LicenseTier.PRO, label: 'Pro', count: tierCounts[LicenseTier.PRO], icon: Zap, desc: 'Advanced tweaks' },
-            { tier: LicenseTier.PREMIUM, label: 'Premium', count: tierCounts[LicenseTier.PREMIUM], icon: Sparkles, desc: 'Elite tweaks' },
-          ].map(({ tier, label, count, icon: Icon, desc }) => {
+            { tier: LicenseTier.FREE, label: 'Free', count: tierCounts[LicenseTier.FREE], icon: Shield, desc: 'Essential tweaks', color: 'var(--success)' },
+            { tier: LicenseTier.PRO, label: 'Pro', count: tierCounts[LicenseTier.PRO], icon: Zap, desc: 'Advanced tweaks', color: 'var(--info)' },
+            { tier: LicenseTier.PREMIUM, label: 'Premium', count: tierCounts[LicenseTier.PREMIUM], icon: Crown, desc: 'Elite tweaks', color: 'var(--warning)' },
+          ].map(({ tier, label, count, icon: Icon, desc, color }) => {
             const isActive = tier === LicenseTier.FREE || license.tier === tier
             return (
-              <div key={tier} className="card-widget p-5 flex items-center gap-4" style={{ opacity: isActive ? 1 : 0.4 }}>
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'var(--accent-dim)' }}>
-                  <Icon className="w-5 h-5 text-white" />
+              <div key={tier} className="card-widget p-5 flex items-center gap-4" style={{ opacity: isActive ? 1 : 0.4, borderColor: isActive ? `${color}20` : undefined }}>
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: `${color}15` }}>
+                  <Icon className="w-5 h-5" style={{ color }} />
                 </div>
                 <div>
-                  <div className="text-[10px] font-bold tracking-widest uppercase text-white">{label}</div>
-                  <div className="text-[9px] text-[var(--text-muted)] mt-0.5">{count} tweaks • {desc}</div>
+                  <div className="text-xs font-bold tracking-widest uppercase" style={{ color }}>{label}</div>
+                  <div className="text-[11px] text-[var(--text-muted)] mt-0.5">{count} tweaks &bull; {desc}</div>
                 </div>
               </div>
             )
@@ -242,38 +241,44 @@ export function BestTweaksPage() {
             const progress = groupTweaks.length > 0 ? (appliedCount / groupTweaks.length) * 100 : 0
 
             return (
-              <div key={group.id} className="rounded-2xl overflow-hidden transition-all duration-300"
-                style={{ background: 'var(--bg-secondary)', border: `1px solid ${isExpanded ? 'var(--border-default)' : 'var(--border-subtle)'}` }}>
+              <div key={group.id} className="rounded-2xl overflow-hidden transition-all duration-300 card-widget"
+                style={{ borderColor: isExpanded ? 'var(--border-default)' : 'var(--border-subtle)' }}>
                 {/* Group header */}
                 <button onClick={() => setExpandedGroup(isExpanded ? null : group.id)}
                   className="w-full px-6 py-5 flex items-center justify-between hover:bg-white/[0.015] transition-colors">
                   <div className="flex items-center gap-4">
-                    <div className="w-11 h-11 rounded-xl flex items-center justify-center" style={{ background: 'var(--accent-dim)' }}>
-                      <Icon className="w-5 h-5 text-white" />
+                    <div className="w-11 h-11 rounded-xl flex items-center justify-center" style={{ background: group.id === 'essential' ? 'var(--success-dim)' : group.id === 'pro' ? 'var(--info-dim)' : 'var(--warning-dim)' }}>
+                      <Icon className="w-5 h-5" style={{ color: group.id === 'essential' ? 'var(--success)' : group.id === 'pro' ? 'var(--info)' : 'var(--warning)' }} />
                     </div>
                     <div>
                       <div className="flex items-center gap-2.5">
                         <span className="text-sm font-bold text-white">{group.label}</span>
-                        <span className="text-[9px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-lg"
-                          style={{ background: 'rgba(255,255,255,0.06)', color: '#fff' }}>
+                        <span className="status-badge" style={{
+                          background: group.id === 'essential' ? 'var(--success-dim)' : group.id === 'pro' ? 'var(--info-dim)' : 'var(--warning-dim)',
+                          color: group.id === 'essential' ? 'var(--success)' : group.id === 'pro' ? 'var(--info)' : 'var(--warning)',
+                          fontSize: '10px',
+                        }}>
                           {appliedCount}/{groupTweaks.length}
                         </span>
                       </div>
-                      <div className="text-[10px] text-[var(--text-muted)] mt-0.5">{group.description}</div>
+                      <div className="text-xs text-[var(--text-muted)] mt-0.5">{group.description}</div>
                     </div>
                   </div>
                   <div className="flex items-center gap-4">
                     {isExpanded && (
                       <button onClick={(e) => { e.stopPropagation(); handleApplyGroup(group) }}
                         disabled={applying !== null}
-                        className="h-9 px-5 rounded-xl text-[10px] font-bold flex items-center gap-2 btn-primary disabled:opacity-50">
+                        className="h-9 px-5 rounded-xl text-[11px] font-bold flex items-center gap-2 btn-primary disabled:opacity-50">
                         {applying ? <Loader2 className="w-3 h-3 animate-spin" /> : <Zap className="w-3 h-3" />}
                         Apply All
                       </button>
                     )}
                     {/* Mini progress */}
                     <div className="w-20 h-1.5 rounded-full" style={{ background: 'var(--bg-elevated)' }}>
-                      <div className="h-full rounded-full transition-all duration-500" style={{ width: `${progress}%`, background: '#fff' }} />
+                      <div className="h-full rounded-full transition-all duration-500" style={{
+                        width: `${progress}%`,
+                        background: group.id === 'essential' ? 'var(--success)' : group.id === 'pro' ? 'var(--info)' : 'var(--warning)',
+                      }} />
                     </div>
                     <ArrowRight className="w-4 h-4 transition-transform duration-200" style={{ color: 'var(--text-muted)', transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)' }} />
                   </div>
@@ -282,7 +287,7 @@ export function BestTweaksPage() {
                 {/* Tweak list */}
                 {isExpanded && (
                   <div className="px-4 pb-4 space-y-1.5 stagger" style={{ borderTop: '1px solid var(--border-subtle)' }}>
-                    <div className="py-2 px-4 flex items-center gap-3 text-[8px] font-bold tracking-widest uppercase" style={{ color: 'var(--text-muted)' }}>
+                    <div className="py-2 px-4 flex items-center gap-3 text-[10px] font-bold tracking-widest uppercase" style={{ color: 'var(--text-muted)' }}>
                       <div className="w-5" />
                       <div className="flex-1">Tweak</div>
                       <div className="w-20 text-center">Impact</div>

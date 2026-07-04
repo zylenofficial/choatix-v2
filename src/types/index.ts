@@ -4,7 +4,7 @@ export enum LicenseTier {
   PREMIUM = 'PREMIUM'
 }
 
-export type TweakCategory = 'network' | 'nvidia' | 'mouse' | 'system' | 'storage' | 'windows' | 'audio' | 'usb' | 'keyboard' | 'privacy' | 'debloat' | 'gpu' | 'gaming' | 'input'
+export type TweakCategory = 'network' | 'nvidia' | 'mouse' | 'system' | 'storage' | 'windows' | 'audio' | 'usb' | 'keyboard' | 'privacy' | 'debloat' | 'gpu' | 'gaming' | 'input' | 'bcdedit' | 'radeon' | 'directx' | 'latency' | 'alttab' | 'explorer'
 
 declare global {
   interface Window {
@@ -278,7 +278,7 @@ export interface Feature {
   description: string
   tier: LicenseTier
   gamingImpact: string
-  category: 'scan' | 'tweak' | 'autopilot' | 'undo'
+  category: 'scan' | 'tweak' | 'autopilot' | 'undo' | 'tools'
 }
 
 // ─── Choatix Advisor Types ───

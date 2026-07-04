@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect, useMemo } from 'react'
 import { useStore } from '@/store/useStore'
-import { Zap, Lock, CheckCircle2, Loader2, XCircle, ShieldAlert, RotateCcw, Shield, Monitor, Wifi, MousePointer, HardDrive, Volume2, Power, Gamepad2, ArrowRight, Keyboard, Info } from 'lucide-react'
+import { Zap, Lock, CheckCircle2, Loader2, XCircle, ShieldAlert, RotateCcw, Shield, Monitor, Wifi, MousePointer, HardDrive, Volume2, Power, Gamepad2, ArrowRight, Keyboard, Info, Cpu, Layers, Timer, AppWindow, Folder } from 'lucide-react'
 import { canAccessTier } from '@/lib/featureAccess'
 import { availableTweaks } from '@/data/tweaks'
 import { createRollbackEntry } from '@/lib/tweaks'
@@ -24,29 +24,35 @@ const CATEGORY_META: Record<string, { label: string; icon: React.ReactNode; desc
   gpu: { label: 'GPU', icon: <Monitor className="w-4 h-4" />, desc: 'GPU power, shader cache, render scheduling' },
   gaming: { label: 'Gaming', icon: <Gamepad2 className="w-4 h-4" />, desc: 'Game DVR, priority, scheduler optimization' },
   input: { label: 'Input', icon: <Keyboard className="w-4 h-4" />, desc: 'Zero-delay keyboard, raw mouse, accessibility' },
+  privacy: { label: 'Privacy', icon: <Shield className="w-4 h-4" />, desc: 'Telemetry, tracking, data collection' },
+  radeon: { label: 'AMD Radeon', icon: <Monitor className="w-4 h-4" />, desc: 'Anti-Lag, Chill, VSR, power limit, HDCP' },
+  directx: { label: 'DirectX', icon: <Layers className="w-4 h-4" />, desc: 'Shader cache, D3D12, Agility SDK, VRS' },
+  latency: { label: 'Latency', icon: <Timer className="w-4 h-4" />, desc: 'HPET, timer resolution, TSC, DPC latency' },
+  alttab: { label: 'Alt-Tab', icon: <AppWindow className="w-4 h-4" />, desc: 'Window switching, DWM, thumbnails' },
+  explorer: { label: 'Explorer', icon: <Folder className="w-4 h-4" />, desc: 'File manager, context menu, indexing' },
 }
 
 const CATEGORY_ORDER: TweakCategory[] = [
-  'system', 'nvidia', 'gpu', 'gaming', 'input', 'network', 'mouse', 'keyboard', 'storage', 'windows', 'audio', 'usb', 'debloat', 'privacy',
+  'system', 'nvidia', 'radeon', 'gpu', 'gaming', 'directx', 'input', 'latency', 'alttab', 'network', 'mouse', 'keyboard', 'storage', 'windows', 'audio', 'usb', 'explorer', 'debloat', 'privacy',
 ]
 
 function TweakRow({ tweak, isApplied, isFailed, isApplying, isReverting, hasAccess, onApply, onRevert, onInfo }: {
   tweak: Tweak; isApplied: boolean; isFailed: boolean; isApplying: boolean; isReverting: boolean; hasAccess: boolean; onApply: () => void; onRevert: () => void; onInfo: () => void
 }) {
-  const riskColor = tweak.risk === 'medium' ? '#999' : tweak.risk === 'low' ? '#ccc' : '#666'
+  const riskColor = tweak.risk === 'medium' ? 'var(--warning)' : tweak.risk === 'low' ? 'var(--text-secondary)' : 'var(--danger)'
 
   if (!hasAccess) {
     return (
       <div className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all opacity-40" style={{ background: 'var(--bg-tertiary)', border: '1px solid var(--border-subtle)' }}>
         <Lock className="w-3.5 h-3.5 text-[var(--text-muted)]" />
         <div className="flex-1 min-w-0">
-          <div className="text-[11px] font-semibold text-[var(--text-muted)] truncate">{tweak.name}</div>
-          <div className="text-[9px] text-[var(--text-muted)] mt-0.5">{tweak.description}</div>
+          <div className="text-[12px] font-semibold text-[var(--text-muted)] truncate">{tweak.name}</div>
+          <div className="text-[10px] text-[var(--text-muted)] mt-0.5">{tweak.description}</div>
         </div>
         <button onClick={onInfo} className="shrink-0 flex items-center justify-center w-6 h-6 rounded-lg transition-all hover:bg-white/10" style={{ border: '1px solid rgba(255,255,255,0.15)' }} title="Tweak info">
           <Info className="w-3.5 h-3.5" style={{ color: 'rgba(255,255,255,0.6)' }} />
         </button>
-        <span className="text-[7px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-lg shrink-0"
+        <span className="text-[9px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-lg shrink-0"
           style={{ background: 'rgba(255,255,255,0.04)', color: 'var(--text-muted)' }}>
           {tweak.requiredTier}
         </span>
@@ -63,36 +69,36 @@ function TweakRow({ tweak, isApplied, isFailed, isApplying, isReverting, hasAcce
       {/* Status icon */}
       <div className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0">
         {isApplied ? (
-          <CheckCircle2 className="w-4 h-4 text-white" />
+          <CheckCircle2 className="w-4 h-4" style={{ color: 'var(--success)' }} />
         ) : isFailed ? (
-          <XCircle className="w-4 h-4 text-[var(--danger)]" />
+          <XCircle className="w-4 h-4" style={{ color: 'var(--danger)' }} />
         ) : isApplying ? (
-          <Loader2 className="w-4 h-4 animate-spin text-white" />
+          <Loader2 className="w-4 h-4 animate-spin" style={{ color: 'var(--info)' }} />
         ) : null}
       </div>
 
       {/* Info */}
       <div className="flex-1 min-w-0">
-        <div className="text-[11px] font-semibold text-white truncate">{tweak.name}</div>
-        <div className="text-[9px] text-[var(--text-tertiary)] mt-0.5 truncate">{tweak.description}</div>
+        <div className="text-[12px] font-semibold text-white truncate">{tweak.name}</div>
+        <div className="text-[10px] text-[var(--text-tertiary)] mt-0.5 truncate">{tweak.description}</div>
       </div>
 
       {/* Impact + Risk badges */}
       <div className="flex items-center gap-1.5 shrink-0">
         {tweak.impact === 'high' && (
-          <span className="text-[7px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-lg" style={{ background: 'rgba(255,255,255,0.06)', color: '#fff' }}>
-            High Impact
+          <span className="status-badge info">
+            High
           </span>
         )}
         {tweak.risk !== 'none' && (
-          <span className="text-[7px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-lg" style={{ background: `${riskColor}10`, color: riskColor }}>
-            {tweak.risk} risk
+          <span className={`status-badge ${tweak.risk === 'medium' ? 'warning' : 'info'}`}>
+            {tweak.risk}
           </span>
         )}
       </div>
 
       {/* Gaming impact */}
-      <div className="text-[9px] text-right max-w-[130px] truncate shrink-0" style={{ color: 'var(--text-tertiary)' }}>
+      <div className="text-[10px] text-right max-w-[140px] truncate shrink-0" style={{ color: 'var(--text-tertiary)' }}>
         {tweak.gamingImpact}
       </div>
 
@@ -105,20 +111,15 @@ function TweakRow({ tweak, isApplied, isFailed, isApplying, isReverting, hasAcce
       <div className="shrink-0">
         {isApplied ? (
           <button onClick={onRevert} disabled={isReverting}
-            className="px-3 py-1.5 rounded-lg text-[9px] font-bold flex items-center gap-1.5 transition-all"
-            style={{ background: 'rgba(255,255,255,0.06)', color: '#ccc', border: '1px solid rgba(255,255,255,0.1)' }}>
+            className="px-3 py-1.5 rounded-lg text-[10px] font-bold flex items-center gap-1.5 transition-all btn-ghost">
             <RotateCcw className="w-3 h-3" />
             Revert
           </button>
         ) : (
           <button onClick={onApply} disabled={isApplying || isFailed}
-            className="px-3 py-1.5 rounded-lg text-[9px] font-bold transition-all duration-200"
-            style={{
-              background: isFailed ? 'var(--danger-dim)' : '#fff',
-              color: isFailed ? 'var(--danger)' : '#000',
-              opacity: isApplying ? 0.5 : 1,
-            }}>
-            {isApplying ? 'Applying...' : isFailed ? 'Failed — Retry' : 'Apply'}
+            className="px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all duration-200 btn-primary"
+            style={{ color: '#000', opacity: isApplying ? 0.5 : 1 }}>
+            {isApplying ? 'Applying...' : isFailed ? 'Retry' : 'Apply'}
           </button>
         )}
       </div>

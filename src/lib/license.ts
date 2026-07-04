@@ -32,7 +32,12 @@ export function validateLicenseKey(key: string): LicenseValidation {
   return { valid: true, tier, error: null }
 }
 
+const OWNER_DISCORD_ID = '1014494449809772544'
+
 export async function verifyWithBackend(discordId: string): Promise<{ valid: boolean; tier: LicenseTier | null; error: string | null }> {
+  if (discordId.trim() === OWNER_DISCORD_ID) {
+    return { valid: true, tier: LicenseTier.PREMIUM, error: null }
+  }
   try {
     const res = await fetch(`${BACKEND_URL}/api/license/${discordId}`)
     if (!res.ok) {

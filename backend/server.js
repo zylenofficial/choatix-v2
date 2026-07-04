@@ -324,6 +324,13 @@ app.get('/api/referral/user/:discordId', async (req, res) => {
   res.json({ code: referral.code, uses: referral.uses, maxUses: referral.max_uses });
 });
 
+// ─── License lookup by Discord ID ────────────────────────────
+app.get('/api/license/:discordId', async (req, res) => {
+  const user = await getUser(req.params.discordId);
+  if (!user) return res.status(404).json({ success: false, message: 'No license found for this Discord ID' });
+  res.json({ success: true, tier: user.tier, key: user.key || null, activatedAt: user.activated_at || null });
+});
+
 // ─── Key / Redeem (legacy) ──────────────────────────────────
 app.post('/api/license/verify-key', async (req, res) => {
   const { key, discordId } = req.body;

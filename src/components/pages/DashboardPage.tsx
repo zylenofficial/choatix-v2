@@ -191,7 +191,7 @@ export function DashboardPage() {
       setGpuHistory([...gpuRef.current])
       addHealthScoreEntry({ score: calcHealthScore(s), timestamp: Date.now() })
     } catch {}
-  }, [])
+  }, [addHealthScoreEntry])
 
   useEffect(() => {
     fetchStats()

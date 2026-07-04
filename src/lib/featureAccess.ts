@@ -34,7 +34,11 @@ export const featureRegistry: Feature[] = [
   { id: 'scan_advanced', name: 'Advanced Scan', description: 'Deep system analysis', tier: LicenseTier.PRO, gamingImpact: 'Detailed bottleneck detection', category: 'scan' },
   { id: 'autopilot_basic', name: 'Basic AutoPilot', description: 'Single game optimization', tier: LicenseTier.FREE, gamingImpact: 'Auto-optimizes on game launch', category: 'autopilot' },
   { id: 'autopilot_multi', name: 'Multi-Game AutoPilot', description: 'Multiple game profiles', tier: LicenseTier.PRO, gamingImpact: 'All games optimized automatically', category: 'autopilot' },
+  { id: 'autopilot_auto', name: 'Auto-Optimize on Launch', description: 'Detect & optimize when game starts', tier: LicenseTier.PRO, gamingImpact: 'Zero-click game optimization', category: 'autopilot' },
   { id: 'undo_basic', name: 'Basic Rollback', description: 'Revert individual tweaks', tier: LicenseTier.FREE, gamingImpact: 'Safe experimentation', category: 'undo' },
   { id: 'undo_full', name: 'Full Restore', description: 'Complete system restore', tier: LicenseTier.PREMIUM, gamingImpact: 'Restore any previous state', category: 'undo' },
   { id: 'optimizer_processes', name: 'Process Optimizer', description: 'Reduce background processes', tier: LicenseTier.PRO, gamingImpact: 'More resources for games', category: 'tweak' },
+  { id: 'benchmark', name: 'Benchmark Tool', description: 'Before/after performance comparison', tier: LicenseTier.FREE, gamingImpact: 'Prove tweaks actually work', category: 'tools' },
+  { id: 'bios_guide', name: 'BIOS Guide', description: 'XMP, C-States, ReBAR walkthrough', tier: LicenseTier.PRO, gamingImpact: 'Unlock hidden performance', category: 'tools' },
+  { id: 'live_monitor', name: 'Live Monitor', description: 'Real-time CPU/GPU/RAM stats', tier: LicenseTier.PRO, gamingImpact: 'Monitor performance while gaming', category: 'tools' },
 ]

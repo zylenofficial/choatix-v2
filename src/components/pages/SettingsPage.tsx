@@ -5,6 +5,7 @@ import { useStore } from '@/store/useStore'
 import { verifyWithBackend } from '@/lib/license'
 import { Settings, Monitor, Info, ExternalLink, Key, CheckCircle, XCircle, User, Download, Upload, RefreshCw, Save, Shield, MessageSquare, Send, Loader2, Star } from 'lucide-react'
 import type { UpdateInfo, FeedbackData } from '@/types'
+import { LicenseTier } from '@/types'
 
 export function SettingsPage() {
   const { license, setLicense, discordId, setDiscordId } = useStore()
@@ -36,7 +37,7 @@ export function SettingsPage() {
   }, [discordId, setLicense])
 
   const handleDeactivate = useCallback(() => {
-    setLicense({ tier: 'FREE' as any, key: null, activated: false, expiryDate: null })
+    setLicense({ tier: LicenseTier.FREE, key: null, activated: false, expiryDate: null })
     setStatus('idle'); setStatusMsg('')
   }, [setLicense])
 
