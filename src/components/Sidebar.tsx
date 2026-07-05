@@ -24,15 +24,8 @@ const NAV_ITEMS: { id: Page; label: string; icon: any; pro?: boolean; premium?: 
 export function Sidebar({ active, onNavigate, tier, onUpgrade, rollbackCount }: SidebarProps) {
   return (
     <aside className="w-60 h-full flex flex-col relative" style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(24px) saturate(1.3)', borderRight: '1px solid rgba(255,255,255,0.06)' }}>
-      {/* Logo */}
-      <div className="flex items-center px-5 py-5 relative">
-        <img src="/choatix-logo.png" alt="CHOATIX" style={{ height: 32, width: 'auto', objectFit: 'contain', filter: 'brightness(0) invert(1)' }} />
-      </div>
-
-      <div className="mx-4 separator" />
-
       {/* Nav */}
-      <nav className="flex-1 overflow-y-auto py-2">
+      <nav className="flex-1 overflow-y-auto py-3">
         <div className="px-2 space-y-0.5">
           {NAV_ITEMS.map(item => {
             const Icon = item.icon
