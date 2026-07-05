@@ -106,7 +106,7 @@ export default function Home() {
       {/* Title Bar */}
       <div className="h-10 flex items-center justify-between px-3 shrink-0" style={{ WebkitAppRegion: 'drag', borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(16px)', position: 'relative', zIndex: 2 } as any}>
         <div className="flex items-center gap-2.5">
-          <img src="/choatix-logo.png" alt="CHOATIX" style={{ height: 50, width: 'auto', objectFit: 'contain', filter: 'brightness(0) invert(1)' }} />
+          <img src="/choatix-logo.png" alt="CHOATIX" style={{ height: 28, width: 'auto', objectFit: 'contain', filter: 'brightness(0) invert(1)' }} />
         </div>
         <div className="flex items-center gap-0.5" style={{ WebkitAppRegion: 'no-drag' } as any}>
           <button onClick={() => window.electronAPI?.minimize()} className="w-7 h-7 rounded-md flex items-center justify-center hover:bg-white/5 transition-all duration-150" style={{ color: 'var(--text-muted)' }}>

@@ -26,7 +26,7 @@ export function Sidebar({ active, onNavigate, tier, onUpgrade, rollbackCount }: 
     <aside className="w-60 h-full flex flex-col relative" style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(24px) saturate(1.3)', borderRight: '1px solid rgba(255,255,255,0.06)' }}>
       {/* Logo */}
       <div className="flex items-center px-5 py-5 relative">
-        <img src="/choatix-logo.png" alt="CHOATIX" style={{ height: 60, width: 'auto', objectFit: 'contain', filter: 'brightness(0) invert(1)' }} />
+        <img src="/choatix-logo.png" alt="CHOATIX" style={{ height: 32, width: 'auto', objectFit: 'contain', filter: 'brightness(0) invert(1)' }} />
       </div>
 
       <div className="mx-4 separator" />
