@@ -385,15 +385,18 @@ client.on('interactionCreate', async (interaction) => {
     await interaction.deferReply({ ephemeral: true });
 
     try {
-      const keys = [];
-      for (let i = 0; i < count; i++) {
-        keys.push(generateKeyLocal(tier));
-      }
+      const result = await apiRequest('POST', '/api/generate', { tier, count, adminSecret: ADMIN_SECRET });
 
-      const keyList = keys.join('\n');
-      await interaction.editReply({
-        content: '✅ **Keys Generated**\n\n' + '```' + keyList + '```' + '\n' + keys.length + ' key(s) ready to share.',
-      });
+      if (result.success && result.keys) {
+        const keyList = result.keys.join('\n');
+        await interaction.editReply({
+          content: '✅ **Keys Generated**\n\n' + '```' + keyList + '```' + '\n' + result.keys.length + ' key(s) saved to database and ready to share.',
+        });
+      } else {
+        await interaction.editReply({
+          content: '❌ **Failed** ' + (result.error || 'Unknown error — backend may be starting up'),
+        });
+      }
     } catch (error) {
       await interaction.editReply({
         content: '❌ **Error** ' + error.message,
