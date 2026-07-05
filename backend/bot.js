@@ -338,19 +338,28 @@ client.on('interactionCreate', async (interaction) => {
       }
 
       const winnerId = entries[Math.floor(Math.random() * entries.length)];
-      const key = `CHTX-${tier.substring(0, 4)}-${Math.random().toString(36).substring(2, 6).toUpperCase()}-0000`;
 
-      await apiRequest('POST', '/api/generate', { tier, count: 1, adminSecret: ADMIN_SECRET });
+      const genResult = await apiRequest('POST', '/api/generate', { tier, count: 1, adminSecret: ADMIN_SECRET });
+      const wonKey = genResult.success && genResult.keys ? genResult.keys[0] : null;
+
+      const winDesc = wonKey
+        ? `**Winner: <@${winnerId}>**\n\nYour key: \`${wonKey}\`\n\nRun \`/redeem key:${wonKey}\` to activate!`
+        : `**Winner: <@${winnerId}>**\n\nA ${tier} key was generated. Run \`/redeem\` to check your status.`;
 
       const winEmbed = EmbedBuilder.from(embed)
-        .setDescription(`**Winner: <@${winnerId}>**\n\nA ${tier} key has been generated. Run \`/redeem\` to activate!`)
+        .setDescription(winDesc)
         .setColor(0xffffff);
 
       await interaction.channel.messages.edit(msg.id, { embeds: [winEmbed], components: [] }).catch(() => {});
 
       try {
         const winner = interaction.guild.members.cache.get(winnerId);
-        if (winner) await winner.send(`🎉 You won a **${tier}** Choatix license key! Run \`/redeem\` in the server to activate.`);
+        if (winner) {
+          const dmText = wonKey
+            ? `🎉 You won a **${tier}** Choatix license key!\n\nYour key: \`${wonKey}\`\n\nRun \`/redeem key:${wonKey}\` in the server to activate!`
+            : `🎉 You won a **${tier}** Choatix license key!\n\nRun \`/redeem\` in the server to activate!`;
+          await winner.send(dmText);
+        }
       } catch {}
     }, duration * 60 * 1000);
   }

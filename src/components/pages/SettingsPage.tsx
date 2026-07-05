@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from 'react'
 import { useStore } from '@/store/useStore'
-import { verifyWithBackend } from '@/lib/license'
+import { verifyWithBackend, activateByKeyAndDiscord } from '@/lib/license'
 import { Settings, Monitor, Info, ExternalLink, Key, CheckCircle, XCircle, User, Download, Upload, RefreshCw, Save, Shield, MessageSquare, Send, Loader2, Star } from 'lucide-react'
 import type { UpdateInfo, FeedbackData } from '@/types'
 import { LicenseTier } from '@/types'
@@ -25,6 +25,10 @@ export function SettingsPage() {
   const [feedbackStatus, setFeedbackStatus] = useState<'idle' | 'success' | 'error'>('idle')
   const [feedbackLoading, setFeedbackLoading] = useState(false)
   const [feedbackMsg, setFeedbackMsg] = useState('')
+  const [licenseKey, setLicenseKey] = useState('')
+  const [keyLoading, setKeyLoading] = useState(false)
+  const [keyStatus, setKeyStatus] = useState<'idle' | 'success' | 'error'>('idle')
+  const [keyStatusMsg, setKeyStatusMsg] = useState('')
 
   const handleVerifyDiscord = useCallback(async () => {
     if (!discordId.trim()) { setStatus('error'); setStatusMsg('Enter your Discord ID'); return }
@@ -40,6 +44,18 @@ export function SettingsPage() {
     setLicense({ tier: LicenseTier.FREE, key: null, activated: false, expiryDate: null })
     setStatus('idle'); setStatusMsg('')
   }, [setLicense])
+
+  const handleActivateKey = useCallback(async () => {
+    if (!licenseKey.trim()) { setKeyStatus('error'); setKeyStatusMsg('Enter a license key'); return }
+    const did = discordId.trim() || 'in-app'
+    setKeyLoading(true); setKeyStatus('idle')
+    const result = await activateByKeyAndDiscord(licenseKey.trim(), did)
+    setKeyLoading(false)
+    if (!result.valid) { setKeyStatus('error'); setKeyStatusMsg(result.error!); return }
+    setLicense({ tier: result.tier!, key: licenseKey.trim().toUpperCase(), activated: true, expiryDate: null })
+    setKeyStatus('success'); setKeyStatusMsg(`Activated ${result.tier} plan!`)
+    setLicenseKey('')
+  }, [licenseKey, discordId, setLicense])
 
   const handleCheckUpdate = useCallback(async () => {
     if (!window.electronAPI) return
@@ -125,9 +141,11 @@ export function SettingsPage() {
                 <div className="text-xs font-semibold text-white">Current Plan</div>
                 <div className="text-[10px] text-[var(--text-tertiary)] mt-0.5">Your license tier</div>
               </div>
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full" style={{ background: license.tier === 'FREE' ? 'var(--text-muted)' : '#fff' }} />
-                <span className="text-sm font-bold text-white">{license.tier}</span>
+              <div className="flex items-center gap-2.5">
+                <div className={`status-badge ${license.tier === 'FREE' ? 'info' : license.tier === 'PRO' ? 'success' : 'warning'}`}>
+                  <div className="w-1.5 h-1.5 rounded-full" style={{ background: 'currentColor' }} />
+                  {license.tier}
+                </div>
               </div>
             </div>
 
@@ -138,28 +156,63 @@ export function SettingsPage() {
                   <Key className="w-3 h-3 text-[var(--text-muted)]" />
                   <span className="text-[10px] font-mono tracking-wider text-[var(--text-secondary)]">{license.key || 'Discord Verified'}</span>
                 </div>
-                <button onClick={handleDeactivate} className="text-[10px] px-2 py-1 rounded-lg transition-colors" style={{ color: '#999', background: 'var(--bg-secondary)' }}>Deactivate</button>
+                <button onClick={handleDeactivate} className="text-[10px] px-2 py-1 rounded-lg transition-colors btn-press" style={{ color: '#999', background: 'var(--bg-secondary)' }}>Deactivate</button>
               </div>
             )}
 
             {/* Discord verify */}
-            <div className="mb-3">
-              <div className="text-[10px] uppercase tracking-widest text-[var(--text-muted)] font-medium mb-2">Verify with Discord</div>
+            <div className="mb-3 p-4 rounded-xl" style={{ background: 'rgba(88,101,242,0.06)', border: '1px solid rgba(88,101,242,0.15)' }}>
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-6 h-6 rounded-lg flex items-center justify-center" style={{ background: 'rgba(88,101,242,0.15)' }}>
+                  <User className="w-3 h-3" style={{ color: '#7289da' }} />
+                </div>
+                <div className="text-[11px] uppercase tracking-widest font-semibold" style={{ color: '#7289da' }}>Verify with Discord</div>
+              </div>
               <div className="flex gap-2">
                 <input type="text" placeholder="Your Discord ID" value={discordId} onChange={(e) => {
                   const val = e.target.value
                   setDiscordId(val)
                   setStatus('idle')
                 }}
-                  className="flex-1 px-4 py-2.5 rounded-xl text-xs outline-none"
+                  className="flex-1 px-4 py-2.5 rounded-xl text-xs outline-none btn-press"
                   style={{ background: 'var(--bg-tertiary)', color: 'var(--text-primary)', border: '1px solid var(--border-subtle)' }} />
                 <button onClick={handleVerifyDiscord} disabled={loading}
-                  className="px-5 py-2.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 btn-primary disabled:opacity-50">
+                  className="px-5 py-2.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 btn-primary btn-press disabled:opacity-50">
                   <User className="w-3 h-3" />{loading ? '...' : 'Lookup'}
                 </button>
               </div>
-              <p className="text-[9px] mt-1.5 text-[var(--text-muted)]">Already redeemed in Discord? Enter your Discord ID above.</p>
+              <p className="text-[10px] mt-2" style={{ color: 'rgba(114,137,218,0.6)' }}>Already redeemed in Discord? Enter your Discord ID above.</p>
             </div>
+
+            {/* Key activation */}
+            <div className="mb-3 p-4 rounded-xl" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-subtle)' }}>
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-6 h-6 rounded-lg flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.06)' }}>
+                  <Key className="w-3 h-3 text-[var(--text-secondary)]" />
+                </div>
+                <div className="text-[11px] uppercase tracking-widest font-semibold text-[var(--text-secondary)]">Activate with Key</div>
+              </div>
+              <div className="flex gap-2">
+                <input type="text" placeholder="CHTX-XXXX-XXXX-XXXX" value={licenseKey} onChange={(e) => {
+                  setLicenseKey(e.target.value.toUpperCase())
+                  setKeyStatus('idle')
+                }}
+                  className="flex-1 px-4 py-2.5 rounded-xl text-xs font-mono tracking-wider outline-none btn-press"
+                  style={{ background: 'var(--bg-tertiary)', color: 'var(--text-primary)', border: '1px solid var(--border-subtle)' }} />
+                <button onClick={handleActivateKey} disabled={keyLoading}
+                  className="px-5 py-2.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 btn-primary btn-press disabled:opacity-50">
+                  <Key className="w-3 h-3" />{keyLoading ? '...' : 'Activate'}
+                </button>
+              </div>
+              <p className="text-[10px] mt-2 text-[var(--text-muted)]">Got a license key? Enter it above to activate directly.</p>
+            </div>
+
+            {keyStatus !== 'idle' && (
+              <div className="flex items-center gap-2 mb-3">
+                {keyStatus === 'success' ? <CheckCircle className="w-3 h-3 text-white" /> : <XCircle className="w-3 h-3" style={{ color: '#999' }} />}
+                <span className="text-[10px]" style={{ color: keyStatus === 'success' ? '#fff' : '#999' }}>{keyStatusMsg}</span>
+              </div>
+            )}
 
             {/* Status */}
             {status !== 'idle' && (
@@ -189,7 +242,7 @@ export function SettingsPage() {
                 </div>
               </div>
               <button onClick={handleCheckUpdate} disabled={checkingUpdate}
-                className="h-9 px-4 rounded-xl text-[11px] font-semibold disabled:opacity-50"
+                className="h-9 px-4 rounded-xl text-[11px] font-semibold disabled:opacity-50 btn-press"
                 style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', border: '1px solid var(--border-subtle)' }}>
                 {checkingUpdate ? 'Checking...' : 'Check'}
               </button>
@@ -226,7 +279,7 @@ export function SettingsPage() {
                   <div className="text-[10px] text-[var(--text-muted)] mt-0.5">Save settings to a JSON file</div>
                 </div>
               </div>
-              <button onClick={handleExport} className="h-9 px-4 rounded-xl text-[11px] font-semibold flex items-center gap-1.5"
+              <button onClick={handleExport} className="h-9 px-4 rounded-xl text-[11px] font-semibold flex items-center gap-1.5 btn-press"
                 style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', border: '1px solid var(--border-subtle)' }}>
                 <Download className="w-3 h-3" />Export
               </button>
@@ -246,7 +299,7 @@ export function SettingsPage() {
                   <div className="text-[10px] text-[var(--text-muted)] mt-0.5">Load settings from a JSON file</div>
                 </div>
               </div>
-              <button onClick={handleImport} className="h-9 px-4 rounded-xl text-[11px] font-semibold flex items-center gap-1.5"
+              <button onClick={handleImport} className="h-9 px-4 rounded-xl text-[11px] font-semibold flex items-center gap-1.5 btn-press"
                 style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', border: '1px solid var(--border-subtle)' }}>
                 <Upload className="w-3 h-3" />Import
               </button>
@@ -294,22 +347,22 @@ export function SettingsPage() {
 
             {/* Type selector - card style */}
             <div>
-              <label className="text-[10px] uppercase tracking-widest font-medium mb-2 block text-[var(--text-muted)]">Type</label>
-              <div className="grid grid-cols-3 gap-2">
+              <label className="text-[10px] uppercase tracking-widest font-medium mb-2.5 block text-[var(--text-muted)]">Type</label>
+              <div className="grid grid-cols-3 gap-2.5">
                 {([
                   { id: 'bug' as const, icon: '🐛', label: 'Bug Report', desc: 'Something broke' },
                   { id: 'feature' as const, icon: '💡', label: 'Feature', desc: 'Suggest improvement' },
                   { id: 'general' as const, icon: '💬', label: 'General', desc: 'Questions, thoughts' },
                 ]).map(t => (
                   <button key={t.id} onClick={() => setFeedbackType(t.id)}
-                    className="p-3 rounded-xl text-left transition-all duration-200"
+                    className="p-3 rounded-xl text-left transition-all duration-200 btn-press"
                     style={{
                       background: feedbackType === t.id ? 'rgba(255,255,255,0.08)' : 'var(--bg-tertiary)',
                       border: `1px solid ${feedbackType === t.id ? 'rgba(255,255,255,0.2)' : 'var(--border-subtle)'}`,
                     }}>
                     <div className="text-lg mb-1">{t.icon}</div>
                     <div className="text-[11px] font-bold text-white">{t.label}</div>
-                    <div className="text-[9px] text-[var(--text-muted)] mt-0.5">{t.desc}</div>
+                    <div className="text-[10px] text-[var(--text-muted)] mt-0.5">{t.desc}</div>
                   </button>
                 ))}
               </div>
@@ -317,14 +370,14 @@ export function SettingsPage() {
 
             {/* Rating */}
             <div>
-              <label className="text-[10px] uppercase tracking-widest font-medium mb-2 block text-[var(--text-muted)]">Rating</label>
+              <label className="text-[10px] uppercase tracking-widest font-medium mb-2.5 block text-[var(--text-muted)]">Rating</label>
               <div className="flex items-center gap-1">
                 {[1, 2, 3, 4, 5].map(star => (
                   <button key={star} type="button"
                     onClick={() => setFeedbackRating(feedbackRating === star ? 0 : star)}
                     onMouseEnter={() => setFeedbackRating(star)}
                     onMouseLeave={() => setFeedbackRating(feedbackRating)}
-                    className="p-1 transition-all duration-200 hover:scale-125"
+                    className="p-1 transition-all duration-200 hover:scale-125 btn-press"
                     aria-label={`${star} star${star > 1 ? 's' : ''}`}>
                     <Star className="w-7 h-7" style={{
                       color: star <= feedbackRating ? '#fff' : 'var(--border-subtle)',
@@ -341,39 +394,39 @@ export function SettingsPage() {
 
             {/* Subject */}
             <div>
-              <label className="text-[10px] uppercase tracking-widest font-medium mb-2 block text-[var(--text-muted)]">Subject</label>
+              <label className="text-[10px] uppercase tracking-widest font-medium mb-2.5 block text-[var(--text-muted)]">Subject</label>
               <input type="text" placeholder="Brief summary" value={feedbackSubject}
                 onChange={(e) => setFeedbackSubject(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl text-xs outline-none"
+                className="w-full px-4 py-3 rounded-xl text-xs outline-none btn-press"
                 style={{ background: 'var(--bg-tertiary)', color: 'var(--text-primary)', border: '1px solid var(--border-subtle)' }} />
             </div>
 
             {/* Message */}
             <div>
-              <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center justify-between mb-2.5">
                 <label className="text-[10px] uppercase tracking-widest font-medium text-[var(--text-muted)]">Message</label>
-                <span className="text-[9px] text-[var(--text-muted)]">{feedbackMessage.length}/2000</span>
+                <span className="text-[10px] text-[var(--text-muted)]">{feedbackMessage.length}/2000</span>
               </div>
               <textarea placeholder="Describe your feedback in detail..." value={feedbackMessage}
                 onChange={(e) => setFeedbackMessage(e.target.value)} rows={6}
-                className="w-full px-4 py-3 rounded-xl text-xs outline-none resize-none"
+                className="w-full px-4 py-3 rounded-xl text-xs outline-none resize-none btn-press"
                 style={{ background: 'var(--bg-tertiary)', color: 'var(--text-primary)', border: '1px solid var(--border-subtle)', lineHeight: '1.7' }} />
             </div>
 
             {/* Include logs */}
-            <div className="flex items-center gap-3 p-3 rounded-xl" style={{ background: 'var(--bg-tertiary)', border: '1px solid var(--border-subtle)' }}>
+            <div className="flex items-center gap-3 p-3.5 rounded-xl" style={{ background: 'var(--bg-tertiary)', border: '1px solid var(--border-subtle)' }}>
               <input type="checkbox" checked={feedbackIncludeLogs}
                 onChange={(e) => setFeedbackIncludeLogs(e.target.checked)}
                 className="w-4 h-4 accent-white cursor-pointer" />
               <div>
                 <span className="text-[11px] text-[var(--text-secondary)] font-medium">Include system logs</span>
-                <span className="text-[9px] text-[var(--text-muted)] ml-2">Helps with debugging</span>
+                <span className="text-[10px] text-[var(--text-muted)] ml-2">Helps with debugging</span>
               </div>
             </div>
 
             {/* Submit */}
             <button onClick={handleSendFeedback} disabled={feedbackLoading || !feedbackSubject.trim() || !feedbackMessage.trim()}
-              className="w-full py-4 rounded-2xl text-sm font-bold flex items-center justify-center gap-2.5 btn-primary disabled:opacity-40 disabled:cursor-not-allowed hover-lift transition-all duration-300">
+              className="w-full py-4 rounded-2xl text-sm font-bold flex items-center justify-center gap-2.5 btn-primary btn-press disabled:opacity-40 disabled:cursor-not-allowed hover-lift transition-all duration-300">
               {feedbackLoading ? (
                 <><Loader2 className="w-4 h-4 animate-spin" /> Sending...</>
               ) : (

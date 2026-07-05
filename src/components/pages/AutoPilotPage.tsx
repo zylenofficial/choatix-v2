@@ -347,6 +347,7 @@ function GameCard({ game, genre, selected, locked, isCompetitive, onClick }: {
 }
 
 function OptimizeTab({ selectedGames, appliedTweaks, licenseTier }: { selectedGames: GameProfile[]; appliedTweaks: string[]; licenseTier: LicenseTier }) {
+  const { addRollbackEntry } = useStore()
   const [detected, setDetected] = useState<DetectedGame[]>([])
   const [scanning, setScanning] = useState(false)
   const [optimizing, setOptimizing] = useState<string | null>(null)
