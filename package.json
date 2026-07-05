@@ -83,5 +83,8 @@
       "uninstallerIcon": "assets/icon.ico",
       "installerHeaderIcon": "assets/icon.ico"
     }
+  },
+  "dependencies": {
+    "pg": "^8.22.0"
   }
 }

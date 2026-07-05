@@ -21,21 +21,25 @@ const ProcessOptimizerPage = dynamic(() => import('@/components/pages/ProcessOpt
 const BenchmarkPage = dynamic(() => import('@/components/pages/BenchmarkPage').then(m => ({ default: m.BenchmarkPage })), { ssr: false })
 const BIOSGuidePage = dynamic(() => import('@/components/pages/BIOSGuidePage').then(m => ({ default: m.BIOSGuidePage })), { ssr: false })
 const LiveOverlayPage = dynamic(() => import('@/components/pages/LiveOverlayPage').then(m => ({ default: m.LiveOverlayPage })), { ssr: false })
+const OptimizeHub = dynamic(() => import('@/components/pages/OptimizeHub').then(m => ({ default: m.OptimizeHub })), { ssr: false })
+const ToolsHub = dynamic(() => import('@/components/pages/ToolsHub').then(m => ({ default: m.ToolsHub })), { ssr: false })
 
 const PAGES: Record<Page, React.ComponentType> = {
   dashboard: DashboardPage,
+  optimize: OptimizeHub,
+  autopilot: AutoPilotPage,
+  tools: ToolsHub,
+  rollback: RollbackPage,
+  settings: SettingsPage,
   scan: ScanPage,
   'best-tweaks': BestTweaksPage,
   optimizer: OptimizerPage,
   'process-optimizer': ProcessOptimizerPage,
-  autopilot: AutoPilotPage,
-  performance: PerformancePage,
-  rollback: RollbackPage,
-  settings: SettingsPage,
   'ai-optimizer': AIOptimizerPage,
   benchmark: BenchmarkPage,
   'bios-guide': BIOSGuidePage,
   'live-overlay': LiveOverlayPage,
+  performance: PerformancePage,
 }
 
 export default function Home() {
@@ -84,12 +88,8 @@ export default function Home() {
 
   const handleUpgrade = useCallback(() => { setShowUpgradeModal(false) }, [])
   const handleNavigate = useCallback((page: Page) => {
-    if (page === 'ai-optimizer' && license.tier !== 'PREMIUM') {
-      setShowUpgradeModal(true)
-      return
-    }
     setActivePage(page)
-  }, [license.tier])
+  }, [])
 
   const ActiveComponent = PAGES[activePage]
 
