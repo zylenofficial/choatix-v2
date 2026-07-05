@@ -3,6 +3,7 @@
 import { useState, useCallback, useRef } from 'react'
 import { useStore } from '@/store/useStore'
 import { performAdvisorScan, getScanSteps, applyAdvisorFix } from '@/lib/advisor'
+import { createRollbackEntry } from '@/lib/tweaks'
 import { canAccessTier } from '@/lib/featureAccess'
 import { AdvisorIssue, LicenseTier, SystemPerfClass, DeviceType } from '@/types'
 import { OptimizationCard } from '@/components/OptimizationCard'
@@ -76,10 +77,13 @@ export function AdvisorPage() {
     setFixingIssue(issue.id)
     try {
       const result = await applyAdvisorFix(issue.tweakId)
-      if (result.success) setAppliedIssues(prev => new Set(prev).add(issue.id))
+      if (result.success) {
+        setAppliedIssues(prev => new Set(prev).add(issue.id))
+        addRollbackEntry(createRollbackEntry(issue.tweakId))
+      }
     } catch {}
     setFixingIssue(null)
-  }, [license.tier])
+  }, [license.tier, addRollbackEntry])
 
   const handleIgnore = useCallback((issueId: string) => {
     dismissAdvisorIssue(issueId)
@@ -93,11 +97,14 @@ export function AdvisorPage() {
       setFixingIssue(issue.id)
       try {
         const result = await applyAdvisorFix(issue.tweakId!)
-        if (result.success) setAppliedIssues(prev => new Set(prev).add(issue.id))
+        if (result.success) {
+          setAppliedIssues(prev => new Set(prev).add(issue.id))
+          addRollbackEntry(createRollbackEntry(issue.tweakId!))
+        }
       } catch {}
       setFixingIssue(null)
     }
-  }, [visibleIssues, license.tier, appliedIssues])
+  }, [visibleIssues, license.tier, appliedIssues, addRollbackEntry])
 
   const handleUpgrade = () => {
     setShowUpgradeModal(false)

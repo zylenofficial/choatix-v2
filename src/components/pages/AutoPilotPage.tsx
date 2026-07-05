@@ -3,6 +3,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react'
 import { useStore } from '@/store/useStore'
 import { canAccess } from '@/lib/featureAccess'
+import { createRollbackEntry } from '@/lib/tweaks'
 import { gameProfiles } from '@/data/games'
 import type { GameProfile, LicenseTier } from '@/types'
 import { LicenseTier as LT } from '@/types'
@@ -61,7 +62,7 @@ function tierRank(t: LicenseTier): number {
 }
 
 export function AutoPilotPage() {
-  const { license, selectedGames, setSelectedGames, appliedTweaks } = useStore()
+  const { license, selectedGames, setSelectedGames, appliedTweaks, addRollbackEntry } = useStore()
   const [tab, setTab] = useState<Tab>('games')
   const [autoOpt, setAutoOpt] = useState({ active: false, currentGame: null as any, gamesCount: 0 })
   const [autoOptEvent, setAutoOptEvent] = useState<string | null>(null)
@@ -75,6 +76,14 @@ export function AutoPilotPage() {
       if (event.type === 'game-detected') {
         setAutoOptEvent(`${event.game} detected — ${event.applied} tweaks applied`)
         setAutoOpt(prev => ({ ...prev, currentGame: { name: event.game, pid: event.pid, tier: event.tier } }))
+        const profile = gameProfiles.find(g => g.name === event.game || g.id === event.game)
+        if (profile && event.tier) {
+          const tierKey = event.tier as OptTier
+          const tweakList = getTweaksForTier(profile, tierKey)
+          for (const tweakId of tweakList) {
+            addRollbackEntry(createRollbackEntry(tweakId))
+          }
+        }
       } else if (event.type === 'game-closed') {
         setAutoOptEvent(`${event.game} closed — ${event.restored} tweaks restored`)
         setAutoOpt(prev => ({ ...prev, currentGame: null }))
@@ -82,7 +91,7 @@ export function AutoPilotPage() {
       setTimeout(() => setAutoOptEvent(null), 4000)
     })
     return () => unsub?.()
-  }, [])
+  }, [addRollbackEntry])
 
   const toggleAutoOpt = useCallback(async () => {
     if (autoOpt.active) {
@@ -391,12 +400,15 @@ function OptimizeTab({ selectedGames, appliedTweaks, licenseTier }: { selectedGa
     try {
       const tweakList = getTweaksForTier(game.profile, tier)
       await window.electronAPI?.applyGameTweaks(tweakList)
+      for (const tweakId of tweakList) {
+        addRollbackEntry(createRollbackEntry(tweakId))
+      }
       await scanForGames()
     } catch (e) {
       console.error('Optimize error:', e)
     }
     setOptimizing(null)
-  }, [scanForGames])
+  }, [scanForGames, addRollbackEntry])
 
   const handleRestore = useCallback(async (game: DetectedGame) => {
     setRestoring(game.profile.id)

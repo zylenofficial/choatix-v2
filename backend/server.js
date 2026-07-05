@@ -9,6 +9,7 @@ app.use(cors());
 app.use(express.json());
 
 const DB_URL = process.env.DATABASE_URL;
+const SECRET = process.env.KEY_SECRET || 'choatix-secret-key-2024';
 let memKeys = {};
 let memUsers = {};
 let memReferrals = {};
