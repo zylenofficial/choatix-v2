@@ -8,7 +8,7 @@ const PRO_ROLE_ID = process.env.PRO_ROLE_ID || '1517719772702314616';
 const PREMIUM_ROLE_ID = process.env.PREMIUM_ROLE_ID || '1517719827580452994';
 const ADMIN_SECRET = 'choatix-admin-2024';
 
-const OWNER_DISCORD_ID = '1014494449809772544';
+const ADMIN_IDS = ['1014494449809772544', '1520176133461512324', '1322475983386837006'];
 
 const activeGiveaways = new Map();
 
@@ -289,7 +289,7 @@ client.on('interactionCreate', async (interaction) => {
     const message = interaction.options.getString('message') || `Win a **${tier}** license key!`;
 
     // Only admin can create giveaways
-    if (interaction.user.id !== OWNER_DISCORD_ID) {
+    if (!ADMIN_IDS.includes(interaction.user.id)) {
       return interaction.reply({ content: '❌ Admin only.', ephemeral: true });
     }
 
@@ -385,7 +385,7 @@ client.on('interactionCreate', async (interaction) => {
 
   // ─── /generate-key (admin only) ──────────────────────────
   if (interaction.isChatInputCommand() && interaction.commandName === 'generate-key') {
-    if (interaction.user.id !== OWNER_DISCORD_ID) {
+    if (!ADMIN_IDS.includes(interaction.user.id)) {
       return interaction.reply({ content: '❌ Admin only.', ephemeral: true });
     }
 
@@ -414,9 +414,19 @@ client.on('interactionCreate', async (interaction) => {
   }
 });
 
-registerCommands();
-client.login(BOT_TOKEN).then(() => {
-  console.log('Choatix Bot is online!');
-}).catch((err) => {
-  console.error('Failed to start bot:', err.message);
-});
+function startBot() {
+  if (!BOT_TOKEN || BOT_TOKEN === 'YOUR_BOT_TOKEN_HERE') {
+    console.log('Discord bot skipped — no DISCORD_BOT_TOKEN set');
+    return;
+  }
+  registerCommands();
+  client.login(BOT_TOKEN).then(() => {
+    console.log('Choatix Bot is online!');
+  }).catch((err) => {
+    console.error('Failed to start bot:', err.message);
+  });
+}
+
+startBot();
+
+module.exports = { startBot };

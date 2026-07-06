@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: choatix-license
+    name: choatix-v2
     runtime: node
     plan: free
     buildCommand: cd backend && npm install
@@ -10,3 +10,9 @@ services:
         value: 10000
       - key: DATABASE_URL
         sync: false
+      - key: DISCORD_BOT_TOKEN
+        sync: false
+      - key: DISCORD_CLIENT_ID
+        sync: false
+      - key: BACKEND_URL
+        value: http://localhost:10000

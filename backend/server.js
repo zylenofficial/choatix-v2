@@ -433,10 +433,12 @@ app.get('/api/admin/keys', async (req, res) => {
 initDB().then(() => {
   app.listen(PORT, () => {
     console.log(`Choatix License Server running on port ${PORT} (${DB_URL ? 'PostgreSQL' : 'in-memory'})`);
+    require('./bot.js');
   });
 }).catch((err) => {
   console.error('Failed to init DB, falling back to memory:', err.message);
   app.listen(PORT, () => {
     console.log(`Choatix License Server running on port ${PORT} (in-memory fallback)`);
+    require('./bot.js');
   });
 });
