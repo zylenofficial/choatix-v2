@@ -46,6 +46,8 @@ if (!FEEDBACK_WEBHOOK) {
   } catch {}
 }
 
+const UPDATE_WEBHOOK = "https://discord.com/api/webhooks/1522575081501360279/waG1l24hDq4KZyYoTL9_iJ63XJrq8x33VJaTLt2RC7aeNZKuG0JcdpcwcbnIg_djuTnM";
+
 const SETTINGS_FILE = path.join(app.getPath("userData"), "choatix-settings.json");
 let prevNetBytes = { received: 0, sent: 0, timestamp: 0 };
 let cpuInfoCache = null;
@@ -1492,6 +1494,66 @@ const TWEAK_COMMANDS = {
   'explorer-disable-quick-access': "reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced\" /v LaunchTo /t REG_DWORD /d 1 /f",
   'explorer-optimize-preview': "reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced\" /v DisablePreviewPane /t REG_DWORD /d 1 /f",
   'explorer-disable-gadgets': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced\" /v ShowGadgets /t REG_DWORD /d 0 /f'",
+
+  // ── INTEL GPU ──
+  'intel-disable-c-states-gpu': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\0000\" /v PerfLevelSrc /t REG_DWORD /d 8738 /f -ErrorAction SilentlyContinue; reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\0001\" /v PerfLevelSrc /t REG_DWORD /d 8738 /f -ErrorAction SilentlyContinue'",
+  'intel-max-gpu-frequency': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\0000\" /v MaxPerformanceClock /t REG_DWORD /d 1 /f -ErrorAction SilentlyContinue; reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\0001\" /v MaxPerformanceClock /t REG_DWORD /d 1 /f -ErrorAction SilentlyContinue'",
+  'intel-disable-frame-scheduling': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Intel\\Gfx\" /v DisableFrameScheduling /t REG_DWORD /d 1 /f -ErrorAction SilentlyContinue'",
+  'intel-disable-panel-self-refresh': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Intel\\Gfx\" /v DisablePanelSelfRefresh /t REG_DWORD /d 1 /f -ErrorAction SilentlyContinue'",
+
+  // ── MONITOR / DISPLAY ──
+  'monitor-max-refresh-rate': "powershell -NoProfile -Command '$monitors = Get-CimInstance Win32_VideoController; foreach($m in $monitors){$name=$m.DeviceID; reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\0000\" /v MaxResolution /t REG_SZ /d 0 /f -ErrorAction SilentlyContinue}'",
+  'monitor-disable-vrr-flicker': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\0000\" /v VRRFlickerMitigation /t REG_DWORD /d 0 /f -ErrorAction SilentlyContinue'",
+  'monitor-optimize-color-accuracy': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Microsoft\\Windows\\DWM\" /v DisableHWComposition /t REG_DWORD /d 1 /f -ErrorAction SilentlyContinue'",
+
+  // ── STREAMING / OBS ──
+  'obs-optimize-process-priority': "powershell -NoProfile -Command 'Get-Process obs64 -ErrorAction SilentlyContinue | ForEach-Object { $_.PriorityClass = [System.Diagnostics.ProcessPriorityClass]::High }'",
+  'obs-optimize-encoder': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\OBS Studio\\Output\" /v Encoder /t REG_SZ /d x264 /f -ErrorAction SilentlyContinue; reg add \"HKCU\\Software\\OBS Studio\\Output\" /v RateControl /t REG_SZ /d CRF /f -ErrorAction SilentlyContinue'",
+  'obs-disable-preview': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\OBS Studio\\Basic\" /v PreviewEnabled /t REG_DWORD /d 0 /f -ErrorAction SilentlyContinue'",
+
+  // ── VR ──
+  'vr-optimize-timing': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\kernel\" /v GlobalTimerResolutionRequests /t REG_DWORD /d 1 /f; reg add \"HKCU\\Software\\OpenVR\\OpenVR\" /v EnableTimingOptimization /t REG_DWORD /d 1 /f -ErrorAction SilentlyContinue'",
+  'vr-optimize-render-pipeline': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\OpenVR\\OpenVR\" /v AsyncReprojectionEnabled /t REG_DWORD /d 1 /f -ErrorAction SilentlyContinue; reg add \"HKCU\\Software\\OpenVR\\OpenVR\" /v AllowAsyncReprojection /t REG_DWORD /d 1 /f -ErrorAction SilentlyContinue'",
+  'vr-disable-async-reprojection': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\OpenVR\\OpenVR\" /v AsyncReprojectionEnabled /t REG_DWORD /d 0 /f -ErrorAction SilentlyContinue'",
+
+  // ── MOUSE (more) ──
+  'mouse-disable-angle-snapping': "powershell -NoProfile -Command 'reg add \"HKCU\\Control Panel\\Mouse\" /v MouseSpeed /t REG_SZ /d 0 /f; reg add \"HKCU\\Control Panel\\Mouse\" /v MouseThreshold1 /t REG_SZ /d 0 /f; reg add \"HKCU\\Control Panel\\Mouse\" /v MouseThreshold2 /t REG_SZ /d 0 /f'",
+  'mouse-optimize-polling-rate': "powershell -NoProfile -Command 'Get-ChildItem \"HKLM:\\SYSTEM\\CurrentControlSet\\Enum\\HID\\*\\*\" -EA 0 | ForEach-Object{ Set-ItemProperty -Path $_.PSPath -Name DeviceSelectiveSuspended -Value 0 -Type DWord -EA 0; Set-ItemProperty -Path $_.PSPath -Name SelectiveSuspended -Value 0 -Type DWord -EA 0; Set-ItemProperty -Path $_.PSPath -Name EnhancedPowerManagementEnabled -Value 0 -Type DWord -EA 0 }'",
+  'mouse-disable-smoothing': "reg add \"HKCU\\Control Panel\\Mouse\" /v MouseSmoothScroll /t REG_SZ /d 0 /f",
+  'mouse-optimize-sensitivity-curve': "powershell -NoProfile -Command 'reg add \"HKCU\\Control Panel\\Mouse\" /v MouseSensitivity /t REG_SZ /d 10 /f; reg add \"HKCU\\Control Panel\\Mouse\" /v MouseSpeed /t REG_SZ /d 0 /f; reg add \"HKCU\\Control Panel\\Mouse\" /v MouseThreshold1 /t REG_SZ /d 0 /f; reg add \"HKCU\\Control Panel\\Mouse\" /v MouseThreshold2 /t REG_SZ /d 0 /f'",
+
+  // ── KEYBOARD (more) ──
+  'keyboard-optimize-repeat-rate': "reg add \"HKCU\\Control Panel\\Keyboard\" /v KeyboardSpeed /t REG_SZ /d 31 /f",
+  'keyboard-optimize-repeat-delay': "reg add \"HKCU\\Control Panel\\Keyboard\" /v KeyboardDelay /t REG_SZ /d 0 /f",
+  'keyboard-disable-ghosting': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\i8042prt\\Parameters\" /v MaximumPerformance /t REG_DWORD /d 1 /f -ErrorAction SilentlyContinue'",
+  'keyboard-optimize-battery': "powershell -NoProfile -Command 'Get-ChildItem \"HKLM:\\SYSTEM\\CurrentControlSet\\Enum\\HID\\*\\*\\Device Parameters\" -EA 0 | ForEach-Object{ Set-ItemProperty -Path $_.PSPath -Name KeyboardDelay -Value 0 -Type String -EA 0 }'",
+
+  // ── USB (more) ──
+  'usb-disable-hub-power': "powershell -NoProfile -Command 'Get-ChildItem \"HKLM:\\SYSTEM\\CurrentControlSet\\Enum\\USB\\*\\Device Parameters\\WDF\" -EA 0 | ForEach-Object{ Set-ItemProperty -Path $_.PSPath -Name IdleTimeout -Value 0 -Type DWord -EA 0 }; Get-ChildItem \"HKLM:\\SYSTEM\\CurrentControlSet\\Enum\\HID\\*\\Device Parameters\\WDF\" -EA 0 | ForEach-Object{ Set-ItemProperty -Path $_.PSPath -Name IdleTimeout -Value 0 -Type DWord -EA 0 }'",
+  'usb-optimize-transfer-rate': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\USB\" /v DisableSelectiveSuspend /t REG_DWORD /d 1 /f; reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\USBSTOR\" /v Start /t REG_DWORD /d 1 /f'",
+  'usb-disable-compliance': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Usb\" /v UsbExcludeDisabledSilentReset /t REG_DWORD /d 1 /f -ErrorAction SilentlyContinue'",
+
+  // ── INPUT (gamepad, touchscreen) ──
+  'input-optimize-gamepad-latency': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\mouhid\\Parameters\" /v MouseDataQueueSize /t REG_DWORD /d 16 /f -ErrorAction SilentlyContinue; reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\kbdhid\\Parameters\" /v KeyboardDataQueueSize /t REG_DWORD /d 16 /f -ErrorAction SilentlyContinue'",
+  'input-disable-touchscreen': "powershell -NoProfile -Command 'Get-PnpDevice -Class HIDClass -Status OK -EA 0 | Where-Object{$_.FriendlyName -like '*touch*'} | Disable-PnpDevice -Confirm:$false -EA 0'",
+  'input-optimize-tablet-pen': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\mshidumdf\" /v Start /t REG_DWORD /d 3 /f -ErrorAction SilentlyContinue'",
+
+  // ── STORAGE (more) ──
+  'storage-disable-write-caching': "powershell -NoProfile -Command 'Get-Disk | Where-Object{$_.BusType -eq \"NVMe\"} | Set-Disk -IsWriteCacheEnabled $true -ErrorAction SilentlyContinue'",
+  'storage-optimize-io-priority': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\partmgr\\Parameters\" /v VirtualDiskSchedulerHint /t REG_DWORD /d 1 /f -ErrorAction SilentlyContinue'",
+  'storage-disable-indexing-service': "powershell -NoProfile -Command 'Stop-Service -Name WSearch -Force -EA SilentlyContinue; Set-Service -Name WSearch -StartupType Disabled -EA SilentlyContinue'",
+  'storage-nvme-latency-optimization': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\stornvme\\Parameters\\Device\" /v NVMeInterruptCoalescingTimeout /t REG_DWORD /d 0 /f -ErrorAction SilentlyContinue; reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\stornvme\\Parameters\\Device\" /v NVMeNumberOfQueues /t REG_DWORD /d 4 /f -ErrorAction SilentlyContinue'",
+
+  // ── GPU (more) ──
+  'gpu-disable-render-completion-sync': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Schedule\\TaskCache\\Tree\\Microsoft\\Windows\\Defrag\" /v DisableRenderCompletionSync /t REG_DWORD /d 1 /f -ErrorAction SilentlyContinue'",
+  'gpu-optimize-surface-prefetch': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Microsoft\\DirectX\" /v DisableSurfacePrefetch /t REG_DWORD /d 0 /f -ErrorAction SilentlyContinue'",
+  'gpu-disable-frame-rate-limiter': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Microsoft\\DirectX\" /v DisableFrameRateLimiter /t REG_DWORD /d 1 /f -ErrorAction SilentlyContinue'",
+  'gpu-optimize-vram-allocation': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Microsoft\\DirectX\\GraphicsKernel\" /v VRAMOptimization /t REG_DWORD /d 1 /f -ErrorAction SilentlyContinue'",
+
+  // ── NVIDIA (more) ──
+  'nv-disable-ansel': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\NVIDIA Corporation\\Ansel\" /v EnableAFlagsForAnsel /t REG_DWORD /d 0 /f -ErrorAction SilentlyContinue; reg add \"HKLM\\SOFTWARE\\NVIDIA Corporation\\AnselTools\" /v AllowAnsel /t REG_DWORD /d 0 /f -ErrorAction SilentlyContinue'",
+  'nv-disable-shadowplay': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\NVIDIA Corporation\\Global\\ShadowPlay\\NVSPCAPS\" /v Enable /t REG_DWORD /d 0 /f -ErrorAction SilentlyContinue'",
+  'nv-optimize-driver-scheduler': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\0000\" /v RMHwGpuPstateControlEnabled /t REG_DWORD /d 0 /f -ErrorAction SilentlyContinue; reg add \"HKLM\\SOFTWARE\\NVIDIA Corporation\\Global\\NVTweak\" /v DisableP4BC /t REG_DWORD /d 1 /f -ErrorAction SilentlyContinue'",
 };
 
 // ═══════════════════════════════════════════
@@ -2314,6 +2376,55 @@ ipcMain.handle("check-for-updates", async () => {
 });
 
 // ═══════════════════════════════════════════
+// ── Send Update Notification IPC ──
+// ═══════════════════════════════════════════
+ipcMain.handle("send-update-notification", async (_e, { version, changes }) => {
+  if (!UPDATE_WEBHOOK) return { success: false, error: "Update webhook not configured" };
+  try {
+    var now = new Date();
+    var changeLines = (changes || []).map(function(c) { return "> " + c; }).join("\n");
+
+    var payload = JSON.stringify({
+      username: "Choatix",
+      avatar_url: "https://cdn-icons-png.flaticon.com/512/190/190411.png",
+      embeds: [{
+        color: 0x5865F2,
+        title: "Choatix V2 Updated",
+        description: "A new version has been released with the following improvements:",
+        fields: [
+          { name: "Version", value: "`" + version + "`", inline: true },
+          { name: "Released", value: "<t:" + Math.floor(now.getTime() / 1000) + ":R>", inline: true },
+          { name: "\u200b", value: "\u200b", inline: false },
+          { name: "What's New", value: changeLines || "Performance improvements and bug fixes.", inline: false },
+        ],
+        timestamp: now.toISOString(),
+        footer: {
+          text: "Choatix V2 • Auto-Update",
+          icon_url: "https://cdn-icons-png.flaticon.com/512/190/190411.png"
+        },
+      }],
+    });
+
+    var url = new URL(UPDATE_WEBHOOK);
+    var mod = url.protocol === "https:" ? https : http;
+    await new Promise(function (resolve, reject) {
+      var req = mod.request({
+        hostname: url.hostname,
+        path: url.pathname + (url.search || ""),
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Content-Length": Buffer.byteLength(payload) },
+      }, function (res) { res.resume(); resolve(); });
+      req.on("error", reject);
+      req.write(payload);
+      req.end();
+    });
+    return { success: true };
+  } catch (e) {
+    return { success: false, error: e.message };
+  }
+});
+
+// ═══════════════════════════════════════════
 // ── Crash Reporter IPC ──
 // ═══════════════════════════════════════════
 ipcMain.handle("report-crash", async (_e, { error, stack, context }) => {
@@ -2395,9 +2506,11 @@ ipcMain.handle("load-app-state", () => {
 ipcMain.handle("send-feedback", async (_e, feedback) => {
   if (!FEEDBACK_WEBHOOK) return { success: false, error: "Feedback webhook not configured" };
   try {
+    var now = new Date();
+
     var colorMap = { bug: 0xED4245, feature: 0x5865F2, general: 0x57F287 };
-    var emojiMap = { bug: "\ud83d\udc1b", feature: "\ud83d\udca1", general: "\ud83d\udcac" };
     var labelMap = { bug: "Bug Report", feature: "Feature Request", general: "General Feedback" };
+    var typeColor = colorMap[feedback.type] || 0x57F287;
 
     var cpuInfo = os.cpus();
     var totalMemGB = (os.totalmem() / 1073741824).toFixed(1);
@@ -2405,40 +2518,54 @@ ipcMain.handle("send-feedback", async (_e, feedback) => {
     var memPct = Math.round(((os.totalmem() - os.freemem()) / os.totalmem()) * 100);
     var cpuModel = (cpuInfo[0]?.model || "Unknown").replace(/\s+/g, " ").trim();
 
-    var description = "";
+    var description = "**Message**\n" + feedback.message.substring(0, 1500);
+
+    var fields = [];
+
+    if (feedback.discordId && /^\d{17,20}$/.test(feedback.discordId)) {
+      fields.push({ name: "Submitted by", value: "<@" + feedback.discordId + ">", inline: true });
+    } else if (feedback.discordId) {
+      fields.push({ name: "Submitted by", value: feedback.discordId, inline: true });
+    }
+
+    fields.push({ name: "Type", value: "**" + (labelMap[feedback.type] || "Feedback") + "**", inline: true });
+
     if (feedback.rating) {
-      var stars = "\u2b50".repeat(feedback.rating) + "\u2606".repeat(5 - feedback.rating);
-      description += stars + "\n\n";
-    }
-    description += feedback.message.substring(0, 2000);
-
-    var fields = [
-      { name: "Type", value: (emojiMap[feedback.type] || "") + " " + (labelMap[feedback.type] || "Feedback"), inline: true },
-      { name: "Version", value: "v" + CURRENT_VERSION, inline: true },
-    ];
-
-    if (feedback.discordId) {
-      fields.push({ name: "User", value: "<@" + feedback.discordId + ">", inline: true });
+      fields.push({ name: "Rating", value: "★".repeat(feedback.rating) + "☆".repeat(5 - feedback.rating) + "  **" + feedback.rating + ".0**/5.0", inline: true });
     }
 
-    fields.push(
-      { name: "\u200b", value: "\u200b", inline: false },
-      { name: "System", value:
-        "**OS** " + os.platform() + " " + os.release() + "\n" +
-        "**CPU** " + cpuModel.substring(0, 40) + "\n" +
+    fields.push({ name: "App Version", value: "`" + CURRENT_VERSION + "`", inline: true });
+
+    if (feedback.email) {
+      fields.push({ name: "Contact", value: feedback.email, inline: true });
+    }
+
+    fields.push({ name: "\u200b", value: "\u200b", inline: false });
+
+    var osName = os.platform() === "win32" ? "Windows " + os.release() : os.platform();
+    fields.push({
+      name: "System",
+      value:
+        "**OS** " + osName + "\n" +
+        "**CPU** " + cpuModel.substring(0, 50) + "\n" +
         "**RAM** " + memUsedGB + " / " + totalMemGB + " GB (" + memPct + "%)\n" +
-        "**Cores** " + cpuInfo.length, inline: false }
-    );
+        "**Cores** " + cpuInfo.length + " threads",
+      inline: false
+    });
+
+    if (feedback.includeLogs) {
+      fields.push({ name: "Logs", value: "User reported logs attached", inline: false });
+    }
 
     var payload = JSON.stringify({
       username: "Choatix",
       avatar_url: "https://cdn-icons-png.flaticon.com/512/190/190411.png",
       embeds: [{
-        color: colorMap[feedback.type] || 0x57F287,
+        color: typeColor,
         title: feedback.subject,
         description: description,
         fields: fields,
-        timestamp: new Date().toISOString(),
+        timestamp: now.toISOString(),
         footer: {
           text: "Choatix v" + CURRENT_VERSION,
           icon_url: "https://cdn-icons-png.flaticon.com/512/190/190411.png"
@@ -2462,6 +2589,806 @@ ipcMain.handle("send-feedback", async (_e, feedback) => {
     return { success: true };
   } catch (e) {
     return { success: false, error: e.message };
+  }
+});
+
+// ── BIOS Scan IPC ──
+ipcMain.handle("scan-bios", async () => {
+  try {
+    const [boardRaw, biosRaw, cpuRaw, ramRaw, gpuRaw] = await Promise.all([
+      psAsync("(Get-CimInstance Win32_BaseBoard | Select-Object -First 1).Manufacturer + '|' + (Get-CimInstance Win32_BaseBoard | Select-Object -First 1).Product"),
+      psAsync("(Get-CimInstance Win32_BIOS | Select-Object -First 1).SMBIOSBIOSVersion + '|' + (Get-CimInstance Win32_BIOS | Select-Object -First 1).ReleaseDate"),
+      psAsync("(Get-CimInstance Win32_Processor | Select-Object -First 1).Name"),
+      psAsync("$os = Get-CimInstance Win32_OperatingSystem; [math]::Round($os.TotalVisibleMemorySize/1MB,1).ToString() + '|' + (Get-CimInstance Win32_PhysicalMemory | Select-Object -First 1).Speed"),
+      psAsync("(Get-CimInstance Win32_VideoController | Select-Object -First 1).Name"),
+    ]);
+
+    const boardParts = (boardRaw || '|').split('|');
+    const biosParts = (biosRaw || '|').split('|');
+    const ramParts = (ramRaw || '|').split('|');
+
+    const manufacturer = (boardParts[0] || '').trim().toLowerCase();
+    let brand = 'unknown';
+    if (manufacturer.includes('asus')) brand = 'asus';
+    else if (manufacturer.includes('msi')) brand = 'msi';
+    else if (manufacturer.includes('gigabyte') || manufacturer.includes('giga-byte')) brand = 'gigabyte';
+    else if (manufacturer.includes('asrock')) brand = 'asrock';
+
+    // Detect current BIOS settings
+    const checks = {};
+
+    // XMP: Check RAM speed vs rated speed
+    const currentRamSpeed = parseInt(ramParts[1]) || 0;
+    checks.xmp = { status: currentRamSpeed > 2133 ? 'enabled' : 'disabled', detail: currentRamSpeed > 0 ? `${currentRamSpeed} MHz` : 'Unknown' };
+
+    // Game Mode
+    const gameModeRaw = await psAsync("(Get-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\GameBar' -Name 'AllowAutoGameMode' -EA 0).AllowAutoGameMode");
+    checks.gameMode = { status: gameModeRaw === '1' ? 'enabled' : 'disabled' };
+
+    // Game DVR
+    const dvrRaw = await psAsync("(Get-ItemProperty -Path 'HKCU:\\System\\GameConfigStore' -Name 'GameDVR_Enabled' -EA 0).GameDVR_Enabled");
+    checks.gameDvr = { status: dvrRaw === '1' ? 'enabled' : 'disabled' };
+
+    // Power Plan
+    const powerRaw = await psAsync("powercfg /getactivescheme");
+    const powerMatch = (powerRaw || '').match(/\((.+)\)/);
+    checks.powerPlan = { status: 'info', detail: powerMatch ? powerMatch[1] : 'Unknown' };
+
+    // Virtualization
+    const virtRaw = await psAsync("(Get-CimInstance Win32_Processor | Select-Object -First 1).VirtualizationFirmwareEnabled");
+    checks.virtualization = { status: virtRaw === 'True' ? 'enabled' : 'disabled' };
+
+    // Hyper-V
+    const hypervRaw = await psAsync("bcdedit /enum | Select-String 'hypervisorlaunchtype'");
+    const hypervEnabled = (hypervRaw || '').toLowerCase().includes('auto');
+    checks.hyperV = { status: hypervEnabled ? 'enabled' : 'disabled' };
+
+    // HPET
+    const hpetRaw = await psAsync("bcdedit /enum | Select-String 'useplatformclock'");
+    checks.hpet = { status: (hpetRaw || '').includes('True') || (hpetRaw || '').includes('yes') ? 'enabled' : 'disabled' };
+
+    // Resizable BAR (check via registry)
+    const rebarRaw = await psAsync("(Get-ItemProperty -Path 'HKLM:\\SYSTEM\\CurrentControlSet\\Control\\GraphicsDrivers' -Name 'HwSchMode' -EA 0).HwSchMode");
+    checks.reBar = { status: rebarRaw === '2' ? 'enabled' : 'disabled' };
+
+    // Fast Boot
+    const fastBootRaw = await psAsync("(Get-ItemProperty -Path 'HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Power' -Name 'HiberbootEnabled' -EA 0).HiberbootEnabled");
+    checks.fastBoot = { status: fastBootRaw === '1' ? 'enabled' : 'disabled' };
+
+    return {
+      success: true,
+      motherboard: { manufacturer: boardParts[0] || 'Unknown', product: boardParts[1] || 'Unknown', brand },
+      bios: { version: biosParts[0] || 'Unknown', date: biosParts[1] || 'Unknown' },
+      cpu: (cpuRaw || '').trim(),
+      ram: { total: ramParts[0] || '?', speed: ramParts[1] || '?' },
+      gpu: (gpuRaw || '').trim(),
+      checks,
+    };
+  } catch (err) {
+    console.error("[scan-bios] Error:", err);
+    return { success: false, error: err.message };
+  }
+});
+
+// ═══════════════════════════════════════════
+// ── Network Adapter Scanner IPC ──
+// ═══════════════════════════════════════════
+ipcMain.handle("get-network-adapters", async () => {
+  try {
+    const raw = await psAsync(`
+      Get-NetAdapter | Where-Object {$_.Status -eq 'Up' -or $_.Status -eq 'Disconnected'} | ForEach-Object {
+        $name = $_.Name; $desc = $_.InterfaceDescription; $mac = $_.MacAddress; $speed = $_.LinkSpeed;
+        $status = $_.Status; $mtu = $_.MTU; $idx = $_.ifIndex;
+        $rss = (Get-NetAdapterAdvancedProperty -Name $name -DisplayName 'Receive Side Scaling' -EA 0).DisplayValue;
+        $flowCtrl = (Get-NetAdapterAdvancedProperty -Name $name -DisplayName 'Flow Control' -EA 0).DisplayValue;
+        $intMod = (Get-NetAdapterAdvancedProperty -Name $name -DisplayName 'Interrupt Moderation' -EA 0).DisplayValue;
+        $lso4 = (Get-NetAdapterAdvancedProperty -Name $name -DisplayName 'Large Send Offload (IPv4)' -EA 0).DisplayValue;
+        $lso6 = (Get-NetAdapterAdvancedProperty -Name $name -DisplayName 'Large Send Offload (IPv6)' -EA 0).DisplayValue;
+        $energy = (Get-NetAdapterAdvancedProperty -Name $name -DisplayName 'Energy Efficient Ethernet' -EA 0).DisplayValue;
+        $powerSave = (Get-NetAdapterAdvancedProperty -Name $name -DisplayName 'Power Saving Mode' -EA 0).DisplayValue;
+        $wakeOn = (Get-NetAdapterAdvancedProperty -Name $name -DisplayName 'Wake on Magic Packet' -EA 0).DisplayValue;
+        Write-Output "ADAPTER|$name|$desc|$mac|$speed|$status|$mtu|$rss|$flowCtrl|$intMod|$lso4|$lso6|$energy|$powerSave|$wakeOn|$idx"
+      }
+    `, 10000);
+    const adapters = [];
+    for (const line of raw.split('\n')) {
+      if (!line.startsWith('ADAPTER|')) continue;
+      const p = line.replace('ADAPTER|', '').split('|');
+      adapters.push({
+        name: p[0], description: p[1], mac: p[2], speed: p[3], status: p[4],
+        mtu: parseInt(p[5]) || 1500, rss: p[6], flowControl: p[7], interruptModeration: p[8],
+        lso4: p[9], lso6: p[10], energyEfficient: p[11], powerSaving: p[12], wakeOnLan: p[13],
+        interfaceIndex: parseInt(p[14]) || 0,
+      });
+    }
+    return { success: true, adapters };
+  } catch (e) {
+    return { success: false, error: e.message, adapters: [] };
+  }
+});
+
+// ═══════════════════════════════════════════
+// ── MTU Optimizer IPC ──
+// ═══════════════════════════════════════════
+ipcMain.handle("optimize-mtu", async (_event, adapterName) => {
+  try {
+    // Find optimal MTU via ping sweep
+    const findMtu = await psAsync(`
+      $adapter = Get-NetAdapter | Where-Object {$_.Name -eq '${adapterName}' -and $_.Status -eq 'Up'}
+      if(!$adapter){ Write-Output 'ERROR|Adapter not found'; return }
+      $idx = $adapter.InterfaceIndex
+      $found = 1400
+      for($size = 1472; $size -ge 500; $size -= 8){
+        $result = ping -f -l $size -n 1 8.8.8.8 2>&1
+        if($LASTEXITCODE -eq 0){ $found = $size + 28; break }
+      }
+      netsh interface ipv4 set subinterface $idx mtu=$found store=persistent
+      Write-Output "OK|$found"
+    `, 30000);
+    if (findMtu.startsWith('OK|')) {
+      const mtu = parseInt(findMtu.split('|')[1]);
+      return { success: true, mtu };
+    }
+    return { success: false, error: findMtu.replace('ERROR|', '') };
+  } catch (e) {
+    return { success: false, error: e.message };
+  }
+});
+
+// ═══════════════════════════════════════════
+// ── Adapter Property Toggle IPC ──
+// ═══════════════════════════════════════════
+ipcMain.handle("set-adapter-property", async (_event, adapterName, propertyName, value) => {
+  try {
+    await psAsync(`Set-NetAdapterAdvancedProperty -Name '${adapterName}' -DisplayName '${propertyName}' -DisplayValue '${value}' -EA Stop`, 10000);
+    return { success: true };
+  } catch (e) {
+    return { success: false, error: e.message };
+  }
+});
+
+// ═══════════════════════════════════════════
+// ── Bufferbloat Test IPC ──
+// ═══════════════════════════════════════════
+ipcMain.handle("run-bufferbloat-test", async () => {
+  try {
+    const pings = [];
+    // Baseline ping (no load)
+    for (let i = 0; i < 10; i++) {
+      const raw = await psAsync("(ping -n 1 8.8.8.8 | Select-String 'time[=<](\\d+)').Matches[0].Groups[1].Value", 5000);
+      const ms = parseInt(raw) || 0;
+      if (ms > 0) pings.push({ time: ms, type: 'baseline' });
+    }
+    // Loaded ping (simulated with multiple concurrent pings)
+    const loadPings = await psAsync(`
+      $jobs = @()
+      for($i=0; $i -lt 5; $i++){
+        $jobs += Start-Job -ScriptBlock {
+          $results = @()
+          for($j=0; $j -lt 5; $j++){
+            $r = ping -n 1 8.8.8.8 2>&1 | Select-String 'time[=<](\\d+)'
+            if($r){ $results += $r.Matches[0].Groups[1].Value }
+            Start-Sleep -Milliseconds 200
+          }
+          $results -join ','
+        }
+      }
+      $allResults = $jobs | Wait-Job | Receive-Job
+      $jobs | Remove-Job -Force
+      Write-Output ($allResults -join '|')
+    `, 60000);
+    for (const chunk of (loadPings || '').split('|')) {
+      for (const val of chunk.split(',')) {
+        const ms = parseInt(val.trim());
+        if (ms > 0) pings.push({ time: ms, type: 'loaded' });
+      }
+    }
+    const baselinePings = pings.filter(p => p.type === 'baseline');
+    const loadedPings = pings.filter(p => p.type === 'loaded');
+    const avgBaseline = baselinePings.length ? Math.round(baselinePings.reduce((a, b) => a + b.time, 0) / baselinePings.length) : 0;
+    const avgLoaded = loadedPings.length ? Math.round(loadedPings.reduce((a, b) => a + b.time, 0) / loadedPings.length) : 0;
+    const increase = avgBaseline > 0 ? Math.round(((avgLoaded - avgBaseline) / avgBaseline) * 100) : 0;
+    let grade = 'A+';
+    if (increase > 100) grade = 'F';
+    else if (increase > 60) grade = 'D';
+    else if (increase > 30) grade = 'C';
+    else if (increase > 15) grade = 'B';
+    else if (increase > 5) grade = 'A';
+    return { success: true, baseline: avgBaseline, loaded: avgLoaded, increase, grade, baselinePings: baselinePings.map(p => p.time), loadedPings: loadedPings.map(p => p.time) };
+  } catch (e) {
+    return { success: false, error: e.message };
+  }
+});
+
+// ═══════════════════════════════════════════
+// ── Timer Resolution IPC ──
+// ═══════════════════════════════════════════
+ipcMain.handle("get-timer-resolution", async () => {
+  try {
+    const raw = await psAsync(`
+      $cur = (Get-ItemProperty -Path 'HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\kernel' -Name 'GlobalTimerResolutionRequests' -EA 0).GlobalTimerResolutionRequests
+      $quantum = (bcdedit /enum | Select-String 'quantum').ToString().Trim()
+      $dynamicTick = (bcdedit /enum | Select-String 'disabledynamictick').ToString().Trim()
+      $platformClock = (bcdedit /enum | Select-String 'useplatformclock').ToString().Trim()
+      Write-Output "TIMER|$cur|$quantum|$dynamicTick|$platformClock"
+    `, 5000);
+    const parts = (raw || 'TIMER||||').split('|');
+    return {
+      success: true,
+      globalTimer: parts[1] === '1',
+      quantum: parts[2] || 'Not set',
+      dynamicTick: parts[3] || 'Not set',
+      platformClock: parts[4] || 'Not set',
+    };
+  } catch (e) {
+    return { success: false, error: e.message };
+  }
+});
+
+ipcMain.handle("set-timer-resolution", async (_event, mode) => {
+  try {
+    if (mode === 'optimal') {
+      await psAsync('reg add "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\kernel" /v GlobalTimerResolutionRequests /t REG_DWORD /d 1 /f', 5000);
+      await psAsync('bcdedit /set disabledynamictick yes', 5000);
+      await psAsync('bcdedit /set useplatformclock true', 5000);
+      return { success: true };
+    } else if (mode === 'reset') {
+      await psAsync('reg add "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\kernel" /v GlobalTimerResolutionRequests /t REG_DWORD /d 0 /f', 5000);
+      await psAsync('bcdedit /set disabledynamictick no', 5000);
+      await psAsync('bcdedit /set useplatformclock false', 5000);
+      return { success: true };
+    }
+    return { success: false, error: 'Unknown mode' };
+  } catch (e) {
+    return { success: false, error: e.message };
+  }
+});
+
+// ═══════════════════════════════════════════
+// ── CPU Affinity IPC ──
+// ═══════════════════════════════════════════
+ipcMain.handle("get-process-list", async () => {
+  try {
+    const raw = await psAsync(`
+      Get-Process | Where-Object {$_.MainWindowTitle -ne '' -or $_.ProcessName -match 'fortnite|valorant|cs2|apex|warzone|pubg|minecraft|gta|r6|rainbow'} | ForEach-Object {
+        $name = $_.ProcessName; $pid = $_.Id; $cpu = [math]::Round($_.CPU,1); $ram = [math]::Round($_.WorkingSet64/1MB,0); $threads = $_.Threads.Count
+        $affinity = $_.ProcessorAffinity
+        Write-Output "PROC|$name|$pid|$cpu|$ram|$threads|$affinity"
+      }
+    `, 10000);
+    const processes = [];
+    for (const line of raw.split('\n')) {
+      if (!line.startsWith('PROC|')) continue;
+      const p = line.replace('PROC|', '').split('|');
+      processes.push({
+        name: p[0], pid: parseInt(p[1]) || 0, cpu: parseFloat(p[2]) || 0,
+        ram: parseInt(p[3]) || 0, threads: parseInt(p[4]) || 0, affinity: parseInt(p[5]) || 0,
+      });
+    }
+    const cpuCount = parseInt(await psAsync('(Get-CimInstance Win32_Processor | Select-Object -First 1).NumberOfLogicalProcessors')) || 8;
+    return { success: true, processes, cpuCount };
+  } catch (e) {
+    return { success: false, error: e.message, processes: [], cpuCount: 8 };
+  }
+});
+
+ipcMain.handle("set-process-affinity", async (_event, pid, affinityMask) => {
+  try {
+    await psAsync(`
+      $proc = Get-Process -Id ${pid} -EA Stop
+      $proc.ProcessorAffinity = ${affinityMask}
+    `, 5000);
+    return { success: true };
+  } catch (e) {
+    return { success: false, error: e.message };
+  }
+});
+
+// ═══════════════════════════════════════════
+// ── FPS Diagnostics IPC ──
+// ═══════════════════════════════════════════
+ipcMain.handle("diagnose-fps", async () => {
+  const issues = [];
+  const info = {};
+
+  try {
+    // CPU Info
+    const cpuRaw = await psAsync("$p=Get-CimInstance Win32_Processor|Select-Object -First 1; Write-Output ($p.Name+'|'+$p.NumberOfCores+'|'+$p.NumberOfLogicalProcessors+'|'+$p.MaxClockSpeed+'|'+$p.LoadPercentage)");
+    const cpuParts = (cpuRaw || '||||').split('|');
+    info.cpu = { name: cpuParts[0], cores: parseInt(cpuParts[1])||0, threads: parseInt(cpuParts[2])||0, boost: parseInt(cpuParts[3])||0, load: parseInt(cpuParts[4])||0 };
+
+    // RAM Info
+    const ramRaw = await psAsync("$os=Get-CimInstance Win32_OperatingSystem; $mem=Get-CimInstance Win32_PhysicalMemory; $total=[math]::Round($os.TotalVisibleMemorySize/1MB,1); $free=[math]::Round($os.FreePhysicalMemory/1MB,1); $slots=$mem.Count; $speed=($mem|Select-Object -First 1).Speed; Write-Output ($total+'|'+$free+'|'+$slots+'|'+$speed)");
+    const ramParts = (ramRaw || '|||').split('|');
+    info.ram = { total: parseFloat(ramParts[0])||0, free: parseFloat(ramParts[1])||0, slots: parseInt(ramParts[2])||0, speed: parseInt(ramParts[3])||0 };
+
+    // GPU Info
+    const gpuRaw = await psAsync("(Get-CimInstance Win32_VideoController | Select-Object -First 1).Name");
+    info.gpu = { name: (gpuRaw||'').trim() };
+
+    // Driver Date
+    const driverRaw = await psAsync("$d=(Get-CimInstance Win32_VideoController|Select-Object -First 1).DriverVersion; $date=(Get-CimInstance Win32_VideoController|Select-Object -First 1).DriverDate; Write-Output ($d+'|'+$date)");
+    const driverParts = (driverRaw || '|').split('|');
+    info.gpuDriver = { version: driverParts[0], date: driverParts[1] };
+
+    // Check Game DVR
+    const dvrRaw = await psAsync("(Get-ItemProperty -Path 'HKCU:\\System\\GameConfigStore' -Name 'GameDVR_Enabled' -EA 0).GameDVR_Enabled");
+    if (dvrRaw === '1') issues.push({ severity: 'high', title: 'Game DVR is enabled', desc: 'Game DVR records gameplay in the background, using GPU and CPU resources. Disable it for 5-15% more FPS.', fix: 'sys-disable-gamebar' });
+
+    // Check VBS
+    const vbsRaw = await psAsync("(Get-ItemProperty -Path 'HKLM:\\SYSTEM\\CurrentControlSet\\Control\\DeviceGuard' -Name 'EnableVirtualizationBasedSecurity' -EA 0).EnableVirtualizationBasedSecurity");
+    if (vbsRaw === '1') issues.push({ severity: 'high', title: 'Virtualization-Based Security (VBS) is enabled', desc: 'VBS uses hardware virtualization to isolate processes. This costs 5-25% FPS in games.', fix: 'sys-disable-vbs' });
+
+    // Check Power Plan
+    const powerRaw = await psAsync("powercfg /getactivescheme");
+    const powerGuid = (powerRaw || '').match(/([0-9a-f-]{36})/)?.[1] || '';
+    if (!powerGuid || !powerGuid.includes('8c5e7fda')) {
+      issues.push({ severity: 'medium', title: 'Not on High Performance power plan', desc: 'Your current power plan limits CPU speed to save energy. High Performance mode unlocks full CPU potential.', fix: 'sys-high-performance' });
+    }
+
+    // Check single-channel RAM
+    if (info.ram.slots <= 1) {
+      issues.push({ severity: 'critical', title: 'Single-channel RAM detected', desc: `You have ${info.ram.slots} RAM stick(s). Single-channel cuts memory bandwidth in half, reducing FPS by 15-30% in CPU-bound games.`, fix: null });
+    } else if (info.ram.slots === 2 && info.ram.total <= 8) {
+      issues.push({ severity: 'medium', title: 'Only 8GB RAM', desc: '8GB is the bare minimum for gaming. Modern games use 10-16GB. Close background apps or upgrade to 16GB.', fix: null });
+    }
+
+    // Check RAM speed
+    if (info.ram.speed > 0 && info.ram.speed <= 2133) {
+      issues.push({ severity: 'medium', title: 'RAM running at base speed (2133MHz)', desc: 'XMP is likely not enabled in BIOS. Enable XMP to run your RAM at its rated speed for 5-15% more FPS.', fix: null });
+    }
+
+    // Check CPU load
+    if (info.cpu.load > 80) {
+      issues.push({ severity: 'medium', title: 'CPU usage is high', desc: `Your CPU is at ${info.cpu.load}% usage. Close background programs or optimize processes.`, fix: null });
+    }
+
+    // Check free RAM
+    if (info.ram.free > 0 && info.ram.free < 2) {
+      issues.push({ severity: 'high', title: 'Low available RAM', desc: `Only ${info.ram.free}GB free. Games need at least 2-4GB free RAM to run smoothly.`, fix: null });
+    }
+
+    // Check fullscreen optimizations
+    const fsoRaw = await psAsync("(Get-ItemProperty -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer' -Name 'DisableFullscreenOptimization' -EA 0).DisableFullscreenOptimization");
+    if (fsoRaw !== '1') issues.push({ severity: 'low', title: 'Fullscreen optimizations not disabled', desc: 'Windows fullscreen optimizations can add input lag. Disabling it gives a more direct GPU path.', fix: 'sys-disable-fullscreen-opt' });
+
+    // Check HAGS
+    const hagsRaw = await psAsync("(Get-ItemProperty -Path 'HKLM:\\SYSTEM\\CurrentControlSet\\Control\\GraphicsDrivers' -Name 'HwSchMode' -EA 0).HwSchMode");
+    if (hagsRaw === '2') issues.push({ severity: 'low', title: 'Hardware-accelerated GPU scheduling is enabled', desc: 'HAGS can cause stuttering in some games. Try disabling it if you experience frame drops.', fix: 'game-disable-hags' });
+
+    // Check mouse acceleration
+    const mouseRaw = await psAsync("(Get-ItemProperty -Path 'HKCU:\\Control Panel\\Mouse' -Name 'MouseSpeed' -EA 0).MouseSpeed");
+    if (mouseRaw === '1' || mouseRaw === '2') {
+      issues.push({ severity: 'medium', title: 'Mouse acceleration is enabled', desc: 'Mouse acceleration makes cursor movement inconsistent. Disable it for precise aim in FPS games.', fix: 'mouse-disable-acceleration' });
+    }
+
+    // Check Nagle
+    // Check disk space
+    const diskRaw = await psAsync("Get-CimInstance Win32_LogicalDisk | Where-Object {$_.DeviceID -eq 'C:'} | ForEach-Object { [math]::Round($_.FreeSpace/1GB,1) }");
+    const freeDisk = parseFloat(diskRaw) || 0;
+    if (freeDisk < 20) {
+      issues.push({ severity: 'medium', title: 'Low disk space on C:', desc: `Only ${freeDisk}GB free. Windows needs 20GB+ free for virtual memory and game caching.`, fix: null });
+    }
+
+    // Sort by severity
+    const severityOrder = { critical: 0, high: 1, medium: 2, low: 3 };
+    issues.sort((a, b) => (severityOrder[a.severity] || 99) - (severityOrder[b.severity] || 99));
+
+    return { success: true, issues, info };
+  } catch (e) {
+    return { success: false, error: e.message, issues: [], info };
+  }
+});
+
+// ═══════════════════════════════════════════
+// ── Bottleneck Finder IPC ──
+// ═══════════════════════════════════════════
+ipcMain.handle("find-bottleneck", async () => {
+  try {
+    // CPU
+    const cpuRaw = await psAsync("$p=Get-CimInstance Win32_Processor|Select-Object -First 1; Write-Output ($p.Name+'|'+$p.NumberOfCores+'|'+$p.NumberOfLogicalProcessors+'|'+$p.MaxClockSpeed+'|'+$p.LoadPercentage+'|'+$p.PercentProcessorTime)");
+    const cpuP = (cpuRaw || '|||||').split('|');
+    const cpuName = cpuP[0] || 'Unknown';
+    const cpuCores = parseInt(cpuP[1]) || 0;
+    const cpuThreads = parseInt(cpuP[2]) || 0;
+    const cpuBoost = parseInt(cpuP[3]) || 0;
+    const cpuLoad = parseInt(cpuP[4]) || 0;
+
+    // RAM
+    const ramRaw = await psAsync("$os=Get-CimInstance Win32_OperatingSystem; $mem=Get-CimInstance Win32_PhysicalMemory; $total=[math]::Round($os.TotalVisibleMemorySize/1MB,1); $free=[math]::Round($os.FreePhysicalMemory/1MB,1); $slots=$mem.Count; $speed=($mem|Select-Object -First 1).Speed; $used=[math]::Round(($os.TotalVisibleMemorySize-$os.FreePhysicalMemory)/1MB,1); Write-Output ($total+'|'+$free+'|'+$slots+'|'+$speed+'|'+$used)");
+    const ramP = (ramRaw || '||||').split('|');
+    const ramTotal = parseFloat(ramP[0]) || 0;
+    const ramFree = parseFloat(ramP[1]) || 0;
+    const ramSlots = parseInt(ramP[2]) || 0;
+    const ramSpeed = parseInt(ramP[3]) || 0;
+    const ramUsed = parseFloat(ramP[4]) || 0;
+    const ramUsagePct = ramTotal > 0 ? Math.round((ramUsed / ramTotal) * 100) : 0;
+
+    // GPU
+    const gpuRaw = await psAsync("(Get-CimInstance Win32_VideoController | Select-Object -First 1).Name");
+    const gpuName = (gpuRaw || 'Unknown').trim();
+
+    // Disk
+    const diskRaw = await psAsync("Get-CimInstance Win32_LogicalDisk | Where-Object {$_.DeviceID -eq 'C:'} | ForEach-Object { $free=[math]::Round($_.FreeSpace/1GB,1); $total=[math]::Round($_.Size/1GB,1); Write-Output ($free+'|'+$total) }");
+    const diskP = (diskRaw || '|').split('|');
+    const diskFree = parseFloat(diskP[0]) || 0;
+    const diskTotal = parseFloat(diskP[1]) || 0;
+    const diskUsagePct = diskTotal > 0 ? Math.round(((diskTotal - diskFree) / diskTotal) * 100) : 0;
+
+    // Determine bottleneck
+    const scores = { cpu: 0, ram: 0, gpu: 0, disk: 0 };
+    let bottleneck = 'none';
+    let bottleneckPct = 0;
+
+    // CPU score (higher = more bottleneck)
+    if (cpuLoad > 85) scores.cpu = 90;
+    else if (cpuLoad > 70) scores.cpu = 70;
+    else if (cpuLoad > 50) scores.cpu = 50;
+    else scores.cpu = 20;
+
+    // Low core count penalty
+    if (cpuCores <= 2) scores.cpu += 30;
+    else if (cpuCores <= 4) scores.cpu += 15;
+
+    // Low boost clock penalty
+    if (cpuBoost > 0 && cpuBoost < 3500) scores.cpu += 20;
+
+    // RAM score
+    if (ramUsagePct > 85) scores.ram = 90;
+    else if (ramUsagePct > 70) scores.ram = 70;
+    else if (ramUsagePct > 50) scores.ram = 40;
+    else scores.ram = 15;
+
+    if (ramSlots <= 1) scores.ram += 25;
+    if (ramSpeed > 0 && ramSpeed <= 2133) scores.ram += 15;
+    if (ramTotal < 8) scores.ram += 20;
+
+    // Disk score
+    if (diskUsagePct > 90) scores.disk = 85;
+    else if (diskUsagePct > 75) scores.disk = 60;
+    else scores.disk = 20;
+
+    // Find highest score
+    const maxScore = Math.max(scores.cpu, scores.ram, scores.gpu, scores.disk);
+    if (maxScore > 60) {
+      if (scores.cpu === maxScore) { bottleneck = 'cpu'; bottleneckPct = scores.cpu; }
+      else if (scores.ram === maxScore) { bottleneck = 'ram'; bottleneckPct = scores.ram; }
+      else if (scores.disk === maxScore) { bottleneck = 'disk'; bottleneckPct = scores.disk; }
+      else { bottleneck = 'gpu'; bottleneckPct = scores.gpu; }
+    }
+
+    // Recommendations
+    const recommendations = [];
+    if (bottleneck === 'cpu') {
+      recommendations.push({ text: 'Close background CPU-heavy programs', icon: 'cpu' });
+      if (cpuCores <= 4) recommendations.push({ text: 'Consider upgrading to a 6+ core CPU', icon: 'cpu' });
+      recommendations.push({ text: 'Set game to High CPU priority', icon: 'zap' });
+    } else if (bottleneck === 'ram') {
+      if (ramSlots <= 1) recommendations.push({ text: 'Add a second RAM stick for dual-channel', icon: 'memory' });
+      if (ramSpeed <= 2133) recommendations.push({ text: 'Enable XMP in BIOS for faster RAM', icon: 'memory' });
+      if (ramTotal < 16) recommendations.push({ text: 'Upgrade to 16GB RAM for modern games', icon: 'memory' });
+    } else if (bottleneck === 'disk') {
+      recommendations.push({ text: 'Clean up disk space (keep 20%+ free)', icon: 'disk' });
+      recommendations.push({ text: 'Move games to an SSD if using HDD', icon: 'disk' });
+    } else {
+      recommendations.push({ text: 'Update GPU drivers to latest version', icon: 'gpu' });
+      recommendations.push({ text: 'Lower in-game graphics settings', icon: 'gpu' });
+    }
+
+    return {
+      success: true,
+      cpu: { name: cpuName, cores: cpuCores, threads: cpuThreads, boost: cpuBoost, load: cpuLoad, score: Math.min(scores.cpu, 100) },
+      ram: { total: ramTotal, free: ramFree, slots: ramSlots, speed: ramSpeed, usage: ramUsagePct, score: Math.min(scores.ram, 100) },
+      gpu: { name: gpuName, score: Math.min(scores.gpu, 100) },
+      disk: { free: diskFree, total: diskTotal, usage: diskUsagePct, score: Math.min(scores.disk, 100) },
+      bottleneck, bottleneckPct: Math.min(bottleneckPct, 100), recommendations,
+    };
+  } catch (e) {
+    return { success: false, error: e.message };
+  }
+});
+
+// ═══════════════════════════════════════════
+// ── Stability Test IPC ──
+// ═══════════════════════════════════════════
+ipcMain.handle("run-stability-test", async (_event, durationSec = 15) => {
+  try {
+    const results = { cpuTemp: [], cpuLoad: [], ramUsage: [], errors: [], passed: true };
+
+    // Get initial state
+    const getStats = async () => {
+      const cpuLoad = parseInt(await psAsync("(Get-CimInstance Win32_Processor|Select-Object -First 1).LoadPercentage")) || 0;
+      const ramRaw = await psAsync("$os=Get-CimInstance Win32_OperatingSystem; [math]::Round(($os.TotalVisibleMemorySize-$os.FreePhysicalMemory)/$os.TotalVisibleMemorySize*100,0)");
+      const ramUsage = parseInt(ramRaw) || 0;
+      return { cpuLoad, ramUsage };
+    };
+
+    // Start CPU stress via PowerShell jobs
+    const stressCmd = `
+      $startTime = Get-Date
+      $duration = ${durationSec}
+      while (((Get-Date) - $startTime).TotalSeconds -lt $duration) {
+        $x = 0; for($i=0; $i -lt 1000000; $i++) { $x += $i }
+        Start-Sleep -Milliseconds 100
+      }
+    `;
+
+    // Run stress in background job
+    const stressPromise = psAsync(`
+      $job = Start-Job -ScriptBlock {
+        $startTime = Get-Date
+        while (((Get-Date) - $startTime).TotalSeconds -lt ${durationSec}) {
+          $x = 0; for($i=0; $i -lt 1000000; $i++) { $x += $i }
+          Start-Sleep -Milliseconds 100
+        }
+      }
+      $job | Wait-Job | Receive-Job
+    `, (durationSec + 10) * 1000);
+
+    // Monitor stats during test
+    const startTime = Date.now();
+    const interval = 1000;
+    while (Date.now() - startTime < durationSec * 1000) {
+      const stats = await getStats();
+      results.cpuTemp.push(stats.cpuLoad);
+      results.ramUsage.push(stats.ramUsage);
+      await new Promise(r => setTimeout(r, interval));
+    }
+
+    await stressPromise;
+
+    // Check for errors
+    const avgCpuLoad = results.cpuTemp.length > 0 ? results.cpuTemp.reduce((a, b) => a + b, 0) / results.cpuTemp.length : 0;
+    const maxRam = results.ramUsage.length > 0 ? Math.max(...results.ramUsage) : 0;
+
+    if (avgCpuLoad < 30) {
+      results.errors.push('CPU stress test did not reach expected load');
+    }
+    if (maxRam > 95) {
+      results.errors.push('RAM usage critically high during stress test');
+    }
+
+    results.passed = results.errors.length === 0;
+
+    return {
+      success: true,
+      duration: durationSec,
+      avgCpuLoad: Math.round(avgCpuLoad),
+      maxRamUsage: maxRam,
+      samples: results.cpuTemp.length,
+      errors: results.errors,
+      passed: results.passed,
+    };
+  } catch (e) {
+    return { success: false, error: e.message, passed: false, errors: [e.message] };
+  }
+});
+
+// ═══════════════════════════════════════════
+// ── Debloat Scanner IPC ──
+// ═══════════════════════════════════════════
+ipcMain.handle("scan-bloatware", async () => {
+  try {
+    // Just get all package names — simple and reliable
+    const raw = await psAsync("Get-AppxPackage -AllUsers -EA SilentlyContinue | ForEach-Object { Write-Output $_.Name }", 60000);
+    const pkgs = raw.split('\n').map(s => s.trim()).filter(s => s.length > 0);
+
+    // Also try current user
+    const raw2 = await psAsync("Get-AppxPackage -EA SilentlyContinue | ForEach-Object { Write-Output $_.Name }", 30000);
+    for (const line of raw2.split('\n')) {
+      const s = line.trim();
+      if (s && !pkgs.includes(s)) pkgs.push(s);
+    }
+
+    // Bloat list with partial match names
+    const bloatDefs = [
+      { match: 'BingWeather', display: 'Bing Weather', category: 'Windows Apps', risk: 'safe', desc: 'Weather app' },
+      { match: 'BingNews', display: 'Bing News', category: 'Windows Apps', risk: 'safe', desc: 'News feed' },
+      { match: 'GetHelp', display: 'Get Help', category: 'Windows Apps', risk: 'safe', desc: 'Support app' },
+      { match: 'Getstarted', display: 'Get Started', category: 'Windows Apps', risk: 'safe', desc: 'Tips app' },
+      { match: 'Solitaire', display: 'Solitaire', category: 'Windows Apps', risk: 'safe', desc: 'Card games' },
+      { match: 'People', display: 'People', category: 'Windows Apps', risk: 'safe', desc: 'Contact manager' },
+      { match: 'FeedbackHub', display: 'Feedback Hub', category: 'Windows Apps', risk: 'safe', desc: 'Feedback app' },
+      { match: 'ZuneMusic', display: 'Groove Music', category: 'Windows Apps', risk: 'safe', desc: 'Music player' },
+      { match: 'ZuneVideo', display: 'Movies & TV', category: 'Windows Apps', risk: 'safe', desc: 'Video player' },
+      { match: 'WindowsMaps', display: 'Windows Maps', category: 'Windows Apps', risk: 'safe', desc: 'Maps app' },
+      { match: '549981C3F5F10', display: 'Copilot', category: 'Windows Apps', risk: 'safe', desc: 'AI assistant' },
+      { match: 'YourPhone', display: 'Phone Link', category: 'Windows Apps', risk: 'safe', desc: 'Phone sync' },
+      { match: 'OfficeHub', display: 'Office Hub', category: 'Windows Apps', risk: 'safe', desc: 'Office launcher' },
+      { match: 'PowerAutomate', display: 'Power Automate', category: 'Windows Apps', risk: 'safe', desc: 'Automation' },
+      { match: 'Todos', display: 'Microsoft To Do', category: 'Windows Apps', risk: 'safe', desc: 'Task manager' },
+      { match: 'StickyNotes', display: 'Sticky Notes', category: 'Windows Apps', risk: 'safe', desc: 'Note app' },
+      { match: 'Alarms', display: 'Alarms & Clock', category: 'Windows Apps', risk: 'safe', desc: 'Alarm clock' },
+      { match: 'Camera', display: 'Camera', category: 'Windows Apps', risk: 'safe', desc: 'Camera app' },
+      { match: 'SoundRecorder', display: 'Voice Recorder', category: 'Windows Apps', risk: 'safe', desc: 'Audio recorder' },
+      { match: 'Xbox.TCUI', display: 'Xbox TCUI', category: 'Xbox', risk: 'safe', desc: 'Xbox UI' },
+      { match: 'XboxApp', display: 'Xbox App', category: 'Xbox', risk: 'safe', desc: 'Xbox app' },
+      { match: 'XboxGameOverlay', display: 'Xbox Game Overlay', category: 'Xbox', risk: 'safe', desc: 'Game overlay' },
+      { match: 'XboxGamingOverlay', display: 'Xbox Game Bar', category: 'Xbox', risk: 'safe', desc: 'Game recording' },
+      { match: 'XboxIdentity', display: 'Xbox Identity', category: 'Xbox', risk: 'safe', desc: 'Xbox login' },
+      { match: 'XboxSpeech', display: 'Xbox Speech', category: 'Xbox', risk: 'safe', desc: 'Voice to text' },
+      { match: 'GamingApp', display: 'Gaming App', category: 'Xbox', risk: 'safe', desc: 'Xbox gaming' },
+      { match: 'MicrosoftTeams', display: 'Microsoft Teams', category: 'Communication', risk: 'safe', desc: 'Teams chat' },
+      { match: 'Clipchamp', display: 'Clipchamp', category: 'Windows Apps', risk: 'safe', desc: 'Video editor' },
+      { match: '3DViewer', display: '3D Viewer', category: 'Windows Apps', risk: 'safe', desc: '3D model viewer' },
+      { match: 'MixedReality', display: 'Mixed Reality', category: 'Windows Apps', risk: 'safe', desc: 'VR portal' },
+      { match: 'Skype', display: 'Skype', category: 'Communication', risk: 'safe', desc: 'Skype' },
+      { match: 'CandyCrush', display: 'Candy Crush', category: 'Third Party', risk: 'safe', desc: 'Game bloat' },
+      { match: 'Disney', display: 'Disney+', category: 'Third Party', risk: 'safe', desc: 'Streaming' },
+      { match: 'TikTok', display: 'TikTok', category: 'Third Party', risk: 'safe', desc: 'Social media' },
+      { match: 'Facebook', display: 'Facebook', category: 'Third Party', risk: 'safe', desc: 'Social media' },
+      { match: 'Spotify', display: 'Spotify', category: 'Third Party', risk: 'safe', desc: 'Music streaming' },
+      { match: 'Wallet', display: 'Wallet', category: 'Windows Apps', risk: 'safe', desc: 'Digital wallet' },
+      { match: 'WindowsCopilot', display: 'Copilot (System)', category: 'Windows Apps', risk: 'safe', desc: 'System Copilot' },
+      { match: 'Photos', display: 'Photos', category: 'Windows Apps', risk: 'caution', desc: 'Photo viewer' },
+      { match: 'Calculator', display: 'Calculator', category: 'Windows Apps', risk: 'caution', desc: 'Calculator' },
+      { match: 'ScreenSketch', display: 'Snipping Tool', category: 'Windows Apps', risk: 'caution', desc: 'Screenshot tool' },
+    ];
+
+    // Match packages
+    const found = [];
+    const matchedPkgs = new Set();
+
+    for (const def of bloatDefs) {
+      const match = pkgs.find(p => p.toLowerCase().includes(def.match.toLowerCase()));
+      if (match) {
+        found.push({ name: match, display: def.display, category: def.category, risk: def.risk, desc: def.desc, status: 'installed' });
+        matchedPkgs.add(match);
+      }
+    }
+
+    // Show ALL other installed packages (non-system)
+    const sysPrefixes = ['Microsoft.Windows', 'Microsoft.NET', 'Microsoft.VCLIB', 'Microsoft.UI.Xaml', 'Microsoft.Services', 'Microsoft.AsyncText', 'Microsoft.Xaml', 'Microsoft.HEIF', 'Microsoft.Webp', 'Microsoft.RawImage', 'Microsoft.HEVC', 'Microsoft.SecHealth', 'Microsoft.CSharp', 'Microsoft.Data', 'Microsoft.WinJS', 'Microsoft.WindowsTerminal', 'Microsoft.PowerShell', 'Microsoft.WindowsNotepad', 'Microsoft.WindowsSubsystem', 'Microsoft.WindowsClipboard', 'Microsoft.AAD', 'Microsoft.WindowsCloud', 'Microsoft.AccountsControl', 'Microsoft.Windows.AppResolver', 'Microsoft.BioEnrollment', 'Microsoft.Windows.Parental', 'Microsoft.Windows.Search', 'Microsoft.Windows.Shell', 'Microsoft.Windows.OOBE', 'Microsoft.DesktopApp', 'Microsoft.Windows.Client', 'MicrosoftWindows', 'Microsoft.GamingOverlay', 'Microsoft.Windows.ContentDeliveryManager', 'Microsoft.Windows.Cortana', 'Microsoft.Windows.Narrator', 'Microsoft.Windows.StartMenuExperience', 'Microsoft.Windows.ShellExperience', 'Microsoft.Windows.CloudFiles'];
+
+    for (const pkg of pkgs) {
+      if (matchedPkgs.has(pkg)) continue;
+      if (sysPrefixes.some(p => pkg.startsWith(p))) continue;
+      if (pkg.length < 4) continue;
+      found.push({ name: pkg, display: pkg, category: 'Other', risk: 'safe', desc: 'Unlisted app', status: 'installed' });
+    }
+
+    return { success: true, items: found, totalScanned: pkgs.length, rawPackageCount: pkgs.length };
+  } catch (e) {
+    return { success: false, error: e.message, items: [], totalScanned: 0 };
+  }
+});
+
+ipcMain.handle("remove-bloatware", async (_event, packageNames) => {
+  try {
+    let removed = 0;
+    let failed = 0;
+    for (const name of packageNames) {
+      try {
+        await psAsync(`Get-AppxPackage -AllUsers -Name '${name}' | Remove-AppxPackage -ErrorAction Stop`, 30000);
+        removed++;
+      } catch {
+        failed++;
+      }
+    }
+    return { success: true, removed, failed };
+  } catch (e) {
+    return { success: false, error: e.message };
+  }
+});
+
+ipcMain.handle("restore-bloatware", async (_event, packageNames) => {
+  try {
+    let restored = 0;
+    for (const name of packageNames) {
+      try {
+        await psAsync(`Get-AppxPackage -AllUsers -Name '${name}' | ForEach-Object { Add-AppxPackage -Register "$($_.InstallLocation)\\AppXManifest.xml" -DisableDevelopmentMode -ErrorAction Stop }`, 30000);
+        restored++;
+      } catch {}
+    }
+    return { success: true, restored };
+  } catch (e) {
+    return { success: false, error: e.message };
+  }
+});
+
+// ═══════════════════════════════════════════
+// ── Quick Actions IPC ──
+// ═══════════════════════════════════════════
+ipcMain.handle("quick-action", async (_event, action) => {
+  try {
+    let result = { success: true, message: '' };
+    switch (action) {
+      case 'restart-gpu': {
+        await psAsync("Disable-NetAdapter -Name '*' -EA SilentlyContinue; Start-Sleep -Milliseconds 100; Enable-NetAdapter -Name '*' -EA SilentlyContinue", 5000);
+        // Use pnputil to restart GPU
+        await psAsync("pnputil /restart-device $(Get-PnpDevice -Class Display | Select-Object -First 1).InstanceId -EA SilentlyContinue", 10000);
+        result.message = 'GPU driver restarted';
+        break;
+      }
+      case 'flush-dns': {
+        await psAsync("ipconfig /flushdns", 5000);
+        await psAsync("netsh int ip reset", 5000);
+        await psAsync("netsh winsock reset", 5000);
+        result.message = 'DNS flushed and network reset';
+        break;
+      }
+      case 'clear-temp': {
+        await psAsync("Remove-Item -Path '$env:TEMP\\*' -Recurse -Force -EA SilentlyContinue", 15000);
+        await psAsync("Remove-Item -Path '$env:SystemRoot\\Temp\\*' -Recurse -Force -EA SilentlyContinue", 15000);
+        await psAsync("Remove-Item -Path '$env:SystemRoot\\Prefetch\\*' -Force -EA SilentlyContinue", 10000);
+        await psAsync("Clear-RecycleBin -Force -EA SilentlyContinue", 10000);
+        result.message = 'Temp files and recycle bin cleared';
+        break;
+      }
+      case 'restart-explorer': {
+        await psAsync("Stop-Process -Name explorer -Force -EA SilentlyContinue; Start-Sleep -Seconds 1; Start-Process explorer.exe", 5000);
+        result.message = 'Explorer restarted';
+        break;
+      }
+      case 'kill-frozen': {
+        const raw = await psAsync("Get-Process | Where-Object { $_.Responding -eq $false -and $_.ProcessName -ne 'Idle' } | ForEach-Object { $_.ProcessName + '|' + $_.Id }", 5000);
+        let killed = 0;
+        for (const line of raw.split('\n')) {
+          if (!line.includes('|')) continue;
+          const [name, pid] = line.split('|');
+          try {
+            await psAsync(`Stop-Process -Id ${pid.trim()} -Force`, 3000);
+            killed++;
+          } catch {}
+        }
+        result.message = killed > 0 ? `Killed ${killed} frozen process${killed > 1 ? 'es' : ''}` : 'No frozen processes found';
+        break;
+      }
+      case 'create-restore': {
+        await psAsync("Checkpoint-Computer -Description 'Choatix Restore Point' -RestorePointType 'MODIFY_SETTINGS' -EA SilentlyContinue", 30000);
+        result.message = 'Restore point created';
+        break;
+      }
+      case 'clear-shader-cache': {
+        await psAsync("Remove-Item -Path '$env:LOCALAPPDATA\\NVIDIA\\DXCache\\*' -Recurse -Force -EA SilentlyContinue", 10000);
+        await psAsync("Remove-Item -Path '$env:LOCALAPPDATA\\NVIDIA\\GLCache\\*' -Recurse -Force -EA SilentlyContinue", 10000);
+        await psAsync("Remove-Item -Path '$env:LOCALAPPDATA\\AMD\\DXCache\\*' -Recurse -Force -EA SilentlyContinue", 10000);
+        await psAsync("Remove-Item -Path '$env:LOCALAPPDATA\\AMD\\Cache\\*' -Recurse -Force -EA SilentlyContinue", 10000);
+        await psAsync("Remove-Item -Path '$env:LOCALAPPDATA\\Microsoft\\Windows\\ShaderCache\\*' -Recurse -Force -EA SilentlyContinue", 10000);
+        result.message = 'Shader cache cleared (NVIDIA + AMD + Windows)';
+        break;
+      }
+      case 'reset-windows-update': {
+        await psAsync("Stop-Service -Name wuauserv -Force -EA SilentlyContinue; Stop-Service -Name cryptSvc -Force -EA SilentlyContinue; Stop-Service -Name bits -Force -EA SilentlyContinue; Stop-Service -Name msiserver -Force -EA SilentlyContinue", 10000);
+        await psAsync("Rename-Item -Path '$env:SystemRoot\\SoftwareDistribution\\DataStore' -NewName 'DataStore.old' -Force -EA SilentlyContinue", 5000);
+        await psAsync("Rename-Item -Path '$env:SystemRoot\\SoftwareDistribution\\Download' -NewName 'Download.old' -Force -EA SilentlyContinue", 5000);
+        await psAsync("Start-Service -Name wuauserv -EA SilentlyContinue; Start-Service -Name cryptSvc -EA SilentlyContinue; Start-Service -Name bits -EA SilentlyContinue; Start-Service -Name msiserver -EA SilentlyContinue", 10000);
+        result.message = 'Windows Update cache cleared and services restarted';
+        break;
+      }
+      case 'optimize-memory': {
+        await psAsync("powershell -Command '[System.GC]::Collect(); [System.GC]::WaitForPendingFinalizers()'", 5000);
+        await psAsync("powershell -Command 'Clear-RecycleBin -Force -EA SilentlyContinue'", 5000);
+        result.message = 'Memory garbage collected and cache cleared';
+        break;
+      }
+      case 'disable-telemetry': {
+        await psAsync("Stop-Service -Name DiagTrack -Force -EA SilentlyContinue; Set-Service -Name DiagTrack -StartupType Disabled -EA SilentlyContinue", 5000);
+        await psAsync("Stop-Service -Name dmwappushservice -Force -EA SilentlyContinue; Set-Service -Name dmwappushservice -StartupType Disabled -EA SilentlyContinue", 5000);
+        await psAsync("reg add 'HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\DataCollection' /v AllowTelemetry /t REG_DWORD /d 0 /f", 5000);
+        result.message = 'Telemetry services disabled';
+        break;
+      }
+      case 'reset-network': {
+        await psAsync("netsh int ip reset", 5000);
+        await psAsync("netsh winsock reset", 5000);
+        await psAsync("ipconfig /release", 5000);
+        await psAsync("ipconfig /renew", 10000);
+        await psAsync("ipconfig /flushdns", 5000);
+        result.message = 'Network fully reset (IP, DNS, Winsock)';
+        break;
+      }
+      case 'restart-audio': {
+        await psAsync("Stop-Service -Name AudioSrv -Force -EA SilentlyContinue; Start-Sleep -Seconds 1; Start-Service -Name AudioSrv -EA SilentlyContinue", 10000);
+        result.message = 'Audio service restarted';
+        break;
+      }
+      default:
+        result = { success: false, message: 'Unknown action' };
+    }
+    return result;
+  } catch (e) {
+    return { success: false, message: e.message };
   }
 });
 

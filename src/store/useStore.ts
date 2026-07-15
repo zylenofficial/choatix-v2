@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { LicenseInfo, LicenseTier, ScanResult, Tweak, RollbackEntry, GameProfile, PerformanceSnapshot, AdvisorResult, ScheduledScan, HealthScoreEntry } from '@/types'
+import type { AppNotification } from '@/components/NotificationBell'
 
 interface AppState {
   // License
@@ -46,6 +47,7 @@ interface AppState {
   appliedTweaks: string[]
   setAppliedTweaks: (ids: string[]) => void
   addAppliedTweak: (id: string) => void
+  removeAppliedTweak: (id: string) => void
   
   // Scheduled Scans
   scheduledScans: ScheduledScan[]
@@ -68,6 +70,20 @@ interface AppState {
   healthScoreHistory: HealthScoreEntry[]
   addHealthScoreEntry: (entry: HealthScoreEntry) => void
   clearHealthScoreHistory: () => void
+
+  // Notifications
+  notifications: AppNotification[]
+  addNotification: (notification: Omit<AppNotification, 'id' | 'timestamp' | 'read'>) => void
+  markNotificationRead: (id: string) => void
+  clearNotifications: () => void
+
+  // Fan Control
+  fanSpeeds: Record<string, number>
+  setFanSpeeds: (speeds: Record<string, number>) => void
+  fanMode: 'auto' | 'manual' | 'custom'
+  setFanMode: (mode: 'auto' | 'manual' | 'custom') => void
+  fanTempTarget: number
+  setFanTempTarget: (temp: number) => void
 }
 
 const defaultLicense: LicenseInfo = {
@@ -133,6 +149,9 @@ export const useStore = create<AppState>()(
       addAppliedTweak: (id) => set((state) => ({
         appliedTweaks: state.appliedTweaks.includes(id) ? state.appliedTweaks : [...state.appliedTweaks, id]
       })),
+      removeAppliedTweak: (id) => set((state) => ({
+        appliedTweaks: state.appliedTweaks.filter(t => t !== id)
+      })),
       
       // Scheduled Scans
       scheduledScans: [],
@@ -159,6 +178,29 @@ export const useStore = create<AppState>()(
         healthScoreHistory: [...state.healthScoreHistory, entry].slice(-100)
       })),
       clearHealthScoreHistory: () => set({ healthScoreHistory: [] }),
+
+      // Notifications
+      notifications: [],
+      addNotification: (notification) => set((state) => ({
+        notifications: [...state.notifications, {
+          ...notification,
+          id: 'n-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6),
+          timestamp: Date.now(),
+          read: false,
+        }].slice(-50)
+      })),
+      markNotificationRead: (id) => set((state) => ({
+        notifications: state.notifications.map(n => n.id === id ? { ...n, read: true } : n)
+      })),
+      clearNotifications: () => set({ notifications: [] }),
+
+      // Fan Control
+      fanSpeeds: {},
+      setFanSpeeds: (speeds) => set({ fanSpeeds: speeds }),
+      fanMode: 'auto',
+      setFanMode: (mode) => set({ fanMode: mode }),
+      fanTempTarget: 75,
+      setFanTempTarget: (temp) => set({ fanTempTarget: temp }),
     }),
     {
       name: 'choatix-v2-storage',

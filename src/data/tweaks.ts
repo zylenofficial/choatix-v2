@@ -1028,30 +1028,6 @@ export const availableTweaks: Tweak[] = [
     gamingImpact: 'Cleaner mouse pointer, no trail artifacts'
   },
 
-  // INPUT
-  {
-    id: 'input-optimize-mouse',
-    name: 'Optimize Mouse Settings',
-    description: 'Sets mouse speed to 6/11 (1:1 raw input) and disables acceleration for optimal gaming aim.',
-    category: 'mouse',
-    requiredTier: LicenseTier.PRO,
-    applied: false,
-    impact: 'medium',
-    risk: 'none',
-    gamingImpact: 'Perfect 1:1 mouse input for gaming'
-  },
-  {
-    id: 'input-optimize-keyboard',
-    name: 'Optimize Keyboard Settings',
-    description: 'Sets optimal keyboard repeat rate (31) and repeat delay (1) for faster key响应.',
-    category: 'keyboard',
-    requiredTier: LicenseTier.PRO,
-    applied: false,
-    impact: 'low',
-    risk: 'none',
-    gamingImpact: 'Faster keyboard response time'
-  },
-
   // STORAGE
   {
     id: 'storage-enable-write-cache',
@@ -1811,41 +1787,6 @@ export const availableTweaks: Tweak[] = [
     impact: 'high',
     risk: 'low',
     gamingImpact: 'No audio crackling, smoother input processing'
-  },
-
-  // INPUT
-  {
-    id: 'mouse-optimize-polling',
-    name: 'Optimize Mouse Polling Rate',
-    description: 'Configures Windows to use the highest supported mouse polling rate for the smoothest cursor movement.',
-    category: 'mouse',
-    requiredTier: LicenseTier.PRO,
-    applied: false,
-    impact: 'medium',
-    risk: 'none',
-    gamingImpact: 'Smoother mouse movement, lower input latency'
-  },
-  {
-    id: 'keyboard-optimize-repeat',
-    name: 'Optimize Keyboard Repeat Rate',
-    description: 'Sets the fastest keyboard repeat rate and shortest delay for responsive key holding.',
-    category: 'keyboard',
-    requiredTier: LicenseTier.FREE,
-    applied: false,
-    impact: 'low',
-    risk: 'none',
-    gamingImpact: 'Faster key repeat for games that use held keys'
-  },
-  {
-    id: 'input-gaming-mode',
-    name: 'Gaming Input Mode',
-    description: 'Zero keyboard delay, max repeat speed, no mouse acceleration, no mouse trails, 6/11 sensitivity, and disables StickyKeys/FilterKeys/ToggleKeys for the least input lag possible.',
-    category: 'input',
-    requiredTier: LicenseTier.PRO,
-    applied: false,
-    impact: 'medium',
-    risk: 'low',
-    gamingImpact: 'Zero-delay keyboard + raw mouse input for competitive gaming'
   },
 
   // AUDIO
@@ -4365,5 +4306,445 @@ export const availableTweaks: Tweak[] = [
     impact: 'low',
     risk: 'none',
     gamingImpact: 'Less desktop overhead'
+  },
+
+  // ── INTEL GPU ──
+  {
+    id: 'intel-disable-c-states-gpu',
+    name: 'Disable Intel GPU C-States',
+    description: 'Prevents Intel integrated GPU from entering low-power C-states for consistent frame delivery',
+    category: 'gpu',
+    requiredTier: LicenseTier.PRO,
+    applied: false,
+    impact: 'medium',
+    risk: 'low',
+    gamingImpact: 'More consistent frame times on Intel iGPU'
+  },
+  {
+    id: 'intel-max-gpu-frequency',
+    name: 'Max Intel GPU Frequency',
+    description: 'Locks Intel GPU to maximum boost frequency for sustained performance',
+    category: 'gpu',
+    requiredTier: LicenseTier.PRO,
+    applied: false,
+    impact: 'medium',
+    risk: 'low',
+    gamingImpact: 'Higher sustained GPU clocks on Intel'
+  },
+  {
+    id: 'intel-disable-frame-scheduling',
+    name: 'Disable Intel Frame Scheduling',
+    description: 'Disables Intel Thread Director interference for manual thread control',
+    category: 'gpu',
+    requiredTier: LicenseTier.PRO,
+    applied: false,
+    impact: 'medium',
+    risk: 'low',
+    gamingImpact: 'Reduced scheduling overhead on Intel'
+  },
+  {
+    id: 'intel-disable-panel-self-refresh',
+    name: 'Disable Panel Self Refresh',
+    description: 'Disables PSR to prevent display latency spikes on Intel graphics',
+    category: 'gpu',
+    requiredTier: LicenseTier.PRO,
+    applied: false,
+    impact: 'medium',
+    risk: 'low',
+    gamingImpact: 'Lower display latency on Intel GPUs'
+  },
+
+  // ── MONITOR / DISPLAY ──
+  {
+    id: 'monitor-max-refresh-rate',
+    name: 'Force Maximum Refresh Rate',
+    description: 'Ensures your display runs at its highest supported refresh rate',
+    category: 'system',
+    requiredTier: LicenseTier.FREE,
+    applied: false,
+    impact: 'high',
+    risk: 'none',
+    gamingImpact: 'Smoother visuals with max refresh rate'
+  },
+  {
+    id: 'monitor-disable-vrr-flicker',
+    name: 'Disable VRR Flicker Mitigation',
+    description: 'Reduces VRR flickering by optimizing display timing parameters',
+    category: 'system',
+    requiredTier: LicenseTier.PRO,
+    applied: false,
+    impact: 'low',
+    risk: 'low',
+    gamingImpact: 'Less flicker with variable refresh rate'
+  },
+  {
+    id: 'monitor-optimize-color-accuracy',
+    name: 'Optimize Display Color Pipeline',
+    description: 'Reduces display processing latency by optimizing color pipeline',
+    category: 'system',
+    requiredTier: LicenseTier.PRO,
+    applied: false,
+    impact: 'low',
+    risk: 'none',
+    gamingImpact: 'Lower display processing latency'
+  },
+
+  // ── STREAMING / OBS ──
+  {
+    id: 'obs-optimize-process-priority',
+    name: 'OBS Process Priority Boost',
+    description: 'Sets OBS process priority to High for smoother streaming and recording',
+    category: 'system',
+    requiredTier: LicenseTier.PRO,
+    applied: false,
+    impact: 'medium',
+    risk: 'low',
+    gamingImpact: 'Smoother OBS recording while gaming'
+  },
+  {
+    id: 'obs-optimize-encoder',
+    name: 'OBS Encoder Optimization',
+    description: 'Optimizes Windows encoder settings for lower OBS CPU usage',
+    category: 'system',
+    requiredTier: LicenseTier.PRO,
+    applied: false,
+    impact: 'medium',
+    risk: 'low',
+    gamingImpact: 'Lower encoding overhead during streaming'
+  },
+  {
+    id: 'obs-disable-preview',
+    name: 'OBS Disable Preview Rendering',
+    description: 'Disables OBS preview rendering to save GPU resources during streaming',
+    category: 'system',
+    requiredTier: LicenseTier.FREE,
+    applied: false,
+    impact: 'low',
+    risk: 'none',
+    gamingImpact: 'More GPU headroom for games during streaming'
+  },
+
+  // ── VR ──
+  {
+    id: 'vr-optimize-timing',
+    name: 'VR Motion-to-Photon Optimization',
+    description: 'Optimizes timer resolution and frame pacing for lower VR motion-to-photon latency',
+    category: 'system',
+    requiredTier: LicenseTier.PREMIUM,
+    applied: false,
+    impact: 'high',
+    risk: 'low',
+    gamingImpact: 'Lower VR motion sickness, smoother head tracking'
+  },
+  {
+    id: 'vr-optimize-render-pipeline',
+    name: 'VR Render Pipeline Optimization',
+    description: 'Optimizes GPU scheduling and frame submission for VR applications',
+    category: 'system',
+    requiredTier: LicenseTier.PREMIUM,
+    applied: false,
+    impact: 'high',
+    risk: 'low',
+    gamingImpact: 'Smoother VR gameplay with less dropped frames'
+  },
+  {
+    id: 'vr-disable-async-reprojection',
+    name: 'Disable VR Async Reprojection',
+    description: 'Disables async reprojection for lower latency in competitive VR games',
+    category: 'system',
+    requiredTier: LicenseTier.PRO,
+    applied: false,
+    impact: 'medium',
+    risk: 'medium',
+    gamingImpact: 'Lower latency at cost of smoothness'
+  },
+
+  // ── MOUSE (more tweaks) ──
+  {
+    id: 'mouse-disable-angle-snapping',
+    name: 'Disable Angle Snapping',
+    description: 'Disables Windows angle prediction for true raw mouse movement',
+    category: 'mouse',
+    requiredTier: LicenseTier.PRO,
+    applied: false,
+    impact: 'medium',
+    risk: 'none',
+    gamingImpact: 'True raw mouse input, no artificial correction'
+  },
+  {
+    id: 'mouse-optimize-polling-rate',
+    name: 'Optimize Mouse Polling Rate',
+    description: 'Ensures mouse polling rate is not throttled by Windows USB power management',
+    category: 'mouse',
+    requiredTier: LicenseTier.PRO,
+    applied: false,
+    impact: 'medium',
+    risk: 'none',
+    gamingImpact: 'Consistent high polling rate, lower input lag'
+  },
+  {
+    id: 'mouse-disable-smoothing',
+    name: 'Disable Mouse Smoothing',
+    description: 'Turns off Windows mouse smoothing for precise cursor tracking',
+    category: 'mouse',
+    requiredTier: LicenseTier.FREE,
+    applied: false,
+    impact: 'low',
+    risk: 'none',
+    gamingImpact: 'Raw unsmoothed mouse movement'
+  },
+  {
+    id: 'mouse-optimize-sensitivity-curve',
+    name: 'Optimize Mouse Sensitivity Curve',
+    description: 'Sets linear mouse sensitivity curve for consistent aiming across all speeds',
+    category: 'mouse',
+    requiredTier: LicenseTier.PRO,
+    applied: false,
+    impact: 'medium',
+    risk: 'low',
+    gamingImpact: 'More consistent aim at different speeds'
+  },
+
+  // ── KEYBOARD (more tweaks) ──
+  {
+    id: 'keyboard-optimize-repeat-rate',
+    name: 'Optimize Key Repeat Rate',
+    description: 'Sets keyboard repeat rate to maximum for faster key registration',
+    category: 'keyboard',
+    requiredTier: LicenseTier.FREE,
+    applied: false,
+    impact: 'low',
+    risk: 'none',
+    gamingImpact: 'Faster key repeat in text and movement'
+  },
+  {
+    id: 'keyboard-optimize-repeat-delay',
+    name: 'Minimize Key Repeat Delay',
+    description: 'Sets keyboard repeat delay to minimum for instant key response',
+    category: 'keyboard',
+    requiredTier: LicenseTier.FREE,
+    applied: false,
+    impact: 'low',
+    risk: 'none',
+    gamingImpact: 'Instant keyboard response'
+  },
+  {
+    id: 'keyboard-disable-ghosting',
+    name: 'Disable Keyboard Ghosting',
+    description: 'Optimizes keyboard interrupt handling to reduce ghosting on membrane keyboards',
+    category: 'keyboard',
+    requiredTier: LicenseTier.PRO,
+    applied: false,
+    impact: 'medium',
+    risk: 'low',
+    gamingImpact: 'More reliable multi-key presses in games'
+  },
+  {
+    id: 'keyboard-optimize-battery',
+    name: 'Disable Keyboard Power Saving',
+    description: 'Disables keyboard power saving mode for consistent input latency',
+    category: 'keyboard',
+    requiredTier: LicenseTier.PRO,
+    applied: false,
+    impact: 'low',
+    risk: 'none',
+    gamingImpact: 'Consistent keyboard polling latency'
+  },
+
+  // ── USB (more tweaks) ──
+  {
+    id: 'usb-disable-hub-power',
+    name: 'Disable USB Hub Power Saving',
+    description: 'Prevents USB hubs from entering power-saving mode for consistent device performance',
+    category: 'usb',
+    requiredTier: LicenseTier.PRO,
+    applied: false,
+    impact: 'medium',
+    risk: 'low',
+    gamingImpact: 'No USB device lag from hub power management'
+  },
+  {
+    id: 'usb-optimize-transfer-rate',
+    name: 'Optimize USB Transfer Rate',
+    description: 'Sets USB transfer mode to maximum performance for faster device communication',
+    category: 'usb',
+    requiredTier: LicenseTier.PRO,
+    applied: false,
+    impact: 'medium',
+    risk: 'low',
+    gamingImpact: 'Lower USB device latency'
+  },
+  {
+    id: 'usb-disable-compliance',
+    name: 'Disable USB Compliance Testing',
+    description: 'Disables USB compliance testing mode for lower device initialization latency',
+    category: 'usb',
+    requiredTier: LicenseTier.PRO,
+    applied: false,
+    impact: 'low',
+    risk: 'low',
+    gamingImpact: 'Faster USB device initialization'
+  },
+
+  // ── INPUT (gamepad, touchscreen) ──
+  {
+    id: 'input-optimize-gamepad-latency',
+    name: 'Optimize Gamepad Input Latency',
+    description: 'Reduces XInput/DirectInput polling latency for controllers',
+    category: 'input',
+    requiredTier: LicenseTier.PRO,
+    applied: false,
+    impact: 'medium',
+    risk: 'low',
+    gamingImpact: 'Lower controller input lag'
+  },
+  {
+    id: 'input-disable-touchscreen',
+    name: 'Disable Touchscreen Input',
+    description: 'Disables touchscreen digitizer to reduce input processing overhead',
+    category: 'input',
+    requiredTier: LicenseTier.FREE,
+    applied: false,
+    impact: 'low',
+    risk: 'none',
+    gamingImpact: 'Less input processing overhead'
+  },
+  {
+    id: 'input-optimize-tablet-pen',
+    name: 'Optimize Tablet Pen Latency',
+    description: 'Reduces pen tablet input processing latency for creative applications',
+    category: 'input',
+    requiredTier: LicenseTier.PRO,
+    applied: false,
+    impact: 'low',
+    risk: 'low',
+    gamingImpact: 'Lower pen input latency'
+  },
+
+  // ── STORAGE (more tweaks) ──
+  {
+    id: 'storage-disable-write-caching',
+    name: 'Disable Write Caching Buffer Flushing',
+    description: 'Disables write cache buffer flushing for faster disk writes (risks data loss on power failure)',
+    category: 'storage',
+    requiredTier: LicenseTier.PREMIUM,
+    applied: false,
+    impact: 'medium',
+    risk: 'medium',
+    gamingImpact: 'Faster save operations in games'
+  },
+  {
+    id: 'storage-optimize-io-priority',
+    name: 'Optimize Disk I/O Priority',
+    description: 'Sets game-related disk operations to high priority for faster load times',
+    category: 'storage',
+    requiredTier: LicenseTier.PRO,
+    applied: false,
+    impact: 'medium',
+    risk: 'low',
+    gamingImpact: 'Faster game loading from disk'
+  },
+  {
+    id: 'storage-disable-indexing-service',
+    name: 'Disable Search Indexing Service',
+    description: 'Fully disables Windows Search Indexing to free CPU and disk resources',
+    category: 'storage',
+    requiredTier: LicenseTier.FREE,
+    applied: false,
+    impact: 'low',
+    risk: 'none',
+    gamingImpact: 'Less background disk I/O during gaming'
+  },
+  {
+    id: 'storage-nvme-latency-optimization',
+    name: 'NVMe Latency Optimization',
+    description: 'Optimizes NVMe queue depth and interrupt coalescing for lower storage latency',
+    category: 'storage',
+    requiredTier: LicenseTier.PREMIUM,
+    applied: false,
+    impact: 'high',
+    risk: 'low',
+    gamingImpact: 'Faster game load times and asset streaming'
+  },
+
+  // ── GPU (more tweaks) ──
+  {
+    id: 'gpu-disable-render-completion-sync',
+    name: 'Disable Render Completion Sync',
+    description: 'Disables GPU render completion synchronization for lower frame submission latency',
+    category: 'gpu',
+    requiredTier: LicenseTier.PREMIUM,
+    applied: false,
+    impact: 'high',
+    risk: 'low',
+    gamingImpact: 'Lower GPU frame submission latency'
+  },
+  {
+    id: 'gpu-optimize-surface-prefetch',
+    name: 'Optimize Surface Prefetch',
+    description: 'Enables GPU surface prefetching for faster texture loading in games',
+    category: 'gpu',
+    requiredTier: LicenseTier.PRO,
+    applied: false,
+    impact: 'medium',
+    risk: 'low',
+    gamingImpact: 'Faster texture loading, less stutter'
+  },
+  {
+    id: 'gpu-disable-frame-rate-limiter',
+    name: 'Disable GPU Frame Rate Limiter',
+    description: 'Disables driver-level frame rate limiting for maximum FPS',
+    category: 'gpu',
+    requiredTier: LicenseTier.PRO,
+    applied: false,
+    impact: 'medium',
+    risk: 'none',
+    gamingImpact: 'Uncapped frame rate in all games'
+  },
+  {
+    id: 'gpu-optimize-vram-allocation',
+    name: 'Optimize VRAM Allocation',
+    description: 'Optimizes GPU virtual memory allocation for better VRAM utilization in games',
+    category: 'gpu',
+    requiredTier: LicenseTier.PREMIUM,
+    applied: false,
+    impact: 'high',
+    risk: 'low',
+    gamingImpact: 'Better VRAM usage, less texture swapping'
+  },
+
+  // ── NVIDIA (more tweaks) ──
+  {
+    id: 'nv-disable-ansel',
+    name: 'Disable NVIDIA Ansel',
+    description: 'Disables NVIDIA Ansel to free GPU overlay resources during gaming',
+    category: 'nvidia',
+    requiredTier: LicenseTier.PRO,
+    applied: false,
+    impact: 'low',
+    risk: 'none',
+    gamingImpact: 'Frees GPU resources from Ansel overlay'
+  },
+  {
+    id: 'nv-disable-shadowplay',
+    name: 'Disable NVIDIA ShadowPlay',
+    description: 'Disables NVIDIA ShadowPlay recording service to reduce GPU overhead',
+    category: 'nvidia',
+    requiredTier: LicenseTier.PRO,
+    applied: false,
+    impact: 'medium',
+    risk: 'none',
+    gamingImpact: 'Lower GPU overhead from ShadowPlay'
+  },
+  {
+    id: 'nv-optimize-driver-scheduler',
+    name: 'Optimize NVIDIA Driver Scheduler',
+    description: 'Optimizes NVIDIA driver thread scheduling for lower driver overhead',
+    category: 'nvidia',
+    requiredTier: LicenseTier.PREMIUM,
+    applied: false,
+    impact: 'high',
+    risk: 'low',
+    gamingImpact: 'Lower driver CPU overhead, higher FPS'
   },
 ]

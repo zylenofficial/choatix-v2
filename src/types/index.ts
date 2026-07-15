@@ -51,6 +51,7 @@ declare global {
       loadAppState: () => Promise<{ success: boolean; state: any }>
       sendFeedback: (feedback: FeedbackData) => Promise<{ success: boolean; error?: string }>
       onSaveStateRequest: (cb: () => void) => void
+      sendUpdateNotification: (data: { version: string; changes: string[] }) => Promise<{ success: boolean; error?: string }>
       isElectron: boolean
     }
   }
