@@ -1,6 +1,6 @@
 {
   "name": "choatix-v2",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Choatix V2 - Advanced Gaming Optimization Suite",
   "author": "zylenofficial",
   "main": "electron/main.js",

@@ -2363,13 +2363,16 @@ const CURRENT_VERSION = app.getVersion();
 ipcMain.handle("check-for-updates", async () => {
   try {
     const data = await new Promise((resolve, reject) => {
-      https.get("https://api.github.com/repos/choatix/choatix-v2/releases/latest", { headers: { "User-Agent": "Choatix-Desktop" } }, (res) => {
+      https.get("https://api.github.com/repos/zylenofficial/choatix-v2/releases/latest", { headers: { "User-Agent": "Choatix-Desktop" } }, (res) => {
         let body = ""; res.on("data", c => body += c);
         res.on("end", () => { try { resolve(JSON.parse(body)); } catch { reject(new Error("Invalid JSON")); } });
       }).on("error", reject);
     });
     const latestTag = (data.tag_name || "").replace(/^v/, "");
-    return { updateAvailable: latestTag !== CURRENT_VERSION, currentVersion: CURRENT_VERSION, latestVersion: latestTag || CURRENT_VERSION, downloadUrl: data.html_url || "", releaseNotes: (data.body || "").substring(0, 500) };
+    const assets = data.assets || [];
+    const installer = assets.find(a => a.name && a.name.includes("Setup"));
+    const downloadUrl = installer ? installer.browser_download_url : (data.html_url || "");
+    return { updateAvailable: latestTag !== CURRENT_VERSION, currentVersion: CURRENT_VERSION, latestVersion: latestTag || CURRENT_VERSION, downloadUrl, releaseNotes: (data.body || "").substring(0, 500) };
   } catch {
     return { updateAvailable: false, currentVersion: CURRENT_VERSION, latestVersion: CURRENT_VERSION, downloadUrl: "", releaseNotes: "" };
   }
