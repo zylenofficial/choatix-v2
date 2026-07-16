@@ -88,6 +88,21 @@ async function initDB() {
       referee_id TEXT,
       used_at TEXT
     );
+    CREATE TABLE IF NOT EXISTS benchmarks (
+      id SERIAL PRIMARY KEY,
+      discord_id TEXT NOT NULL,
+      nickname TEXT DEFAULT 'Anonymous',
+      hardware_hash TEXT NOT NULL,
+      cpu_model TEXT,
+      gpu_model TEXT,
+      ram_gb INTEGER,
+      cpu_score FLOAT,
+      ram_score FLOAT,
+      disk_score FLOAT,
+      gpu_score FLOAT,
+      overall_score FLOAT NOT NULL,
+      created_at TIMESTAMP DEFAULT NOW()
+    );
   `);
   console.log('PostgreSQL connected');
 }
@@ -428,6 +443,55 @@ app.get('/api/admin/keys', async (req, res) => {
   } else {
     res.json({ keys: memKeys, users: memUsers, partners: memPartners, referrals: memReferrals });
   }
+});
+
+// ── Leaderboard ──
+app.post('/api/benchmark/submit', async (req, res) => {
+  const { discord_id, nickname, hardware_hash, cpu_model, gpu_model, ram_gb, cpu_score, ram_score, disk_score, gpu_score, overall_score } = req.body;
+  if (!overall_score) return res.status(400).json({ error: 'overall_score required' });
+  const id = discord_id || 'anonymous';
+  const hw = hardware_hash || 'unknown';
+  if (app.locals.pool) {
+    await app.locals.pool.query(
+      'INSERT INTO benchmarks (discord_id, nickname, hardware_hash, cpu_model, gpu_model, ram_gb, cpu_score, ram_score, disk_score, gpu_score, overall_score) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)',
+      [id, nickname || 'Anonymous', hw, cpu_model || '', gpu_model || '', ram_gb || 0, cpu_score || 0, ram_score || 0, disk_score || 0, gpu_score || 0, overall_score]
+    );
+  }
+  res.json({ success: true });
+});
+
+app.get('/api/leaderboard', async (req, res) => {
+  const limit = Math.min(parseInt(req.query.limit) || 50, 200);
+  if (app.locals.pool) {
+    const r = await app.locals.pool.query(
+      'SELECT *, ROW_NUMBER() OVER (ORDER BY overall_score DESC) as rank FROM benchmarks ORDER BY overall_score DESC LIMIT $1', [limit]
+    );
+    return res.json({ entries: r.rows });
+  }
+  res.json({ entries: [] });
+});
+
+app.get('/api/leaderboard/hardware/:hash', async (req, res) => {
+  const limit = Math.min(parseInt(req.query.limit) || 50, 200);
+  if (app.locals.pool) {
+    const r = await app.locals.pool.query(
+      'SELECT *, ROW_NUMBER() OVER (ORDER BY overall_score DESC) as rank FROM benchmarks WHERE hardware_hash = $1 ORDER BY overall_score DESC LIMIT $2',
+      [req.params.hash, limit]
+    );
+    return res.json({ entries: r.rows });
+  }
+  res.json({ entries: [] });
+});
+
+app.get('/api/leaderboard/user/:discordId', async (req, res) => {
+  if (app.locals.pool) {
+    const r = await app.locals.pool.query(
+      'SELECT *, (SELECT COUNT(*) + 1 FROM benchmarks b2 WHERE b2.overall_score > b1.overall_score) as rank FROM benchmarks b1 WHERE discord_id = $1 ORDER BY overall_score DESC LIMIT 5',
+      [req.params.discordId]
+    );
+    return res.json({ entries: r.rows });
+  }
+  res.json({ entries: [] });
 });
 
 initDB().then(() => {

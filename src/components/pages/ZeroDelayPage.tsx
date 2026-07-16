@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { Mouse, Keyboard, Zap, RotateCcw, Check, ChevronDown, ChevronUp, MonitorSmartphone } from 'lucide-react'
 import { useStore } from '@/store/useStore'
 import { createRollbackEntry } from '@/lib/tweaks'
@@ -186,8 +186,8 @@ export function ZeroDelayPage() {
   const [expandedSection, setExpandedSection] = useState<string | null>('mouse')
   const [applying, setApplying] = useState<Record<string, boolean>>({})
   const [applied, setApplied] = useState<Record<string, boolean>>({})
-  const [settings, setSettings] = useState<Record<string, number | string>>(() => {
-    const defaults: Record<string, number | string> = {}
+  const [settings, setSettings] = useState<Record<string, number | string | boolean>>(() => {
+    const defaults: Record<string, number | string | boolean> = {}
     ZERO_DELAY_SECTIONS.forEach(section => {
       section.settings.forEach(setting => {
         defaults[setting.id] = setting.defaultValue ?? 0
@@ -195,6 +195,18 @@ export function ZeroDelayPage() {
     })
     return defaults
   })
+
+  useEffect(() => {
+    const close = () => {
+      setSettings(prev => {
+        const next = { ...prev }
+        Object.keys(next).forEach(k => { if (k.startsWith('_open_')) delete next[k] })
+        return next
+      })
+    }
+    window.addEventListener('click', close)
+    return () => window.removeEventListener('click', close)
+  }, [])
 
   const isTweakApplied = useCallback((tweakId: string) => {
     return appliedTweaks.includes(tweakId)
@@ -356,7 +368,7 @@ export function ZeroDelayPage() {
                                   min={setting.min}
                                   max={setting.max}
                                   step={setting.step}
-                                  value={settings[setting.id]}
+                                  value={Number(settings[setting.id])}
                                   onChange={(e) => {
                                     const val = Number(e.target.value)
                                     setSettings(prev => ({ ...prev, [setting.id]: val }))
@@ -368,19 +380,32 @@ export function ZeroDelayPage() {
                               </div>
                             )}
                             {setting.type === 'select' && (
-                              <select
-                                value={settings[setting.id]}
-                                onChange={(e) => {
-                                  setSettings(prev => ({ ...prev, [setting.id]: e.target.value }))
-                                  handleApplySetting(setting)
-                                }}
-                                className="h-7 px-2 rounded text-[10px] font-semibold"
-                                style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)', color: 'var(--text)' }}
-                              >
-                                {setting.options?.map(opt => (
-                                  <option key={opt.value} value={opt.value}>{opt.label}</option>
-                                ))}
-                              </select>
+                              <div className="relative">
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    setSettings(prev => ({ ...prev, [`_open_${setting.id}`]: !settings[`_open_${setting.id}`] }))
+                                  }}
+                                  className="h-7 px-2 rounded text-[10px] font-semibold flex items-center gap-1 min-w-[100px] justify-between"
+                                  style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)', color: 'var(--text)' }}
+                                >
+                                  {setting.options?.find(o => o.value === String(settings[setting.id]))?.label || 'Select'}
+                                  <ChevronDown className="w-3 h-3" style={{ color: 'var(--text-muted)' }} />
+                                </button>
+                                {settings[`_open_${setting.id}`] && (
+                                  <div className="absolute right-0 top-full mt-1 z-50 rounded-lg py-1 min-w-[120px]" style={{ background: '#1a1a1a', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 8px 32px rgba(0,0,0,0.5)' }}>
+                                    {setting.options?.map(opt => (
+                                      <button key={opt.value} onClick={(e) => {
+                                        e.stopPropagation()
+                                        setSettings(prev => ({ ...prev, [setting.id]: opt.value, [`_open_${setting.id}`]: false }))
+                                        handleApplySetting(setting)
+                                      }} className="w-full text-left px-3 py-1.5 text-[10px] font-semibold hover:bg-white/5 transition-colors" style={{ color: String(settings[setting.id]) === opt.value ? 'var(--accent)' : 'var(--text)' }}>
+                                        {opt.label}
+                                      </button>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
                             )}
                             <div className="w-5 h-5 rounded-full flex items-center justify-center" style={{
                               background: isApplied ? 'rgba(74,222,128,0.15)' : isLoading ? 'rgba(255,107,53,0.15)' : 'rgba(255,255,255,0.04)',

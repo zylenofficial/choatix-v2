@@ -60,5 +60,10 @@ contextBridge.exposeInMainWorld("electronAPI", {
   restoreBloatware: (names) => ipcRenderer.invoke("restore-bloatware", names),
   quickAction: (action) => ipcRenderer.invoke("quick-action", action),
   sendUpdateNotification: (data) => ipcRenderer.invoke("send-update-notification", data),
+  getFanSensors: () => ipcRenderer.invoke("get-fan-sensors"),
+  setFanSpeed: (fanName, speed) => ipcRenderer.invoke("set-fan-speed", { fanName, speed }),
+  submitBenchmark: (data) => ipcRenderer.invoke("submit-benchmark", data),
+  getLeaderboard: (opts) => ipcRenderer.invoke("get-leaderboard", opts || {}),
+  getUserRank: (discordId) => ipcRenderer.invoke("get-user-rank", { discordId }),
   isElectron: true,
 });

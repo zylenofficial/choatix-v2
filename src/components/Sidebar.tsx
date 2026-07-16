@@ -1,9 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { LayoutDashboard, Zap, Gamepad2, Monitor, Settings, Shield, Target, Mouse, ScanSearch, ChevronRight, Fan } from 'lucide-react'
+import { LayoutDashboard, Zap, Gamepad2, Monitor, Settings, Shield, Target, Mouse, ScanSearch, ChevronRight, Trophy } from 'lucide-react'
 
-export type Page = 'home' | 'optimize' | 'quick-boost' | 'zero-delay' | 'scan' | 'games' | 'system' | 'settings' | 'fan-control'
+export type Page = 'home' | 'optimize' | 'quick-boost' | 'zero-delay' | 'scan' | 'games' | 'leaderboard' | 'system' | 'settings'
 
 interface SidebarProps {
   active: Page
@@ -20,7 +20,7 @@ const NAV_ITEMS: { id: Page; label: string; icon: any }[] = [
   { id: 'quick-boost', label: 'Quick Boost', icon: Target },
   { id: 'zero-delay', label: '0 Delay', icon: Mouse },
   { id: 'games', label: 'Games', icon: Gamepad2 },
-  { id: 'fan-control', label: 'Fan Control', icon: Fan },
+  { id: 'leaderboard', label: 'Leaderboard', icon: Trophy },
   { id: 'system', label: 'System', icon: Monitor },
   { id: 'settings', label: 'Settings', icon: Settings },
 ]

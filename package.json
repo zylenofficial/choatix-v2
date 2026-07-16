@@ -85,6 +85,7 @@
     }
   },
   "dependencies": {
-    "pg": "^8.22.0"
+    "pg": "^8.22.0",
+    "systeminformation": "^5.31.17"
   }
 }

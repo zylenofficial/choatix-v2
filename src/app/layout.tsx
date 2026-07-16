@@ -1,6 +1,5 @@
 import type { Metadata } from 'next'
 import './globals.css'
-import TitleBar from '@/components/TitleBar'
 
 export const metadata: Metadata = {
   title: 'Choatix',
@@ -15,10 +14,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="h-screen overflow-hidden">
-        <TitleBar />
-        <div className="h-full">
-          {children}
-        </div>
+        {children}
       </body>
     </html>
   )

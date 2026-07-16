@@ -2,43 +2,50 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useStore } from '@/store/useStore'
-import { Fan, Thermometer, Gauge, RotateCw, Zap, Wind, Settings, AlertTriangle } from 'lucide-react'
+import { Fan, Gauge, RotateCw, Zap, Wind, Settings, AlertTriangle } from 'lucide-react'
 import { useToast } from '@/components/Toast'
 
 interface FanInfo {
   name: string
   speed: number
   maxSpeed: number
-  temperature: number | null
+  active: boolean
 }
 
 export function FanControlPage() {
-  const { fanMode, setFanMode, fanSpeeds, setFanSpeeds, fanTempTarget, setFanTempTarget, addNotification } = useStore()
+  const { fanMode, setFanMode, fanSpeeds, setFanSpeeds, addNotification } = useStore()
   const { addToast } = useToast()
   const [fans, setFans] = useState<FanInfo[]>([])
   const [loading, setLoading] = useState(true)
   const [cpuTemp, setCpuTemp] = useState<number | null>(null)
   const [gpuTemp, setGpuTemp] = useState<number | null>(null)
   const [applying, setApplying] = useState(false)
+  const [sensorError, setSensorError] = useState<string | null>(null)
+  const [canControlFans, setCanControlFans] = useState<boolean | null>(null)
 
   const fetchFanInfo = useCallback(async () => {
-    if (!window.electronAPI) { setLoading(false); return }
+    if (!window.electronAPI) { setLoading(false); setSensorError('Not running in Electron'); return }
     try {
-      const stats = await window.electronAPI.getRealtimeStats()
-      setCpuTemp(stats.cpu.temperature)
-      setGpuTemp(stats.gpu.temperature)
-
-      const detectedFans: FanInfo[] = [
-        { name: 'CPU Fan', speed: 1200 + Math.floor(Math.random() * 400), maxSpeed: 3000, temperature: stats.cpu.temperature },
-        { name: 'Case Fan 1', speed: 800 + Math.floor(Math.random() * 300), maxSpeed: 1500, temperature: null },
-        { name: 'Case Fan 2', speed: 700 + Math.floor(Math.random() * 200), maxSpeed: 1500, temperature: null },
-      ]
-      setFans(detectedFans)
-
-      const initial: Record<string, number> = {}
-      detectedFans.forEach(f => { initial[f.name] = fanSpeeds[f.name] || Math.round((f.speed / f.maxSpeed) * 100) })
-      setFanSpeeds(initial)
-    } catch { }
+      const result = await window.electronAPI.getFanSensors()
+      if (result.success) {
+        setCpuTemp(result.cpuTemp)
+        setGpuTemp(result.gpuTemp)
+        setFans(result.fans)
+        setSensorError(null)
+        const initial: Record<string, number> = {}
+        result.fans.forEach((f: FanInfo) => {
+          const pct = f.maxSpeed > 0 ? Math.round((f.speed / f.maxSpeed) * 100) : 50
+          initial[f.name] = fanSpeeds[f.name] || pct
+        })
+        if (Object.keys(initial).length > 0) setFanSpeeds(initial)
+        const fanCheck = await window.electronAPI.setFanSpeed('_check', 0)
+        setCanControlFans(fanCheck.success)
+      } else {
+        setSensorError(result.error || 'Could not read sensors')
+      }
+    } catch (e: any) {
+      setSensorError(e.message || 'Failed to read sensors')
+    }
     setLoading(false)
   }, [fanSpeeds, setFanSpeeds])
 
@@ -49,14 +56,23 @@ export function FanControlPage() {
   }, [fanSpeeds, setFanSpeeds])
 
   const handleApply = useCallback(async () => {
+    if (!window.electronAPI || canControlFans === false) return
     setApplying(true)
-    addToast(`Fan mode set to ${fanMode}`, 'success')
-    addNotification({ title: 'Fan Control', message: `Applied ${fanMode} mode — fans adjusted`, type: 'success' })
+    let successCount = 0
+    for (const [name, pct] of Object.entries(fanSpeeds)) {
+      const res = await window.electronAPI.setFanSpeed(name, pct)
+      if (res.success) successCount++
+    }
+    if (successCount > 0) {
+      addToast(`Fan settings applied (${successCount} fans)`, 'success')
+      addNotification({ title: 'Fan Control', message: `Applied ${fanMode} mode`, type: 'success' })
+    }
     setTimeout(() => setApplying(false), 1000)
-  }, [fanMode, addToast, addNotification])
+  }, [fanSpeeds, fanMode, canControlFans, addToast, addNotification])
 
   const handleAutoDetect = useCallback(() => {
-    addToast('Scanning for fans...', 'info')
+    addToast('Scanning hardware sensors...', 'info')
+    setLoading(true)
     fetchFanInfo()
   }, [addToast, fetchFanInfo])
 
@@ -98,6 +114,20 @@ export function FanControlPage() {
             <RotateCw className="w-3 h-3" /> Scan
           </button>
         </div>
+
+        {/* Sensor Error */}
+        {sensorError && (
+          <div className="rounded-2xl p-4 flex items-start gap-3 reveal-up reveal-up-2" style={{
+            background: 'rgba(248,113,113,0.04)',
+            border: '1px solid rgba(248,113,113,0.1)',
+          }}>
+            <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" style={{ color: '#f87171' }} />
+            <div>
+              <p className="text-[11px] font-semibold" style={{ color: '#f87171' }}>Sensor read error</p>
+              <p className="text-[10px] mt-0.5" style={{ color: 'rgba(248,113,113,0.5)' }}>{sensorError}</p>
+            </div>
+          </div>
+        )}
 
         {/* Temperature Overview */}
         <div className="grid grid-cols-2 gap-3 reveal-up reveal-up-2">
@@ -200,12 +230,6 @@ export function FanControlPage() {
                     }} />
                   <span className="text-[9px]" style={{ color: 'rgba(255,255,255,0.15)' }}>100%</span>
                 </div>
-                {fan.temperature !== null && (
-                  <div className="flex items-center gap-1.5 mt-2">
-                    <Thermometer className="w-2.5 h-2.5" style={{ color: getTempColor(fan.temperature) }} />
-                    <span className="text-[9px]" style={{ color: getTempColor(fan.temperature) }}>{fan.temperature}°C</span>
-                  </div>
-                )}
               </div>
             ))}
           </div>
@@ -214,28 +238,47 @@ export function FanControlPage() {
         {/* Safety Warning */}
         {fanMode !== 'auto' && (
           <div className="rounded-2xl p-4 flex items-start gap-3 reveal-up reveal-up-5" style={{
-            background: 'rgba(251,191,36,0.04)',
-            border: '1px solid rgba(251,191,36,0.1)',
+            background: canControlFans ? 'rgba(251,191,36,0.04)' : 'rgba(248,113,113,0.04)',
+            border: `1px solid ${canControlFans ? 'rgba(251,191,36,0.1)' : 'rgba(248,113,113,0.1)'}`,
           }}>
-            <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" style={{ color: '#fbbf24' }} />
+            <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" style={{ color: canControlFans ? '#fbbf24' : '#f87171' }} />
             <div>
-              <p className="text-[11px] font-semibold" style={{ color: '#fbbf24' }}>Manual fan control</p>
-              <p className="text-[10px] mt-0.5" style={{ color: 'rgba(251,191,36,0.5)' }}>
-                Setting fans too low may cause overheating. Keep an eye on temperatures. Auto mode is recommended for most users.
-              </p>
+              {canControlFans ? (
+                <>
+                  <p className="text-[11px] font-semibold" style={{ color: '#fbbf24' }}>Manual fan control</p>
+                  <p className="text-[10px] mt-0.5" style={{ color: 'rgba(251,191,36,0.5)' }}>
+                    Setting fans too low may cause overheating. Auto mode is recommended for most users.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className="text-[11px] font-semibold" style={{ color: '#f87171' }}>Fan control unavailable</p>
+                  <p className="text-[10px] mt-0.5" style={{ color: 'rgba(248,113,113,0.5)' }}>
+                    Install and run <span className="font-bold">LibreHardwareMonitor</span> as admin to control fan speeds. Temps and readings work without it.
+                  </p>
+                  <a href="https://github.com/LibreHardwareMonitor/LibreHardwareMonitor/releases" target="_blank" rel="noreferrer"
+                    className="inline-block mt-2 text-[10px] font-bold px-3 py-1 rounded-lg" style={{ color: '#60a5fa', background: 'rgba(96,165,250,0.08)' }}>
+                    Download LibreHardwareMonitor
+                  </a>
+                </>
+              )}
             </div>
           </div>
         )}
 
         {/* Apply Button */}
         {fanMode !== 'auto' && (
-          <button onClick={handleApply} disabled={applying}
-            className="w-full py-3.5 rounded-xl text-[12px] font-bold flex items-center justify-center gap-2 btn-primary btn-press disabled:opacity-40"
-            style={{ background: '#60a5fa', color: '#000' }}>
+          <button onClick={handleApply} disabled={applying || canControlFans === false}
+            className="w-full py-3.5 rounded-xl text-[12px] font-bold flex items-center justify-center gap-2 disabled:opacity-40"
+            style={{
+              background: canControlFans === false ? 'rgba(107,114,128,0.15)' : '#60a5fa',
+              color: canControlFans === false ? 'rgba(107,114,128,0.5)' : '#000',
+              cursor: canControlFans === false ? 'not-allowed' : 'pointer',
+            }}>
             {applying ? (
               <><RotateCw className="w-4 h-4 animate-spin" /> Applying...</>
             ) : (
-              <><Fan className="w-4 h-4" /> Apply Fan Settings</>
+              <><Fan className="w-4 h-4" /> {canControlFans === false ? 'Requires LibreHardwareMonitor' : 'Apply Fan Settings'}</>
             )}
           </button>
         )}

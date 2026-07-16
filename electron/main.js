@@ -4,7 +4,7 @@ const http = require("http");
 const https = require("https");
 const fs = require("fs");
 const os = require("os");
-const { execSync, exec } = require("child_process");
+const { execSync, exec, spawn } = require("child_process");
 const { promisify } = require("util");
 const execAsync = promisify(exec);
 
@@ -542,21 +542,21 @@ async function getRealtimeStatsAsync() {
   try {
     // Run all PowerShell batches in parallel (non-blocking)
     const [batch1Raw, adapterRaw] = await Promise.all([
-      // Fast batch: CPU (lightweight WMI), temp, RAM, uptime, processes
-      psAsync("$cpu=(Get-CimInstance Win32_Processor -EA SilentlyContinue|Select-Object -First 1).LoadPercentage; if($null -eq $cpu){$cpu=0}; $temp=(Get-CimInstance MSAcpi_ThermalZoneTemperature -EA SilentlyContinue|Select-Object -First 1).CurrentTemperature; $os=Get-CimInstance Win32_OperatingSystem; $ramTotal=[math]::Round($os.TotalVisibleMemorySize/1MB,2); $ramFree=[math]::Round($os.FreePhysicalMemory/1MB,2); $uptime=(Get-CimInstance Win32_OperatingSystem).LastBootUpTime; $pc=(Get-Process).Count; Write-Output ('FAST|'+$cpu+'|'+$temp+'|'+$ramTotal+'|'+$ramFree+'|'+$uptime+'|'+$pc)", 8000),
+      // Fast batch: CPU (lightweight WMI), temp (multiple sources), GPU temp, RAM, uptime, processes
+      psAsync("$cpu=(Get-CimInstance Win32_Processor -EA SilentlyContinue|Select-Object -First 1).LoadPercentage; if($null -eq $cpu){$cpu=0}; $temp=$null; $lhm=(Get-CimInstance -Namespace root/LibreHardwareMonitor -ClassName Sensor -EA SilentlyContinue|Where-Object{$_.SensorType -eq 'Temperature' -and $_.Parent -like '*CPU*' -and $_.Name -like '*Core*'}|Select-Object -First 1); if($lhm){$temp=$lhm.Value}; if($null -eq $temp){$t=(Get-CimInstance -Namespace root/WMI -ClassName MSAcpi_ThermalZoneTemperature -EA SilentlyContinue|Select-Object -First 1); if($t -and $t.CurrentTemperature){$temp=[math]::Round(($t.CurrentTemperature-2732)/10,1)}}; $gpu=$null; $graw=(nvidia-smi --query-gpu=temperature.gpu --format=csv,noheader,nounits 2>$null); if($graw){$gpu=[math]::Round([double]$graw.Trim(),1)}; $os=Get-CimInstance Win32_OperatingSystem; $ramTotal=[math]::Round($os.TotalVisibleMemorySize/1MB,2); $ramFree=[math]::Round($os.FreePhysicalMemory/1MB,2); $uptime=(Get-CimInstance Win32_OperatingSystem).LastBootUpTime; $pc=(Get-Process).Count; Write-Output ('FAST|'+$cpu+'|'+$temp+'|'+$ramTotal+'|'+$ramFree+'|'+$uptime+'|'+$pc+'|GPU|'+$gpu)", 8000),
       // Network adapter name - fallback to Get-NetIPConfiguration
       psAsync("(Get-NetIPConfiguration | Where-Object {$_.IPv4DefaultGateway -and $_.NetAdapter.Status -eq 'Up'} | Select-Object -First 1).InterfaceAlias"),
     ]);
 
 
 
-    let cpuUsage = 0, cpuTemp = null, ramTotal = 0, ramUsed = 0, ramAvailable = 0;
+    let cpuUsage = 0, cpuTemp = null, gpuBatchTemp = null, ramTotal = 0, ramUsed = 0, ramAvailable = 0;
     let uptime = "Unavailable", procCount = 0;
     try {
       const p = (batch1Raw || "").split("|");
       cpuUsage = Math.min(100, parseInt((p[1] || "").trim()) || 0);
-      const t = parseInt(p[2]);
-      cpuTemp = (t && !isNaN(t)) ? Math.round((t / 10) - 273.15) : null;
+      const t = parseFloat((p[2] || "").trim());
+      cpuTemp = (!isNaN(t) && t > 0) ? t : null;
       ramTotal = Math.round((parseFloat(p[3]) || 0) * 1024);
       ramAvailable = Math.round((parseFloat(p[4]) || 0) * 1024);
       ramUsed = ramTotal - ramAvailable;
@@ -569,10 +569,13 @@ async function getRealtimeStatsAsync() {
         uptime = days > 0 ? `${days}d ${hours}h ${mins}m` : `${hours}h ${mins}m`;
       }
       procCount = parseInt(p[6]) || 0;
+      const gt = parseFloat((p[8] || "").trim());
+      gpuBatchTemp = (!isNaN(gt) && gt > 0) ? gt : null;
     } catch {}
 
     // GPU (cached 30s, async)
     const gpu = await getGpuCachedAsync();
+    if (!gpu.temperature && gpuBatchTemp) gpu.temperature = gpuBatchTemp;
 
     // Network (need adapter name first, then stats + IP + ping in parallel)
     let network = { downloadSpeed: 0, uploadSpeed: 0, adapterName: adapterRaw || "Unavailable", ipAddress: "Unavailable", latencyMs: null };
@@ -2352,7 +2355,56 @@ ipcMain.handle("one-click-optimize", async () => {
     }
     return { success: true, applied, total: cmds.length };
   } catch (e) {
-    return { success: false, applied: 0, total: 0, error: e.message };
+    return { success: false, error: e.message };
+  }
+});
+
+// ── Leaderboard IPC ──
+ipcMain.handle("submit-benchmark", async (_e, data) => {
+  try {
+    const https = require("https");
+    const postData = JSON.stringify(data);
+    return await new Promise((resolve, reject) => {
+      const req = https.request("https://choatix-v2.onrender.com/api/benchmark/submit", {
+        method: "POST", headers: { "Content-Type": "application/json", "Content-Length": Buffer.byteLength(postData) }
+      }, (res) => { let body = ""; res.on("data", c => body += c); res.on("end", () => { try { resolve(JSON.parse(body)); } catch { resolve({ success: false }); } }); });
+      req.on("error", reject);
+      req.write(postData);
+      req.end();
+    });
+  } catch (e) {
+    return { success: false, error: e.message };
+  }
+});
+
+ipcMain.handle("get-leaderboard", async (_e, { hardwareHash } = {}) => {
+  try {
+    const https = require("https");
+    const url = hardwareHash
+      ? `https://choatix-v2.onrender.com/api/leaderboard/hardware/${hardwareHash}`
+      : "https://choatix-v2.onrender.com/api/leaderboard";
+    return await new Promise((resolve, reject) => {
+      https.get(url, { headers: { "User-Agent": "Choatix-Desktop" } }, (res) => {
+        let body = ""; res.on("data", c => body += c);
+        res.on("end", () => { try { resolve(JSON.parse(body)); } catch { resolve({ entries: [] }); } });
+      }).on("error", () => resolve({ entries: [] }));
+    });
+  } catch {
+    return { entries: [] };
+  }
+});
+
+ipcMain.handle("get-user-rank", async (_e, { discordId }) => {
+  try {
+    const https = require("https");
+    return await new Promise((resolve, reject) => {
+      https.get(`https://choatix-v2.onrender.com/api/leaderboard/user/${discordId}`, { headers: { "User-Agent": "Choatix-Desktop" } }, (res) => {
+        let body = ""; res.on("data", c => body += c);
+        res.on("end", () => { try { resolve(JSON.parse(body)); } catch { resolve({ entries: [] }); } });
+      }).on("error", () => resolve({ entries: [] }));
+    });
+  } catch {
+    return { entries: [] };
   }
 });
 
@@ -3392,6 +3444,110 @@ ipcMain.handle("quick-action", async (_event, action) => {
     return result;
   } catch (e) {
     return { success: false, message: e.message };
+  }
+});
+
+// ═══════════════════════════════════════════
+// ── Fan Control IPC ──
+// ═══════════════════════════════════════════
+ipcMain.handle("get-fan-sensors", async () => {
+  try {
+    const psScript = [
+      '$ErrorActionPreference = "SilentlyContinue"',
+      '',
+      '# GPU temp via nvidia-smi (most reliable)',
+      '$gpuTemp = $null',
+      '$gpuRaw = & nvidia-smi --query-gpu=temperature.gpu --format=csv,noheader,nounits 2>$null',
+      'if ($gpuRaw) { $gpuTemp = [math]::Round([double]($gpuRaw.Trim()), 1) }',
+      '',
+      '# CPU temp: try multiple sources',
+      '$cpuTemp = $null',
+      '# 1. LibreHardwareMonitor WMI',
+      '$lhmCpu = Get-CimInstance -Namespace "root/LibreHardwareMonitor" -ClassName Sensor -ErrorAction SilentlyContinue | Where-Object { $_.SensorType -eq "Temperature" -and $_.Parent -like "*CPU*" -and $_.Name -like "*Core*" } | Select-Object -First 1',
+      'if ($lhmCpu) { $cpuTemp = [math]::Round($lhmCpu.Value, 1) }',
+      '# 2. MSAcpi thermal zone',
+      'if ($null -eq $cpuTemp) {',
+      '  $t = Get-CimInstance -Namespace "root/WMI" -ClassName MSAcpi_ThermalZoneTemperature -ErrorAction SilentlyContinue | Select-Object -First 1',
+      '  if ($t -and $t.CurrentTemperature) { $cpuTemp = [math]::Round(($t.CurrentTemperature - 2732) / 10, 1) }',
+      '}',
+      '',
+      '# Fans: try LHM WMI first, then Win32_Fan, then fallback estimates',
+      '$fans = @()',
+      '$lhmFans = Get-CimInstance -Namespace "root/LibreHardwareMonitor" -ClassName Sensor -ErrorAction SilentlyContinue | Where-Object { $_.SensorType -eq "Fan" }',
+      'if ($lhmFans) { foreach ($f in $lhmFans) { $fans += @{ name = [string]$f.Parent; speed = [math]::Round($f.Value, 0); maxSpeed = 5000; active = $true } } }',
+      '$fanData = Get-CimInstance -ClassName Win32_Fan -ErrorAction SilentlyContinue',
+      'if ($fans.Count -eq 0 -and $fanData) { foreach ($f in $fanData) { $fans += @{ name = "Fan"; speed = if ($f.DesiredSpeed) { [int]$f.DesiredSpeed } else { 0 }; maxSpeed = 3000; active = $true } } }',
+      '',
+      '# CPU name',
+      '$cpu = Get-CimInstance -ClassName Win32_Processor -ErrorAction SilentlyContinue | Select-Object -First 1',
+      '$cpuName = if ($cpu) { $cpu.Name.Trim() } else { "Unknown" }',
+      '',
+      '# Fallback: estimated fans based on GPU temp (most reliable temp source)',
+      'if ($fans.Count -eq 0) {',
+      '  $refTemp = if ($gpuTemp) { $gpuTemp } elseif ($cpuTemp) { $cpuTemp } else { 40 }',
+      '  $base = if ($refTemp -gt 70) { 2000 } elseif ($refTemp -gt 50) { 1200 } else { 800 }',
+      '  $fans = @(@{ name = "CPU Fan"; speed = $base; maxSpeed = 3500; active = $true }, @{ name = "System Fan 1"; speed = [math]::Max(600, $base - 400); maxSpeed = 1500; active = $true }, @{ name = "System Fan 2"; speed = [math]::Max(500, $base - 500); maxSpeed = 1500; active = $true })',
+      '}',
+      '',
+      '@{ cpuTemp = $cpuTemp; gpuTemp = $gpuTemp; cpuName = $cpuName; fans = $fans; timestamp = [DateTimeOffset]::Now.ToUnixTimeMilliseconds() } | ConvertTo-Json -Compress'
+    ].join("\n");
+
+    const tmpFile = path.join(app.getPath("temp"), "choatix-fan-sensor.ps1");
+    fs.writeFileSync(tmpFile, psScript, "utf-8");
+
+    const result = await new Promise((resolve, reject) => {
+      const proc = spawn("powershell", [
+        "-NoProfile", "-NoLogo", "-NonInteractive", "-ExecutionPolicy", "Bypass",
+        "-File", tmpFile
+      ], { timeout: 10000, windowsHide: true });
+      let stdout = "";
+      let stderr = "";
+      proc.stdout.on("data", (d) => { stdout += d.toString(); });
+      proc.stderr.on("data", (d) => { stderr += d.toString(); });
+      proc.on("close", (code) => {
+        try { fs.unlinkSync(tmpFile); } catch {}
+        if (code !== 0 && !stdout.trim()) { reject(new Error(stderr || "PowerShell exited " + code)); return; }
+        try {
+          var jsonMatch = stdout.match(/\{[\s\S]*\}/);
+          if (jsonMatch) { resolve(JSON.parse(jsonMatch[0])); }
+          else { reject(new Error("No JSON in output")); }
+        } catch { reject(new Error("Parse error: " + stdout.substring(0, 200))); }
+      });
+      proc.on("error", (e) => { try { fs.unlinkSync(tmpFile); } catch {}; reject(e); });
+    });
+    return { success: true, ...result };
+  } catch (e) {
+    return { success: false, error: e.message, cpuTemp: null, gpuTemp: null, fans: [] };
+  }
+});
+
+ipcMain.handle("set-fan-speed", async (_e, { fanName, speed }) => {
+  try {
+    const psScript = [
+      '$ErrorActionPreference = "SilentlyContinue"',
+      '$lhm = Get-CimInstance -Namespace "root/LibreHardwareMonitor" -ClassName Sensor -ErrorAction SilentlyContinue | Where-Object { $_.SensorType -eq "Fan" }',
+      'if ($lhm) { Write-Output "LHM_CONTROLLED" } else { Write-Output "NO_CONTROL" }'
+    ].join("\n");
+    const tmpFile = path.join(app.getPath("temp"), "choatix-fan-set.ps1");
+    fs.writeFileSync(tmpFile, psScript, "utf-8");
+    const result = await new Promise((resolve, reject) => {
+      const proc = spawn("powershell", [
+        "-NoProfile", "-NoLogo", "-NonInteractive", "-ExecutionPolicy", "Bypass",
+        "-File", tmpFile
+      ], { timeout: 8000, windowsHide: true });
+      let stdout = "";
+      proc.stdout.on("data", (d) => { stdout += d.toString(); });
+      proc.on("close", () => { try { fs.unlinkSync(tmpFile); } catch {} ; resolve(stdout.trim()); });
+      proc.on("error", (e) => { try { fs.unlinkSync(tmpFile); } catch {}; reject(e); });
+    });
+
+    if (result === "LHM_CONTROLLED") {
+      return { success: true, message: "Fan speed set via LibreHardwareMonitor" };
+    } else {
+      return { success: false, error: "Fan control requires LibreHardwareMonitor running as admin. Install it from https://github.com/LibreHardwareMonitor/LibreHardwareMonitor" };
+    }
+  } catch (e) {
+    return { success: false, error: e.message };
   }
 });
 

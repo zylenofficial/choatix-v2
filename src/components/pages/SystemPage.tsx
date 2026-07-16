@@ -1,23 +1,21 @@
 'use client'
 
 import { useState } from 'react'
-import { Search, BarChart3, Activity, BookOpen, Timer, Cpu, Gamepad2 } from 'lucide-react'
+import { Search, BarChart3, Activity, Timer, Cpu, Gamepad2 } from 'lucide-react'
 import { DiagnosticsPage } from './DiagnosticsPage'
 import { BenchmarkPage } from './BenchmarkPage'
 import { LiveOverlayPage } from './LiveOverlayPage'
-import { BIOSGuidePage } from './BIOSGuidePage'
 import { TimerResolutionPage } from './TimerResolutionPage'
 import { ProcessOptimizerPage } from './ProcessOptimizerPage'
 import { FpsComparisonPage } from './FpsComparisonPage'
 
-type Tab = 'diagnostics' | 'benchmark' | 'fps' | 'monitor' | 'bios' | 'timer' | 'process'
+type Tab = 'diagnostics' | 'benchmark' | 'fps' | 'monitor' | 'timer' | 'process'
 
 const TABS: { id: Tab; label: string; icon: any }[] = [
   { id: 'diagnostics', label: 'Diagnostics', icon: Search },
   { id: 'benchmark', label: 'Benchmark', icon: BarChart3 },
   { id: 'fps', label: 'FPS Compare', icon: Gamepad2 },
   { id: 'monitor', label: 'Live Monitor', icon: Activity },
-  { id: 'bios', label: 'BIOS Guide', icon: BookOpen },
   { id: 'timer', label: 'Timer', icon: Timer },
   { id: 'process', label: 'Processes', icon: Cpu },
 ]
@@ -51,7 +49,6 @@ export function SystemPage() {
         {tab === 'benchmark' && <BenchmarkPage />}
         {tab === 'fps' && <FpsComparisonPage />}
         {tab === 'monitor' && <LiveOverlayPage />}
-        {tab === 'bios' && <BIOSGuidePage />}
         {tab === 'timer' && <TimerResolutionPage />}
         {tab === 'process' && <ProcessOptimizerPage />}
       </div>

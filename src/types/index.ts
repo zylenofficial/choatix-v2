@@ -52,6 +52,11 @@ declare global {
       sendFeedback: (feedback: FeedbackData) => Promise<{ success: boolean; error?: string }>
       onSaveStateRequest: (cb: () => void) => void
       sendUpdateNotification: (data: { version: string; changes: string[] }) => Promise<{ success: boolean; error?: string }>
+      getFanSensors: () => Promise<{ success: boolean; cpuTemp: number | null; gpuTemp: number | null; fans: { name: string; speed: number; maxSpeed: number; active: boolean }[]; error?: string }>
+      setFanSpeed: (fanName: string, speed: number) => Promise<{ success: boolean; message?: string; error?: string }>
+      submitBenchmark: (data: any) => Promise<{ success: boolean; error?: string }>
+      getLeaderboard: (opts?: { hardwareHash?: string }) => Promise<{ entries: any[] }>
+      getUserRank: (discordId: string) => Promise<{ entries: any[] }>
       isElectron: boolean
     }
   }

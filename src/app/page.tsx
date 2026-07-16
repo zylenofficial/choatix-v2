@@ -18,6 +18,7 @@ const GamesPage = dynamic(() => import('@/components/pages/GamesPage').then(m =>
 const SystemPage = dynamic(() => import('@/components/pages/SystemPage').then(m => ({ default: m.SystemPage })), { ssr: false })
 const SettingsPage = dynamic(() => import('@/components/pages/SettingsPage').then(m => ({ default: m.SettingsPage })), { ssr: false })
 const FanControlPage = dynamic(() => import('@/components/pages/FanControlPage').then(m => ({ default: m.FanControlPage })), { ssr: false })
+const LeaderboardPage = dynamic(() => import('@/components/pages/LeaderboardPage').then(m => ({ default: m.LeaderboardPage })), { ssr: false })
 
 const PAGES: Record<Page, React.ComponentType> = {
   home: DashboardPage,
@@ -28,7 +29,7 @@ const PAGES: Record<Page, React.ComponentType> = {
   games: GamesPage,
   system: SystemPage,
   settings: SettingsPage,
-  'fan-control': FanControlPage,
+  leaderboard: LeaderboardPage,
 }
 
 export default function Home() {
