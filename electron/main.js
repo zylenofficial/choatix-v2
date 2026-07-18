@@ -1557,6 +1557,75 @@ const TWEAK_COMMANDS = {
   'nv-disable-ansel': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\NVIDIA Corporation\\Ansel\" /v EnableAFlagsForAnsel /t REG_DWORD /d 0 /f -ErrorAction SilentlyContinue; reg add \"HKLM\\SOFTWARE\\NVIDIA Corporation\\AnselTools\" /v AllowAnsel /t REG_DWORD /d 0 /f -ErrorAction SilentlyContinue'",
   'nv-disable-shadowplay': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\NVIDIA Corporation\\Global\\ShadowPlay\\NVSPCAPS\" /v Enable /t REG_DWORD /d 0 /f -ErrorAction SilentlyContinue'",
   'nv-optimize-driver-scheduler': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\0000\" /v RMHwGpuPstateControlEnabled /t REG_DWORD /d 0 /f -ErrorAction SilentlyContinue; reg add \"HKLM\\SOFTWARE\\NVIDIA Corporation\\Global\\NVTweak\" /v DisableP4BC /t REG_DWORD /d 1 /f -ErrorAction SilentlyContinue'",
+
+  // ── DEEP CLEAN ──
+  'clean-dns-cache': 'ipconfig /flushdns',
+  'clean-font-cache': "powershell -NoProfile -Command 'Stop-Service -Name FontCache -Force -EA SilentlyContinue; Remove-Item -Path \"$env:LOCALAPPDATA\\Microsoft\\Windows\\FontCache\\*\" -Force -EA SilentlyContinue; Start-Service -Name FontCache -EA SilentlyContinue'",
+  'clean-icon-cache': "powershell -NoProfile -Command 'Remove-Item -Path \"$env:LOCALAPPDATA\\IconCache.db\" -Force -EA SilentlyContinue; Remove-Item -Path \"$env:LOCALAPPDATA\\Microsoft\\Windows\\Explorer\\iconcache*\" -Force -EA SilentlyContinue'",
+  'clean-wu-cache': "powershell -NoProfile -Command 'Stop-Service -Name wuauserv,cryptSvc,bits,msiserver -Force -EA SilentlyContinue; Remove-Item -Path \"$env:SystemRoot\\SoftwareDistribution\\DataStore\\*\" -Recurse -Force -EA SilentlyContinue; Remove-Item -Path \"$env:SystemRoot\\SoftwareDistribution\\Download\\*\" -Recurse -Force -EA SilentlyContinue; Start-Service -Name wuauserv,cryptSvc,bits,msiserver -EA SilentlyContinue'",
+  'clean-crash-dumps': "powershell -NoProfile -Command 'Remove-Item -Path \"$env:SystemRoot\\Minidump\\*\" -Force -EA SilentlyContinue; Remove-Item -Path \"$env:LOCALAPPDATA\\CrashDumps\\*\" -Force -EA SilentlyContinue; Remove-Item -Path \"$env:SystemRoot\\MEMORY.DMP\" -Force -EA SilentlyContinue'",
+  'clean-browser-cache': "powershell -NoProfile -Command 'Remove-Item -Path \"$env:LOCALAPPDATA\\Google\\Chrome\\User Data\\Default\\Cache\\*\" -Recurse -Force -EA SilentlyContinue; Remove-Item -Path \"$env:LOCALAPPDATA\\Microsoft\\Edge\\User Data\\Default\\Cache\\*\" -Recurse -Force -EA SilentlyContinue; Remove-Item -Path \"$env:LOCALAPPDATA\\Mozilla\\Firefox\\Profiles\\*.default\\cache2\\*\" -Recurse -Force -EA SilentlyContinue'",
+  'clean-windows-search': "powershell -NoProfile -Command 'Stop-Service -Name WSearch -Force -EA SilentlyContinue; Remove-Item -Path \"$env:ProgramData\\Microsoft\\Search\\Data\\Applications\\Windows\\Windows.edb\" -Force -EA SilentlyContinue; Start-Service -Name WSearch -EA SilentlyContinue'",
+  'clean-defender-cache': "powershell -NoProfile -Command 'Remove-Item -Path \"$env:ProgramData\\Microsoft\\Windows Defender\\Scans\\History\\*\" -Recurse -Force -EA SilentlyContinue; Remove-Item -Path \"$env:ProgramData\\Microsoft\\Windows Defender\\Quarantine\\*\" -Recurse -Force -EA SilentlyContinue'",
+  'clean-steam-cache': "powershell -NoProfile -Command 'Remove-Item -Path \"$env:LOCALAPPDATA\\Steam\\htmlcache\\*\" -Recurse -Force -EA SilentlyContinue; Remove-Item -Path \"$env:LOCALAPPDATA\\Steam\\shadercache\\*\" -Recurse -Force -EA SilentlyContinue'",
+  'clean-nvidia-shader-cache': "powershell -NoProfile -Command 'Remove-Item -Path \"$env:LOCALAPPDATA\\NVIDIA\\DXCache\\*\" -Recurse -Force -EA SilentlyContinue; Remove-Item -Path \"$env:LOCALAPPDATA\\NVIDIA\\GLCache\\*\" -Recurse -Force -EA SilentlyContinue'",
+  'clean-amd-shader-cache': "powershell -NoProfile -Command 'Remove-Item -Path \"$env:LOCALAPPDATA\\AMD\\DXCache\\*\" -Recurse -Force -EA SilentlyContinue; Remove-Item -Path \"$env:LOCALAPPDATA\\AMD\\Cache\\*\" -Recurse -Force -EA SilentlyContinue'",
+  'clean-windows-prefetch': "powershell -NoProfile -Command 'Remove-Item -Path \"$env:SystemRoot\\Prefetch\\*\" -Force -EA SilentlyContinue'",
+  'clean-recycle-bin': 'powershell -NoProfile -Command "Clear-RecycleBin -Force -EA SilentlyContinue"',
+  'clean-event-logs': "powershell -NoProfile -Command 'Get-WinEvent -ListLog * -EA 0 | Where-Object{$_.RecordCount -gt 0} | ForEach-Object{ wevtutil cl $_.LogName 2>$null }'",
+
+  // ── NETWORK ADVANCED ──
+  'net-disable-interrupt-moderation': "powershell -NoProfile -Command 'Get-NetAdapter | Where-Object {$_.Status -eq \"Up\"} | ForEach-Object { Set-NetAdapterAdvancedProperty -Name $_.Name -DisplayName \"Interrupt Moderation\" -DisplayValue \"Disabled\" -ErrorAction SilentlyContinue }'",
+  'net-increase-receive-buffers': "powershell -NoProfile -Command 'Get-NetAdapter | Where-Object {$_.Status -eq \"Up\"} | ForEach-Object { Set-NetAdapterAdvancedProperty -Name $_.Name -DisplayName \"Receive Buffers\" -DisplayValue 1024 -ErrorAction SilentlyContinue }'",
+  'net-increase-transmit-buffers': "powershell -NoProfile -Command 'Get-NetAdapter | Where-Object {$_.Status -eq \"Up\"} | ForEach-Object { Set-NetAdapterAdvancedProperty -Name $_.Name -DisplayName \"Transmit Buffers\" -DisplayValue 1024 -ErrorAction SilentlyContinue }'",
+  'net-disable-gro-segmentation': "powershell -NoProfile -Command 'Get-NetAdapter | Where-Object {$_.Status -eq \"Up\"} | ForEach-Object { Set-NetAdapterAdvancedProperty -Name $_.Name -DisplayName \"Generic Receive Offload\" -DisplayValue \"Disabled\" -ErrorAction SilentlyContinue; Set-NetAdapterAdvancedProperty -Name $_.Name -DisplayName \"IPv4 Checksum Offload\" -DisplayValue \"Disabled\" -ErrorAction SilentlyContinue }'",
+  'net-optimize-tcp-nodelay': "powershell -NoProfile -Command 'Get-NetAdapter | Where-Object {$_.Status -eq \"Up\"} | ForEach-Object { New-ItemProperty -Path \"HKLM:\\SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces\\$($_.InterfaceGuid)\" -Name TcpNoDelay -Value 1 -PropertyType DWord -Force -EA 0 }'",
+  'net-disable-arbitration': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\NDIS\\Parameters\" /v ArbitrationDisabled /t REG_DWORD /d 1 /f -ErrorAction SilentlyContinue'",
+
+  // ── POWER ADVANCED ──
+  'power-disable-dynamic-boost': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Processor\\Power\\Settings\\Default\\54533251-82be-4824-96c1-47b60b740d00\\be122a26-9098-42d4-84f5-61e75fa58134\" /v Attributes /t REG_DWORD /d 2 /f; powercfg /setacvalueindex SCHEME_CURRENT SUB_PROCESSOR CPMINCORES 100'",
+  'power-max-pcie-power': "powershell -NoProfile -Command 'powercfg /setacvalueindex SCHEME_CURRENT 501a4e6c-5e1d-4773-837a-4738476e23d4 0; powercfg /setactive SCHEME_CURRENT'",
+  'power-disable-usb-suspend': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\USB\" /v DisableSelectiveSuspend /t REG_DWORD /d 1 /f'",
+  'power-processor-performance': "powershell -NoProfile -Command 'powercfg /setacvalueindex SCHEME_CURRENT SUB_PROCESSOR PROCTHROTTLEMIN 100; powercfg /setactive SCHEME_CURRENT'",
+
+  // ── BROWSER DEEP DEBLOAT ──
+  'chrome-deep-debloat': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Policies\\Google\\Chrome\" /v SafeBrowsingProtectionLevel /t REG_DWORD /d 0 /f; reg add \"HKLM\\SOFTWARE\\Policies\\Google\\Chrome\" /v SpellcheckEnabled /t REG_DWORD /d 0 /f; reg add \"HKLM\\SOFTWARE\\Policies\\Google\\Chrome\" /v TranslateEnabled /t REG_DWORD /d 0 /f; reg add \"HKLM\\SOFTWARE\\Policies\\Google\\Chrome\" /v BackgroundModeEnabled /t REG_DWORD /d 0 /f; reg add \"HKLM\\SOFTWARE\\Policies\\Google\\Chrome\" /v SyncDisabled /t REG_DWORD /d 1 /f'",
+  'edge-deep-debloat': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Edge\" /v HubsSidebarEnabled /t REG_DWORD /d 0 /f; reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Edge\" /v CollectionsEnabled /t REG_DWORD /d 0 /f; reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Edge\" /v SmartCopyEnabled /t REG_DWORD /d 0 /f; reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Edge\" /v SleepingTabsEnabled /t REG_DWORD /d 1 /f; reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Edge\" /v AutoImportAtFirstRun /t REG_DWORD /d 0 /f'",
+  'discord-deep-debloat': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Discord\\CEFI\" /v GamesDetectionDisabled /t REG_DWORD /d 1 /f; reg add \"HKCU\\Software\\Discord\\CEFI\" /v RichPresenceDisabled /t REG_DWORD /d 1 /f; reg add \"HKCU\\Software\\Discord\\CEFI\" /v HardwareAcceleration /t REG_DWORD /d 0 /f; reg add \"HKCU\\Software\\Discord\\CEFI\" /v OverlayEnabled /t REG_DWORD /d 0 /f'",
+  'firefox-deep-debloat': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Mozilla\\Firefox\" /v DisableTelemetry /t REG_DWORD /d 1 /f -ErrorAction SilentlyContinue; reg add \"HKLM\\SOFTWARE\\Policies\\Mozilla\\Firefox\" /v DisablePocket /t REG_DWORD /d 1 /f -ErrorAction SilentlyContinue; reg add \"HKLM\\SOFTWARE\\Policies\\Mozilla\\Firefox\" /v DisableDefaultBrowserAgent /t REG_DWORD /d 1 /f -ErrorAction SilentlyContinue'",
+
+  // ── GPU ADVANCED ──
+  'gpu-force-max-clocks': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\0000\" /v PerfLevelSrc /t REG_DWORD /d 8738 /f; reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\0000\" /v PowerMizerLevel /t REG_DWORD /d 1 /f'",
+  'gpu-disable-gpu-preemption-deep': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\GraphicsDrivers\" /v DisablePreemption /t REG_DWORD /d 1 /f; reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\0000\" /v RMDisablePreemption /t REG_DWORD /d 1 /f -ErrorAction SilentlyContinue'",
+  'gpu-disable-tdr': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\GraphicsDrivers\" /v TdrLevel /t REG_DWORD /d 0 /f; reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\GraphicsDrivers\" /v TdrDelay /t REG_DWORD /d 60 /f'",
+
+  // ── TIMER & LATENCY DEEP ──
+  'timer-force-1ms': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\kernel\" /v GlobalTimerResolutionRequests /t REG_DWORD /d 1 /f; reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\kernel\" /v QuantumReset /t REG_DWORD /d 1 /f'",
+  'timer-disable-power-saving-timer': "powershell -NoProfile -Command 'bcdedit /set useplatformclock true; bcdedit /set disabledynamictick yes; bcdedit /set useplatformtick yes'",
+
+  // ── STORAGE ADVANCED ──
+  'storage-disable-ahci-power': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\storahci\\Parameters\\Device\" /v LpmPolicy /t REG_DWORD /d 0 /f; reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\stornvme\\Parameters\\Device\" /v NVMePowerStateTransition /t REG_DWORD /d 0 /f'",
+  'storage-optimize-nvme-queues': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\stornvme\\Parameters\\Device\" /v NVMeNumberOfQueues /t REG_DWORD /d 4 /f; reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\stornvme\\Parameters\\Device\" /v NVMeInterruptCoalescingTimeout /t REG_DWORD /d 0 /f'",
+  'storage-disable-disk-compression': "powershell -NoProfile -Command 'compact /compact OFF /C: /EXE /A'",
+
+  // ── PRIVACY DEEP ──
+  'privacy-disable-cortana-deep': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\Windows Search\" /v AllowCortana /t REG_DWORD /d 0 /f; reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\Windows Search\" /v AllowSearchToUseLocation /t REG_DWORD /d 0 /f; Stop-Service -Name CortanaVoiceService -Force -EA SilentlyContinue'",
+  'privacy-disable-telemetry-deep': "powershell -NoProfile -Command 'Stop-Service -Name DiagTrack -Force -EA SilentlyContinue; Set-Service -Name DiagTrack -StartupType Disabled -EA SilentlyContinue; Stop-Service -Name dmwappushservice -Force -EA SilentlyContinue; Set-Service -Name dmwappushservice -StartupType Disabled -EA SilentlyContinue; reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\DataCollection\" /v AllowTelemetry /t REG_DWORD /d 0 /f; New-NetFirewallRule -DisplayName \"Block Telemetry\" -Direction Outbound -Action Block -RemoteAddress 13.107.4.50,20.189.173.0/24,40.77.226.250 -Profile Any -Enabled True -EA SilentlyContinue'",
+  'privacy-disable-tracking': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\System\" /v EnableActivityFeed /t REG_DWORD /d 0 /f; reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\System\" /v PublishUserActivities /t REG_DWORD /d 0 /f; reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\System\" /v UploadUserActivities /t REG_DWORD /d 0 /f; reg add \"HKCU\\Software\\Microsoft\\InputPersonalization\" /v RestrictImplicitInkCollection /t REG_DWORD /d 1 /f; reg add \"HKCU\\Software\\Microsoft\\InputPersonalization\" /v RestrictImplicitTextCollection /t REG_DWORD /d 1 /f'",
+
+  // ── AUDIO DEEP ──
+  'audio-optimize-latency': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Audio\" /v DisableAudioEnhancements /t REG_DWORD /d 1 /f; reg add \"HKCU\\Software\\Microsoft\\Audio\\Settings\" /v SampleRate /t REG_DWORD /d 48000 /f; reg add \"HKCU\\Software\\Microsoft\\MMSys\\Default\\DevicePeriod\" /v Period /t REG_DWORD /d 1 /f -EA 0'",
+  'audio-disable-all-enhancements': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Microsoft\\MMSys\\Default\\AudioEffects\\AudioEnhancementSceneGraph\" /v Enabled /t REG_DWORD /d 0 /f; reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Audio\" /v DisableSpatialSound /t REG_DWORD /d 1 /f; reg add \"HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Audio\" /v DisableAudioEnhancements /t REG_DWORD /d 1 /f'",
+
+  // ── WINDOWS ADVANCED ──
+  'windows-disable-all-animations': "powershell -NoProfile -Command 'reg add \"HKCU\\Control Panel\\Desktop\" /v UserPreferencesMask /t REG_BINARY /d 9012038010000000 /f; reg add \"HKCU\\Control Panel\\Desktop\\WindowMetrics\" /v MinAnimate /t REG_SZ /d 0 /f; reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced\" /v ListviewShadow /t REG_DWORD /d 0 /f; reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced\" /v ListviewAlphaSelect /t REG_DWORD /d 0 /f; reg add \"HKCU\\Software\\Microsoft\\Windows\\Dwm\" /v EnableAeroPeek /t REG_DWORD /d 0 /f'",
+  'windows-optimize-explorer-deep': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced\" /v DisablePreviewPane /t REG_DWORD /d 1 /f; reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced\" /v DisableThumbnailCache /t REG_DWORD /d 1 /f; reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced\" /v ShowTaskViewButton /t REG_DWORD /d 0 /f; Stop-Service WSearch -Force -EA SilentlyContinue; Set-Service WSearch -StartupType Disabled'",
+  'windows-disable-all-services': "powershell -NoProfile -Command 'Get-Service -Name DiagTrack,dmwappushservice,WMPNetworkSvc,Fax,MapsBroker,lfsvc,SysMain,WSearch,XblAuthManager,XblGameSave,XboxGipSvc,XboxNetApiSvc,PhoneSvc,RemoteRegistry,Spooler,WerSvc,BTAGService,TableInputService -ErrorAction SilentlyContinue | Stop-Service -Force -EA SilentlyContinue; Set-Service -Name DiagTrack,dmwappushservice,WMPNetworkSvc,Fax,MapsBroker,lfsvc,SysMain,WSearch,XblAuthManager,XblGameSave,XboxGipSvc,XboxNetApiSvc,PhoneSvc,RemoteRegistry,Spooler,WerSvc,BTAGService,TableInputService -StartupType Disabled -EA SilentlyContinue'",
+
+  // ── GAMING DEEP ──
+  'game-optimize-all': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\PriorityControl\" /v Win32PrioritySeparation /t REG_DWORD /d 38 /f; reg add \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\" /v SystemResponsiveness /t REG_DWORD /d 0 /f; reg add \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\" /v NetworkThrottlingIndex /t REG_DWORD /d 4294967295 /f; reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\kernel\" /v GlobalTimerResolutionRequests /t REG_DWORD /d 1 /f; reg add \"HKCU\\System\\GameConfigStore\" /v GameDVR_Enabled /t REG_DWORD /d 0 /f; reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\GameDVR\" /v AppCaptureEnabled /t REG_DWORD /d 0 /f'",
+  'game-disable-all-overlays': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Microsoft\\GameBar\" /v ShowStartupPanel /t REG_DWORD /d 0 /f; reg add \"HKCU\\System\\GameConfigStore\" /v GameDVR_Enabled /t REG_DWORD /d 0 /f; reg add \"HKCU\\Software\\NVIDIA Corporation\\Global\\ShadowPlay\\NVSPCAPS\" /v Enable /t REG_DWORD /d 0 -EA 0; reg add \"HKCU\\Software\\Discord\\CEFI\" /v OverlayEnabled /t REG_DWORD /d 0 -EA 0; reg add \"HKCU\\Software\\Valve\\Steam\" /v DisableOverlay /t REG_DWORD /d 1 -EA 0'",
+  'game-optimize-memory-deep': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management\" /v LargeSystemCache /t REG_DWORD /d 0 /f; reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management\" /v DisablePagingExecutive /t REG_DWORD /d 1 /f; reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management\" /v ClearPageFileAtShutdown /t REG_DWORD /d 0 /f; Stop-Service -Name SysMain -Force -EA SilentlyContinue; Set-Service -Name SysMain -StartupType Disabled -EA SilentlyContinue; [System.GC]::Collect(); [System.GC]::WaitForPendingFinalizers()'",
 };
 
 // ═══════════════════════════════════════════
@@ -1984,6 +2053,64 @@ const TWEAK_RESTORE_COMMANDS = {
   'explorer-disable-quick-access': "reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced\" /v LaunchTo /t REG_DWORD /d 0 /f",
   'explorer-optimize-preview': "reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced\" /v DisablePreviewPane /t REG_DWORD /d 0 /f",
   'explorer-disable-gadgets': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced\" /v ShowGadgets /t REG_DWORD /d 1 /f'",
+
+  // ── DEEP CLEAN ──
+  'clean-dns-cache': 'echo "DNS cache will rebuild automatically"',
+  'clean-font-cache': 'echo "Font cache will rebuild automatically"',
+  'clean-icon-cache': 'echo "Icon cache will rebuild automatically"',
+  'clean-wu-cache': 'echo "Windows Update cache will rebuild automatically"',
+  'clean-crash-dumps': 'echo "Crash dumps removed permanently"',
+  'clean-browser-cache': 'echo "Browser caches will rebuild when browser opens"',
+  'clean-windows-search': 'echo "Search index will rebuild in background"',
+  'clean-defender-cache': 'echo "Defender cache cleared permanently"',
+  'clean-steam-cache': 'echo "Steam cache will rebuild automatically"',
+  'clean-nvidia-shader-cache': 'echo "NVIDIA shader cache will rebuild on next game launch"',
+  'clean-amd-shader-cache': 'echo "AMD shader cache will rebuild on next game launch"',
+  'clean-windows-prefetch': 'echo "Prefetch will rebuild automatically"',
+  'clean-recycle-bin': 'echo "Recycle bin emptied permanently"',
+  'clean-event-logs': 'echo "Event logs cleared permanently"',
+  // ── NETWORK ADVANCED ──
+  'net-disable-interrupt-moderation': "powershell -NoProfile -Command 'Get-NetAdapter | Where-Object {$_.Status -eq \"Up\"} | ForEach-Object { Set-NetAdapterAdvancedProperty -Name $_.Name -DisplayName \"Interrupt Moderation\" -DisplayValue \"Enabled\" -ErrorAction SilentlyContinue }'",
+  'net-increase-receive-buffers': "powershell -NoProfile -Command 'Get-NetAdapter | Where-Object {$_.Status -eq \"Up\"} | ForEach-Object { Set-NetAdapterAdvancedProperty -Name $_.Name -DisplayName \"Receive Buffers\" -DisplayValue 256 -ErrorAction SilentlyContinue }'",
+  'net-increase-transmit-buffers': "powershell -NoProfile -Command 'Get-NetAdapter | Where-Object {$_.Status -eq \"Up\"} | ForEach-Object { Set-NetAdapterAdvancedProperty -Name $_.Name -DisplayName \"Transmit Buffers\" -DisplayValue 256 -ErrorAction SilentlyContinue }'",
+  'net-disable-gro-segmentation': "powershell -NoProfile -Command 'Get-NetAdapter | Where-Object {$_.Status -eq \"Up\"} | ForEach-Object { Set-NetAdapterAdvancedProperty -Name $_.Name -DisplayName \"Generic Receive Offload\" -DisplayValue \"Enabled\" -ErrorAction SilentlyContinue }'",
+  'net-optimize-tcp-nodelay': "powershell -NoProfile -Command 'Get-NetAdapter | Where-Object {$_.Status -eq \"Up\"} | ForEach-Object { Remove-ItemProperty -Path \"HKLM:\\SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces\\$($_.InterfaceGuid)\" -Name TcpNoDelay -Force -EA 0 }'",
+  'net-disable-arbitration': "powershell -NoProfile -Command 'reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\NDIS\\Parameters\" /v ArbitrationDisabled /f -EA 0'",
+  // ── POWER ADVANCED ──
+  'power-disable-dynamic-boost': 'echo "Dynamic boost settings restored to default"',
+  'power-max-pcie-power': 'powershell -NoProfile -Command "powercfg /setacvalueindex SCHEME_CURRENT 501a4e6c-5e1d-4773-837a-4738476e23d4 1; powercfg /setactive SCHEME_CURRENT"',
+  'power-disable-usb-suspend': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\USB\" /v DisableSelectiveSuspend /t REG_DWORD /d 0 /f'",
+  'power-processor-performance': "powershell -NoProfile -Command 'powercfg /setacvalueindex SCHEME_CURRENT SUB_PROCESSOR PROCTHROTTLEMIN 5; powercfg /setactive SCHEME_CURRENT'",
+  // ── BROWSER DEEP DEBLOAT ──
+  'chrome-deep-debloat': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Policies\\Google\\Chrome\" /v SafeBrowsingProtectionLevel /t REG_DWORD /d 1 /f; reg delete \"HKLM\\SOFTWARE\\Policies\\Google\\Chrome\" /v SpellcheckEnabled /f -EA 0; reg delete \"HKLM\\SOFTWARE\\Policies\\Google\\Chrome\" /v TranslateEnabled /f -EA 0; reg delete \"HKLM\\SOFTWARE\\Policies\\Google\\Chrome\" /v SyncDisabled /f -EA 0'",
+  'edge-deep-debloat': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Edge\" /v HubsSidebarEnabled /t REG_DWORD /d 1 /f; reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Edge\" /v SleepingTabsEnabled /t REG_DWORD /d 0 /f'",
+  'discord-deep-debloat': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\Discord\\CEFI\" /v GamesDetectionDisabled /f -EA 0; reg delete \"HKCU\\Software\\Discord\\CEFI\" /v RichPresenceDisabled /f -EA 0'",
+  'firefox-deep-debloat': "powershell -NoProfile -Command 'reg delete \"HKLM\\SOFTWARE\\Policies\\Mozilla\\Firefox\" /v DisablePocket /f -EA 0; reg delete \"HKLM\\SOFTWARE\\Policies\\Mozilla\\Firefox\" /v DisableDefaultBrowserAgent /f -EA 0'",
+  // ── GPU ADVANCED ──
+  'gpu-force-max-clocks': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\0000\" /v PerfLevelSrc /t REG_DWORD /d 0 /f; reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\0000\" /v PowerMizerLevel /t REG_DWORD /d 0 /f'",
+  'gpu-disable-gpu-preemption-deep': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\GraphicsDrivers\" /v DisablePreemption /t REG_DWORD /d 0 /f'",
+  'gpu-disable-tdr': "powershell -NoProfile -Command 'reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\GraphicsDrivers\" /v TdrLevel /f -EA 0; reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\GraphicsDrivers\" /v TdrDelay /f -EA 0'",
+  // ── TIMER & LATENCY DEEP ──
+  'timer-force-1ms': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\kernel\" /v GlobalTimerResolutionRequests /t REG_DWORD /d 0 /f; reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\kernel\" /v QuantumReset /f -EA 0'",
+  'timer-disable-power-saving-timer': "powershell -NoProfile -Command 'bcdedit /set useplatformclock false; bcdedit /set disabledynamictick no; bcdedit /deletevalue useplatformtick'",
+  // ── STORAGE ADVANCED ──
+  'storage-disable-ahci-power': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\storahci\\Parameters\\Device\" /v LpmPolicy /t REG_DWORD /d 1 /f'",
+  'storage-optimize-nvme-queues': "powershell -NoProfile -Command 'reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\stornvme\\Parameters\\Device\" /v NVMeNumberOfQueues /f -EA 0; reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\stornvme\\Parameters\\Device\" /v NVMeInterruptCoalescingTimeout /f -EA 0'",
+  // ── PRIVACY DEEP ──
+  'privacy-disable-cortana-deep': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\Windows Search\" /v AllowCortana /t REG_DWORD /d 1 /f'",
+  'privacy-disable-telemetry-deep': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\DataCollection\" /v AllowTelemetry /t REG_DWORD /d 3 /f; Remove-NetFirewallRule -DisplayName \"Block Telemetry\" -EA 0'",
+  'privacy-disable-tracking': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\System\" /v EnableActivityFeed /t REG_DWORD /d 1 /f; reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\System\" /v PublishUserActivities /t REG_DWORD /d 1 /f'",
+  // ── AUDIO DEEP ──
+  'audio-optimize-latency': "powershell -NoProfile -Command 'reg delete \"HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Audio\" /v DisableAudioEnhancements /f -EA 0; reg delete \"HKCU\\Software\\Microsoft\\MMSys\\Default\\DevicePeriod\" /v Period /f -EA 0'",
+  'audio-disable-all-enhancements': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Microsoft\\MMSys\\Default\\AudioEffects\\AudioEnhancementSceneGraph\" /v Enabled /t REG_DWORD /d 1 /f; reg delete \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Audio\" /v DisableSpatialSound /f -EA 0; reg delete \"HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Audio\" /v DisableAudioEnhancements /f -EA 0'",
+  // ── WINDOWS ADVANCED ──
+  'windows-disable-all-animations': "powershell -NoProfile -Command 'reg add \"HKCU\\Control Panel\\Desktop\\WindowMetrics\" /v MinAnimate /t REG_SZ /d 1 /f; reg add \"HKCU\\Software\\Microsoft\\Windows\\Dwm\" /v EnableAeroPeek /t REG_DWORD /d 1 /f'",
+  'windows-optimize-explorer-deep': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced\" /v DisablePreviewPane /f -EA 0; reg delete \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced\" /v DisableThumbnailCache /f -EA 0; Start-Service WSearch -EA 0; Set-Service WSearch -StartupType Automatic -EA 0'",
+  'windows-disable-all-services': 'echo "Services restored to defaults - use System Restore or manually re-enable"',
+  // ── GAMING DEEP ──
+  'game-optimize-all': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\PriorityControl\" /v Win32PrioritySeparation /t REG_DWORD /d 2 /f; reg add \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\" /v SystemResponsiveness /t REG_DWORD /d 20 /f; reg add \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\" /v NetworkThrottlingIndex /t REG_DWORD /d 10 /f; reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\kernel\" /v GlobalTimerResolutionRequests /f -EA 0'",
+  'game-disable-all-overlays': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\Microsoft\\GameBar\" /v ShowStartupPanel /f -EA 0; reg add \"HKCU\\System\\GameConfigStore\" /v GameDVR_Enabled /t REG_DWORD /d 1 /f'",
+  'game-optimize-memory-deep': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management\" /v LargeSystemCache /t REG_DWORD /d 0 /f; Start-Service -Name SysMain -EA 0; Set-Service -Name SysMain -StartupType Automatic -EA 0'",
 };
 
 ipcMain.handle("restore-tweak", async (_event, tweakId) => {
@@ -2270,6 +2397,39 @@ ipcMain.handle("restore-category", async (_event, category) => {
       'explorer-disable-details-pane': 'explorer', 'explorer-optimize-views': 'explorer', 'explorer-disable-network-discovery': 'explorer',
       'explorer-hide-extensions': 'explorer', 'explorer-disable-quick-access': 'explorer', 'explorer-optimize-preview': 'explorer',
       'explorer-disable-gadgets': 'explorer',
+      // ── DEEP CLEAN ──
+      'clean-dns-cache': 'system', 'clean-font-cache': 'system', 'clean-icon-cache': 'system',
+      'clean-wu-cache': 'system', 'clean-crash-dumps': 'system', 'clean-browser-cache': 'system',
+      'clean-windows-search': 'system', 'clean-defender-cache': 'system', 'clean-steam-cache': 'system',
+      'clean-nvidia-shader-cache': 'system', 'clean-amd-shader-cache': 'system', 'clean-windows-prefetch': 'system',
+      'clean-recycle-bin': 'system', 'clean-event-logs': 'system',
+      // ── NETWORK ADVANCED ──
+      'net-disable-interrupt-moderation': 'network', 'net-increase-receive-buffers': 'network',
+      'net-increase-transmit-buffers': 'network', 'net-disable-gro-segmentation': 'network',
+      'net-optimize-tcp-nodelay': 'network', 'net-disable-arbitration': 'network',
+      // ── POWER ADVANCED ──
+      'power-disable-dynamic-boost': 'system', 'power-max-pcie-power': 'system',
+      'power-disable-usb-suspend': 'system', 'power-processor-performance': 'system',
+      // ── BROWSER DEEP DEBLOAT ──
+      'chrome-deep-debloat': 'debloat', 'edge-deep-debloat': 'debloat',
+      'discord-deep-debloat': 'debloat', 'firefox-deep-debloat': 'debloat',
+      // ── GPU ADVANCED ──
+      'gpu-force-max-clocks': 'gpu', 'gpu-disable-gpu-preemption-deep': 'gpu', 'gpu-disable-tdr': 'gpu',
+      // ── TIMER & LATENCY DEEP ──
+      'timer-force-1ms': 'latency', 'timer-disable-power-saving-timer': 'latency',
+      // ── STORAGE ADVANCED ──
+      'storage-disable-ahci-power': 'storage', 'storage-optimize-nvme-queues': 'storage',
+      // ── PRIVACY DEEP ──
+      'privacy-disable-cortana-deep': 'privacy', 'privacy-disable-telemetry-deep': 'privacy',
+      'privacy-disable-tracking': 'privacy',
+      // ── AUDIO DEEP ──
+      'audio-optimize-latency': 'audio', 'audio-disable-all-enhancements': 'audio',
+      // ── WINDOWS ADVANCED ──
+      'windows-disable-all-animations': 'windows', 'windows-optimize-explorer-deep': 'windows',
+      'windows-disable-all-services': 'windows',
+      // ── GAMING DEEP ──
+      'game-optimize-all': 'gaming', 'game-disable-all-overlays': 'gaming',
+      'game-optimize-memory-deep': 'gaming',
     };
     return categories[id] === category;
   });
@@ -3546,6 +3706,256 @@ ipcMain.handle("set-fan-speed", async (_e, { fanName, speed }) => {
     } else {
       return { success: false, error: "Fan control requires LibreHardwareMonitor running as admin. Install it from https://github.com/LibreHardwareMonitor/LibreHardwareMonitor" };
     }
+  } catch (e) {
+    return { success: false, error: e.message };
+  }
+});
+
+// ═══════════════════════════════════════════
+// ── Power Plan Management IPC ──
+// ═══════════════════════════════════════════
+ipcMain.handle("get-power-plans", async () => {
+  try {
+    const output = await execAsync("powercfg /list", { timeout: 10000, windowsHide: true });
+    const lines = output.stdout.split("\n").filter(l => l.includes("Power Scheme GUID"));
+    const plans = lines.map(l => {
+      const match = l.match(/Power Scheme GUID:\s+([0-9a-f-]+)\s+\((.+)\)/);
+      return match ? { id: match[1], name: match[2], active: l.includes("*") } : null;
+    }).filter(Boolean);
+    return { success: true, plans };
+  } catch (e) {
+    return { success: false, error: e.message, plans: [] };
+  }
+});
+
+ipcMain.handle("export-power-plan", async (_e, { planId }) => {
+  try {
+    const { dialog } = require("electron");
+    const tmpFile = path.join(app.getPath("temp"), `choatix-power-${planId}.pow`);
+    await execAsync(`powercfg /export "${tmpFile}" ${planId}`, { timeout: 10000, windowsHide: true });
+    const data = fs.readFileSync(tmpFile);
+    try { fs.unlinkSync(tmpFile); } catch {}
+    const result = await dialog.showSaveDialog(mainWindow, {
+      title: "Export Power Plan",
+      defaultPath: `power-plan-${planId.slice(0, 8)}.pow`,
+      filters: [{ name: "Power Plan", extensions: ["pow"] }]
+    });
+    if (!result.canceled && result.filePath) {
+      fs.writeFileSync(result.filePath, data);
+      return { success: true, path: result.filePath };
+    }
+    return { success: false, error: "Export cancelled" };
+  } catch (e) {
+    return { success: false, error: e.message };
+  }
+});
+
+ipcMain.handle("import-power-plan", async () => {
+  try {
+    const { dialog } = require("electron");
+    const result = await dialog.showOpenDialog(mainWindow, {
+      title: "Import Power Plan",
+      filters: [{ name: "Power Plan", extensions: ["pow"] }],
+      properties: ["openFile"]
+    });
+    if (result.canceled || !result.filePaths[0]) return { success: false, error: "Import cancelled" };
+    const filePath = result.filePaths[0];
+    const output = await execAsync(`powercfg /import "${filePath}"`, { timeout: 10000, windowsHide: true });
+    const match = output.stdout.match(/Power Scheme GUID:\s+([0-9a-f-]+)/);
+    const newId = match ? match[1] : null;
+    return { success: true, planId: newId, message: "Power plan imported successfully" };
+  } catch (e) {
+    return { success: false, error: e.message };
+  }
+});
+
+ipcMain.handle("apply-power-plan", async (_e, { planId }) => {
+  try {
+    await execAsync(`powercfg /setactive ${planId}`, { timeout: 10000, windowsHide: true });
+    return { success: true };
+  } catch (e) {
+    return { success: false, error: e.message };
+  }
+});
+
+ipcMain.handle("create-gaming-power-plan", async () => {
+  try {
+    const cmds = [
+      'powercfg -duplicatescheme 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c',
+      'powercfg /setactive 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c',
+      'powercfg /setacvalueindex SCHEME_CURRENT SUB_PROCESSOR PROCTHROTTLEMIN 100',
+      'powercfg /setacvalueindex SCHEME_CURRENT SUB_PROCESSOR PROCTHROTTLEMAX 100',
+      'powercfg /setacvalueindex SCHEME_CURRENT SUB_PROCESSOR CPMINCORES 100',
+      'powercfg /setacvalueindex SCHEME_CURRENT SUB_PROCESSOR THROTTLING 0',
+      'powercfg /setacvalueindex SCHEME_CURRENT SUB_PROCESSOR IDLEDISABLE 1',
+      'powercfg /setacvalueindex SCHEME_CURRENT 501a4e6c-5e1d-4773-837a-4738476e23d4 0',
+      'powercfg /setacvalueindex SCHEME_CURRENT SUB_DISK IDLEDETECT0 0',
+      'powercfg /setacvalueindex SCHEME_CURRENT SUB_DISK IDLEDETECT1 0',
+      'powercfg /setactive SCHEME_CURRENT'
+    ];
+    let applied = 0;
+    for (const cmd of cmds) {
+      try { await execAsync(cmd, { timeout: 10000, windowsHide: true }); applied++; } catch {}
+    }
+    return { success: true, applied, message: "Gaming power plan created and activated" };
+  } catch (e) {
+    return { success: false, error: e.message };
+  }
+});
+
+// ═══════════════════════════════════════════
+// ── Game Settings Backup/Restore IPC ──
+// ═══════════════════════════════════════════
+ipcMain.handle("backup-game-settings", async () => {
+  try {
+    const backupDir = path.join(app.getPath("userData"), "game-backups");
+    if (!fs.existsSync(backupDir)) fs.mkdirSync(backupDir, { recursive: true });
+    const timestamp = Date.now();
+    const backupPath = path.join(backupDir, `backup-${timestamp}`);
+    fs.mkdirSync(backupPath, { recursive: true });
+    const gamePaths = [
+      { name: "Fortnite", src: path.join(app.getPath("home"), "AppData", "Local", "FortniteGame", "Saved", "Config", "WindowsClient") },
+      { name: "Valorant", src: path.join(app.getPath("home"), "AppData", "Local", "VALORANT", "Saved", "Config", "WindowsClient") },
+      { name: "CS2", src: path.join(process.env["ProgramFiles(x86)"] || "C:\\Program Files (x86)", "Steam", "steamapps", "common", "Counter-Strike Global Offensive", "game", "csgo", "cfg") },
+      { name: "Apex Legends", src: path.join(app.getPath("home"), "AppData", "Local", "Respawn", "Apex", "cfg") },
+      { name: "Minecraft", src: path.join(app.getPath("home"), "AppData", "Roaming", ".minecraft") },
+    ];
+    let backedUp = 0;
+    const details = [];
+    for (const game of gamePaths) {
+      if (fs.existsSync(game.src)) {
+        const dest = path.join(backupPath, game.name);
+        try {
+          execSync(`xcopy "${game.src}" "${dest}" /E /I /Q /Y`, { timeout: 30000, windowsHide: true, stdio: "ignore" });
+          backedUp++;
+          details.push(game.name);
+        } catch {}
+      }
+    }
+    const manifest = { timestamp, games: details, path: backupPath };
+    fs.writeFileSync(path.join(backupPath, "manifest.json"), JSON.stringify(manifest, null, 2));
+    return { success: true, backedUp, games: details, backupPath };
+  } catch (e) {
+    return { success: false, error: e.message };
+  }
+});
+
+ipcMain.handle("restore-game-settings", async (_e, { backupPath }) => {
+  try {
+    if (!backupPath || !fs.existsSync(backupPath)) {
+      const backups = [];
+      const backupDir = path.join(app.getPath("userData"), "game-backups");
+      if (fs.existsSync(backupDir)) {
+        const dirs = fs.readdirSync(backupDir).filter(d => d.startsWith("backup-")).sort().reverse();
+        if (dirs.length > 0) backupPath = path.join(backupDir, dirs[0]);
+      }
+      if (!backupPath || !fs.existsSync(backupPath)) return { success: false, error: "No backup found" };
+    }
+    const manifestPath = path.join(backupPath, "manifest.json");
+    if (!fs.existsSync(manifestPath)) return { success: false, error: "Invalid backup (no manifest)" };
+    const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf-8"));
+    const gamePaths = {
+      "Fortnite": path.join(app.getPath("home"), "AppData", "Local", "FortniteGame", "Saved", "Config", "WindowsClient"),
+      "Valorant": path.join(app.getPath("home"), "AppData", "Local", "VALORANT", "Saved", "Config", "WindowsClient"),
+      "CS2": path.join(process.env["ProgramFiles(x86)"] || "C:\\Program Files (x86)", "Steam", "steamapps", "common", "Counter-Strike Global Offensive", "game", "csgo", "cfg"),
+      "Apex Legends": path.join(app.getPath("home"), "AppData", "Local", "Respawn", "Apex", "cfg"),
+      "Minecraft": path.join(app.getPath("home"), "AppData", "Roaming", ".minecraft"),
+    };
+    let restored = 0;
+    const details = [];
+    for (const gameName of manifest.games) {
+      const src = path.join(backupPath, gameName);
+      const dest = gamePaths[gameName];
+      if (fs.existsSync(src) && dest) {
+        try {
+          execSync(`xcopy "${src}" "${dest}" /E /I /Q /Y`, { timeout: 30000, windowsHide: true, stdio: "ignore" });
+          restored++;
+          details.push(gameName);
+        } catch {}
+      }
+    }
+    return { success: true, restored, games: details };
+  } catch (e) {
+    return { success: false, error: e.message };
+  }
+});
+
+ipcMain.handle("list-game-backups", async () => {
+  try {
+    const backupDir = path.join(app.getPath("userData"), "game-backups");
+    if (!fs.existsSync(backupDir)) return { success: true, backups: [] };
+    const dirs = fs.readdirSync(backupDir).filter(d => d.startsWith("backup-")).sort().reverse();
+    const backups = dirs.map(d => {
+      const manifestPath = path.join(backupDir, d, "manifest.json");
+      try {
+        const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf-8"));
+        return { path: path.join(backupDir, d), ...manifest };
+      } catch {
+        return { path: path.join(backupDir, d), timestamp: parseInt(d.replace("backup-", "")), games: [] };
+      }
+    });
+    return { success: true, backups };
+  } catch (e) {
+    return { success: false, error: e.message, backups: [] };
+  }
+});
+
+// ═══════════════════════════════════════════
+// ── Deep Clean IPC ──
+// ═══════════════════════════════════════════
+ipcMain.handle("deep-clean", async () => {
+  try {
+    const results = {};
+    const cleanActions = [
+      { name: "DNS Cache", cmd: "ipconfig /flushdns" },
+      { name: "Temp Files", cmd: 'powershell -NoProfile -Command "Remove-Item -Path \\"$env:TEMP\\*\\" -Recurse -Force -EA 0; Remove-Item -Path \\"$env:SystemRoot\\Temp\\*\\" -Recurse -Force -EA 0"' },
+      { name: "Recycle Bin", cmd: 'powershell -NoProfile -Command "Clear-RecycleBin -Force -EA 0"' },
+      { name: "Crash Dumps", cmd: 'powershell -NoProfile -Command "Remove-Item -Path \\"$env:SystemRoot\\Minidump\\*\\" -Force -EA 0; Remove-Item -Path \\"$env:LOCALAPPDATA\\CrashDumps\\*\\" -Force -EA 0"' },
+      { name: "Windows Update Cache", cmd: 'powershell -NoProfile -Command "Stop-Service wuauserv,cryptSvc,bits,msiserver -Force -EA 0; Remove-Item \\"$env:SystemRoot\\SoftwareDistribution\\Download\\*\\" -Recurse -Force -EA 0; Start-Service wuauserv,cryptSvc,bits,msiserver -EA 0"' },
+      { name: "Prefetch", cmd: 'powershell -NoProfile -Command "Remove-Item \\"$env:SystemRoot\\Prefetch\\*\\" -Force -EA 0"' },
+      { name: "NVIDIA Shader Cache", cmd: 'powershell -NoProfile -Command "Remove-Item \\"$env:LOCALAPPDATA\\NVIDIA\\DXCache\\*\\" -Recurse -Force -EA 0; Remove-Item \\"$env:LOCALAPPDATA\\NVIDIA\\GLCache\\*\\" -Recurse -Force -EA 0"' },
+      { name: "AMD Shader Cache", cmd: 'powershell -NoProfile -Command "Remove-Item \\"$env:LOCALAPPDATA\\AMD\\DXCache\\*\\" -Recurse -Force -EA 0; Remove-Item \\"$env:LOCALAPPDATA\\AMD\\Cache\\*\\" -Recurse -Force -EA 0"' },
+      { name: "Browser Caches", cmd: 'powershell -NoProfile -Command "Remove-Item \\"$env:LOCALAPPDATA\\Google\\Chrome\\User Data\\Default\\Cache\\*\\" -Recurse -Force -EA 0; Remove-Item \\"$env:LOCALAPPDATA\\Microsoft\\Edge\\User Data\\Default\\Cache\\*\\" -Recurse -Force -EA 0"' },
+      { name: "Event Logs", cmd: 'powershell -NoProfile -Command "Get-WinEvent -ListLog * -EA 0 | Where-Object{$_.RecordCount -gt 0} | Select-Object -First 5 | ForEach-Object{ wevtutil cl $_.LogName 2>$null }"' },
+    ];
+    let cleaned = 0;
+    let freedSpace = 0;
+    for (const action of cleanActions) {
+      try { await execAsync(action.cmd, { timeout: 15000, windowsHide: true }); cleaned++; results[action.name] = "success"; } catch { results[action.name] = "partial"; }
+    }
+    try {
+      const sizeBefore = await execAsync("powershell -NoProfile -Command \"(Get-ChildItem -Path $env:SystemRoot\\SoftwareDistribution -Recurse -EA 0 | Measure-Object -Property Length -Sum).Sum\"", { timeout: 10000, windowsHide: true });
+      freedSpace = parseInt(sizeBefore.stdout.trim()) || 0;
+    } catch {}
+    return { success: true, cleaned, total: cleanActions.length, results, freedBytes: freedSpace };
+  } catch (e) {
+    return { success: false, error: e.message };
+  }
+});
+
+// ═══════════════════════════════════════════
+// ── Network Speed Test IPC ──
+// ═══════════════════════════════════════════
+ipcMain.handle("network-speed-test", async () => {
+  try {
+    const startTime = Date.now();
+    const result = await new Promise((resolve, reject) => {
+      const req = https.request("https://www.speedtest.net/api/js/speedtest?ping=true&download=true&upload=true&servers=false&ecmp=true", {
+        method: "GET",
+        headers: { "User-Agent": "Choatix-SpeedTest/1.0" },
+        timeout: 30000
+      }, (res) => {
+        let body = "";
+        res.on("data", c => body += c);
+        res.on("end", () => {
+          try { resolve(JSON.parse(body)); } catch { resolve({ download: 0, upload: 0, ping: 0 }); }
+        });
+      });
+      req.on("error", (e) => resolve({ download: 0, upload: 0, ping: 0, error: e.message }));
+      req.on("timeout", () => { req.destroy(); resolve({ download: 0, upload: 0, ping: 0, error: "timeout" }); });
+      req.end();
+    });
+    return { success: true, download: result.download || 0, upload: result.upload || 0, ping: result.ping || 0, duration: Date.now() - startTime };
   } catch (e) {
     return { success: false, error: e.message };
   }

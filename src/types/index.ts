@@ -57,6 +57,16 @@ declare global {
       submitBenchmark: (data: any) => Promise<{ success: boolean; error?: string }>
       getLeaderboard: (opts?: { hardwareHash?: string }) => Promise<{ entries: any[] }>
       getUserRank: (discordId: string) => Promise<{ entries: any[] }>
+      getPowerPlans: () => Promise<{ success: boolean; plans: { id: string; name: string; active: boolean }[]; error?: string }>
+      exportPowerPlan: (planId: string) => Promise<{ success: boolean; path?: string; error?: string }>
+      importPowerPlan: () => Promise<{ success: boolean; planId?: string; error?: string }>
+      applyPowerPlan: (planId: string) => Promise<{ success: boolean; error?: string }>
+      createGamingPowerPlan: () => Promise<{ success: boolean; applied?: number; error?: string }>
+      backupGameSettings: () => Promise<{ success: boolean; backedUp?: number; games?: string[]; error?: string }>
+      restoreGameSettings: (backupPath?: string) => Promise<{ success: boolean; restored?: number; games?: string[]; error?: string }>
+      listGameBackups: () => Promise<{ success: boolean; backups?: any[]; error?: string }>
+      deepClean: () => Promise<{ success: boolean; cleaned?: number; total?: number; results?: Record<string, string>; error?: string }>
+      networkSpeedTest: () => Promise<{ success: boolean; download?: number; upload?: number; ping?: number; error?: string }>
       isElectron: boolean
     }
   }

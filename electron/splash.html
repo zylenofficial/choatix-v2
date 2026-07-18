@@ -11,37 +11,44 @@
     justify-content: center;
     height: 100vh;
     overflow: hidden;
-    font-family: 'Segoe UI', sans-serif;
+    font-family: -apple-system, 'Segoe UI', sans-serif;
     -webkit-app-region: drag;
   }
 
-  .scene {
+  /* Ambient background */
+  .bg {
     position: fixed; inset: 0; z-index: 0;
-    background:
-      radial-gradient(ellipse 80% 60% at 50% 50%, rgba(255,255,255,0.03) 0%, transparent 100%),
-      radial-gradient(circle at 30% 70%, rgba(255,255,255,0.015) 0%, transparent 50%),
-      radial-gradient(circle at 70% 30%, rgba(255,255,255,0.015) 0%, transparent 50%);
+    background: radial-gradient(ellipse 50% 50% at 50% 50%, rgba(255,255,255,0.02) 0%, transparent 100%);
+    opacity: 0;
+    animation: bgIn 2s 0.5s ease-out forwards;
   }
+  @keyframes bgIn { to { opacity: 1; } }
 
-  /* Animated horizontal lines */
-  .h-lines {
-    position: fixed; inset: 0; z-index: 1; pointer-events: none; overflow: hidden;
+  /* Particles */
+  .particles {
+    position: fixed; inset: 0; z-index: 1; pointer-events: none;
   }
-  .h-line {
-    position: absolute; left: 0; right: 0; height: 1px;
-    background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.06) 20%, rgba(255,255,255,0.06) 80%, transparent 100%);
+  .dot {
+    position: absolute;
+    width: 2px; height: 2px;
+    background: rgba(255,255,255,0.12);
+    border-radius: 50%;
+    opacity: 0;
   }
-  .h-line:nth-child(1) { top: 15%; animation: lineSweep 6s -1s linear infinite; opacity: 0; }
-  .h-line:nth-child(2) { top: 35%; animation: lineSweep 8s -4s linear infinite; opacity: 0; }
-  .h-line:nth-child(3) { top: 55%; animation: lineSweep 7s -2s linear infinite; opacity: 0; }
-  .h-line:nth-child(4) { top: 75%; animation: lineSweep 9s -5s linear infinite; opacity: 0; }
-  .h-line:nth-child(5) { top: 90%; animation: lineSweep 5s -3s linear infinite; opacity: 0; }
+  .dot:nth-child(1) { left: 20%; top: 30%; animation: drift 12s 1s ease-in-out infinite; }
+  .dot:nth-child(2) { left: 75%; top: 20%; animation: drift 15s 2s ease-in-out infinite; width: 1.5px; height: 1.5px; }
+  .dot:nth-child(3) { left: 40%; top: 70%; animation: drift 18s 0.5s ease-in-out infinite; width: 1px; height: 1px; }
+  .dot:nth-child(4) { left: 85%; top: 65%; animation: drift 14s 3s ease-in-out infinite; }
+  .dot:nth-child(5) { left: 10%; top: 80%; animation: drift 16s 1.5s ease-in-out infinite; width: 1.5px; height: 1.5px; }
+  .dot:nth-child(6) { left: 55%; top: 15%; animation: drift 20s 0s ease-in-out infinite; width: 1px; height: 1px; }
+  .dot:nth-child(7) { left: 30%; top: 50%; animation: drift 13s 2.5s ease-in-out infinite; }
+  .dot:nth-child(8) { left: 65%; top: 85%; animation: drift 17s 1s ease-in-out infinite; width: 1.5px; height: 1.5px; }
 
-  @keyframes lineSweep {
-    0% { opacity: 0; transform: translateX(-100%); }
-    10% { opacity: 1; }
-    90% { opacity: 1; }
-    100% { opacity: 0; transform: translateX(100%); }
+  @keyframes drift {
+    0%, 100% { opacity: 0; transform: translate(0, 0); }
+    25% { opacity: 0.6; }
+    50% { opacity: 0.4; transform: translate(15px, -20px); }
+    75% { opacity: 0.7; }
   }
 
   /* Center content */
@@ -50,161 +57,131 @@
     display: flex; flex-direction: column; align-items: center;
   }
 
-  /* Logo */
-  .logo-wrap {
-    position: relative;
-    width: 280px; height: 280px;
-    display: flex; align-items: center; justify-content: center;
-  }
-
-  /* Hexagon ring */
-  .hex-ring {
-    position: absolute; top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-  }
-  .hex-ring svg {
-    position: absolute; top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-  }
-  .hex-1 { animation: hexSpin 25s linear infinite; }
-  .hex-2 { animation: hexSpin 18s linear infinite reverse; }
-  .hex-3 { animation: hexSpin 12s linear infinite; }
-
-  @keyframes hexSpin { from { transform: translate(-50%, -50%) rotate(0deg); } to { transform: translate(-50%, -50%) rotate(360deg); } }
-
-  /* Glow behind logo */
+  /* Logo glow */
   .glow {
-    position: absolute; top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    width: 200px; height: 200px;
-    background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 40%, transparent 70%);
-    animation: breathe 3s ease-in-out infinite;
+    position: absolute;
+    width: 180px; height: 180px;
+    background: radial-gradient(circle, rgba(255,255,255,0.04) 0%, transparent 70%);
+    border-radius: 50%;
+    opacity: 0;
+    animation: glowIn 2s 0.8s ease-out forwards;
   }
-  @keyframes breathe { 0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.6; } 50% { transform: translate(-50%, -50%) scale(1.15); opacity: 1; } }
+  @keyframes glowIn { to { opacity: 1; } }
 
-  /* Logo image */
+  /* Logo */
   .logo {
-    width: 160px; height: auto;
+    width: 120px; height: auto;
     filter: brightness(0) invert(1);
     position: relative; z-index: 5;
     opacity: 0;
-    animation: logoIn 0.8s 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    animation: logoIn 1.2s 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   }
   @keyframes logoIn {
-    from { opacity: 0; transform: scale(0.7) translateY(10px); filter: brightness(0) invert(1) blur(8px); }
-    to { opacity: 1; transform: scale(1) translateY(0); filter: brightness(0) invert(1) blur(0); }
+    from { opacity: 0; transform: scale(0.92) translateY(6px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
   }
 
   /* Name */
   .name {
-    margin-top: 32px;
-    font-size: 11px; font-weight: 700;
-    letter-spacing: 12px; text-indent: 12px;
-    color: rgba(255,255,255,0.7);
-    opacity: 0; animation: fadeUp 0.6s 1s forwards;
+    margin-top: 28px;
+    font-size: 11px; font-weight: 600;
+    letter-spacing: 10px; text-indent: 10px;
+    color: rgba(255,255,255,0.5);
+    opacity: 0;
+    animation: fadeUp 0.8s 1.2s ease-out forwards;
   }
 
   /* Tagline */
   .tagline {
-    margin-top: 8px;
+    margin-top: 6px;
     font-size: 8px; font-weight: 400;
-    letter-spacing: 5px; text-indent: 5px;
-    color: rgba(255,255,255,0.2);
-    opacity: 0; animation: fadeUp 0.6s 1.2s forwards;
+    letter-spacing: 4px; text-indent: 4px;
+    color: rgba(255,255,255,0.15);
+    opacity: 0;
+    animation: fadeUp 0.8s 1.4s ease-out forwards;
   }
 
-  /* Loading section */
+  /* Loading */
   .loading {
-    margin-top: 56px;
-    display: flex; flex-direction: column; align-items: center; gap: 14px;
-    opacity: 0; animation: fadeUp 0.5s 1.8s forwards;
+    margin-top: 48px;
+    display: flex; flex-direction: column; align-items: center; gap: 12px;
+    opacity: 0;
+    animation: fadeUp 0.6s 2s ease-out forwards;
   }
 
   /* Progress bar */
   .bar-track {
-    width: 220px; height: 1px;
+    width: 180px; height: 1px;
     background: rgba(255,255,255,0.06);
     position: relative; overflow: hidden;
   }
   .bar-fill {
     position: absolute; top: 0; left: 0; height: 100%;
-    width: 0%; background: rgba(255,255,255,0.5);
-    animation: fillBar 2s 2.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-  }
-  .bar-fill::after {
-    content: ''; position: absolute;
-    right: -6px; top: -6px;
-    width: 13px; height: 13px;
-    background: #fff; border-radius: 50%;
-    box-shadow: 0 0 20px rgba(255,255,255,0.6), 0 0 60px rgba(255,255,255,0.2);
+    width: 0%;
+    background: rgba(255,255,255,0.35);
+    animation: fillBar 2.2s 2.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
   }
   @keyframes fillBar {
     0% { width: 0%; }
-    15% { width: 12%; }
-    35% { width: 38%; }
-    55% { width: 58%; }
-    75% { width: 82%; }
+    20% { width: 15%; }
+    40% { width: 40%; }
+    60% { width: 62%; }
+    80% { width: 85%; }
     100% { width: 100%; }
   }
 
   /* Status */
   .status {
-    font-size: 8px; letter-spacing: 5px;
-    color: rgba(255,255,255,0.25);
-    font-family: 'Consolas', monospace;
-    transition: opacity 0.15s;
+    font-size: 8px; letter-spacing: 4px;
+    color: rgba(255,255,255,0.2);
+    font-family: 'Consolas', 'SF Mono', monospace;
+    transition: opacity 0.2s ease;
   }
 
   /* Version */
   .ver {
-    margin-top: 12px;
+    margin-top: 14px;
     font-size: 7px; letter-spacing: 3px;
-    color: rgba(255,255,255,0.08);
-    font-family: 'Consolas', monospace;
+    color: rgba(255,255,255,0.06);
+    font-family: 'Consolas', 'SF Mono', monospace;
+    opacity: 0;
+    animation: fadeUp 0.5s 2.6s ease-out forwards;
   }
 
-  /* Corner accents */
-  .corner { position: fixed; z-index: 20; opacity: 0; animation: fadeIn 0.3s 1.4s forwards; }
-  .corner::before, .corner::after { content: ''; position: absolute; background: rgba(255,255,255,0.07); }
-  .corner.tl { top: 28px; left: 28px; }
-  .corner.tl::before { width: 28px; height: 1px; }
-  .corner.tl::after { width: 1px; height: 28px; }
-  .corner.tr { top: 28px; right: 28px; }
-  .corner.tr::before { width: 28px; height: 1px; right: 0; }
-  .corner.tr::after { width: 1px; height: 28px; right: 0; }
-  .corner.bl { bottom: 28px; left: 28px; }
-  .corner.bl::before { width: 28px; height: 1px; bottom: 0; }
-  .corner.bl::after { width: 1px; height: 28px; bottom: 0; }
-  .corner.br { bottom: 28px; right: 28px; }
-  .corner.br::before { width: 28px; height: 1px; bottom: 0; right: 0; }
-  .corner.br::after { width: 1px; height: 28px; bottom: 0; right: 0; }
-
-  /* Scan line */
-  .scan {
-    position: fixed; left: 0; right: 0; height: 1px; z-index: 30;
-    background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.25) 50%, transparent 100%);
-    opacity: 0; animation: scanMove 2s 0.6s ease-in-out forwards;
+  /* Corner accents — subtle */
+  .corner {
+    position: fixed; z-index: 20;
+    opacity: 0;
+    animation: fadeIn 0.5s 1.6s ease-out forwards;
   }
-  @keyframes scanMove {
-    0% { top: -1%; opacity: 0; }
-    8% { opacity: 0.4; }
-    92% { opacity: 0.4; }
-    100% { top: 101%; opacity: 0; }
+  .corner::before, .corner::after {
+    content: ''; position: absolute;
+    background: rgba(255,255,255,0.04);
   }
+  .corner.tl { top: 32px; left: 32px; }
+  .corner.tl::before { width: 24px; height: 1px; }
+  .corner.tl::after { width: 1px; height: 24px; }
+  .corner.tr { top: 32px; right: 32px; }
+  .corner.tr::before { width: 24px; height: 1px; right: 0; }
+  .corner.tr::after { width: 1px; height: 24px; right: 0; }
+  .corner.bl { bottom: 32px; left: 32px; }
+  .corner.bl::before { width: 24px; height: 1px; bottom: 0; }
+  .corner.bl::after { width: 1px; height: 24px; bottom: 0; }
+  .corner.br { bottom: 32px; right: 32px; }
+  .corner.br::before { width: 24px; height: 1px; bottom: 0; }
+  .corner.br::after { width: 1px; height: 24px; bottom: 0; }
 
   @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-  @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 </style>
 </head>
 <body>
-  <div class="scene"></div>
+  <div class="bg"></div>
 
-  <div class="h-lines">
-    <div class="h-line"></div><div class="h-line"></div><div class="h-line"></div>
-    <div class="h-line"></div><div class="h-line"></div>
+  <div class="particles">
+    <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+    <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
   </div>
-
-  <div class="scan"></div>
 
   <div class="corner tl"></div>
   <div class="corner tr"></div>
@@ -212,25 +189,8 @@
   <div class="corner br"></div>
 
   <div class="center">
-    <div class="logo-wrap">
-      <div class="glow"></div>
-      <div class="hex-ring hex-1">
-        <svg width="260" height="260" viewBox="0 0 260 260" fill="none">
-          <polygon points="130,10 240,70 240,190 130,250 20,190 20,70" stroke="rgba(255,255,255,0.04)" stroke-width="0.5" fill="none"/>
-        </svg>
-      </div>
-      <div class="hex-ring hex-2">
-        <svg width="220" height="220" viewBox="0 0 220 220" fill="none">
-          <polygon points="110,8 202,58 202,162 110,212 18,162 18,58" stroke="rgba(255,255,255,0.06)" stroke-width="0.5" fill="none"/>
-        </svg>
-      </div>
-      <div class="hex-ring hex-3">
-        <svg width="180" height="180" viewBox="0 0 180 180" fill="none">
-          <polygon points="90,6 166,46 166,134 90,174 14,134 14,46" stroke="rgba(255,255,255,0.03)" stroke-width="0.5" fill="none" stroke-dasharray="4 8"/>
-        </svg>
-      </div>
-      <img src="choatix-logo.png" class="logo" alt="CHOATIX" />
-    </div>
+    <div class="glow"></div>
+    <img src="choatix-logo.png" class="logo" alt="CHOATIX" />
 
     <div class="name">CHOATIX</div>
     <div class="tagline">GAMING PERFORMANCE OPTIMIZER</div>
@@ -244,15 +204,15 @@
   </div>
 
   <script>
-    const steps = ['INITIALIZING','LOADING MODULES','SCANNING SYSTEM','PREPARING TWEAKS','OPTIMIZING','READY'];
+    const steps = ['INITIALIZING','LOADING MODULES','SCANNING SYSTEM','PREPARING','READY'];
     let i = 0;
     const el = document.getElementById('status');
     const t = setInterval(() => {
       i++;
       if (i >= steps.length) { clearInterval(t); return; }
       el.style.opacity = '0';
-      setTimeout(() => { el.textContent = steps[i]; el.style.opacity = '1'; }, 100);
-    }, 400);
+      setTimeout(() => { el.textContent = steps[i]; el.style.opacity = '1'; }, 150);
+    }, 450);
   </script>
 </body>
 </html>

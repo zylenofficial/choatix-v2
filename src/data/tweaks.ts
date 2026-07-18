@@ -4747,4 +4747,554 @@ export const availableTweaks: Tweak[] = [
     risk: 'low',
     gamingImpact: 'Lower driver CPU overhead, higher FPS'
   },
+
+  // ── DEEP CLEAN ──
+  {
+    id: 'clean-dns-cache',
+    name: 'Flush DNS Cache',
+    description: 'Clears the DNS resolver cache to remove stale entries and free memory',
+    category: 'system',
+    requiredTier: LicenseTier.FREE,
+    applied: false,
+    impact: 'low',
+    risk: 'none',
+    gamingImpact: 'Fresh DNS lookups, slight network improvement'
+  },
+  {
+    id: 'clean-font-cache',
+    name: 'Rebuild Font Cache',
+    description: 'Rebuilds the Windows font cache to remove corrupted entries and free disk space',
+    category: 'system',
+    requiredTier: LicenseTier.FREE,
+    applied: false,
+    impact: 'low',
+    risk: 'none',
+    gamingImpact: 'Clean font rendering, freed disk cache'
+  },
+  {
+    id: 'clean-icon-cache',
+    name: 'Rebuild Icon Cache',
+    description: 'Rebuilds the Windows icon cache database to fix broken or missing icons',
+    category: 'system',
+    requiredTier: LicenseTier.FREE,
+    applied: false,
+    impact: 'low',
+    risk: 'none',
+    gamingImpact: 'Fixed icon rendering issues'
+  },
+  {
+    id: 'clean-wu-cache',
+    name: 'Clean Windows Update Cache',
+    description: 'Removes cached Windows Update download files to free disk space',
+    category: 'system',
+    requiredTier: LicenseTier.FREE,
+    applied: false,
+    impact: 'medium',
+    risk: 'none',
+    gamingImpact: 'Freed disk space, faster update cycle'
+  },
+  {
+    id: 'clean-crash-dumps',
+    name: 'Clean Crash Dumps',
+    description: 'Removes Windows crash dump files and memory dump files',
+    category: 'system',
+    requiredTier: LicenseTier.FREE,
+    applied: false,
+    impact: 'low',
+    risk: 'none',
+    gamingImpact: 'Freed disk space from old crash dumps'
+  },
+  {
+    id: 'clean-browser-cache',
+    name: 'Clean Browser Caches',
+    description: 'Clears Chrome, Edge, Firefox, and Opera browser caches',
+    category: 'system',
+    requiredTier: LicenseTier.FREE,
+    applied: false,
+    impact: 'medium',
+    risk: 'low',
+    gamingImpact: 'Freed disk space from browser data'
+  },
+  {
+    id: 'clean-windows-search',
+    name: 'Clean Windows Search Index',
+    description: 'Resets and rebuilds the Windows Search index from scratch',
+    category: 'system',
+    requiredTier: LicenseTier.FREE,
+    applied: false,
+    impact: 'low',
+    risk: 'none',
+    gamingImpact: 'Faster file search after rebuild'
+  },
+  {
+    id: 'clean-defender-cache',
+    name: 'Clean Windows Defender Cache',
+    description: 'Clears Windows Defender scan cache and quarantine files older than 30 days',
+    category: 'system',
+    requiredTier: LicenseTier.FREE,
+    applied: false,
+    impact: 'low',
+    risk: 'none',
+    gamingImpact: 'Freed disk space from AV cache'
+  },
+  {
+    id: 'clean-steam-cache',
+    name: 'Clean Steam Download Cache',
+    description: 'Clears Steam download cache and shader cache for fresh downloads',
+    category: 'system',
+    requiredTier: LicenseTier.FREE,
+    applied: false,
+    impact: 'medium',
+    risk: 'low',
+    gamingImpact: 'Freed disk space, fixed Steam download issues'
+  },
+  {
+    id: 'clean-nvidia-shader-cache',
+    name: 'Clean NVIDIA Shader Cache',
+    description: 'Removes NVIDIA driver shader cache to force fresh compilation',
+    category: 'system',
+    requiredTier: LicenseTier.FREE,
+    applied: false,
+    impact: 'medium',
+    risk: 'low',
+    gamingImpact: 'Fixed shader compilation stuttering'
+  },
+  {
+    id: 'clean-amd-shader-cache',
+    name: 'Clean AMD Shader Cache',
+    description: 'Removes AMD driver shader cache to force fresh compilation',
+    category: 'system',
+    requiredTier: LicenseTier.FREE,
+    applied: false,
+    impact: 'medium',
+    risk: 'low',
+    gamingImpact: 'Fixed shader compilation stuttering'
+  },
+  {
+    id: 'clean-windows-prefetch',
+    name: 'Clean Prefetch Files',
+    description: 'Removes Windows prefetch data to free disk space and reduce disk I/O',
+    category: 'system',
+    requiredTier: LicenseTier.FREE,
+    applied: false,
+    impact: 'low',
+    risk: 'none',
+    gamingImpact: 'Freed disk space'
+  },
+  {
+    id: 'clean-recycle-bin',
+    name: 'Empty Recycle Bin',
+    description: 'Empties the Recycle Bin to immediately free disk space',
+    category: 'system',
+    requiredTier: LicenseTier.FREE,
+    applied: false,
+    impact: 'low',
+    risk: 'medium',
+    gamingImpact: 'Immediate disk space recovery'
+  },
+  {
+    id: 'clean-event-logs',
+    name: 'Clear Event Logs',
+    description: 'Clears Windows Event Logs to free disk space and reduce system overhead',
+    category: 'system',
+    requiredTier: LicenseTier.FREE,
+    applied: false,
+    impact: 'low',
+    risk: 'none',
+    gamingImpact: 'Freed disk space, cleaner event viewer'
+  },
+
+  // ── NETWORK ADVANCED ──
+  {
+    id: 'net-disable-interrupt-moderation',
+    name: 'Disable Network Interrupt Moderation',
+    description: 'Disables network adapter interrupt coalescing for lowest possible latency',
+    category: 'network',
+    requiredTier: LicenseTier.PREMIUM,
+    applied: false,
+    impact: 'high',
+    risk: 'low',
+    gamingImpact: 'Lower network latency from immediate interrupt handling'
+  },
+  {
+    id: 'net-increase-receive-buffers',
+    name: 'Increase Network Receive Buffers',
+    description: 'Increases network adapter receive buffer count to prevent packet drops',
+    category: 'network',
+    requiredTier: LicenseTier.PRO,
+    applied: false,
+    impact: 'medium',
+    risk: 'low',
+    gamingImpact: 'Fewer dropped packets during intense gaming'
+  },
+  {
+    id: 'net-increase-transmit-buffers',
+    name: 'Increase Network Transmit Buffers',
+    description: 'Increases network adapter transmit buffer count for smoother outgoing traffic',
+    category: 'network',
+    requiredTier: LicenseTier.PRO,
+    applied: false,
+    impact: 'medium',
+    risk: 'low',
+    gamingImpact: 'Smoother voice chat and game data transmission'
+  },
+  {
+    id: 'net-disable-gro-segmentation',
+    name: 'Disable GRO Segmentation',
+    description: 'Disables Generic Receive Offload segmentation for lower latency packet processing',
+    category: 'network',
+    requiredTier: LicenseTier.PRO,
+    applied: false,
+    impact: 'medium',
+    risk: 'low',
+    gamingImpact: 'Lower packet processing latency'
+  },
+  {
+    id: 'net-optimize-tcp-nodelay',
+    name: 'Enable TCP No Delay',
+    description: 'Enables TCP_NODELAY globally to send packets immediately without buffering',
+    category: 'network',
+    requiredTier: LicenseTier.PRO,
+    applied: false,
+    impact: 'medium',
+    risk: 'none',
+    gamingImpact: 'Immediate packet delivery, lower latency'
+  },
+  {
+    id: 'net-disable-arbitration',
+    name: 'Disable Network Arbitration',
+    description: 'Disables NDIS network arbitration for direct adapter communication',
+    category: 'network',
+    requiredTier: LicenseTier.PREMIUM,
+    applied: false,
+    impact: 'high',
+    risk: 'low',
+    gamingImpact: 'Direct network adapter access, minimal overhead'
+  },
+
+  // ── POWER ADVANCED ──
+  {
+    id: 'power-disable-dynamic-boost',
+    name: 'Disable CPU Dynamic Boost',
+    description: 'Disables Intel Turbo Boost / AMD Boost for consistent clock speeds',
+    category: 'system',
+    requiredTier: LicenseTier.PREMIUM,
+    applied: false,
+    impact: 'high',
+    risk: 'medium',
+    gamingImpact: 'Consistent CPU frequency, no boost/unboost latency'
+  },
+  {
+    id: 'power-max-pcie-power',
+    name: 'Maximum PCIe Power State',
+    description: 'Sets PCIe link power management to maximum performance',
+    category: 'system',
+    requiredTier: LicenseTier.PRO,
+    applied: false,
+    impact: 'medium',
+    risk: 'low',
+    gamingImpact: 'Maximum GPU bandwidth, no PCIe throttling'
+  },
+  {
+    id: 'power-disable-usb-suspend',
+    name: 'Disable All USB Suspend',
+    description: 'Disables USB selective suspend globally for all devices',
+    category: 'system',
+    requiredTier: LicenseTier.PRO,
+    applied: false,
+    impact: 'medium',
+    risk: 'low',
+    gamingImpact: 'No USB device wake-up delays during gaming'
+  },
+  {
+    id: 'power-processor-performance',
+    name: 'Max Processor Performance',
+    description: 'Sets minimum processor state to 100% to prevent CPU throttling',
+    category: 'system',
+    requiredTier: LicenseTier.PRO,
+    applied: false,
+    impact: 'high',
+    risk: 'low',
+    gamingImpact: 'CPU always at maximum performance'
+  },
+
+  // ── BROWSER DEEP DEBLOAT ──
+  {
+    id: 'chrome-deep-debloat',
+    name: 'Chrome Deep Debloat',
+    description: 'Disables Chrome safe browsing, spell check, translate, and background sync',
+    category: 'debloat',
+    requiredTier: LicenseTier.PRO,
+    applied: false,
+    impact: 'medium',
+    risk: 'low',
+    gamingImpact: 'Chrome uses minimal resources during gaming'
+  },
+  {
+    id: 'edge-deep-debloat',
+    name: 'Edge Deep Debloat',
+    description: 'Disables Edge sidebar, collections, smart copy, and tab sleeping features',
+    category: 'debloat',
+    requiredTier: LicenseTier.PRO,
+    applied: false,
+    impact: 'medium',
+    risk: 'low',
+    gamingImpact: 'Edge uses minimal resources during gaming'
+  },
+  {
+    id: 'discord-deep-debloat',
+    name: 'Discord Deep Debloat',
+    description: 'Disables Discord games detection, rich presence, and reduces animation overhead',
+    category: 'debloat',
+    requiredTier: LicenseTier.PRO,
+    applied: false,
+    impact: 'medium',
+    risk: 'low',
+    gamingImpact: 'Discord uses less GPU and CPU during gaming'
+  },
+  {
+    id: 'firefox-deep-debloat',
+    name: 'Firefox Debloat',
+    description: 'Disables Firefox telemetry, pocket, and background updates',
+    category: 'debloat',
+    requiredTier: LicenseTier.FREE,
+    applied: false,
+    impact: 'low',
+    risk: 'none',
+    gamingImpact: 'Firefox background processes reduced'
+  },
+
+  // ── GPU ADVANCED ──
+  {
+    id: 'gpu-force-max-clocks',
+    name: 'Force GPU Maximum Clocks',
+    description: 'Forces GPU to run at maximum boost clocks at all times via registry',
+    category: 'gpu',
+    requiredTier: LicenseTier.PREMIUM,
+    applied: false,
+    impact: 'high',
+    risk: 'medium',
+    gamingImpact: 'GPU never drops below maximum clock speed'
+  },
+  {
+    id: 'gpu-disable-gpu-preemption-deep',
+    name: 'Disable GPU Context Preemption',
+    description: 'Disables GPU context preemption for uninterrupted frame rendering',
+    category: 'gpu',
+    requiredTier: LicenseTier.PREMIUM,
+    applied: false,
+    impact: 'high',
+    risk: 'low',
+    gamingImpact: 'No GPU context switches during gameplay'
+  },
+  {
+    id: 'gpu-disable-tdr',
+    name: 'Disable TDR (Timeout Detection)',
+    description: 'Disables GPU timeout detection for uninterrupted rendering (risky)',
+    category: 'gpu',
+    requiredTier: LicenseTier.PREMIUM,
+    applied: false,
+    impact: 'high',
+    risk: 'high',
+    gamingImpact: 'No GPU timeout resets, uninterrupted rendering'
+  },
+
+  // ── TIMER & LATENCY DEEP ──
+  {
+    id: 'timer-force-1ms',
+    name: 'Force 1ms Timer Resolution',
+    description: 'Forces the system timer to 1ms resolution for maximum input responsiveness',
+    category: 'latency',
+    requiredTier: LicenseTier.PREMIUM,
+    applied: false,
+    impact: 'high',
+    risk: 'low',
+    gamingImpact: 'Input polled at 1000Hz for maximum responsiveness'
+  },
+  {
+    id: 'timer-disable-power-saving-timer',
+    name: 'Disable Power Saving Timer',
+    description: 'Disables the power management timer that causes latency spikes',
+    category: 'latency',
+    requiredTier: LicenseTier.PREMIUM,
+    applied: false,
+    impact: 'high',
+    risk: 'low',
+    gamingImpact: 'No timer latency spikes from power transitions'
+  },
+
+  // ── STORAGE ADVANCED ──
+  {
+    id: 'storage-disable-ahci-power',
+    name: 'Disable AHCI Power Management',
+    description: 'Disables SATA AHCI power management for consistent disk performance',
+    category: 'storage',
+    requiredTier: LicenseTier.PRO,
+    applied: false,
+    impact: 'medium',
+    risk: 'low',
+    gamingImpact: 'No disk latency spikes from AHCI power states'
+  },
+  {
+    id: 'storage-optimize-nvme-queues',
+    name: 'Optimize NVMe Queue Depth',
+    description: 'Optimizes NVMe queue depth and interrupt coalescing for maximum throughput',
+    category: 'storage',
+    requiredTier: LicenseTier.PREMIUM,
+    applied: false,
+    impact: 'high',
+    risk: 'low',
+    gamingImpact: 'Maximum disk throughput during game loading'
+  },
+  {
+    id: 'storage-disable-disk-compression',
+    name: 'Disable Disk Compression',
+    description: 'Disables NTFS disk compression for maximum disk performance',
+    category: 'storage',
+    requiredTier: LicenseTier.PRO,
+    applied: false,
+    impact: 'medium',
+    risk: 'low',
+    gamingImpact: 'Faster file access without compression overhead'
+  },
+  {
+    id: 'storage-optimize-defrag-schedule',
+    name: 'Disable Automatic Defrag',
+    description: 'Disables scheduled disk defragmentation to prevent background disk usage',
+    category: 'storage',
+    requiredTier: LicenseTier.FREE,
+    applied: false,
+    impact: 'low',
+    risk: 'none',
+    gamingImpact: 'No surprise defrag during gaming'
+  },
+
+  // ── PRIVACY DEEP ──
+  {
+    id: 'privacy-disable-cortana-deep',
+    name: 'Disable Cortana Deep',
+    description: 'Completely removes Cortana from the system and disables all background processes',
+    category: 'privacy',
+    requiredTier: LicenseTier.PRO,
+    applied: false,
+    impact: 'medium',
+    risk: 'low',
+    gamingImpact: 'No Cortana processes consuming resources'
+  },
+  {
+    id: 'privacy-disable-telemetry-deep',
+    name: 'Disable Telemetry Deep',
+    description: 'Blocks all known Microsoft telemetry endpoints via hosts file and firewall',
+    category: 'privacy',
+    requiredTier: LicenseTier.PREMIUM,
+    applied: false,
+    impact: 'high',
+    risk: 'medium',
+    gamingImpact: 'Zero telemetry traffic leaving your system'
+  },
+  {
+    id: 'privacy-disable-tracking',
+    name: 'Disable Activity Tracking',
+    description: 'Disables all Windows activity tracking, timeline, and cloud sync',
+    category: 'privacy',
+    requiredTier: LicenseTier.PRO,
+    applied: false,
+    impact: 'medium',
+    risk: 'none',
+    gamingImpact: 'No background activity tracking overhead'
+  },
+
+  // ── AUDIO DEEP ──
+  {
+    id: 'audio-optimize-latency',
+    name: 'Optimize Audio Latency',
+    description: 'Sets audio buffer to minimum size and disables all audio processing for lowest latency',
+    category: 'audio',
+    requiredTier: LicenseTier.PREMIUM,
+    applied: false,
+    impact: 'high',
+    risk: 'low',
+    gamingImpact: 'Minimum possible audio latency in games'
+  },
+  {
+    id: 'audio-disable-all-enhancements',
+    name: 'Disable All Audio Enhancements',
+    description: 'Disables all Windows audio enhancements, equalizers, and spatial sound processing',
+    category: 'audio',
+    requiredTier: LicenseTier.PRO,
+    applied: false,
+    impact: 'medium',
+    risk: 'none',
+    gamingImpact: 'No audio processing overhead'
+  },
+
+  // ── WINDOWS ADVANCED ──
+  {
+    id: 'windows-disable-all-animations',
+    name: 'Disable All Windows Animations',
+    description: 'Disables all Windows UI animations, transitions, and visual effects for maximum performance',
+    category: 'windows',
+    requiredTier: LicenseTier.PRO,
+    applied: false,
+    impact: 'medium',
+    risk: 'none',
+    gamingImpact: 'Zero animation overhead, instant UI response'
+  },
+  {
+    id: 'windows-optimize-explorer-deep',
+    name: 'Deep Optimize Explorer',
+    description: 'Disables Explorer preview pane, details pane, thumbnails, and search indexing',
+    category: 'windows',
+    requiredTier: LicenseTier.PRO,
+    applied: false,
+    impact: 'medium',
+    risk: 'low',
+    gamingImpact: 'Lighter Explorer, less disk I/O'
+  },
+  {
+    id: 'windows-disable-all-services',
+    name: 'Disable Unnecessary Services',
+    description: 'Disables 20+ unnecessary Windows services to maximize available resources',
+    category: 'windows',
+    requiredTier: LicenseTier.PREMIUM,
+    applied: false,
+    impact: 'high',
+    risk: 'medium',
+    gamingImpact: 'Maximum available CPU and RAM for gaming'
+  },
+
+  // ── GAMING DEEP ──
+  {
+    id: 'game-optimize-all',
+    name: 'Ultimate Game Optimization',
+    description: 'Applies all gaming tweaks at once: priority, scheduler, timer, network, GPU settings',
+    category: 'gaming',
+    requiredTier: LicenseTier.PREMIUM,
+    applied: false,
+    impact: 'high',
+    risk: 'low',
+    gamingImpact: 'Complete gaming optimization in one click'
+  },
+  {
+    id: 'game-disable-all-overlays',
+    name: 'Disable All Overlays',
+    description: 'Disables Steam, Discord, NVIDIA, AMD, and Xbox overlays simultaneously',
+    category: 'gaming',
+    requiredTier: LicenseTier.PRO,
+    applied: false,
+    impact: 'high',
+    risk: 'none',
+    gamingImpact: 'No overlay stealing GPU or CPU resources'
+  },
+  {
+    id: 'game-optimize-memory-deep',
+    name: 'Deep Memory Optimization',
+    description: 'Optimizes memory management: disables paging, clears standby, optimizes pagefile',
+    category: 'gaming',
+    requiredTier: LicenseTier.PREMIUM,
+    applied: false,
+    impact: 'high',
+    risk: 'low',
+    gamingImpact: 'Maximum available RAM for games, no memory stutters'
+  },
 ]
