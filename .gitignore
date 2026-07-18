@@ -3,6 +3,15 @@ node_modules/
 .next/
 out/
 dist/
+dist-installer*/
+installer*/
+installer-dark.ps1
+installer-build/
+clean.ps1
+extract-restores.js
+build-installer.bat
+build-nsis.bat
+run-bot.bat
 .env
 *.log
 tsconfig.tsbuildinfo
