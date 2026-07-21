@@ -11,20 +11,21 @@
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
     :root {
-      --bg: #050505;
-      --bg2: #0c0c0c;
-      --bg3: #141414;
-      --bg4: #1c1c1c;
-      --border: #1a1a1a;
-      --border2: #252525;
-      --text: #f0f0f0;
-      --text-dim: #666;
-      --text-mid: #999;
+      --bg: #030303;
+      --bg2: #0a0a0a;
+      --bg3: #111111;
+      --bg4: #181818;
+      --border: rgba(255,255,255,0.04);
+      --border2: rgba(255,255,255,0.07);
+      --border3: rgba(255,255,255,0.1);
+      --text: #f5f5f5;
+      --text-dim: #555;
+      --text-mid: #888;
       --accent: #fff;
       --green: #00e676;
       --blue: #2979ff;
-      --purple: #b388ff;
-      --cyan: #18ffff;
+      --purple: #7c4dff;
+      --cyan: #00e5ff;
     }
 
     html { scroll-behavior: smooth; }
@@ -35,6 +36,75 @@
       color: var(--text);
       line-height: 1.6;
       overflow-x: hidden;
+      cursor: none;
+    }
+
+    a, button { cursor: none; }
+
+    /* ─── CUSTOM CURSOR ──────────────────────── */
+    .cursor-dot {
+      position: fixed;
+      width: 8px;
+      height: 8px;
+      background: #fff;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 9999;
+      transition: transform 0.15s ease;
+      mix-blend-mode: difference;
+    }
+
+    .cursor-ring {
+      position: fixed;
+      width: 40px;
+      height: 40px;
+      border: 1.5px solid rgba(255,255,255,0.3);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 9998;
+      transition: all 0.15s ease;
+    }
+
+    .cursor-ring.hover {
+      transform: scale(1.8);
+      border-color: var(--green);
+      background: rgba(0,230,118,0.05);
+    }
+
+    /* ─── SCROLL PROGRESS ────────────────────── */
+    .scroll-progress {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--green), var(--cyan));
+      z-index: 1000;
+      transition: width 0.1s;
+    }
+
+    /* ─── GRID BACKGROUND ────────────────────── */
+    .grid-bg {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+      background-size: 60px 60px;
+      mask-image: radial-gradient(ellipse 80% 60% at 50% 40%, black 20%, transparent 70%);
+      -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 40%, black 20%, transparent 70%);
+    }
+
+    /* ─── NOISE OVERLAY ──────────────────────── */
+    .noise {
+      position: fixed;
+      inset: 0;
+      z-index: 9990;
+      pointer-events: none;
+      opacity: 0.03;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+      background-repeat: repeat;
+      background-size: 256px 256px;
     }
 
     /* ─── NAV ─────────────────────────────────── */
@@ -44,11 +114,11 @@
       left: 0;
       right: 0;
       z-index: 100;
-      background: rgba(5, 5, 5, 0.7);
-      backdrop-filter: blur(24px) saturate(180%);
-      -webkit-backdrop-filter: blur(24px) saturate(180%);
-      border-bottom: 1px solid rgba(255,255,255,0.04);
-      padding: 0 2rem;
+      background: rgba(3, 3, 3, 0.6);
+      backdrop-filter: blur(30px) saturate(150%);
+      -webkit-backdrop-filter: blur(30px) saturate(150%);
+      border-bottom: 1px solid var(--border);
+      padding: 0 3rem;
       height: 64px;
       display: flex;
       align-items: center;
@@ -56,26 +126,39 @@
     }
 
     .nav-brand {
-      font-size: 1.25rem;
+      font-size: 1.2rem;
       font-weight: 900;
       color: var(--accent);
       text-decoration: none;
-      letter-spacing: -0.04em;
+      letter-spacing: -0.05em;
     }
 
     .nav-brand span { color: var(--green); }
 
-    .nav-links { display: flex; gap: 2rem; align-items: center; }
+    .nav-links { display: flex; gap: 2.5rem; align-items: center; }
 
     .nav-links a {
       color: var(--text-dim);
       text-decoration: none;
-      font-size: 0.85rem;
+      font-size: 0.825rem;
       font-weight: 500;
-      transition: color 0.2s;
+      transition: color 0.25s;
+      position: relative;
+    }
+
+    .nav-links a::after {
+      content: '';
+      position: absolute;
+      bottom: -4px;
+      left: 0;
+      width: 0;
+      height: 1.5px;
+      background: var(--green);
+      transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     .nav-links a:hover { color: var(--text); }
+    .nav-links a:hover::after { width: 100%; }
 
     /* ─── BUTTONS ──────────────────────────────── */
     .btn {
@@ -84,14 +167,12 @@
       gap: 0.5rem;
       padding: 0.7rem 1.5rem;
       border-radius: 10px;
-      font-size: 0.875rem;
+      font-size: 0.85rem;
       font-weight: 600;
       text-decoration: none;
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      cursor: pointer;
       border: none;
       position: relative;
-      overflow: hidden;
     }
 
     .btn-primary {
@@ -101,17 +182,17 @@
 
     .btn-primary:hover {
       transform: translateY(-2px);
-      box-shadow: 0 8px 30px rgba(255,255,255,0.15);
+      box-shadow: 0 8px 40px rgba(255,255,255,0.12);
     }
 
     .btn-secondary {
       background: transparent;
       color: var(--text);
-      border: 1px solid var(--border2);
+      border: 1px solid var(--border3);
     }
 
     .btn-secondary:hover {
-      border-color: rgba(255,255,255,0.15);
+      border-color: rgba(255,255,255,0.2);
       background: rgba(255,255,255,0.03);
       transform: translateY(-2px);
     }
@@ -119,22 +200,31 @@
     .btn-discord {
       background: #5865F2;
       color: white;
-      border: none;
     }
 
     .btn-discord:hover {
       background: #4752C4;
       transform: translateY(-2px);
-      box-shadow: 0 8px 30px rgba(88,101,242,0.3);
+      box-shadow: 0 8px 40px rgba(88,101,242,0.25);
     }
 
-    .btn-ghost {
-      background: transparent;
-      color: var(--text-dim);
-      padding: 0;
+    .btn-glow {
+      position: relative;
+      overflow: hidden;
     }
 
-    .btn-ghost:hover { color: var(--text); }
+    .btn-glow::before {
+      content: '';
+      position: absolute;
+      inset: -2px;
+      border-radius: inherit;
+      background: linear-gradient(135deg, var(--green), var(--cyan), var(--purple));
+      opacity: 0;
+      z-index: -1;
+      transition: opacity 0.3s;
+    }
+
+    .btn-glow:hover::before { opacity: 0.3; }
 
     /* ─── HERO ────────────────────────────────── */
     .hero {
@@ -149,35 +239,45 @@
       overflow: hidden;
     }
 
-    .hero::before {
-      content: '';
+    .hero-orb {
       position: absolute;
-      top: -50%;
+      border-radius: 50%;
+      filter: blur(80px);
+      pointer-events: none;
+      animation: orbFloat 12s ease-in-out infinite;
+    }
+
+    .hero-orb-1 {
+      width: 500px;
+      height: 500px;
+      background: rgba(0,230,118,0.06);
+      top: 20%;
       left: 50%;
       transform: translateX(-50%);
-      width: 1000px;
-      height: 1000px;
-      background: radial-gradient(ellipse, rgba(0,230,118,0.06) 0%, rgba(41,121,255,0.03) 40%, transparent 70%);
-      pointer-events: none;
-      animation: heroPulse 8s ease-in-out infinite;
     }
 
-    @keyframes heroPulse {
-      0%, 100% { opacity: 1; transform: translateX(-50%) scale(1); }
-      50% { opacity: 0.7; transform: translateX(-50%) scale(1.1); }
+    .hero-orb-2 {
+      width: 300px;
+      height: 300px;
+      background: rgba(41,121,255,0.05);
+      top: 60%;
+      right: 20%;
+      animation-delay: -4s;
     }
 
-    .hero::after {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background:
-        radial-gradient(circle at 20% 30%, rgba(0,230,118,0.03) 0%, transparent 50%),
-        radial-gradient(circle at 80% 70%, rgba(41,121,255,0.03) 0%, transparent 50%);
-      pointer-events: none;
+    .hero-orb-3 {
+      width: 200px;
+      height: 200px;
+      background: rgba(124,77,255,0.04);
+      top: 30%;
+      left: 15%;
+      animation-delay: -8s;
+    }
+
+    @keyframes orbFloat {
+      0%, 100% { transform: translateY(0) translateX(-50%); }
+      33% { transform: translateY(-30px) translateX(-45%); }
+      66% { transform: translateY(20px) translateX(-55%); }
     }
 
     .hero-badge {
@@ -185,12 +285,13 @@
       align-items: center;
       gap: 0.5rem;
       padding: 0.4rem 1rem;
-      background: rgba(255,255,255,0.04);
-      border: 1px solid rgba(255,255,255,0.06);
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border2);
       border-radius: 100px;
-      font-size: 0.8rem;
+      font-size: 0.75rem;
+      font-weight: 500;
       color: var(--text-mid);
-      margin-bottom: 2rem;
+      margin-bottom: 2.5rem;
       animation: fadeUp 0.8s ease forwards;
     }
 
@@ -199,29 +300,49 @@
       height: 6px;
       border-radius: 50%;
       background: var(--green);
-      box-shadow: 0 0 8px var(--green);
+      box-shadow: 0 0 10px var(--green);
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; box-shadow: 0 0 10px var(--green); }
+      50% { opacity: 0.5; box-shadow: 0 0 20px var(--green); }
     }
 
     .hero h1 {
-      font-size: clamp(3.5rem, 9vw, 6.5rem);
+      font-size: clamp(4rem, 10vw, 7rem);
       font-weight: 900;
-      letter-spacing: -0.05em;
-      line-height: 1;
+      letter-spacing: -0.06em;
+      line-height: 0.95;
       margin-bottom: 1.5rem;
-      background: linear-gradient(180deg, #fff 0%, rgba(255,255,255,0.6) 100%);
+      position: relative;
+    }
+
+    .hero h1 .line1 {
+      display: block;
+      background: linear-gradient(180deg, #fff 0%, rgba(255,255,255,0.7) 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       animation: fadeUp 0.8s ease 0.1s forwards;
       opacity: 0;
     }
 
-    .hero p {
-      font-size: 1.125rem;
+    .hero h1 .line2 {
+      display: block;
+      background: linear-gradient(135deg, var(--green) 0%, var(--cyan) 50%, var(--blue) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: fadeUp 0.8s ease 0.2s forwards;
+      opacity: 0;
+    }
+
+    .hero-desc {
+      font-size: 1.1rem;
       color: var(--text-dim);
-      max-width: 480px;
+      max-width: 460px;
       margin-bottom: 3rem;
       line-height: 1.7;
-      animation: fadeUp 0.8s ease 0.2s forwards;
+      animation: fadeUp 0.8s ease 0.3s forwards;
       opacity: 0;
     }
 
@@ -230,50 +351,38 @@
       gap: 1rem;
       flex-wrap: wrap;
       justify-content: center;
-      animation: fadeUp 0.8s ease 0.3s forwards;
+      animation: fadeUp 0.8s ease 0.4s forwards;
       opacity: 0;
     }
 
-    @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    /* ─── STATS ───────────────────────────────── */
-    .stats {
+    .hero-stats {
       display: flex;
-      justify-content: center;
-      gap: 1px;
-      padding: 0 2rem;
-      max-width: 900px;
-      margin: 0 auto;
-      background: var(--border);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      overflow: hidden;
+      gap: 3rem;
+      margin-top: 5rem;
+      animation: fadeUp 0.8s ease 0.5s forwards;
+      opacity: 0;
     }
 
-    .stat {
-      text-align: center;
-      padding: 2.5rem 2rem;
-      background: var(--bg2);
-      flex: 1;
-    }
+    .hero-stat { text-align: center; }
 
-    .stat-number {
-      font-size: 2.5rem;
-      font-weight: 900;
+    .hero-stat-value {
+      font-size: 1.5rem;
+      font-weight: 800;
       color: var(--accent);
-      letter-spacing: -0.03em;
-      line-height: 1;
+      letter-spacing: -0.02em;
     }
 
-    .stat-label {
-      font-size: 0.75rem;
+    .hero-stat-label {
+      font-size: 0.7rem;
       color: var(--text-dim);
       text-transform: uppercase;
-      letter-spacing: 0.08em;
-      margin-top: 0.5rem;
+      letter-spacing: 0.1em;
+      margin-top: 0.25rem;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
     /* ─── SECTIONS ────────────────────────────── */
@@ -287,21 +396,21 @@
       display: inline-flex;
       align-items: center;
       gap: 0.5rem;
-      font-size: 0.75rem;
+      font-size: 0.7rem;
       font-weight: 600;
       text-transform: uppercase;
-      letter-spacing: 0.1em;
+      letter-spacing: 0.12em;
       color: var(--green);
-      margin-bottom: 1rem;
+      margin-bottom: 1.25rem;
     }
 
     .section-label::before {
       content: '';
-      width: 8px;
-      height: 8px;
+      width: 6px;
+      height: 6px;
       border-radius: 2px;
       background: var(--green);
-      opacity: 0.5;
+      opacity: 0.6;
     }
 
     .section-header {
@@ -312,105 +421,184 @@
     .section-header h2 {
       font-size: clamp(2rem, 4vw, 3rem);
       font-weight: 900;
-      letter-spacing: -0.04em;
+      letter-spacing: -0.05em;
       margin-bottom: 1rem;
-      line-height: 1.1;
+      line-height: 1.05;
     }
 
     .section-header p {
       color: var(--text-dim);
-      max-width: 480px;
+      max-width: 450px;
       margin: 0 auto;
-      font-size: 1.05rem;
+      font-size: 1rem;
     }
 
-    /* ─── HOW IT WORKS ──────────────────────────── */
-    .steps-grid {
+    /* ─── STATS BANNER ────────────────────────── */
+    .stats-banner {
+      display: flex;
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .stat-item {
+      flex: 1;
+      text-align: center;
+      padding: 2.5rem 1.5rem;
+      background: var(--bg2);
+      position: relative;
+    }
+
+    .stat-item::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0;
+      height: 2px;
+      background: var(--green);
+      transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .stat-item:hover::after { width: 40px; }
+
+    .stat-value {
+      font-size: 2.25rem;
+      font-weight: 900;
+      color: var(--accent);
+      letter-spacing: -0.03em;
+      line-height: 1;
+    }
+
+    .stat-label {
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-top: 0.5rem;
+    }
+
+    /* ─── STEPS ────────────────────────────────── */
+    .steps {
       display: flex;
       align-items: flex-start;
-      gap: 1rem;
+      gap: 0;
       justify-content: center;
     }
 
     .step {
       flex: 1;
-      max-width: 300px;
-      position: relative;
+      max-width: 280px;
+      padding: 0 1.5rem;
+      text-align: center;
     }
 
-    .step-visual {
-      width: 48px;
-      height: 48px;
-      border-radius: 12px;
+    .step-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 14px;
       background: var(--bg3);
       border: 1px solid var(--border2);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.25rem;
-      margin-bottom: 1.25rem;
-      transition: all 0.3s;
+      font-size: 1.3rem;
+      margin: 0 auto 1.25rem;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
     }
 
-    .step:hover .step-visual {
-      background: rgba(0,230,118,0.08);
+    .step-icon::before {
+      content: '';
+      position: absolute;
+      inset: -3px;
+      border-radius: 17px;
+      background: linear-gradient(135deg, var(--green), var(--cyan));
+      opacity: 0;
+      z-index: -1;
+      transition: opacity 0.3s;
+    }
+
+    .step:hover .step-icon::before { opacity: 0.15; }
+
+    .step:hover .step-icon {
+      transform: translateY(-4px);
       border-color: rgba(0,230,118,0.2);
-      transform: translateY(-2px);
+      background: rgba(0,230,118,0.06);
     }
 
-    .step-number {
-      font-size: 0.7rem;
+    .step-num {
+      font-size: 0.65rem;
       font-weight: 700;
       color: var(--green);
       text-transform: uppercase;
-      letter-spacing: 0.1em;
+      letter-spacing: 0.15em;
       margin-bottom: 0.5rem;
     }
 
     .step h3 {
-      font-size: 1.1rem;
+      font-size: 1rem;
       font-weight: 700;
-      margin-bottom: 0.5rem;
+      margin-bottom: 0.4rem;
     }
 
     .step p {
-      font-size: 0.875rem;
+      font-size: 0.825rem;
       color: var(--text-dim);
       line-height: 1.6;
     }
 
-    .step-connector {
+    .step-line {
       width: 60px;
       height: 1px;
-      background: var(--border2);
-      margin-top: 24px;
+      background: linear-gradient(90deg, var(--border2), var(--border), var(--border2));
+      margin-top: 28px;
       flex-shrink: 0;
+      position: relative;
+    }
+
+    .step-line::after {
+      content: '';
+      position: absolute;
+      top: -2px;
+      left: 50%;
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--bg3);
+      border: 1px solid var(--border2);
     }
 
     /* ─── FPS COMPARISON ───────────────────────── */
     .fps-grid {
       display: flex;
       flex-direction: column;
-      gap: 0.75rem;
-      max-width: 700px;
+      gap: 0.6rem;
+      max-width: 680px;
       margin: 0 auto;
     }
 
-    .fps-game {
+    .fps-row {
       display: flex;
       align-items: center;
       gap: 1rem;
     }
 
-    .fps-game-name {
-      width: 120px;
-      font-size: 0.875rem;
+    .fps-name {
+      width: 110px;
+      font-size: 0.825rem;
       font-weight: 600;
       text-align: right;
       flex-shrink: 0;
+      color: var(--text-mid);
     }
 
-    .fps-bar-container {
+    .fps-bars {
       flex: 1;
       display: flex;
       flex-direction: column;
@@ -418,30 +606,30 @@
     }
 
     .fps-bar {
-      height: 22px;
-      border-radius: 4px;
+      height: 20px;
+      border-radius: 3px;
       display: flex;
       align-items: center;
-      padding: 0 10px;
-      font-size: 0.7rem;
+      padding: 0 8px;
+      font-size: 0.65rem;
       font-weight: 600;
-      transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: width 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     }
 
     .fps-bar.before {
-      background: var(--bg3);
+      background: rgba(255,255,255,0.03);
       color: var(--text-dim);
     }
 
     .fps-bar.after {
-      background: linear-gradient(90deg, rgba(0,230,118,0.25), rgba(0,230,118,0.1));
-      border: 1px solid rgba(0,230,118,0.2);
+      background: linear-gradient(90deg, rgba(0,230,118,0.2), rgba(0,230,118,0.08));
+      border: 1px solid rgba(0,230,118,0.15);
       color: var(--green);
     }
 
     .fps-delta {
-      width: 60px;
-      font-size: 0.875rem;
+      width: 55px;
+      font-size: 0.8rem;
       font-weight: 700;
       color: var(--green);
       flex-shrink: 0;
@@ -457,25 +645,25 @@
     .fps-legend-item {
       display: flex;
       align-items: center;
-      gap: 0.5rem;
-      font-size: 0.8rem;
+      gap: 0.4rem;
+      font-size: 0.75rem;
       color: var(--text-dim);
     }
 
-    .fps-dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 3px;
+    .fps-legend-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 2px;
     }
 
-    .fps-dot.before { background: var(--bg3); }
+    .fps-legend-dot.before { background: rgba(255,255,255,0.05); }
 
-    .fps-dot.after {
-      background: rgba(0,230,118,0.25);
-      border: 1px solid rgba(0,230,118,0.2);
+    .fps-legend-dot.after {
+      background: rgba(0,230,118,0.2);
+      border: 1px solid rgba(0,230,118,0.15);
     }
 
-    /* ─── FEATURES GRID ───────────────────────── */
+    /* ─── FEATURES ──────────────────────────────── */
     .features-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -489,70 +677,66 @@
     .feature-card {
       background: var(--bg2);
       padding: 2rem;
-      transition: all 0.3s;
+      transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
       position: relative;
     }
 
-    .feature-card:hover {
-      background: var(--bg3);
-    }
-
-    .feature-card::after {
+    .feature-card::before {
       content: '';
       position: absolute;
       inset: 0;
-      border-radius: inherit;
+      background: radial-gradient(500px circle at var(--mx, 50%) var(--my, 50%), rgba(0,230,118,0.04), transparent 40%);
       opacity: 0;
-      transition: opacity 0.3s;
-      background: radial-gradient(400px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(255,255,255,0.03), transparent 40%);
+      transition: opacity 0.35s;
     }
 
-    .feature-card:hover::after { opacity: 1; }
+    .feature-card:hover { background: var(--bg3); }
+    .feature-card:hover::before { opacity: 1; }
 
     .feature-icon {
       width: 40px;
       height: 40px;
       border-radius: 10px;
-      background: rgba(255,255,255,0.03);
-      border: 1px solid rgba(255,255,255,0.05);
+      background: rgba(255,255,255,0.02);
+      border: 1px solid var(--border2);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.15rem;
+      font-size: 1.1rem;
       margin-bottom: 1rem;
       transition: all 0.3s;
     }
 
     .feature-card:hover .feature-icon {
-      background: rgba(0,230,118,0.08);
+      background: rgba(0,230,118,0.06);
       border-color: rgba(0,230,118,0.15);
-      transform: scale(1.05);
+      transform: scale(1.1) translateY(-2px);
     }
 
     .feature-card h3 {
-      font-size: 0.95rem;
+      font-size: 0.9rem;
       font-weight: 700;
-      margin-bottom: 0.4rem;
+      margin-bottom: 0.35rem;
     }
 
     .feature-card p {
-      font-size: 0.825rem;
+      font-size: 0.8rem;
       color: var(--text-dim);
-      line-height: 1.5;
+      line-height: 1.55;
     }
 
-    /* ─── TWEAKS SHOWCASE ─────────────────────── */
+    /* ─── TWEAKS ────────────────────────────────── */
     .tweaks-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 1rem;
+      gap: 0.75rem;
     }
 
     .tweak-card {
       background: var(--bg2);
       border: 1px solid var(--border);
       border-radius: 12px;
-      padding: 1.5rem;
+      padding: 1.5rem 1rem;
       text-align: center;
       transition: all 0.3s;
       position: relative;
@@ -565,28 +749,29 @@
       top: 0;
       left: 0;
       right: 0;
-      height: 2px;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(0,230,118,0.3), transparent);
       opacity: 0;
       transition: opacity 0.3s;
     }
 
     .tweak-card:hover {
       border-color: var(--border2);
-      transform: translateY(-2px);
+      transform: translateY(-3px);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
     }
 
     .tweak-card:hover::before { opacity: 1; }
 
     .tweak-count {
-      font-size: 1.75rem;
+      font-size: 1.5rem;
       font-weight: 900;
       color: var(--accent);
       letter-spacing: -0.02em;
     }
 
     .tweak-label {
-      font-size: 0.7rem;
+      font-size: 0.65rem;
       color: var(--text-dim);
       text-transform: uppercase;
       letter-spacing: 0.08em;
@@ -615,33 +800,35 @@
 
     .price-card.featured {
       background: var(--bg3);
+      z-index: 1;
     }
 
     .price-card.featured::before {
-      content: 'POPULAR';
+      content: '';
       position: absolute;
       top: 0;
       left: 0;
       right: 0;
       height: 2px;
-      background: var(--green);
+      background: linear-gradient(90deg, var(--green), var(--cyan));
     }
 
-    .price-badge {
+    .price-popular {
       position: absolute;
-      top: -1px;
-      right: 2rem;
-      background: var(--green);
-      color: #000;
+      top: 1rem;
+      right: 1rem;
+      background: rgba(0,230,118,0.1);
+      color: var(--green);
       font-size: 0.6rem;
-      font-weight: 800;
+      font-weight: 700;
       letter-spacing: 0.1em;
-      padding: 0.3rem 0.6rem;
-      border-radius: 0 0 6px 6px;
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      border: 1px solid rgba(0,230,118,0.15);
     }
 
     .price-tier {
-      font-size: 0.75rem;
+      font-size: 0.7rem;
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.12em;
@@ -650,14 +837,14 @@
     }
 
     .price-amount {
-      font-size: 3rem;
+      font-size: 2.75rem;
       font-weight: 900;
       letter-spacing: -0.04em;
       line-height: 1;
     }
 
     .price-period {
-      font-size: 0.825rem;
+      font-size: 0.8rem;
       color: var(--text-dim);
       margin-bottom: 2rem;
     }
@@ -666,20 +853,19 @@
       list-style: none;
       display: flex;
       flex-direction: column;
-      gap: 0.6rem;
+      gap: 0.5rem;
       margin-bottom: 2rem;
     }
 
     .price-features li {
-      font-size: 0.825rem;
+      font-size: 0.8rem;
       color: var(--text-mid);
       display: flex;
       align-items: center;
       gap: 0.5rem;
     }
 
-    .price-features li::before {
-      content: '';
+    .price-check {
       width: 14px;
       height: 14px;
       border-radius: 4px;
@@ -690,19 +876,19 @@
       flex-shrink: 0;
     }
 
-    .price-features li::after {
-      content: '✓';
-      color: var(--green);
-      font-size: 0.65rem;
-      font-weight: 700;
-      margin-left: 4px;
+    .price-check svg {
+      width: 8px;
+      height: 8px;
+      stroke: var(--green);
+      stroke-width: 2.5;
+      fill: none;
     }
 
     .price-card .btn { width: 100%; justify-content: center; }
 
     /* ─── CTA ─────────────────────────────────── */
     .cta-section {
-      padding: 8rem 2rem;
+      padding: 10rem 2rem;
       text-align: center;
       position: relative;
       overflow: hidden;
@@ -711,26 +897,27 @@
     .cta-section::before {
       content: '';
       position: absolute;
-      top: 0;
+      top: 50%;
       left: 50%;
-      transform: translateX(-50%);
+      transform: translate(-50%, -50%);
       width: 800px;
-      height: 400px;
-      background: radial-gradient(ellipse, rgba(0,230,118,0.05) 0%, transparent 70%);
+      height: 500px;
+      background: radial-gradient(ellipse, rgba(0,230,118,0.04) 0%, rgba(41,121,255,0.02) 40%, transparent 70%);
       pointer-events: none;
     }
 
     .cta-section h2 {
-      font-size: clamp(2rem, 4vw, 3rem);
+      font-size: clamp(2.25rem, 5vw, 3.5rem);
       font-weight: 900;
-      letter-spacing: -0.04em;
+      letter-spacing: -0.05em;
       margin-bottom: 1rem;
+      line-height: 1.05;
     }
 
     .cta-section p {
       color: var(--text-dim);
       margin-bottom: 2.5rem;
-      font-size: 1.05rem;
+      font-size: 1rem;
     }
 
     .cta-buttons { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
@@ -742,12 +929,8 @@
       text-align: center;
     }
 
-    footer p {
-      font-size: 0.8rem;
-      color: var(--text-dim);
-    }
-
-    footer a { color: var(--text-dim); text-decoration: none; }
+    footer p { font-size: 0.75rem; color: var(--text-dim); }
+    footer a { color: var(--text-dim); text-decoration: none; transition: color 0.2s; }
     footer a:hover { color: var(--text); }
 
     .footer-links {
@@ -757,16 +940,13 @@
       margin-bottom: 1.5rem;
     }
 
-    .footer-links a {
-      font-size: 0.85rem;
-      transition: color 0.2s;
-    }
+    .footer-links a { font-size: 0.8rem; }
 
-    /* ─── SCROLL ANIMATIONS ───────────────────── */
+    /* ─── REVEAL ANIMATIONS ───────────────────── */
     .reveal {
       opacity: 0;
-      transform: translateY(24px);
-      transition: opacity 0.7s cubic-bezier(0.4, 0, 0.2, 1), transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+      transform: translateY(40px);
+      transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     .reveal.visible {
@@ -774,29 +954,47 @@
       transform: translateY(0);
     }
 
-    .reveal-delay-1 { transition-delay: 0.1s; }
-    .reveal-delay-2 { transition-delay: 0.2s; }
-    .reveal-delay-3 { transition-delay: 0.3s; }
+    .reveal-d1 { transition-delay: 0.1s; }
+    .reveal-d2 { transition-delay: 0.2s; }
+    .reveal-d3 { transition-delay: 0.3s; }
+    .reveal-d4 { transition-delay: 0.4s; }
+    .reveal-d5 { transition-delay: 0.5s; }
 
     /* ─── RESPONSIVE ──────────────────────────── */
+    @media (max-width: 900px) {
+      .features-grid { grid-template-columns: repeat(2, 1fr); }
+      .tweaks-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+
     @media (max-width: 768px) {
+      body { cursor: auto; }
+      .cursor-dot, .cursor-ring { display: none; }
+      nav { padding: 0 1.5rem; }
       .nav-links { display: none; }
-      .stats { flex-direction: column; }
-      .hero { padding: 6rem 1.5rem 3rem; }
+      .hero h1 { font-size: clamp(2.5rem, 10vw, 4rem); }
+      .hero-stats { gap: 1.5rem; }
+      .stats-banner { flex-direction: column; }
       section { padding: 5rem 1.5rem; }
       .pricing-grid { grid-template-columns: 1fr; }
       .features-grid { grid-template-columns: 1fr; }
-      .tweaks-grid { grid-template-columns: repeat(3, 1fr); }
-      .steps-grid { flex-direction: column; align-items: center; }
-      .step-connector { width: 1px; height: 30px; margin: 0; }
-      .fps-game { flex-direction: column; align-items: flex-start; gap: 0.25rem; }
-      .fps-game-name { width: auto; text-align: left; }
+      .tweaks-grid { grid-template-columns: repeat(2, 1fr); }
+      .steps { flex-direction: column; align-items: center; }
+      .step-line { width: 1px; height: 40px; margin: 0; }
+      .step-line::after { display: none; }
+      .fps-row { flex-direction: column; align-items: flex-start; gap: 0.25rem; }
+      .fps-name { width: auto; text-align: left; }
       .fps-delta { width: auto; }
       .cta-section { padding: 5rem 1.5rem; }
     }
   </style>
 </head>
 <body>
+
+  <div class="cursor-dot" id="cursorDot"></div>
+  <div class="cursor-ring" id="cursorRing"></div>
+  <div class="scroll-progress" id="scrollProgress"></div>
+  <div class="grid-bg"></div>
+  <div class="noise"></div>
 
   <!-- NAV -->
   <nav>
@@ -806,44 +1004,69 @@
       <a href="#tweaks">Tweaks</a>
       <a href="#pricing">Pricing</a>
       <a href="https://discord.gg/AhEK85REhG" target="_blank">Discord</a>
-      <a href="https://github.com/zylenofficial/choatix-v2/releases/latest" class="btn btn-primary" target="_blank">Download</a>
+      <a href="https://github.com/zylenofficial/choatix-v2/releases/latest" class="btn btn-primary btn-glow" target="_blank">Download</a>
     </div>
   </nav>
 
   <!-- HERO -->
   <section class="hero">
+    <div class="hero-orb hero-orb-1"></div>
+    <div class="hero-orb hero-orb-2"></div>
+    <div class="hero-orb hero-orb-3"></div>
+
     <div class="hero-badge">
       <span class="dot"></span>
       v2.3.0 — 461 system tweaks
     </div>
-    <h1>Maximize Your<br>FPS</h1>
-    <p>Optimize your PC for maximum gaming performance. One click. Zero delay. Pure performance.</p>
+
+    <h1>
+      <span class="line1">Maximize Your</span>
+      <span class="line2">FPS</span>
+    </h1>
+
+    <p class="hero-desc">Optimize your PC for maximum gaming performance. One click. Zero delay. Pure performance.</p>
+
     <div class="hero-buttons">
-      <a href="https://github.com/zylenofficial/choatix-v2/releases/latest" class="btn btn-primary" target="_blank">
+      <a href="https://github.com/zylenofficial/choatix-v2/releases/latest" class="btn btn-primary btn-glow" target="_blank">
         ⬇ Download Free
       </a>
       <a href="https://discord.gg/AhEK85REhG" class="btn btn-discord" target="_blank">
         Join Discord
       </a>
     </div>
+
+    <div class="hero-stats">
+      <div class="hero-stat">
+        <div class="hero-stat-value" data-count="461">0</div>
+        <div class="hero-stat-label">Tweaks</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-value" data-count="12">0</div>
+        <div class="hero-stat-label">Games</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-value" data-count="9">0</div>
+        <div class="hero-stat-label">Tools</div>
+      </div>
+    </div>
   </section>
 
-  <!-- STATS -->
-  <div class="stats reveal">
-    <div class="stat">
-      <div class="stat-number">461</div>
+  <!-- STATS BANNER -->
+  <div class="stats-banner reveal">
+    <div class="stat-item">
+      <div class="stat-value">461</div>
       <div class="stat-label">System Tweaks</div>
     </div>
-    <div class="stat">
-      <div class="stat-number">12</div>
+    <div class="stat-item">
+      <div class="stat-value">12</div>
       <div class="stat-label">Game Profiles</div>
     </div>
-    <div class="stat">
-      <div class="stat-number">9</div>
+    <div class="stat-item">
+      <div class="stat-value">9</div>
       <div class="stat-label">Optimization Tools</div>
     </div>
-    <div class="stat">
-      <div class="stat-number">100%</div>
+    <div class="stat-item">
+      <div class="stat-value">100%</div>
       <div class="stat-label">Free to Use</div>
     </div>
   </div>
@@ -854,24 +1077,24 @@
       <div class="section-label">How It Works</div>
       <h2>Three steps to peak performance</h2>
     </div>
-    <div class="steps-grid">
-      <div class="step reveal reveal-delay-1">
-        <div class="step-visual">📥</div>
-        <div class="step-number">Step 01</div>
+    <div class="steps">
+      <div class="step reveal reveal-d1">
+        <div class="step-icon">📥</div>
+        <div class="step-num">Step 01</div>
         <h3>Download & Install</h3>
         <p>Install takes 10 seconds. No bloatware, no ads, no data collection.</p>
       </div>
-      <div class="step-connector"></div>
-      <div class="step reveal reveal-delay-2">
-        <div class="step-visual">🔍</div>
-        <div class="step-number">Step 02</div>
+      <div class="step-line"></div>
+      <div class="step reveal reveal-d2">
+        <div class="step-icon">🔍</div>
+        <div class="step-num">Step 02</div>
         <h3>Scan Your PC</h3>
         <p>Analyze your hardware, OS, and settings to find optimization opportunities.</p>
       </div>
-      <div class="step-connector"></div>
-      <div class="step reveal reveal-delay-3">
-        <div class="step-visual">⚡</div>
-        <div class="step-number">Step 03</div>
+      <div class="step-line"></div>
+      <div class="step reveal reveal-d3">
+        <div class="step-icon">⚡</div>
+        <div class="step-num">Step 03</div>
         <h3>One-Click Optimize</h3>
         <p>Apply all tweaks instantly. Every change is reversible. FPS jumps in seconds.</p>
       </div>
@@ -886,58 +1109,58 @@
       <p>Average improvements measured across 12 popular games</p>
     </div>
     <div class="fps-grid reveal">
-      <div class="fps-game">
-        <div class="fps-game-name">Fortnite</div>
-        <div class="fps-bar-container">
-          <div class="fps-bar before" style="width: 55%"><span>110 FPS</span></div>
-          <div class="fps-bar after" style="width: 85%"><span>170 FPS</span></div>
+      <div class="fps-row">
+        <div class="fps-name">Fortnite</div>
+        <div class="fps-bars">
+          <div class="fps-bar before" data-width="55%"><span>110 FPS</span></div>
+          <div class="fps-bar after" data-width="85%"><span>170 FPS</span></div>
         </div>
         <div class="fps-delta">+55%</div>
       </div>
-      <div class="fps-game">
-        <div class="fps-game-name">Valorant</div>
-        <div class="fps-bar-container">
-          <div class="fps-bar before" style="width: 50%"><span>200 FPS</span></div>
-          <div class="fps-bar after" style="width: 80%"><span>320 FPS</span></div>
+      <div class="fps-row">
+        <div class="fps-name">Valorant</div>
+        <div class="fps-bars">
+          <div class="fps-bar before" data-width="50%"><span>200 FPS</span></div>
+          <div class="fps-bar after" data-width="80%"><span>320 FPS</span></div>
         </div>
         <div class="fps-delta">+60%</div>
       </div>
-      <div class="fps-game">
-        <div class="fps-game-name">CS2</div>
-        <div class="fps-bar-container">
-          <div class="fps-bar before" style="width: 45%"><span>180 FPS</span></div>
-          <div class="fps-bar after" style="width: 75%"><span>300 FPS</span></div>
+      <div class="fps-row">
+        <div class="fps-name">CS2</div>
+        <div class="fps-bars">
+          <div class="fps-bar before" data-width="45%"><span>180 FPS</span></div>
+          <div class="fps-bar after" data-width="75%"><span>300 FPS</span></div>
         </div>
         <div class="fps-delta">+67%</div>
       </div>
-      <div class="fps-game">
-        <div class="fps-game-name">Apex Legends</div>
-        <div class="fps-bar-container">
-          <div class="fps-bar before" style="width: 50%"><span>100 FPS</span></div>
-          <div class="fps-bar after" style="width: 80%"><span>160 FPS</span></div>
+      <div class="fps-row">
+        <div class="fps-name">Apex Legends</div>
+        <div class="fps-bars">
+          <div class="fps-bar before" data-width="50%"><span>100 FPS</span></div>
+          <div class="fps-bar after" data-width="80%"><span>160 FPS</span></div>
         </div>
         <div class="fps-delta">+60%</div>
       </div>
-      <div class="fps-game">
-        <div class="fps-game-name">Minecraft</div>
-        <div class="fps-bar-container">
-          <div class="fps-bar before" style="width: 40%"><span>120 FPS</span></div>
-          <div class="fps-bar after" style="width: 85%"><span>260 FPS</span></div>
+      <div class="fps-row">
+        <div class="fps-name">Minecraft</div>
+        <div class="fps-bars">
+          <div class="fps-bar before" data-width="40%"><span>120 FPS</span></div>
+          <div class="fps-bar after" data-width="85%"><span>260 FPS</span></div>
         </div>
         <div class="fps-delta">+117%</div>
       </div>
-      <div class="fps-game">
-        <div class="fps-game-name">GTA V</div>
-        <div class="fps-bar-container">
-          <div class="fps-bar before" style="width: 55%"><span>85 FPS</span></div>
-          <div class="fps-bar after" style="width: 80%"><span>125 FPS</span></div>
+      <div class="fps-row">
+        <div class="fps-name">GTA V</div>
+        <div class="fps-bars">
+          <div class="fps-bar before" data-width="55%"><span>85 FPS</span></div>
+          <div class="fps-bar after" data-width="80%"><span>125 FPS</span></div>
         </div>
         <div class="fps-delta">+47%</div>
       </div>
     </div>
     <div class="fps-legend reveal">
-      <div class="fps-legend-item"><span class="fps-dot before"></span> Before</div>
-      <div class="fps-legend-item"><span class="fps-dot after"></span> After Choatix V2</div>
+      <div class="fps-legend-item"><span class="fps-legend-dot before"></span> Before</div>
+      <div class="fps-legend-item"><span class="fps-legend-dot after"></span> After Choatix V2</div>
     </div>
   </section>
 
@@ -967,7 +1190,7 @@
       <div class="feature-card">
         <div class="feature-icon">⏱️</div>
         <h3>Zero Delay</h3>
-        <p>Reduce input lag. Optimize timer resolution, mouse latency, and render pipeline.</p>
+        <p>Reduce input lag. Optimize timer resolution, mouse latency, render pipeline.</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon">📊</div>
@@ -1084,26 +1307,26 @@
         <div class="price-amount">$0</div>
         <div class="price-period">Forever</div>
         <ul class="price-features">
-          <li>Basic system tweaks</li>
-          <li>Quick Boost</li>
-          <li>System info</li>
-          <li>Process manager</li>
-          <li>Community support</li>
+          <li><span class="price-check"><svg viewBox="0 0 12 12"><path d="M2 6l3 3 5-5"/></svg></span> Basic system tweaks</li>
+          <li><span class="price-check"><svg viewBox="0 0 12 12"><path d="M2 6l3 3 5-5"/></svg></span> Quick Boost</li>
+          <li><span class="price-check"><svg viewBox="0 0 12 12"><path d="M2 6l3 3 5-5"/></svg></span> System info</li>
+          <li><span class="price-check"><svg viewBox="0 0 12 12"><path d="M2 6l3 3 5-5"/></svg></span> Process manager</li>
+          <li><span class="price-check"><svg viewBox="0 0 12 12"><path d="M2 6l3 3 5-5"/></svg></span> Community support</li>
         </ul>
         <a href="https://github.com/zylenofficial/choatix-v2/releases/latest" class="btn btn-secondary" target="_blank">Download Free</a>
       </div>
       <div class="price-card featured">
-        <div class="price-badge">POPULAR</div>
+        <div class="price-popular">POPULAR</div>
         <div class="price-tier">Pro</div>
         <div class="price-amount">$4.99</div>
         <div class="price-period">One-time payment</div>
         <ul class="price-features">
-          <li>461 system tweaks</li>
-          <li>Game Optimizer (all games)</li>
-          <li>Zero Delay</li>
-          <li>Deep Clean</li>
-          <li>FPS Compare</li>
-          <li>Benchmark & Leaderboard</li>
+          <li><span class="price-check"><svg viewBox="0 0 12 12"><path d="M2 6l3 3 5-5"/></svg></span> 461 system tweaks</li>
+          <li><span class="price-check"><svg viewBox="0 0 12 12"><path d="M2 6l3 3 5-5"/></svg></span> Game Optimizer (all games)</li>
+          <li><span class="price-check"><svg viewBox="0 0 12 12"><path d="M2 6l3 3 5-5"/></svg></span> Zero Delay</li>
+          <li><span class="price-check"><svg viewBox="0 0 12 12"><path d="M2 6l3 3 5-5"/></svg></span> Deep Clean</li>
+          <li><span class="price-check"><svg viewBox="0 0 12 12"><path d="M2 6l3 3 5-5"/></svg></span> FPS Compare</li>
+          <li><span class="price-check"><svg viewBox="0 0 12 12"><path d="M2 6l3 3 5-5"/></svg></span> Benchmark & Leaderboard</li>
         </ul>
         <a href="https://discord.gg/AhEK85REhG" class="btn btn-primary" target="_blank">Get Pro</a>
       </div>
@@ -1112,12 +1335,12 @@
         <div class="price-amount">€7.99</div>
         <div class="price-period">One-time payment</div>
         <ul class="price-features">
-          <li>Everything in Pro</li>
-          <li>Power Plan Manager</li>
-          <li>Game Settings Backup</li>
-          <li>Network Speed Test</li>
-          <li>Priority support</li>
-          <li>Early access features</li>
+          <li><span class="price-check"><svg viewBox="0 0 12 12"><path d="M2 6l3 3 5-5"/></svg></span> Everything in Pro</li>
+          <li><span class="price-check"><svg viewBox="0 0 12 12"><path d="M2 6l3 3 5-5"/></svg></span> Power Plan Manager</li>
+          <li><span class="price-check"><svg viewBox="0 0 12 12"><path d="M2 6l3 3 5-5"/></svg></span> Game Settings Backup</li>
+          <li><span class="price-check"><svg viewBox="0 0 12 12"><path d="M2 6l3 3 5-5"/></svg></span> Network Speed Test</li>
+          <li><span class="price-check"><svg viewBox="0 0 12 12"><path d="M2 6l3 3 5-5"/></svg></span> Priority support</li>
+          <li><span class="price-check"><svg viewBox="0 0 12 12"><path d="M2 6l3 3 5-5"/></svg></span> Early access features</li>
         </ul>
         <a href="https://discord.gg/AhEK85REhG" class="btn btn-secondary" target="_blank">Get Premium</a>
       </div>
@@ -1126,10 +1349,10 @@
 
   <!-- CTA -->
   <section class="cta-section">
-    <h2 class="reveal">Ready to Boost Your FPS?</h2>
+    <h2 class="reveal">Ready to Boost<br>Your FPS?</h2>
     <p class="reveal">Join gamers optimizing their PCs with Choatix V2</p>
     <div class="cta-buttons reveal">
-      <a href="https://github.com/zylenofficial/choatix-v2/releases/latest" class="btn btn-primary" target="_blank">
+      <a href="https://github.com/zylenofficial/choatix-v2/releases/latest" class="btn btn-primary btn-glow" target="_blank">
         ⬇ Download Choatix V2
       </a>
       <a href="https://discord.gg/AhEK85REhG" class="btn btn-discord" target="_blank">
@@ -1148,9 +1371,44 @@
     <p>&copy; 2026 Choatix V2. Built by zylenofficial.</p>
   </footer>
 
-  <!-- SCROLL ANIMATIONS + INTERACTIVE -->
   <script>
-    const observer = new IntersectionObserver((entries) => {
+    // Custom cursor
+    const dot = document.getElementById('cursorDot');
+    const ring = document.getElementById('cursorRing');
+    let mouseX = 0, mouseY = 0;
+    let ringX = 0, ringY = 0;
+
+    document.addEventListener('mousemove', (e) => {
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+      dot.style.left = mouseX - 4 + 'px';
+      dot.style.top = mouseY - 4 + 'px';
+    });
+
+    function animateRing() {
+      ringX += (mouseX - ringX) * 0.15;
+      ringY += (mouseY - ringY) * 0.15;
+      ring.style.left = ringX - 20 + 'px';
+      ring.style.top = ringY - 20 + 'px';
+      requestAnimationFrame(animateRing);
+    }
+    animateRing();
+
+    document.querySelectorAll('a, button, .feature-card, .tweak-card, .price-card, .step').forEach(el => {
+      el.addEventListener('mouseenter', () => ring.classList.add('hover'));
+      el.addEventListener('mouseleave', () => ring.classList.remove('hover'));
+    });
+
+    // Scroll progress
+    window.addEventListener('scroll', () => {
+      const scrollTop = document.documentElement.scrollTop;
+      const scrollHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+      const progress = (scrollTop / scrollHeight) * 100;
+      document.getElementById('scrollProgress').style.width = progress + '%';
+    });
+
+    // Scroll reveal
+    const revealObserver = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
           entry.target.classList.add('visible');
@@ -1158,13 +1416,64 @@
       });
     }, { threshold: 0.1 });
 
-    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+    document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
 
+    // FPS bar animation on scroll
+    const fpsObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.querySelectorAll('.fps-bar').forEach(bar => {
+            bar.style.width = bar.dataset.width;
+          });
+        }
+      });
+    }, { threshold: 0.3 });
+
+    document.querySelectorAll('.fps-grid').forEach(el => {
+      el.querySelectorAll('.fps-bar').forEach(bar => bar.style.width = '0%');
+      fpsObserver.observe(el);
+    });
+
+    // Counter animation
+    const counterObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const el = entry.target;
+          const target = parseInt(el.dataset.count);
+          let current = 0;
+          const increment = target / 40;
+          const timer = setInterval(() => {
+            current += increment;
+            if (current >= target) {
+              el.textContent = target;
+              clearInterval(timer);
+            } else {
+              el.textContent = Math.floor(current);
+            }
+          }, 30);
+          counterObserver.unobserve(el);
+        }
+      });
+    }, { threshold: 0.5 });
+
+    document.querySelectorAll('[data-count]').forEach(el => counterObserver.observe(el));
+
+    // Feature card mouse tracking
     document.querySelectorAll('.feature-card').forEach(card => {
       card.addEventListener('mousemove', (e) => {
         const rect = card.getBoundingClientRect();
-        card.style.setProperty('--mouse-x', ((e.clientX - rect.left) / rect.width * 100) + '%');
-        card.style.setProperty('--mouse-y', ((e.clientY - rect.top) / rect.height * 100) + '%');
+        card.style.setProperty('--mx', ((e.clientX - rect.left) / rect.width * 100) + '%');
+        card.style.setProperty('--my', ((e.clientY - rect.top) / rect.height * 100) + '%');
+      });
+    });
+
+    // Stat item hover effect
+    document.querySelectorAll('.stat-item').forEach(item => {
+      item.addEventListener('mouseenter', () => {
+        item.style.background = 'var(--bg3)';
+      });
+      item.addEventListener('mouseleave', () => {
+        item.style.background = 'var(--bg2)';
       });
     });
   </script>
