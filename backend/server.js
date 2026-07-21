@@ -445,6 +445,71 @@ app.get('/api/admin/keys', async (req, res) => {
   }
 });
 
+// ─── Admin: Revoke key ──────────────────────────────────────
+app.post('/api/admin/revoke', async (req, res) => {
+  const { key, adminSecret } = req.body;
+  if (adminSecret !== 'choatix-admin-2024') return res.status(403).json({ error: 'Unauthorized' });
+  if (!key) return res.status(400).json({ error: 'Key required' });
+
+  const cleaned = key.trim().toUpperCase();
+  const keyData = await getKey(cleaned);
+  if (!keyData) return res.json({ success: false, message: 'Key not found' });
+
+  if (keyData.discord_id) {
+    await deleteUser(keyData.discord_id);
+  }
+  await saveKey(cleaned, { ...keyData, redeemed: false, discord_id: null });
+  res.json({ success: true, message: `Key ${cleaned} revoked` });
+});
+
+// ─── Admin: Stats ────────────────────────────────────────────
+app.get('/api/admin/stats', async (req, res) => {
+  const adminSecret = req.headers['x-admin-secret'];
+  if (adminSecret !== 'choatix-admin-2024') return res.status(403).json({ error: 'Unauthorized' });
+
+  if (app.locals.pool) {
+    const totalKeys = await app.locals.pool.query('SELECT COUNT(*) as count FROM keys_table');
+    const redeemedKeys = await app.locals.pool.query('SELECT COUNT(*) as count FROM keys_table WHERE redeemed = true');
+    const proUsers = await app.locals.pool.query("SELECT COUNT(*) as count FROM users_table WHERE tier = 'PRO'");
+    const premiumUsers = await app.locals.pool.query("SELECT COUNT(*) as count FROM users_table WHERE tier = 'PREMIUM'");
+    const totalReferrals = await app.locals.pool.query('SELECT COALESCE(SUM(uses), 0) as count FROM referrals_table');
+    const benchmarks = await app.locals.pool.query('SELECT COUNT(*) as count FROM benchmarks');
+    res.json({
+      totalKeys: parseInt(totalKeys.rows[0].count),
+      redeemedKeys: parseInt(redeemedKeys.rows[0].count),
+      proUsers: parseInt(proUsers.rows[0].count),
+      premiumUsers: parseInt(premiumUsers.rows[0].count),
+      totalReferrals: parseInt(totalReferrals.rows[0].count),
+      totalBenchmarks: parseInt(benchmarks.rows[0].count),
+    });
+  } else {
+    const keys = Object.values(memKeys);
+    const users = Object.values(memUsers);
+    res.json({
+      totalKeys: keys.length,
+      redeemedKeys: keys.filter(k => k.redeemed).length,
+      proUsers: users.filter(u => u.tier === 'PRO').length,
+      premiumUsers: users.filter(u => u.tier === 'PREMIUM').length,
+      totalReferrals: 0,
+      totalBenchmarks: 0,
+    });
+  }
+});
+
+// ─── Admin: All licensed users ───────────────────────────────
+app.get('/api/admin/users', async (req, res) => {
+  const adminSecret = req.headers['x-admin-secret'];
+  if (adminSecret !== 'choatix-admin-2024') return res.status(403).json({ error: 'Unauthorized' });
+
+  if (app.locals.pool) {
+    const r = await app.locals.pool.query('SELECT discord_id, tier, activated_at FROM users_table');
+    res.json({ users: r.rows });
+  } else {
+    const users = Object.entries(memUsers).map(([id, d]) => ({ discord_id: id, tier: d.tier, activated_at: d.activatedAt }));
+    res.json({ users });
+  }
+});
+
 // ── Leaderboard ──
 app.post('/api/benchmark/submit', async (req, res) => {
   const { discord_id, nickname, hardware_hash, cpu_model, gpu_model, ram_gb, cpu_score, ram_score, disk_score, gpu_score, overall_score } = req.body;

@@ -110,6 +110,51 @@ async function registerCommands() {
       .addIntegerOption(option =>
         option.setName('count').setDescription('Number of keys to generate (1-10)').setMinValue(1).setMaxValue(10).setRequired(true)
       ),
+    new SlashCommandBuilder()
+      .setName('help')
+      .setDescription('List all available commands'),
+    new SlashCommandBuilder()
+      .setName('invite')
+      .setDescription('Get the Discord server invite link'),
+    new SlashCommandBuilder()
+      .setName('download')
+      .setDescription('Get the Choatix V2 download link'),
+    new SlashCommandBuilder()
+      .setName('ping')
+      .setDescription('Check bot latency'),
+    new SlashCommandBuilder()
+      .setName('profile')
+      .setDescription('View your Choatix profile'),
+    new SlashCommandBuilder()
+      .setName('changelog')
+      .setDescription('View latest Choatix V2 updates'),
+    new SlashCommandBuilder()
+      .setName('revoke')
+      .setDescription('Revoke a license key (admin only)')
+      .addStringOption(option =>
+        option.setName('key').setDescription('License key to revoke').setRequired(true)
+      ),
+    new SlashCommandBuilder()
+      .setName('announce')
+      .setDescription('Send an announcement embed (admin only)')
+      .addStringOption(option =>
+        option.setName('title').setDescription('Embed title').setRequired(true)
+      )
+      .addStringOption(option =>
+        option.setName('message').setDescription('Embed message').setRequired(true)
+      )
+      .addStringOption(option =>
+        option.setName('color').setDescription('Hex color (e.g. ff0000)').setRequired(false)
+      ),
+    new SlashCommandBuilder()
+      .setName('stats')
+      .setDescription('View bot and server statistics (admin only)'),
+    new SlashCommandBuilder()
+      .setName('broadcast')
+      .setDescription('DM all licensed users (admin only)')
+      .addStringOption(option =>
+        option.setName('message').setDescription('Message to send').setRequired(true)
+      ),
   ];
 
   const rest = new REST({ version: '10' }).setToken(BOT_TOKEN);
@@ -410,6 +455,212 @@ client.on('interactionCreate', async (interaction) => {
       await interaction.editReply({
         content: '❌ **Error** ' + error.message,
       });
+    }
+  }
+
+  // ─── /help ────────────────────────────────────────────────
+  if (interaction.isChatInputCommand() && interaction.commandName === 'help') {
+    const embed = new EmbedBuilder()
+      .setTitle('📖 Choatix V2 — Commands')
+      .setDescription('All available bot commands')
+      .addFields(
+        { name: '🔑 License', value: '`/redeem` — Redeem a license key\n`/status` — Check your license\n`/unlink` — Unlink your license', inline: false },
+        { name: '🔗 Referrals', value: '`/refer` — Get your referral code\n`/redeem-referral` — Redeem a referral code', inline: false },
+        { name: '🎉 Fun', value: '`/giveaway` — Start a giveaway (admin)\n`/profile` — View your profile', inline: false },
+        { name: 'ℹ️ Info', value: '`/help` — This message\n`/ping` — Bot latency\n`/invite` — Server invite\n`/download` — Download Choatix V2\n`/changelog` — Latest updates', inline: false },
+        { name: '🛠️ Admin', value: '`/generate-key` — Generate keys\n`/revoke` — Revoke a key\n`/announce` — Send announcement\n`/stats` — Server statistics\n`/broadcast` — DM all users', inline: false },
+      )
+      .setColor(0xffffff)
+      .setFooter({ text: 'Choatix V2 — Gaming Optimization' });
+
+    await interaction.reply({ embeds: [embed] });
+  }
+
+  // ─── /invite ──────────────────────────────────────────────
+  if (interaction.isChatInputCommand() && interaction.commandName === 'invite') {
+    const embed = new EmbedBuilder()
+      .setTitle('🔗 Join Our Server')
+      .setDescription('[Click here to join Choatix Discord](https://discord.gg/AhEK85REhG)')
+      .setColor(0xffffff);
+
+    await interaction.reply({ embeds: [embed] });
+  }
+
+  // ─── /download ────────────────────────────────────────────
+  if (interaction.isChatInputCommand() && interaction.commandName === 'download') {
+    const embed = new EmbedBuilder()
+      .setTitle('⬇️ Download Choatix V2')
+      .setDescription('[Click here to download](https://github.com/zylenofficial/choatix-v2/releases/latest)\n\nChoose the latest `Setup.exe` from Assets.')
+      .setColor(0xffffff);
+
+    await interaction.reply({ embeds: [embed] });
+  }
+
+  // ─── /ping ────────────────────────────────────────────────
+  if (interaction.isChatInputCommand() && interaction.commandName === 'ping') {
+    const sent = await interaction.reply({ content: '🏓 Pinging...', fetchReply: true });
+    const latency = sent.createdTimestamp - interaction.createdTimestamp;
+    const apiLatency = Math.round(client.ws.ping);
+
+    await interaction.editReply({
+      content: `🏓 **Pong!**\n\nBot Latency: **${latency}ms**\nAPI Latency: **${apiLatency}ms**`,
+    });
+  }
+
+  // ─── /profile ─────────────────────────────────────────────
+  if (interaction.isChatInputCommand() && interaction.commandName === 'profile') {
+    const discordId = interaction.user.id;
+    await interaction.deferReply();
+
+    try {
+      const result = await apiRequest('GET', `/api/license/${discordId}`);
+      const embed = new EmbedBuilder()
+        .setTitle(`👤 ${interaction.user.username}'s Profile`)
+        .setThumbnail(interaction.user.displayAvatarURL())
+        .setColor(0xffffff);
+
+      if (result.tier) {
+        const key = result.key ? `\`${result.key}\`` : 'N/A';
+        embed.addFields(
+          { name: 'Plan', value: `**${result.tier}**`, inline: true },
+          { name: 'Key', value: key, inline: true },
+          { name: 'Activated', value: result.activatedAt ? `<t:${Math.floor(new Date(result.activatedAt).getTime() / 1000)}:R>` : 'N/A', inline: true },
+        );
+      } else {
+        embed.setDescription('No license found.\n\nUse `/redeem` to activate a key.');
+      }
+
+      await interaction.editReply({ embeds: [embed] });
+    } catch (error) {
+      await interaction.editReply({ content: '❌ **Error** Could not connect to license server.' });
+    }
+  }
+
+  // ─── /changelog ───────────────────────────────────────────
+  if (interaction.isChatInputCommand() && interaction.commandName === 'changelog') {
+    const embed = new EmbedBuilder()
+      .setTitle('📋 Choatix V2 — Changelog')
+      .setDescription('Latest updates and improvements')
+      .addFields(
+        { name: 'v2.3.0', value: '• 48 new tweaks (461 total)\n• Power Plan Manager\n• Game Settings Backup/Restore\n• Deep Clean one-click\n• Network Speed Test', inline: false },
+        { name: 'v2.2.0', value: '• Custom dark installer\n• FPS Comparison\n• Settings redesign\n• Notification Bell\n• Leaderboard\n• Update checker', inline: false },
+        { name: 'v2.1.0', value: '• CSS performance overhaul\n• ZeroDelay sensitivity dropdown\n• Game Optimizer inline tiers\n• Revert All button', inline: false },
+        { name: 'v2.0.0', value: '• Full UI redesign\n• Discord bot + license server\n• 9-page layout\n• 400+ tweaks', inline: false },
+      )
+      .setColor(0xffffff)
+      .setFooter({ text: 'github.com/zylenofficial/choatix-v2' });
+
+    await interaction.reply({ embeds: [embed] });
+  }
+
+  // ─── /revoke (admin only) ────────────────────────────────
+  if (interaction.isChatInputCommand() && interaction.commandName === 'revoke') {
+    if (!ADMIN_IDS.includes(interaction.user.id)) {
+      return interaction.reply({ content: '❌ Admin only.', ephemeral: true });
+    }
+
+    const key = interaction.options.getString('key').trim().toUpperCase();
+    await interaction.deferReply({ ephemeral: true });
+
+    try {
+      const result = await apiRequest('POST', '/api/admin/revoke', { key, adminSecret: ADMIN_SECRET });
+      if (result.success) {
+        await interaction.editReply({ content: `✅ **Key Revoked**\n\n\`${key}\` has been revoked and unlinked from any user.` });
+      } else {
+        await interaction.editReply({ content: `❌ **Failed**\n\n${result.message}` });
+      }
+    } catch (error) {
+      await interaction.editReply({ content: '❌ **Error** Could not connect to license server.' });
+    }
+  }
+
+  // ─── /announce (admin only) ──────────────────────────────
+  if (interaction.isChatInputCommand() && interaction.commandName === 'announce') {
+    if (!ADMIN_IDS.includes(interaction.user.id)) {
+      return interaction.reply({ content: '❌ Admin only.', ephemeral: true });
+    }
+
+    const title = interaction.options.getString('title');
+    const message = interaction.options.getString('message');
+    const colorHex = interaction.options.getString('color') || 'ffffff';
+    const color = parseInt(colorHex.replace('#', ''), 16) || 0xffffff;
+
+    const embed = new EmbedBuilder()
+      .setTitle(title)
+      .setDescription(message)
+      .setColor(color)
+      .setTimestamp()
+      .setFooter({ text: `Announced by ${interaction.user.username}` });
+
+    await interaction.reply({ content: '**📢 Announcement sent!**' });
+    await interaction.channel.send({ embeds: [embed] });
+  }
+
+  // ─── /stats (admin only) ─────────────────────────────────
+  if (interaction.isChatInputCommand() && interaction.commandName === 'stats') {
+    if (!ADMIN_IDS.includes(interaction.user.id)) {
+      return interaction.reply({ content: '❌ Admin only.', ephemeral: true });
+    }
+
+    await interaction.deferReply({ ephemeral: true });
+
+    try {
+      const result = await apiRequest('GET', '/api/admin/stats');
+      const embed = new EmbedBuilder()
+        .setTitle('📊 Choatix V2 — Statistics')
+        .addFields(
+          { name: 'Total Keys', value: String(result.totalKeys || 0), inline: true },
+          { name: 'Redeemed', value: String(result.redeemedKeys || 0), inline: true },
+          { name: 'PRO Users', value: String(result.proUsers || 0), inline: true },
+          { name: 'PREMIUM Users', value: String(result.premiumUsers || 0), inline: true },
+          { name: 'Referral Uses', value: String(result.totalReferrals || 0), inline: true },
+          { name: 'Benchmarks', value: String(result.totalBenchmarks || 0), inline: true },
+        )
+        .setColor(0xffffff)
+        .setTimestamp();
+
+      await interaction.editReply({ embeds: [embed] });
+    } catch (error) {
+      await interaction.editReply({ content: '❌ **Error** Could not connect to license server.' });
+    }
+  }
+
+  // ─── /broadcast (admin only) ─────────────────────────────
+  if (interaction.isChatInputCommand() && interaction.commandName === 'broadcast') {
+    if (!ADMIN_IDS.includes(interaction.user.id)) {
+      return interaction.reply({ content: '❌ Admin only.', ephemeral: true });
+    }
+
+    const message = interaction.options.getString('message');
+    await interaction.deferReply({ ephemeral: true });
+
+    try {
+      const result = await apiRequest('GET', '/api/admin/users');
+      const users = result.users || [];
+      if (users.length === 0) {
+        return interaction.editReply({ content: '❌ No licensed users found.' });
+      }
+
+      let sent = 0;
+      let failed = 0;
+
+      for (const user of users) {
+        try {
+          const member = await interaction.guild.members.fetch(user.discord_id);
+          if (member) {
+            await member.send(`📢 **Choatix Announcement**\n\n${message}`);
+            sent++;
+          }
+        } catch {
+          failed++;
+        }
+      }
+
+      await interaction.editReply({
+        content: `✅ **Broadcast Sent**\n\nDelivered: **${sent}**\nFailed: **${failed}**\nTotal users: **${users.length}**`,
+      });
+    } catch (error) {
+      await interaction.editReply({ content: '❌ **Error** Could not connect to license server.' });
     }
   }
 });
