@@ -8,6 +8,7 @@ import dynamic from 'next/dynamic'
 import Disclaimer from '@/components/Disclaimer'
 import { ToastProvider } from '@/components/Toast'
 import { NotificationBell } from '@/components/NotificationBell'
+import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
 
 const DashboardPage = dynamic(() => import('@/components/pages/DashboardPage').then(m => ({ default: m.DashboardPage })), { ssr: false })
 const OptimizePage = dynamic(() => import('@/components/pages/OptimizePage').then(m => ({ default: m.OptimizePage })), { ssr: false })
@@ -40,6 +41,8 @@ export default function Home() {
   const [showDisclaimer, setShowDisclaimer] = useState(true)
 
   const { license, rollbackEntries, appliedTweaks, discordId, selectedGames, scheduledScans, autopilotEnabled } = useStore()
+
+  useKeyboardShortcuts()
 
   const saveState = useCallback(() => {
     if (!window.electronAPI) return

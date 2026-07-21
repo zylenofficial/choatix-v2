@@ -859,4 +859,52 @@
     transform: translateZ(0);
     backface-visibility: hidden;
   }
+
+  /* ─── Skeleton Shimmer ─────────────────────── */
+  .skeleton-shimmer {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(255,255,255,0.04) 40%,
+      rgba(255,255,255,0.06) 50%,
+      rgba(255,255,255,0.04) 60%,
+      transparent 100%
+    );
+    animation: shimmer 1.8s ease-in-out infinite;
+  }
+  @keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+  }
+
+  /* ─── Card Hover Glow ──────────────────────── */
+  .card-glow {
+    transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.25s ease;
+    will-change: transform;
+  }
+  .card-glow:hover {
+    transform: translateY(-2px);
+    border-color: rgba(255,255,255,0.12);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.06);
+  }
+
+  /* ─── Keyboard Shortcut Badge ───────────────── */
+  .kbd {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 5px;
+    font-size: 10px;
+    font-weight: 600;
+    font-family: 'Inter', monospace;
+    color: rgba(255,255,255,0.4);
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 4px;
+    line-height: 1;
+  }
 }

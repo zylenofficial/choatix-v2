@@ -6,9 +6,11 @@ import {
   Cpu, MemoryStick, Monitor, HardDrive, Zap, Shield,
   Activity, Gamepad2, ArrowRight, Clock, Wifi,
   Download, Upload, Target, TrendingUp,
-  Sparkles, Thermometer,
+  Sparkles, Thermometer, Keyboard,
 } from 'lucide-react'
 import type { RealtimeStats } from '@/types'
+import { DashboardSkeleton } from '@/components/Skeleton'
+import { Tooltip } from '@/components/Tooltip'
 
 function calcHealthScore(stats: RealtimeStats | null): number {
   if (!stats) return 0
@@ -91,15 +93,7 @@ export function DashboardPage() {
   const nav = (page: string) => window.dispatchEvent(new CustomEvent('choatix-navigate', { detail: page }))
 
   if (!stats) {
-    return (
-      <div className="h-full flex flex-col items-center justify-center">
-        <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4 pulse-glow" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
-          <Activity className="w-8 h-8 scan-pulse" style={{ color: '#ffffff' }} />
-        </div>
-        <p className="text-[13px] font-medium" style={{ color: 'rgba(255,255,255,0.5)' }}>Scanning system</p>
-        <p className="text-[10px] mt-1" style={{ color: 'rgba(255,255,255,0.2)' }}>Detecting hardware and performance metrics</p>
-      </div>
-    )
+    return <DashboardSkeleton />
   }
 
   const cpuPct = Math.round(stats.cpu.usage)
@@ -219,7 +213,7 @@ export function DashboardPage() {
             { icon: HardDrive, label: 'DISK', value: `${diskPct}%`, sub: `${stats.storage.drives[0]?.freeGB || 0} GB free`, detail: '', pct: diskPct, temp: null },
             { icon: Clock, label: 'UPTIME', value: formatUptime(stats.system.uptime), sub: stats.system.os, detail: '', pct: 0, temp: null },
           ].map((item, i) => (
-            <div key={i} className="rounded-xl px-4 py-3.5 transition-all duration-200 group"
+            <div key={i} className="rounded-xl px-4 py-3.5 card-glow"
               style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.04)' }}>
               <div className="flex items-center justify-between mb-2.5">
                 <div className="flex items-center gap-2">
@@ -304,6 +298,22 @@ export function DashboardPage() {
               </div>
             </div>
           </div>
+
+          <Tooltip content="Press 1-9 to navigate pages" side="bottom">
+            <div className="rounded-xl px-4 py-3 flex items-center gap-3" style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.04)' }}>
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.05)' }}>
+                <Keyboard className="w-3.5 h-3.5" style={{ color: 'rgba(255,255,255,0.4)' }} />
+              </div>
+              <div>
+                <div className="text-[9px] font-bold tracking-[0.15em]" style={{ color: 'rgba(255,255,255,0.2)' }}>SHORTCUTS</div>
+                <div className="flex gap-1 mt-1">
+                  {['1','2','3','4','5'].map(k => (
+                    <span key={k} className="kbd">{k}</span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </Tooltip>
         </div>
       </div>
     </div>
