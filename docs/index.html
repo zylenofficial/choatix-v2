@@ -430,6 +430,265 @@
       margin-bottom: 1.5rem;
     }
 
+    /* ─── HOW IT WORKS ──────────────────────────── */
+    .steps-grid {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .step {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 2.5rem 2rem;
+      flex: 1;
+      min-width: 220px;
+      max-width: 280px;
+      transition: border-color 0.2s;
+    }
+
+    .step:hover { border-color: var(--text-dim); }
+
+    .step-number {
+      font-size: 3rem;
+      font-weight: 900;
+      color: var(--border);
+      line-height: 1;
+      margin-bottom: 1rem;
+    }
+
+    .step h3 {
+      font-size: 1.125rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+
+    .step p {
+      font-size: 0.875rem;
+      color: var(--text-dim);
+      line-height: 1.6;
+    }
+
+    .step-arrow {
+      font-size: 1.5rem;
+      color: var(--text-dim);
+      flex-shrink: 0;
+    }
+
+    /* ─── FPS COMPARISON ───────────────────────── */
+    .fps-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      max-width: 700px;
+      margin: 0 auto;
+    }
+
+    .fps-game {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .fps-game-name {
+      width: 120px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    .fps-bar-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .fps-bar {
+      height: 24px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      padding: 0 10px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      transition: width 1s ease;
+    }
+
+    .fps-bar.before {
+      background: var(--bg3);
+      color: var(--text-dim);
+    }
+
+    .fps-bar.after {
+      background: linear-gradient(90deg, rgba(34,197,94,0.3), rgba(34,197,94,0.15));
+      border: 1px solid rgba(34,197,94,0.3);
+      color: var(--green);
+    }
+
+    .fps-delta {
+      width: 60px;
+      font-size: 0.875rem;
+      font-weight: 700;
+      color: var(--green);
+      flex-shrink: 0;
+    }
+
+    .fps-legend {
+      display: flex;
+      gap: 2rem;
+      justify-content: center;
+      margin-top: 2rem;
+    }
+
+    .fps-legend-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.8rem;
+      color: var(--text-dim);
+    }
+
+    .fps-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+    }
+
+    .fps-dot.before { background: var(--bg3); }
+
+    .fps-dot.after {
+      background: rgba(34,197,94,0.3);
+      border: 1px solid rgba(34,197,94,0.3);
+    }
+
+    /* ─── SCREENSHOTS ──────────────────────────── */
+    .screenshots-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .screenshot-card { text-align: center; }
+
+    .screenshot-placeholder {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1rem;
+      aspect-ratio: 16/10;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: border-color 0.2s;
+    }
+
+    .screenshot-placeholder:hover { border-color: var(--text-dim); }
+
+    .screenshot-mockup {
+      width: 100%;
+      height: 100%;
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    .mockup-bar {
+      height: 20px;
+      background: var(--bg3);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 0 8px;
+    }
+
+    .mockup-bar span {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--border);
+    }
+
+    .mockup-content {
+      height: calc(100% - 20px);
+      background: var(--bg);
+      display: flex;
+    }
+
+    .mockup-sidebar {
+      width: 30%;
+      background: var(--bg2);
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .mockup-item {
+      height: 12px;
+      background: var(--bg3);
+      border-radius: 3px;
+    }
+
+    .mockup-item.active {
+      background: rgba(255,255,255,0.1);
+      border-left: 2px solid var(--accent);
+    }
+
+    .mockup-main {
+      flex: 1;
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .mockup-card {
+      height: 20px;
+      background: var(--bg2);
+      border-radius: 4px;
+      flex: 1;
+    }
+
+    .mockup-tweaks {
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      width: 100%;
+    }
+
+    .mockup-toggle {
+      height: 14px;
+      background: var(--bg2);
+      border-radius: 3px;
+      width: 80%;
+    }
+
+    .mockup-games {
+      padding: 8px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      width: 100%;
+    }
+
+    .mockup-game {
+      aspect-ratio: 1;
+      background: var(--bg2);
+      border-radius: 4px;
+    }
+
+    .screenshot-label {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--text-dim);
+    }
+
     /* ─── RESPONSIVE ──────────────────────────── */
     @media (max-width: 768px) {
       .nav-links { display: none; }
@@ -437,6 +696,12 @@
       .hero { padding: 6rem 1.5rem 3rem; }
       section { padding: 4rem 1.5rem; }
       .pricing-grid { grid-template-columns: 1fr; }
+      .steps-grid { flex-direction: column; }
+      .step-arrow { transform: rotate(90deg); }
+      .fps-game { flex-direction: column; align-items: flex-start; gap: 0.25rem; }
+      .fps-game-name { width: auto; text-align: left; }
+      .fps-delta { width: auto; }
+      .screenshots-grid { grid-template-columns: 1fr; }
     }
 
     /* ─── SCROLL ANIMATIONS ───────────────────── */
@@ -503,6 +768,160 @@
       <div class="stat-label">Free to Use</div>
     </div>
   </div>
+
+  <!-- HOW IT WORKS -->
+  <section id="how-it-works">
+    <div class="section-header fade-in">
+      <h2>How It Works</h2>
+      <p>Three steps to maximum performance</p>
+    </div>
+    <div class="steps-grid fade-in">
+      <div class="step">
+        <div class="step-number">01</div>
+        <h3>Download & Install</h3>
+        <p>Download Choatix V2 from GitHub. Install takes 10 seconds. No bloatware, no ads.</p>
+      </div>
+      <div class="step-arrow">→</div>
+      <div class="step">
+        <div class="step-number">02</div>
+        <h3>Scan Your PC</h3>
+        <p>Choatix analyzes your hardware, OS version, and current settings to find optimization opportunities.</p>
+      </div>
+      <div class="step-arrow">→</div>
+      <div class="step">
+        <div class="step-number">03</div>
+        <h3>One-Click Optimize</h3>
+        <p>Apply all tweaks instantly. Every change is reversible. See your FPS jump in seconds.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- FPS COMPARISON -->
+  <section id="fps-compare">
+    <div class="section-header fade-in">
+      <h2>Real FPS Gains</h2>
+      <p>Average improvements measured across 12 popular games</p>
+    </div>
+    <div class="fps-grid fade-in">
+      <div class="fps-game">
+        <div class="fps-game-name">Fortnite</div>
+        <div class="fps-bar-container">
+          <div class="fps-bar before" style="width: 55%"><span>110 FPS</span></div>
+          <div class="fps-bar after" style="width: 85%"><span>170 FPS</span></div>
+        </div>
+        <div class="fps-delta">+55%</div>
+      </div>
+      <div class="fps-game">
+        <div class="fps-game-name">Valorant</div>
+        <div class="fps-bar-container">
+          <div class="fps-bar before" style="width: 50%"><span>200 FPS</span></div>
+          <div class="fps-bar after" style="width: 80%"><span>320 FPS</span></div>
+        </div>
+        <div class="fps-delta">+60%</div>
+      </div>
+      <div class="fps-game">
+        <div class="fps-game-name">CS2</div>
+        <div class="fps-bar-container">
+          <div class="fps-bar before" style="width: 45%"><span>180 FPS</span></div>
+          <div class="fps-bar after" style="width: 75%"><span>300 FPS</span></div>
+        </div>
+        <div class="fps-delta">+67%</div>
+      </div>
+      <div class="fps-game">
+        <div class="fps-game-name">Apex Legends</div>
+        <div class="fps-bar-container">
+          <div class="fps-bar before" style="width: 50%"><span>100 FPS</span></div>
+          <div class="fps-bar after" style="width: 80%"><span>160 FPS</span></div>
+        </div>
+        <div class="fps-delta">+60%</div>
+      </div>
+      <div class="fps-game">
+        <div class="fps-game-name">Minecraft</div>
+        <div class="fps-bar-container">
+          <div class="fps-bar before" style="width: 40%"><span>120 FPS</span></div>
+          <div class="fps-bar after" style="width: 85%"><span>260 FPS</span></div>
+        </div>
+        <div class="fps-delta">+117%</div>
+      </div>
+      <div class="fps-game">
+        <div class="fps-game-name">GTA V</div>
+        <div class="fps-bar-container">
+          <div class="fps-bar before" style="width: 55%"><span>85 FPS</span></div>
+          <div class="fps-bar after" style="width: 80%"><span>125 FPS</span></div>
+        </div>
+        <div class="fps-delta">+47%</div>
+      </div>
+    </div>
+    <div class="fps-legend fade-in">
+      <div class="fps-legend-item"><span class="fps-dot before"></span> Before</div>
+      <div class="fps-legend-item"><span class="fps-dot after"></span> After Choatix V2</div>
+    </div>
+  </section>
+
+  <!-- SCREENSHOTS -->
+  <section id="screenshots">
+    <div class="section-header fade-in">
+      <h2>See It In Action</h2>
+      <p>Clean, dark, and built for gamers</p>
+    </div>
+    <div class="screenshots-grid fade-in">
+      <div class="screenshot-card">
+        <div class="screenshot-placeholder">
+          <div class="screenshot-mockup">
+            <div class="mockup-bar"><span></span><span></span><span></span></div>
+            <div class="mockup-content">
+              <div class="mockup-sidebar">
+                <div class="mockup-item active"></div>
+                <div class="mockup-item"></div>
+                <div class="mockup-item"></div>
+                <div class="mockup-item"></div>
+                <div class="mockup-item"></div>
+              </div>
+              <div class="mockup-main">
+                <div class="mockup-card"></div>
+                <div class="mockup-card"></div>
+                <div class="mockup-card"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p class="screenshot-label">Dashboard</p>
+      </div>
+      <div class="screenshot-card">
+        <div class="screenshot-placeholder">
+          <div class="screenshot-mockup">
+            <div class="mockup-bar"><span></span><span></span><span></span></div>
+            <div class="mockup-content">
+              <div class="mockup-tweaks">
+                <div class="mockup-toggle"></div>
+                <div class="mockup-toggle"></div>
+                <div class="mockup-toggle"></div>
+                <div class="mockup-toggle"></div>
+                <div class="mockup-toggle"></div>
+                <div class="mockup-toggle"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p class="screenshot-label">Optimize</p>
+      </div>
+      <div class="screenshot-card">
+        <div class="screenshot-placeholder">
+          <div class="screenshot-mockup">
+            <div class="mockup-bar"><span></span><span></span><span></span></div>
+            <div class="mockup-content">
+              <div class="mockup-games">
+                <div class="mockup-game"></div>
+                <div class="mockup-game"></div>
+                <div class="mockup-game"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p class="screenshot-label">Game Optimizer</p>
+      </div>
+    </div>
+  </section>
 
   <!-- FEATURES -->
   <section id="features">
