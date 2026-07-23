@@ -558,6 +558,31 @@
 
     .price-card .btn { width: 100%; justify-content: center; }
 
+    /* ─── FAQ ────────────────────────────────── */
+    .faq-list { max-width: 680px; margin: 0 auto; display: flex; flex-direction: column; gap: 0.5rem; }
+
+    .faq-item {
+      background: var(--bg2); border: 1px solid var(--border); border-radius: 12px;
+      overflow: hidden; transition: border-color 0.3s;
+    }
+    .faq-item:hover { border-color: var(--border2); }
+    .faq-item.open { border-color: var(--border2); }
+
+    .faq-q {
+      width: 100%; display: flex; align-items: center; justify-content: space-between;
+      padding: 1.25rem 1.5rem; background: none; border: none; color: var(--text);
+      font-size: 0.9rem; font-weight: 600; text-align: left; cursor: pointer;
+    }
+    .faq-q svg { width: 16px; height: 16px; color: var(--text-dim); flex-shrink: 0; transition: transform 0.3s; }
+    .faq-item.open .faq-q svg { transform: rotate(180deg); }
+
+    .faq-a {
+      max-height: 0; overflow: hidden; transition: max-height 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .faq-item.open .faq-a { max-height: 200px; }
+    .faq-a p { padding: 0 1.5rem 1.25rem; font-size: 0.825rem; color: var(--text-dim); line-height: 1.7; }
+    .faq-a code { background: rgba(255,255,255,0.05); padding: 0.1rem 0.35rem; border-radius: 4px; font-size: 0.8rem; color: var(--green); }
+
     /* ─── TEAM ────────────────────────────────── */
     .team-grid { display: flex; gap: 1.5rem; justify-content: center; flex-wrap: wrap; }
 
@@ -647,6 +672,7 @@
     <div class="nav-links">
       <a href="#features">Features</a>
       <a href="#tweaks">Tweaks</a>
+      <a href="#faq">FAQ</a>
       <a href="#team">Team</a>
       <a href="#pricing">Pricing</a>
       <a href="https://discord.gg/AhEK85REhG" target="_blank">Discord</a>
@@ -702,10 +728,10 @@
 
   <!-- STATS -->
   <div class="stats-row reveal">
-    <div class="stat-cell"><div class="stat-num">461</div><div class="stat-txt">System Tweaks</div></div>
-    <div class="stat-cell"><div class="stat-num">12</div><div class="stat-txt">Game Profiles</div></div>
-    <div class="stat-cell"><div class="stat-num">9</div><div class="stat-txt">Optimization Tools</div></div>
-    <div class="stat-cell"><div class="stat-num">100%</div><div class="stat-txt">Free to Use</div></div>
+    <div class="stat-cell"><div class="stat-num" data-count="461">0</div><div class="stat-txt">System Tweaks</div></div>
+    <div class="stat-cell"><div class="stat-num" data-count="12">0</div><div class="stat-txt">Game Profiles</div></div>
+    <div class="stat-cell"><div class="stat-num" data-count="9">0</div><div class="stat-txt">Optimization Tools</div></div>
+    <div class="stat-cell"><div class="stat-num" data-count="100" data-suffix="%">0</div><div class="stat-txt">Free to Use</div></div>
   </div>
 
   <!-- HOW IT WORKS -->
@@ -781,6 +807,55 @@
       <div class="tl" id="modalList"></div>
     </div>
   </div>
+
+  <!-- FAQ -->
+  <section id="faq">
+    <div class="section-header reveal"><div class="section-label">FAQ</div><h2>Frequently Asked Questions</h2><p>Everything you need to know about Choatix V2</p></div>
+    <div class="faq-list reveal">
+      <div class="faq-item">
+        <button class="faq-q" onclick="this.parentElement.classList.toggle('open')">
+          <span>Is Choatix V2 safe to use?</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <div class="faq-a"><p>Yes. Every tweak is reversible with one click. Choatix never modifies critical system files and all changes can be rolled back from the Settings page.</p></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="this.parentElement.classList.toggle('open')">
+          <span>How much FPS will I gain?</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <div class="faq-a"><p>Results vary by hardware and game. Most users see 15-60% FPS improvement. Check the FPS Comparison section for average gains across popular games.</p></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="this.parentElement.classList.toggle('open')">
+          <span>What's the difference between Free, Pro, and Premium?</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <div class="faq-a"><p>Free includes basic tweaks and Quick Boost. Pro unlocks all 461 tweaks, Game Optimizer, Zero Delay, and Deep Clean. Premium adds Power Plan Manager, Game Settings Backup, and Network Speed Test.</p></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="this.parentElement.classList.toggle('open')">
+          <span>Do I need to restart my PC after optimizing?</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <div class="faq-a"><p>Some tweaks take effect immediately, others require a restart. Choatix will notify you when a restart is needed. Quick Boost works instantly without restart.</p></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="this.parentElement.classList.toggle('open')">
+          <span>How do I get a Pro or Premium key?</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <div class="faq-a"><p>Join our Discord server and use the <code>/redeem</code> command with your license key. Keys are available through giveaways, referrals, or direct purchase.</p></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="this.parentElement.classList.toggle('open')">
+          <span>Does it work on Windows 11?</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <div class="faq-a"><p>Yes. Choatix V2 supports Windows 10 and Windows 11. All tweaks are compatible with the latest updates.</p></div>
+      </div>
+    </div>
+  </section>
 
   <!-- TEAM -->
   <section id="team">
@@ -871,6 +946,7 @@
     <div class="footer-links">
       <a href="https://discord.gg/AhEK85REhG" target="_blank">Discord</a>
       <a href="#features">Features</a>
+      <a href="#faq">FAQ</a>
       <a href="#team">Team</a>
       <a href="#pricing">Pricing</a>
     </div>
@@ -920,6 +996,29 @@
     // Reveal
     const obs = new IntersectionObserver(e => e.forEach(x => { if (x.isIntersecting) x.target.classList.add('visible'); }), { threshold: 0.1 });
     document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+
+    // Animated counters
+    const counterObs = new IntersectionObserver(e => e.forEach(x => {
+      if (x.isIntersecting) {
+        x.target.querySelectorAll('.stat-num[data-count]').forEach(el => {
+          if (el.dataset.animated) return;
+          el.dataset.animated = '1';
+          const target = parseInt(el.dataset.count);
+          const suffix = el.dataset.suffix || '';
+          const duration = 1600;
+          const start = performance.now();
+          function tick(now) {
+            const elapsed = now - start;
+            const progress = Math.min(elapsed / duration, 1);
+            const eased = 1 - Math.pow(1 - progress, 3);
+            el.textContent = Math.round(target * eased) + suffix;
+            if (progress < 1) requestAnimationFrame(tick);
+          }
+          requestAnimationFrame(tick);
+        });
+      }
+    }), { threshold: 0.3 });
+    counterObs.observe(document.querySelector('.stats-row'));
 
     // FPS bars
     const fpsObs = new IntersectionObserver(e => e.forEach(x => {
