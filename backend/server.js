@@ -594,6 +594,61 @@ app.get('/api/team/:id', async (req, res) => {
   }
 });
 
+// ── Discord OAuth2 ──
+const DISCORD_CLIENT_ID = process.env.DISCORD_CLIENT_ID || '1520450575831929083';
+const DISCORD_CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET || '';
+const REDIRECT_URI = process.env.DISCORD_REDIRECT_URI || 'https://choatix-v2.onrender.com/api/auth/callback';
+
+app.get('/api/auth/discord', (req, res) => {
+  const url = `https://discord.com/api/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&scope=identify+guilds`;
+  res.redirect(url);
+});
+
+app.get('/api/auth/callback', async (req, res) => {
+  const code = req.query.code;
+  if (!code) return res.status(400).json({ error: 'No code provided' });
+
+  const https = require('https');
+  try {
+    const tokenData = await new Promise((resolve, reject) => {
+      const postData = `client_id=${DISCORD_CLIENT_ID}&client_secret=${DISCORD_CLIENT_SECRET}&grant_type=authorization_code&code=${code}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}`;
+      const request = https.request('https://discord.com/api/oauth2/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Content-Length': Buffer.byteLength(postData) },
+      }, (response) => {
+        let body = '';
+        response.on('data', chunk => body += chunk);
+        response.on('end', () => { try { resolve(JSON.parse(body)); } catch { reject(new Error('Token parse error')); } });
+      });
+      request.on('error', reject);
+      request.write(postData);
+      request.end();
+    });
+
+    if (!tokenData.access_token) return res.status(400).json({ error: 'Failed to get token' });
+
+    const user = await new Promise((resolve, reject) => {
+      https.get('https://discord.com/api/users/@me', {
+        headers: { 'Authorization': `Bearer ${tokenData.access_token}` },
+      }, (response) => {
+        let body = '';
+        response.on('data', chunk => body += chunk);
+        response.on('end', () => { try { resolve(JSON.parse(body)); } catch { reject(new Error('User parse error')); } });
+      }).on('error', reject);
+    });
+
+    let avatarUrl = null;
+    if (user.avatar) {
+      const ext = user.avatar.startsWith('a_') ? 'gif' : 'png';
+      avatarUrl = `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.${ext}?size=256`;
+    }
+
+    res.redirect(`https://zylenofficial.github.io/choatix-v2?discord_id=${user.id}&username=${user.username}&avatar=${avatarUrl || ''}`);
+  } catch (err) {
+    res.redirect('https://zylenofficial.github.io/choatix-v2?error=auth_failed');
+  }
+});
+
 initDB().then(() => {
   app.listen(PORT, () => {
     console.log(`Choatix License Server running on port ${PORT} (${DB_URL ? 'PostgreSQL' : 'in-memory'})`);

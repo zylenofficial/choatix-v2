@@ -617,6 +617,7 @@
       <a href="#team">Team</a>
       <a href="#pricing">Pricing</a>
       <a href="https://discord.gg/AhEK85REhG" target="_blank">Discord</a>
+      <a href="#" class="btn btn-secondary" id="loginBtn" onclick="handleLogin(event)">Login</a>
       <a href="https://github.com/zylenofficial/choatix-v2/releases/latest" class="btn btn-primary" target="_blank">Download</a>
     </div>
   </nav>
@@ -1051,6 +1052,47 @@
         }
       } catch {}
     });
+
+    // ── Discord Login ──
+    const params = new URLSearchParams(window.location.search);
+    const discordId = params.get('discord_id');
+    const username = params.get('username');
+    const avatar = params.get('avatar');
+
+    if (discordId) {
+      localStorage.setItem('discord_id', discordId);
+      localStorage.setItem('username', username);
+      localStorage.setItem('avatar', avatar);
+      window.history.replaceState({}, '', '/');
+    }
+
+    const savedId = localStorage.getItem('discord_id');
+    const savedUser = localStorage.getItem('username');
+    const savedAvatar = localStorage.getItem('avatar');
+
+    const loginBtn = document.getElementById('loginBtn');
+    if (savedId && savedUser) {
+      loginBtn.href = '#';
+      loginBtn.textContent = savedUser;
+      loginBtn.className = 'btn btn-discord';
+      loginBtn.onclick = (e) => {
+        e.preventDefault();
+        localStorage.clear();
+        window.location.reload();
+      };
+      loginBtn.title = 'Click to logout';
+    }
+
+    function handleLogin(e) {
+      e.preventDefault();
+      if (localStorage.getItem('discord_id')) {
+        localStorage.clear();
+        window.location.reload();
+      } else {
+        window.location.href = 'https://choatix-v2.onrender.com/api/auth/discord';
+      }
+    }
+    window.handleLogin = handleLogin;
   </script>
 
 </body>
