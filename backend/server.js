@@ -651,7 +651,7 @@ app.post('/api/quests/progress', async (req, res) => {
       ON CONFLICT (discord_id, quest_id, date) DO NOTHING
     `, [discordId, quest.id, today]);
 
-    if (!true) { // only increment if not completed
+    if (!uq.rows[0].completed) { // only increment if not completed
       const uq = await app.locals.pool.query(
         'SELECT * FROM user_quests WHERE discord_id = $1 AND quest_id = $2 AND date = $3 AND completed = false',
         [discordId, quest.id, today]
