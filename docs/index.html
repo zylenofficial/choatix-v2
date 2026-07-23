@@ -422,7 +422,7 @@
     .tweak-card {
       background: var(--bg2); border: 1px solid var(--border); border-radius: 12px;
       padding: 1.5rem 1rem; text-align: center; transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-      position: relative; overflow: hidden;
+      position: relative; overflow: hidden; cursor: pointer;
     }
 
     .tweak-card::before {
@@ -432,6 +432,49 @@
     }
 
     .tweak-card:hover { border-color: var(--border2); transform: translateY(-4px); box-shadow: 0 12px 32px rgba(0,0,0,0.4); }
+
+    /* Modal */
+    .modal-bg {
+      position: fixed; inset: 0; z-index: 10000;
+      background: rgba(0,0,0,0.8); backdrop-filter: blur(8px);
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none; transition: opacity 0.3s;
+    }
+    .modal-bg.active { opacity: 1; pointer-events: all; }
+    .modal {
+      background: var(--bg2); border: 1px solid var(--border2);
+      border-radius: 16px; padding: 2.5rem; max-width: 560px; width: 90%;
+      max-height: 70vh; overflow-y: auto; position: relative;
+      transform: translateY(20px) scale(0.97); transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .modal-bg.active .modal { transform: translateY(0) scale(1); }
+    .modal-close {
+      position: absolute; top: 1rem; right: 1rem;
+      width: 32px; height: 32px; border-radius: 8px;
+      background: rgba(255,255,255,0.04); border: 1px solid var(--border2);
+      color: var(--text-dim); font-size: 1.1rem; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s;
+    }
+    .modal-close:hover { background: rgba(255,255,255,0.08); color: var(--text); }
+    .modal h3 { font-size: 1.25rem; font-weight: 800; margin-bottom: 0.25rem; }
+    .modal .mc { font-size: 0.75rem; color: var(--green); font-weight: 600; margin-bottom: 1.25rem; }
+    .modal .tl { display: flex; flex-direction: column; gap: 0.5rem; }
+    .modal .ti {
+      background: rgba(255,255,255,0.02); border: 1px solid var(--border);
+      border-radius: 8px; padding: 0.75rem 1rem;
+      display: flex; align-items: flex-start; gap: 0.75rem; transition: all 0.2s;
+    }
+    .modal .ti:hover { background: rgba(255,255,255,0.04); border-color: var(--border2); }
+    .modal .td { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+    .modal .td.high { background: #ff5252; }
+    .modal .td.medium { background: #ffc107; }
+    .modal .td.low { background: var(--green); }
+    .modal .tn { font-size: 0.825rem; font-weight: 600; }
+    .modal .tx { font-size: 0.7rem; color: var(--text-dim); margin-top: 0.15rem; line-height: 1.5; }
+    .modal::-webkit-scrollbar { width: 4px; }
+    .modal::-webkit-scrollbar-track { background: transparent; }
+    .modal::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
     .tweak-card:hover::before { opacity: 1; }
     .tweak-count { font-size: 1.5rem; font-weight: 900; color: var(--accent); letter-spacing: -0.02em; }
     .tweak-label { font-size: 0.6rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 0.25rem; }
@@ -614,20 +657,30 @@
   <section id="tweaks">
     <div class="section-header reveal"><div class="section-label">Tweaks</div><h2>461 System Tweaks</h2><p>Organized into 10 categories for maximum control</p></div>
     <div class="tweaks-grid reveal">
-      <div class="tweak-card"><div class="tweak-count">14</div><div class="tweak-label">Deep Clean</div></div>
-      <div class="tweak-card"><div class="tweak-count">6</div><div class="tweak-label">Network</div></div>
-      <div class="tweak-card"><div class="tweak-count">4</div><div class="tweak-label">Power</div></div>
-      <div class="tweak-card"><div class="tweak-count">4</div><div class="tweak-label">Browser</div></div>
-      <div class="tweak-card"><div class="tweak-count">3</div><div class="tweak-label">GPU</div></div>
-      <div class="tweak-card"><div class="tweak-count">2</div><div class="tweak-label">Timer</div></div>
-      <div class="tweak-card"><div class="tweak-count">4</div><div class="tweak-label">Storage</div></div>
-      <div class="tweak-card"><div class="tweak-count">3</div><div class="tweak-label">Privacy</div></div>
-      <div class="tweak-card"><div class="tweak-count">2</div><div class="tweak-label">Audio</div></div>
-      <div class="tweak-card"><div class="tweak-count">3</div><div class="tweak-label">Windows</div></div>
-      <div class="tweak-card"><div class="tweak-count">3</div><div class="tweak-label">Gaming</div></div>
-      <div class="tweak-card"><div class="tweak-count">413</div><div class="tweak-label">Core Tweaks</div></div>
+      <div class="tweak-card" onclick="openTweaks('deep-clean')"><div class="tweak-count">14</div><div class="tweak-label">Deep Clean</div></div>
+      <div class="tweak-card" onclick="openTweaks('network')"><div class="tweak-count">6</div><div class="tweak-label">Network</div></div>
+      <div class="tweak-card" onclick="openTweaks('power')"><div class="tweak-count">4</div><div class="tweak-label">Power</div></div>
+      <div class="tweak-card" onclick="openTweaks('browser')"><div class="tweak-count">4</div><div class="tweak-label">Browser</div></div>
+      <div class="tweak-card" onclick="openTweaks('gpu')"><div class="tweak-count">3</div><div class="tweak-label">GPU</div></div>
+      <div class="tweak-card" onclick="openTweaks('timer')"><div class="tweak-count">2</div><div class="tweak-label">Timer</div></div>
+      <div class="tweak-card" onclick="openTweaks('storage')"><div class="tweak-count">4</div><div class="tweak-label">Storage</div></div>
+      <div class="tweak-card" onclick="openTweaks('privacy')"><div class="tweak-count">3</div><div class="tweak-label">Privacy</div></div>
+      <div class="tweak-card" onclick="openTweaks('audio')"><div class="tweak-count">2</div><div class="tweak-label">Audio</div></div>
+      <div class="tweak-card" onclick="openTweaks('windows')"><div class="tweak-count">3</div><div class="tweak-label">Windows</div></div>
+      <div class="tweak-card" onclick="openTweaks('gaming')"><div class="tweak-count">3</div><div class="tweak-label">Gaming</div></div>
+      <div class="tweak-card" onclick="openTweaks('core')"><div class="tweak-count">413</div><div class="tweak-label">Core Tweaks</div></div>
     </div>
   </section>
+
+  <!-- TWEAKS MODAL -->
+  <div class="modal-bg" id="modal" onclick="if(event.target===this)closeModal()">
+    <div class="modal">
+      <button class="modal-close" onclick="closeModal()">✕</button>
+      <h3 id="modalTitle"></h3>
+      <div class="mc" id="modalCount"></div>
+      <div class="tl" id="modalList"></div>
+    </div>
+  </div>
 
   <!-- PRICING -->
   <section id="pricing">
@@ -755,6 +808,156 @@
       const s = window.scrollY;
       document.querySelectorAll('.mesh-blob').forEach((b, i) => b.style.transform = `translateY(${s * (0.08 + i * 0.04)}px)`);
     });
+
+    // ── Tweaks Modal ──
+    const tweakData = {
+      'deep-clean': {
+        title: 'Deep Clean', count: '14 tweaks',
+        items: [
+          { name: 'Disk Cleanup', desc: 'Remove temporary files and free disk space', impact: 'low' },
+          { name: 'DNS Cache Flush', desc: 'Clear DNS resolver cache', impact: 'low' },
+          { name: 'Windows Store Cache', desc: 'Reset Microsoft Store cache', impact: 'low' },
+          { name: 'Thumbnail Cache', desc: 'Clear Windows thumbnail cache', impact: 'low' },
+          { name: 'Icon Cache', desc: 'Rebuild Windows icon cache', impact: 'low' },
+          { name: 'Windows Update Cache', desc: 'Clear Windows Update download cache', impact: 'low' },
+          { name: 'Font Cache', desc: 'Rebuild Windows font cache', impact: 'low' },
+          { name: 'Prefetch Cleanup', desc: 'Clear prefetch folder for faster boot', impact: 'low' },
+          { name: 'Windows Error Reports', desc: 'Delete error report files', impact: 'low' },
+          { name: 'Old Windows Install', desc: 'Remove previous Windows installation files', impact: 'medium' },
+          { name: 'Windows Temp Files', desc: 'Clean Windows temp directory', impact: 'low' },
+          { name: 'User Temp Files', desc: 'Clean user temp directory', impact: 'low' },
+          { name: 'Crash Dumps', desc: 'Delete crash dump files', impact: 'low' },
+          { name: 'Software Distribution', desc: 'Clear software distribution cache', impact: 'low' },
+        ]
+      },
+      'network': {
+        title: 'Network', count: '6 tweaks',
+        items: [
+          { name: 'Network Throttling', desc: 'Disable network throttling index for maximum throughput', impact: 'high' },
+          { name: 'TCP Auto-Tuning', desc: 'Optimize TCP receive window auto-tuning', impact: 'medium' },
+          { name: 'Nagle Algorithm', desc: 'Disable Nagle algorithm for lower latency', impact: 'medium' },
+          { name: 'DNS Optimization', desc: 'Switch to Cloudflare/Google DNS for faster resolution', impact: 'medium' },
+          { name: 'Network Priority', desc: 'Prioritize gaming network traffic', impact: 'medium' },
+          { name: 'RSS (Receive Side Scaling)', desc: 'Enable RSS for better network performance', impact: 'low' },
+        ]
+      },
+      'power': {
+        title: 'Power', count: '4 tweaks',
+        items: [
+          { name: 'High Performance Plan', desc: 'Switch to High Performance power plan', impact: 'high' },
+          { name: 'Disable Power Throttling', desc: 'Prevent Windows from throttling background apps', impact: 'high' },
+          { name: 'Disable Core Parking', desc: 'Keep all CPU cores active at all times', impact: 'medium' },
+          { name: 'Processor Performance Boost', desc: 'Set CPU boost mode to aggressive', impact: 'high' },
+        ]
+      },
+      'browser': {
+        title: 'Browser', count: '4 tweaks',
+        items: [
+          { name: 'Hardware Acceleration', desc: 'Enable GPU hardware acceleration in browsers', impact: 'medium' },
+          { name: 'Browser Pre-rendering', desc: 'Enable pre-rendering for faster page loads', impact: 'low' },
+          { name: 'DNS Prefetch', desc: 'Enable DNS prefetching for faster navigation', impact: 'low' },
+          { name: 'Disable Telemetry', desc: 'Reduce browser data collection and telemetry', impact: 'low' },
+        ]
+      },
+      'gpu': {
+        title: 'GPU', count: '3 tweaks',
+        items: [
+          { name: 'NVIDIA Low Latency', desc: 'Enable NVIDIA Ultra Low Latency mode', impact: 'high' },
+          { name: 'GPU Power Management', desc: 'Set GPU power management to maximum performance', impact: 'high' },
+          { name: 'Shader Cache', desc: 'Optimize shader cache for smoother gameplay', impact: 'medium' },
+        ]
+      },
+      'timer': {
+        title: 'Timer', count: '2 tweaks',
+        items: [
+          { name: 'Timer Resolution', desc: 'Set system timer to 0.5ms for lower input lag', impact: 'high' },
+          { name: 'TSC Sync', desc: 'Synchronize TSC across CPU cores for accurate timing', impact: 'medium' },
+        ]
+      },
+      'storage': {
+        title: 'Storage', count: '4 tweaks',
+        items: [
+          { name: 'AHCI Link Power', desc: 'Disable AHCI Link Power Management for SSDs', impact: 'medium' },
+          { name: 'TRIM Optimization', desc: 'Enable and optimize TRIM for SSD performance', impact: 'medium' },
+          { name: 'Write Caching', desc: 'Enable write caching for faster disk writes', impact: 'medium' },
+          { name: 'NVMe Optimization', desc: 'Optimize NVMe queue depth and interrupt moderation', impact: 'high' },
+        ]
+      },
+      'privacy': {
+        title: 'Privacy', count: '3 tweaks',
+        items: [
+          { name: 'Telemetry Disable', desc: 'Turn off Windows telemetry data collection', impact: 'low' },
+          { name: 'Cortana Disable', desc: 'Disable Cortana to free up resources', impact: 'low' },
+          { name: 'Activity History', desc: 'Disable Windows activity history tracking', impact: 'low' },
+        ]
+      },
+      'audio': {
+        title: 'Audio', count: '2 tweaks',
+        items: [
+          { name: 'Audio Latency', desc: 'Reduce audio buffer size for lower latency', impact: 'low' },
+          { name: 'Exclusive Mode', desc: 'Enable exclusive mode for audio devices', impact: 'low' },
+        ]
+      },
+      'windows': {
+        title: 'Windows', count: '3 tweaks',
+        items: [
+          { name: 'Game Mode', desc: 'Enable Windows Game Mode for gaming optimization', impact: 'medium' },
+          { name: 'Fullscreen Optimizations', desc: 'Disable fullscreen optimizations for lower input lag', impact: 'medium' },
+          { name: 'Visual Effects', desc: 'Reduce Windows visual effects for more resources', impact: 'medium' },
+        ]
+      },
+      'gaming': {
+        title: 'Gaming', count: '3 tweaks',
+        items: [
+          { name: 'Game Bar Disable', desc: 'Disable Xbox Game Bar overlay to free resources', impact: 'medium' },
+          { name: 'Game DVR', desc: 'Turn off Game DVR background recording', impact: 'high' },
+          { name: 'Xbox Services', desc: 'Disable Xbox-related background services', impact: 'medium' },
+        ]
+      },
+      'core': {
+        title: 'Core Tweaks', count: '413 optimizations',
+        items: [
+          { name: 'CPU Priority Optimization', desc: 'Optimize Win32PrioritySeparation for foreground apps', impact: 'high' },
+          { name: 'VBS / Hyper-V', desc: 'Disable Virtualization-Based Security for raw performance', impact: 'high' },
+          { name: 'Mitigations', desc: 'Disable CPU security mitigations for higher FPS', impact: 'high' },
+          { name: 'MSI Mode', desc: 'Optimize Message Signaled Interrupts for lower latency', impact: 'high' },
+          { name: 'Device Affinities', desc: 'Assign devices to optimal CPU cores', impact: 'medium' },
+          { name: 'Memory Management', desc: 'Enable modern Windows memory allocator (Segment Heap)', impact: 'medium' },
+          { name: 'Background Services', desc: 'Reduce unnecessary Windows background services', impact: 'medium' },
+          { name: 'Scheduled Tasks', desc: 'Disable non-essential scheduled tasks', impact: 'low' },
+          { name: 'Registry Optimizations', desc: 'Apply 200+ registry tweaks for maximum performance', impact: 'high' },
+          { name: 'Power Plan Tweaks', desc: 'Advanced power plan registry optimizations', impact: 'high' },
+          { name: 'Input Optimization', desc: 'Mouse, keyboard, and controller latency reduction', impact: 'medium' },
+          { name: 'USB Optimization', desc: 'USB polling rate and power management tweaks', impact: 'low' },
+        ]
+      },
+    };
+
+    function openTweaks(category) {
+      const data = tweakData[category];
+      if (!data) return;
+      document.getElementById('modalTitle').textContent = data.title;
+      document.getElementById('modalCount').textContent = data.count + ' included';
+      const list = document.getElementById('modalList');
+      list.innerHTML = data.items.map(i => `
+        <div class="ti">
+          <div class="td ${i.impact}"></div>
+          <div>
+            <div class="tn">${i.name}</div>
+            <div class="tx">${i.desc}</div>
+          </div>
+        </div>
+      `).join('');
+      document.getElementById('modal').classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeModal() {
+      document.getElementById('modal').classList.remove('active');
+      document.body.style.overflow = '';
+    }
+
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
   </script>
 
 </body>
