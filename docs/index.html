@@ -513,6 +513,43 @@
 
     .price-card .btn { width: 100%; justify-content: center; }
 
+    /* ─── TEAM ────────────────────────────────── */
+    .team-grid { display: flex; gap: 1.5rem; justify-content: center; flex-wrap: wrap; }
+
+    .team-card {
+      background: var(--bg2); border: 1px solid var(--border); border-radius: 14px;
+      padding: 2rem 1.75rem; text-align: center; width: 160px;
+      transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .team-card:hover { border-color: var(--border2); transform: translateY(-4px); box-shadow: 0 12px 32px rgba(0,0,0,0.3); }
+
+    .team-avatar {
+      width: 56px; height: 56px; border-radius: 50%;
+      margin: 0 auto 0.75rem; object-fit: cover;
+      border: 2px solid var(--border2);
+    }
+
+    .team-avatar-fallback {
+      width: 56px; height: 56px; border-radius: 50%;
+      margin: 0 auto 0.75rem;
+      background: linear-gradient(135deg, rgba(0,230,118,0.15), rgba(41,121,255,0.15));
+      border: 2px solid var(--border2);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.25rem; font-weight: 800; color: var(--text);
+      text-transform: uppercase;
+    }
+
+    .team-name { font-size: 0.9rem; font-weight: 700; margin-bottom: 0.35rem; }
+
+    .team-role {
+      font-size: 0.6rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.1em; padding: 0.2rem 0.6rem;
+      border-radius: 4px; display: inline-block;
+    }
+    .team-role.owner { background: rgba(0,230,118,0.1); color: var(--green); border: 1px solid rgba(0,230,118,0.15); }
+    .team-role.admin { background: rgba(41,121,255,0.1); color: var(--blue); border: 1px solid rgba(41,121,255,0.15); }
+    .team-role.support { background: rgba(124,77,255,0.1); color: var(--purple); border: 1px solid rgba(124,77,255,0.15); }
+
     /* ─── CTA ─────────────────────────────────── */
     .cta-section {
       padding: 10rem 2rem; text-align: center; position: relative; overflow: hidden;
@@ -575,6 +612,7 @@
     <div class="nav-links">
       <a href="#features">Features</a>
       <a href="#tweaks">Tweaks</a>
+      <a href="#team">Team</a>
       <a href="#pricing">Pricing</a>
       <a href="https://discord.gg/AhEK85REhG" target="_blank">Discord</a>
       <a href="https://github.com/zylenofficial/choatix-v2/releases/latest" class="btn btn-primary" target="_blank">Download</a>
@@ -682,6 +720,43 @@
     </div>
   </div>
 
+  <!-- TEAM -->
+  <section id="team">
+    <div class="section-header reveal"><div class="section-label">Team</div><h2>Meet the Crew</h2><p>The people behind Choatix V2</p></div>
+    <div class="team-grid reveal">
+      <div class="team-card">
+        <img class="team-avatar" src="https://cdn.discordapp.com/avatars/1014494449809772544/a_1a1a1a1a1a1a1a1a.png?size=256" alt="zylen" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+        <div class="team-avatar-fallback" style="display:none">z</div>
+        <div class="team-name">zylen</div>
+        <div class="team-role owner">Owner</div>
+      </div>
+      <div class="team-card">
+        <img class="team-avatar" src="https://cdn.discordapp.com/avatars/1032970883192606780/a_1a1a1a1a1a1a1a1a.png?size=256" alt="domi" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+        <div class="team-avatar-fallback" style="display:none">d</div>
+        <div class="team-name">domi</div>
+        <div class="team-role admin">Admin</div>
+      </div>
+      <div class="team-card">
+        <img class="team-avatar" src="https://cdn.discordapp.com/avatars/398137085430726656/a_1a1a1a1a1a1a1a1a.png?size=256" alt="nedis" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+        <div class="team-avatar-fallback" style="display:none">n</div>
+        <div class="team-name">nedis</div>
+        <div class="team-role admin">Admin</div>
+      </div>
+      <div class="team-card">
+        <img class="team-avatar" src="https://cdn.discordapp.com/avatars/1322475983386837006/a_1a1a1a1a1a1a1a1a.png?size=256" alt="donce" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+        <div class="team-avatar-fallback" style="display:none">d</div>
+        <div class="team-name">donce</div>
+        <div class="team-role admin">Admin</div>
+      </div>
+      <div class="team-card">
+        <img class="team-avatar" src="https://cdn.discordapp.com/avatars/1402203036914290764/a_1a1a1a1a1a1a1a1a.png?size=256" alt="lukutis" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+        <div class="team-avatar-fallback" style="display:none">l</div>
+        <div class="team-name">lukutis</div>
+        <div class="team-role support">Support</div>
+      </div>
+    </div>
+  </section>
+
   <!-- PRICING -->
   <section id="pricing">
     <div class="section-header reveal"><div class="section-label">Pricing</div><h2>Simple Pricing</h2><p>Start free. Upgrade when you need more.</p></div>
@@ -740,6 +815,7 @@
     <div class="footer-links">
       <a href="https://discord.gg/AhEK85REhG" target="_blank">Discord</a>
       <a href="#features">Features</a>
+      <a href="#team">Team</a>
       <a href="#pricing">Pricing</a>
     </div>
     <p>&copy; 2026 Choatix V2. Built by zylenofficial.</p>
