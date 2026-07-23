@@ -527,7 +527,9 @@
       width: 56px; height: 56px; border-radius: 50%;
       margin: 0 auto 0.75rem; object-fit: cover;
       border: 2px solid var(--border2);
+      display: none;
     }
+    .team-avatar.loaded { display: block; }
 
     .team-avatar-fallback {
       width: 56px; height: 56px; border-radius: 50%;
@@ -725,32 +727,32 @@
     <div class="section-header reveal"><div class="section-label">Team</div><h2>Meet the Crew</h2><p>The people behind Choatix V2</p></div>
     <div class="team-grid reveal">
       <div class="team-card">
-        <img class="team-avatar" id="avatar-1014494449809772544" src="" alt="zylen" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-        <div class="team-avatar-fallback" style="display:none">z</div>
+        <img class="team-avatar" id="avatar-1014494449809772544" src="" alt="zylen">
+        <div class="team-avatar-fallback">z</div>
         <div class="team-name">zylen</div>
         <div class="team-role owner">Developer</div>
       </div>
       <div class="team-card">
-        <img class="team-avatar" id="avatar-1032970883192606780" src="" alt="domi" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-        <div class="team-avatar-fallback" style="display:none">d</div>
+        <img class="team-avatar" id="avatar-1032970883192606780" src="" alt="domi">
+        <div class="team-avatar-fallback">d</div>
         <div class="team-name">domi</div>
         <div class="team-role admin">Server Owner</div>
       </div>
       <div class="team-card">
-        <img class="team-avatar" id="avatar-398137085430726656" src="" alt="nedis" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-        <div class="team-avatar-fallback" style="display:none">n</div>
+        <img class="team-avatar" id="avatar-398137085430726656" src="" alt="nedis">
+        <div class="team-avatar-fallback">n</div>
         <div class="team-name">nedis</div>
         <div class="team-role admin">Admin</div>
       </div>
       <div class="team-card">
-        <img class="team-avatar" id="avatar-1322475983386837006" src="" alt="donce" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-        <div class="team-avatar-fallback" style="display:none">d</div>
+        <img class="team-avatar" id="avatar-1322475983386837006" src="" alt="donce">
+        <div class="team-avatar-fallback">d</div>
         <div class="team-name">donce</div>
         <div class="team-role admin">Admin</div>
       </div>
       <div class="team-card">
-        <img class="team-avatar" id="avatar-1402203036914290764" src="" alt="lukutis" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-        <div class="team-avatar-fallback" style="display:none">l</div>
+        <img class="team-avatar" id="avatar-1402203036914290764" src="" alt="lukutis">
+        <div class="team-avatar-fallback">l</div>
         <div class="team-name">lukutis</div>
         <div class="team-role support">Ticket Support</div>
       </div>
@@ -1043,8 +1045,10 @@
         const r = await fetch(API + id);
         const d = await r.json();
         const img = document.getElementById('avatar-' + id);
-        if (img && d.avatar) { img.src = d.avatar; }
-        else if (img) { img.style.display = 'none'; img.nextElementSibling.style.display = 'flex'; }
+        if (img && d.avatar) {
+          img.onload = () => img.classList.add('loaded');
+          img.src = d.avatar;
+        }
       } catch {}
     });
   </script>
