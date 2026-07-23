@@ -561,24 +561,34 @@ app.get('/api/leaderboard/user/:discordId', async (req, res) => {
 
 // ── Team avatars ──
 app.get('/api/team/:id', async (req, res) => {
-  try {
-    const { Client, GatewayIntentBits } = require('discord.js');
-    const token = process.env.DISCORD_BOT_TOKEN;
-    if (!token) return res.status(500).json({ error: 'No bot token' });
+  const https = require('https');
+  const token = process.env.DISCORD_BOT_TOKEN;
+  if (!token) return res.status(500).json({ error: 'No bot token' });
 
-    const response = await fetch(`https://discord.com/api/v10/users/${req.params.id}`, {
-      headers: { 'Authorization': `Bot ${token}` },
+  try {
+    const data = await new Promise((resolve, reject) => {
+      const request = https.get(`https://discord.com/api/v10/users/${req.params.id}`, {
+        headers: { 'Authorization': `Bot ${token}` },
+      }, (response) => {
+        let body = '';
+        response.on('data', chunk => body += chunk);
+        response.on('end', () => {
+          try { resolve(JSON.parse(body)); } catch { reject(new Error('Parse error')); }
+        });
+      });
+      request.on('error', reject);
+      request.setTimeout(5000, () => { request.destroy(); reject(new Error('Timeout')); });
     });
-    if (!response.ok) return res.status(404).json({ error: 'User not found' });
-    const user = await response.json();
+
+    if (data.message === 'Unknown User') return res.status(404).json({ error: 'Not found' });
 
     let avatarUrl = null;
-    if (user.avatar) {
-      const ext = user.avatar.startsWith('a_') ? 'gif' : 'png';
-      avatarUrl = `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.${ext}?size=256`;
+    if (data.avatar) {
+      const ext = data.avatar.startsWith('a_') ? 'gif' : 'png';
+      avatarUrl = `https://cdn.discordapp.com/avatars/${data.id}/${data.avatar}.${ext}?size=256`;
     }
 
-    res.json({ username: user.username, global_name: user.global_name, avatar: avatarUrl, discriminator: user.discriminator });
+    res.json({ username: data.username, global_name: data.global_name, avatar: avatarUrl, discriminator: data.discriminator });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
