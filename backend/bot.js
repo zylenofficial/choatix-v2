@@ -159,6 +159,21 @@ async function registerCommands() {
       .addStringOption(option =>
         option.setName('message').setDescription('Message to send').setRequired(true)
       ),
+    new SlashCommandBuilder()
+      .setName('daily')
+      .setDescription('View and claim your daily quests'),
+    new SlashCommandBuilder()
+      .setName('balance')
+      .setDescription('Check your coin balance'),
+    new SlashCommandBuilder()
+      .setName('buy-pro')
+      .setDescription('Spend coins for Pro access (10 coins = 1 hour)')
+      .addIntegerOption(option =>
+        option.setName('hours').setDescription('Hours of Pro (default 1)').setMinValue(1).setMaxValue(24).setRequired(false)
+      ),
+    new SlashCommandBuilder()
+      .setName('coins-leaderboard')
+      .setDescription('View the coins leaderboard'),
   ];
 
   const rest = new REST({ version: '10' }).setToken(BOT_TOKEN);
@@ -470,6 +485,7 @@ client.on('interactionCreate', async (interaction) => {
       .addFields(
         { name: '🔑 License', value: '`/redeem` — Redeem a license key\n`/status` — Check your license\n`/unlink` — Unlink your license', inline: false },
         { name: '🔗 Referrals', value: '`/refer` — Get your referral code\n`/redeem-referral` — Redeem a referral code', inline: false },
+        { name: '💰 Coins & Quests', value: '`/daily` — View daily quests\n`/balance` — Check coin balance\n`/buy-pro` — Spend coins for Pro access\n`/coins-leaderboard` — Top coin earners', inline: false },
         { name: '🎉 Fun', value: '`/giveaway` — Start a giveaway (admin)\n`/profile` — View your profile', inline: false },
         { name: 'ℹ️ Info', value: '`/help` — This message\n`/ping` — Bot latency\n`/invite` — Server invite\n`/download` — Download Choatix V2\n`/changelog` — Latest updates', inline: false },
         { name: '🛠️ Admin', value: '`/generate-key` — Generate keys\n`/revoke` — Revoke a key\n`/announce` — Send announcement\n`/stats` — Server statistics\n`/broadcast` — DM all users', inline: false },
@@ -525,10 +541,12 @@ client.on('interactionCreate', async (interaction) => {
 
       if (result.tier) {
         const key = result.key ? `\`${result.key}\`` : 'N/A';
+        const coinsResult = await apiRequest('GET', `/api/coins/${discordId}`);
         embed.addFields(
           { name: 'Plan', value: `**${result.tier}**`, inline: true },
           { name: 'Key', value: key, inline: true },
           { name: 'Activated', value: result.activatedAt ? `<t:${Math.floor(new Date(result.activatedAt).getTime() / 1000)}:R>` : 'N/A', inline: true },
+          { name: 'Coins', value: `**${coinsResult.coins || 0}** (${coinsResult.total_earned || 0} earned)`, inline: true },
         );
       } else {
         embed.setDescription('No license found.\n\nUse `/redeem` to activate a key.');
@@ -619,6 +637,8 @@ client.on('interactionCreate', async (interaction) => {
           { name: 'PREMIUM Users', value: String(result.premiumUsers || 0), inline: true },
           { name: 'Referral Uses', value: String(result.totalReferrals || 0), inline: true },
           { name: 'Benchmarks', value: String(result.totalBenchmarks || 0), inline: true },
+          { name: 'Total Coins Earned', value: String(result.totalCoinsEarned || 0), inline: true },
+          { name: 'Pro Time Purchases', value: String(result.proTimePurchases || 0), inline: true },
         )
         .setColor(0xffffff)
         .setTimestamp();
@@ -667,6 +687,189 @@ client.on('interactionCreate', async (interaction) => {
       await interaction.editReply({ content: '❌ **Error** Could not connect to license server.' });
     }
   }
+
+  // ─── /daily ──────────────────────────────────────────────
+  if (interaction.isChatInputCommand() && interaction.commandName === 'daily') {
+    const discordId = interaction.user.id;
+    await interaction.deferReply();
+
+    try {
+      const result = await apiRequest('GET', `/api/quests/today/${discordId}`);
+      const quests = result.quests || [];
+
+      if (quests.length === 0) {
+        return interaction.editReply({ content: '📋 No quests available today. Check back tomorrow!' });
+      }
+
+      const embed = new EmbedBuilder()
+        .setTitle('📋 Daily Quests')
+        .setDescription('Complete quests to earn coins! Use coins to buy Pro access.')
+        .setColor(0xffffff)
+        .setFooter({ text: 'Use /buy-pro to spend coins • /balance to check balance' });
+
+      let totalReward = 0;
+      for (const q of quests) {
+        const progress = Math.min(q.progress, q.target);
+        const bar = '█'.repeat(Math.floor(progress / q.target * 8)) + '░'.repeat(8 - Math.floor(progress / q.target * 8));
+        const status = q.claimed ? '✅ Claimed' : q.completed ? '🎁 Ready to claim!' : `\`${bar}\` ${progress}/${q.target}`;
+        embed.addFields({
+          name: `${q.name} — ${q.reward} coins`,
+          value: `${q.description}\n${status}`,
+          inline: false,
+        });
+        totalReward += q.reward;
+      }
+
+      embed.setDescription(`Complete quests to earn coins! Total possible: **${totalReward} coins**\n\n10 coins = 1 hour Pro access`);
+
+      // Add claim buttons for completed unclaimed quests
+      const claimable = quests.filter(q => q.completed && !q.claimed);
+      const components = [];
+      if (claimable.length > 0) {
+        const row = new ActionRowBuilder();
+        for (const q of claimable.slice(0, 5)) {
+          row.addComponents(
+            new ButtonBuilder()
+              .setCustomId(`quest_claim_${q.id}`)
+              .setLabel(`Claim ${q.name}`)
+              .setStyle(ButtonStyle.Success)
+              .setEmoji('🎁'),
+          );
+        }
+        components.push(row);
+      }
+
+      await interaction.editReply({ embeds: [embed], components });
+    } catch (error) {
+      await interaction.editReply({ content: '❌ **Error** Could not connect to license server.' });
+    }
+  }
+
+  // ─── Quest claim buttons ─────────────────────────────────
+  if (interaction.isButton() && interaction.customId.startsWith('quest_claim_')) {
+    const questId = parseInt(interaction.customId.replace('quest_claim_', ''));
+    const discordId = interaction.user.id;
+
+    try {
+      const result = await apiRequest('POST', '/api/quests/claim', { discordId, questId });
+      if (result.success) {
+        await interaction.reply({ content: `✅ Claimed! You now have **${result.coins} coins**.`, ephemeral: true });
+      } else {
+        await interaction.reply({ content: `❌ ${result.message}`, ephemeral: true });
+      }
+    } catch {
+      await interaction.reply({ content: '❌ Error claiming quest.', ephemeral: true });
+    }
+  }
+
+  // ─── /balance ────────────────────────────────────────────
+  if (interaction.isChatInputCommand() && interaction.commandName === 'balance') {
+    const discordId = interaction.user.id;
+    await interaction.deferReply();
+
+    try {
+      const result = await apiRequest('GET', `/api/coins/${discordId}`);
+      const coins = result.coins || 0;
+      const totalEarned = result.total_earned || 0;
+
+      const proResult = await apiRequest('GET', `/api/pro-time/${discordId}`);
+      const proActive = proResult.active;
+      const proUntil = proResult.proUntil;
+
+      const embed = new EmbedBuilder()
+        .setTitle('💰 Your Balance')
+        .addFields(
+          { name: 'Coins', value: `**${coins}**`, inline: true },
+          { name: 'Total Earned', value: `${totalEarned}`, inline: true },
+          { name: 'Pro Status', value: proActive ? `✅ Active until <t:${Math.floor(new Date(proUntil).getTime() / 1000)}:R>` : '❌ Not active', inline: true },
+        )
+        .setColor(0xffffff)
+        .setFooter({ text: '10 coins = 1 hour Pro • Use /daily for quests' });
+
+      await interaction.editReply({ embeds: [embed] });
+    } catch (error) {
+      await interaction.editReply({ content: '❌ **Error** Could not connect to license server.' });
+    }
+  }
+
+  // ─── /buy-pro ────────────────────────────────────────────
+  if (interaction.isChatInputCommand() && interaction.commandName === 'buy-pro') {
+    const discordId = interaction.user.id;
+    const hours = interaction.options.getInteger('hours') || 1;
+    await interaction.deferReply();
+
+    try {
+      const result = await apiRequest('POST', '/api/coins/buy-pro', { discordId, hours });
+      if (result.success) {
+        await interaction.editReply({
+          content: `✅ **Pro Activated!**\n\nDuration: **${hours} hour${hours > 1 ? 's' : ''}**\nExpires: <t:${Math.floor(new Date(result.proUntil).getTime() / 1000)}:R>\nRemaining coins: **${result.coins}**`,
+        });
+      } else {
+        await interaction.editReply({
+          content: `❌ **${result.message}**`,
+        });
+      }
+    } catch (error) {
+      await interaction.editReply({ content: '❌ **Error** Could not connect to license server.' });
+    }
+  }
+
+  // ─── /coins-leaderboard ──────────────────────────────────
+  if (interaction.isChatInputCommand() && interaction.commandName === 'coins-leaderboard') {
+    await interaction.deferReply();
+
+    try {
+      const result = await apiRequest('GET', '/api/coins/leaderboard');
+      const entries = result.entries || [];
+
+      if (entries.length === 0) {
+        return interaction.editReply({ content: '🏆 No one has earned coins yet. Use `/daily` to start!' });
+      }
+
+      const embed = new EmbedBuilder()
+        .setTitle('🏆 Coins Leaderboard')
+        .setDescription(entries.map((e, i) => {
+          const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `#${i + 1}`;
+          return `${medal} <@${e.discord_id}> — **${e.coins}** coins (${e.total_earned} earned)`;
+        }).join('\n'))
+        .setColor(0xffffff)
+        .setFooter({ text: 'Use /daily for quests • /buy-pro to spend coins' });
+
+      await interaction.editReply({ embeds: [embed] });
+    } catch (error) {
+      await interaction.editReply({ content: '❌ **Error** Could not connect to license server.' });
+    }
+  }
+});
+
+// ─── Message tracking for daily quests ──────────────────────
+const chatCooldown = new Map();
+
+client.on('messageCreate', async (message) => {
+  if (message.author.bot || !message.guild) return;
+  const userId = message.author.id;
+  const now = Date.now();
+
+  // Cooldown: only track every 5 seconds per user
+  if (chatCooldown.has(userId) && now - chatCooldown.get(userId) < 5000) return;
+  chatCooldown.set(userId, now);
+
+  try {
+    await apiRequest('POST', '/api/quests/progress', { discordId: userId, type: 'chat', amount: 1 });
+  } catch {}
+});
+
+// Track command usage for quests
+const origHandler = client.listeners('interactionCreate')[0];
+client.removeAllListeners('interactionCreate');
+client.on('interactionCreate', async (interaction) => {
+  if (interaction.isChatInputCommand()) {
+    try {
+      await apiRequest('POST', '/api/quests/progress', { discordId: interaction.user.id, type: 'commands', amount: 1 });
+    } catch {}
+  }
+  // Call original handler
+  if (origHandler) origHandler(interaction);
 });
 
 client.on('error', (err) => {

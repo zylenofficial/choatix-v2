@@ -88,6 +88,36 @@ async function initDB() {
       referee_id TEXT,
       used_at TEXT
     );
+    CREATE TABLE IF NOT EXISTS user_coins (
+      discord_id TEXT PRIMARY KEY,
+      coins INTEGER DEFAULT 0,
+      total_earned INTEGER DEFAULT 0,
+      created_at TEXT DEFAULT NOW()::TEXT
+    );
+    CREATE TABLE IF NOT EXISTS daily_quests (
+      id SERIAL PRIMARY KEY,
+      name TEXT NOT NULL,
+      description TEXT NOT NULL,
+      type TEXT NOT NULL,
+      target INTEGER NOT NULL,
+      reward INTEGER NOT NULL,
+      active BOOLEAN DEFAULT true
+    );
+    CREATE TABLE IF NOT EXISTS user_quests (
+      id SERIAL PRIMARY KEY,
+      discord_id TEXT NOT NULL,
+      quest_id INTEGER NOT NULL,
+      progress INTEGER DEFAULT 0,
+      completed BOOLEAN DEFAULT false,
+      claimed BOOLEAN DEFAULT false,
+      date TEXT NOT NULL,
+      UNIQUE(discord_id, quest_id, date)
+    );
+    CREATE TABLE IF NOT EXISTS user_pro_time (
+      discord_id TEXT PRIMARY KEY,
+      pro_until TIMESTAMP,
+      activated_at TEXT
+    );
     CREATE TABLE IF NOT EXISTS benchmarks (
       id SERIAL PRIMARY KEY,
       discord_id TEXT NOT NULL,
@@ -105,7 +135,19 @@ async function initDB() {
     );
   `);
   console.log('PostgreSQL connected');
-}
+
+  // Seed daily quests if empty
+  const qCount = await pool.query('SELECT COUNT(*) as c FROM daily_quests');
+  if (parseInt(qCount.rows[0].c) === 0) {
+    await pool.query(`
+      INSERT INTO daily_quests (name, description, type, target, reward) VALUES
+        ('Chat Activity', 'Send 10 messages in any channel', 'chat', 10, 5),
+        ('Invite a Friend', 'Invite 1 person to the server', 'invite', 1, 10),
+        ('Daily Check-in', 'Claim your daily reward', 'claim', 1, 3),
+        ('Bot User', 'Use 3 bot commands', 'commands', 3, 5)
+    `);
+    console.log('Default quests seeded');
+  }
 
 async function getKey(key) {
   if (app.locals.pool) {
@@ -474,6 +516,8 @@ app.get('/api/admin/stats', async (req, res) => {
     const premiumUsers = await app.locals.pool.query("SELECT COUNT(*) as count FROM users_table WHERE tier = 'PREMIUM'");
     const totalReferrals = await app.locals.pool.query('SELECT COALESCE(SUM(uses), 0) as count FROM referrals_table');
     const benchmarks = await app.locals.pool.query('SELECT COUNT(*) as count FROM benchmarks');
+    const totalCoinsEarned = await app.locals.pool.query('SELECT COALESCE(SUM(total_earned), 0) as count FROM user_coins');
+    const proTimePurchases = await app.locals.pool.query('SELECT COUNT(*) as count FROM user_pro_time');
     res.json({
       totalKeys: parseInt(totalKeys.rows[0].count),
       redeemedKeys: parseInt(redeemedKeys.rows[0].count),
@@ -481,6 +525,8 @@ app.get('/api/admin/stats', async (req, res) => {
       premiumUsers: parseInt(premiumUsers.rows[0].count),
       totalReferrals: parseInt(totalReferrals.rows[0].count),
       totalBenchmarks: parseInt(benchmarks.rows[0].count),
+      totalCoinsEarned: parseInt(totalCoinsEarned.rows[0].count),
+      proTimePurchases: parseInt(proTimePurchases.rows[0].count),
     });
   } else {
     const keys = Object.values(memKeys);
@@ -557,6 +603,149 @@ app.get('/api/leaderboard/user/:discordId', async (req, res) => {
     return res.json({ entries: r.rows });
   }
   res.json({ entries: [] });
+});
+
+// ── Daily Quests & Coins ──
+
+// Get user coins
+app.get('/api/coins/:discordId', async (req, res) => {
+  if (!app.locals.pool) return res.json({ coins: 0, total_earned: 0 });
+  const r = await app.locals.pool.query('SELECT * FROM user_coins WHERE discord_id = $1', [req.params.discordId]);
+  if (r.rows.length === 0) return res.json({ coins: 0, total_earned: 0 });
+  res.json({ coins: r.rows[0].coins, total_earned: r.rows[0].total_earned });
+});
+
+// Get today's quests for a user
+app.get('/api/quests/today/:discordId', async (req, res) => {
+  if (!app.locals.pool) return res.json({ quests: [] });
+  const today = new Date().toISOString().split('T')[0];
+  const quests = await app.locals.pool.query('SELECT * FROM daily_quests WHERE active = true ORDER BY id');
+  const userQuests = await app.locals.pool.query(
+    'SELECT * FROM user_quests WHERE discord_id = $1 AND date = $2', [req.params.discordId, today]
+  );
+
+  const userMap = {};
+  userQuests.rows.forEach(uq => { userMap[uq.quest_id] = uq; });
+
+  const result = quests.rows.map(q => {
+    const uq = userMap[q.id] || { progress: 0, completed: false, claimed: false };
+    return { ...q, progress: uq.progress, completed: uq.completed, claimed: uq.claimed };
+  });
+
+  res.json({ quests: result });
+});
+
+// Update quest progress
+app.post('/api/quests/progress', async (req, res) => {
+  const { discordId, type, amount = 1 } = req.body;
+  if (!discordId || !type) return res.status(400).json({ error: 'discordId and type required' });
+  if (!app.locals.pool) return res.json({ success: true });
+
+  const today = new Date().toISOString().split('T')[0];
+  const quests = await app.locals.pool.query('SELECT * FROM daily_quests WHERE active = true AND type = $1', [type]);
+
+  for (const quest of quests.rows) {
+    await app.locals.pool.query(`
+      INSERT INTO user_quests (discord_id, quest_id, progress, completed, claimed, date)
+      VALUES ($1, $2, 0, false, false, $3)
+      ON CONFLICT (discord_id, quest_id, date) DO NOTHING
+    `, [discordId, quest.id, today]);
+
+    if (!true) { // only increment if not completed
+      const uq = await app.locals.pool.query(
+        'SELECT * FROM user_quests WHERE discord_id = $1 AND quest_id = $2 AND date = $3 AND completed = false',
+        [discordId, quest.id, today]
+      );
+      if (uq.rows.length > 0) {
+        const newProgress = uq.rows[0].progress + amount;
+        const completed = newProgress >= quest.target;
+        await app.locals.pool.query(
+          'UPDATE user_quests SET progress = $1, completed = $2 WHERE id = $3',
+          [newProgress, completed, uq.rows[0].id]
+        );
+      }
+    }
+  }
+
+  res.json({ success: true });
+});
+
+// Claim quest reward
+app.post('/api/quests/claim', async (req, res) => {
+  const { discordId, questId } = req.body;
+  if (!discordId || !questId) return res.status(400).json({ error: 'discordId and questId required' });
+  if (!app.locals.pool) return res.json({ success: true, coins: 0 });
+
+  const today = new Date().toISOString().split('T')[0];
+  const uq = await app.locals.pool.query(
+    'SELECT * FROM user_quests WHERE discord_id = $1 AND quest_id = $2 AND date = $3',
+    [discordId, questId, today]
+  );
+
+  if (uq.rows.length === 0) return res.json({ success: false, message: 'Quest not found' });
+  if (!uq.rows[0].completed) return res.json({ success: false, message: 'Quest not completed' });
+  if (uq.rows[0].claimed) return res.json({ success: false, message: 'Already claimed' });
+
+  const quest = await app.locals.pool.query('SELECT * FROM daily_quests WHERE id = $1', [questId]);
+  if (quest.rows.length === 0) return res.json({ success: false, message: 'Quest not found' });
+
+  const reward = quest.rows[0].reward;
+
+  await app.locals.pool.query('UPDATE user_quests SET claimed = true WHERE id = $1', [uq.rows[0].id]);
+  await app.locals.pool.query(`
+    INSERT INTO user_coins (discord_id, coins, total_earned) VALUES ($1, $2, $2)
+    ON CONFLICT (discord_id) DO UPDATE SET coins = user_coins.coins + $2, total_earned = user_coins.total_earned + $2
+  `, [discordId, reward]);
+
+  const balance = await app.locals.pool.query('SELECT coins FROM user_coins WHERE discord_id = $1', [discordId]);
+  res.json({ success: true, coins: balance.rows[0]?.coins || 0 });
+});
+
+// Buy Pro time with coins (10 coins = 1 hour)
+app.post('/api/coins/buy-pro', async (req, res) => {
+  const { discordId, hours = 1 } = req.body;
+  if (!discordId) return res.status(400).json({ error: 'discordId required' });
+  if (!app.locals.pool) return res.json({ success: false, message: 'No database' });
+
+  const cost = hours * 10;
+  const userCoins = await app.locals.pool.query('SELECT * FROM user_coins WHERE discord_id = $1', [discordId]);
+  if (userCoins.rows.length === 0 || userCoins.rows[0].coins < cost) {
+    return res.json({ success: false, message: `Not enough coins. Need ${cost}, have ${userCoins.rows[0]?.coins || 0}` });
+  }
+
+  await app.locals.pool.query('UPDATE user_coins SET coins = coins - $1 WHERE discord_id = $2', [cost, discordId]);
+
+  const existing = await app.locals.pool.query('SELECT * FROM user_pro_time WHERE discord_id = $1', [discordId]);
+  const now = new Date();
+  const base = existing.rows.length > 0 && new Date(existing.rows[0].pro_until) > now
+    ? new Date(existing.rows[0].pro_until) : now;
+  const proUntil = new Date(base.getTime() + hours * 3600000);
+
+  await app.locals.pool.query(`
+    INSERT INTO user_pro_time (discord_id, pro_until, activated_at) VALUES ($1, $2, $3)
+    ON CONFLICT (discord_id) DO UPDATE SET pro_until = $2, activated_at = $3
+  `, [discordId, proUntil.toISOString(), now.toISOString()]);
+
+  const balance = await app.locals.pool.query('SELECT coins FROM user_coins WHERE discord_id = $1', [discordId]);
+  res.json({ success: true, proUntil: proUntil.toISOString(), coins: balance.rows[0]?.coins || 0 });
+});
+
+// Check Pro time status
+app.get('/api/pro-time/:discordId', async (req, res) => {
+  if (!app.locals.pool) return res.json({ active: false });
+  const r = await app.locals.pool.query('SELECT * FROM user_pro_time WHERE discord_id = $1', [req.params.discordId]);
+  if (r.rows.length === 0) return res.json({ active: false });
+  const active = new Date(r.rows[0].pro_until) > new Date();
+  res.json({ active, proUntil: r.rows[0].pro_until });
+});
+
+// Coins leaderboard
+app.get('/api/coins/leaderboard', async (req, res) => {
+  if (!app.locals.pool) return res.json({ entries: [] });
+  const r = await app.locals.pool.query(
+    'SELECT discord_id, coins, total_earned, ROW_NUMBER() OVER (ORDER BY coins DESC) as rank FROM user_coins ORDER BY coins DESC LIMIT 20'
+  );
+  res.json({ entries: r.rows });
 });
 
 // ── Team avatars ──
