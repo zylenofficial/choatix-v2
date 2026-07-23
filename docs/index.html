@@ -25,7 +25,6 @@
       --green: #00e676;
       --blue: #2979ff;
       --purple: #7c4dff;
-      --cyan: #00e5ff;
     }
 
     html { scroll-behavior: smooth; }
@@ -46,8 +45,7 @@
       top: 0;
       left: 0;
       height: 2px;
-      background: linear-gradient(90deg, var(--green), var(--cyan), var(--purple));
-      z-index: 10001;
+      background: var(--green);
     }
 
     /* ─── PARTICLES ──────────────────────────── */
@@ -292,15 +290,14 @@
 
     .hero h1 .line2 {
       display: block;
-      background: linear-gradient(135deg, var(--green) 0%, var(--cyan) 40%, var(--blue) 80%, var(--purple) 100%);
-      background-size: 200% 200%;
+      background: var(--green);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
-      animation: fadeUp 0.8s ease 0.2s forwards, gradientShift 6s ease-in-out infinite;
+      animation: fadeUp 0.8s ease 0.2s forwards;
       opacity: 0;
     }
 
-    @keyframes gradientShift { 0%,100%{background-position:0% 50%} 50%{background-position:100% 50%} }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(30px)} to{opacity:1;transform:translateY(0)} }
 
     .hero-desc {
       font-size: 1.1rem;
@@ -393,7 +390,7 @@
 
     .step-icon::before {
       content: ''; position: absolute; inset: -4px; border-radius: 18px;
-      background: conic-gradient(from 0deg, var(--green), var(--cyan), var(--purple), var(--green));
+      background: var(--green);
       opacity: 0; z-index: -1; transition: opacity 0.4s; filter: blur(8px);
     }
 
@@ -538,11 +535,10 @@
 
     .price-card.featured::before {
       content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
-      background: linear-gradient(90deg, var(--green), var(--cyan), var(--purple));
-      background-size: 200% 100%; animation: gradientSlide 3s linear infinite;
+      background: var(--green);
     }
 
-    @keyframes gradientSlide { 0%{background-position:0% 50%} 100%{background-position:200% 50%} }
+    .price-popular {
 
     .price-popular {
       position: absolute; top: 1rem; right: 1rem;
