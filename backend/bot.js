@@ -7,6 +7,8 @@ const API_URL = process.env.BACKEND_URL || 'http://localhost:3001';
 const PRO_ROLE_ID = process.env.PRO_ROLE_ID || '1517719772702314616';
 const PREMIUM_ROLE_ID = process.env.PREMIUM_ROLE_ID || '1517719827580452994';
 const ADMIN_SECRET = 'choatix-admin-2024';
+const MAX_RETRIES = 10;
+const RETRY_DELAY = 5000;
 
 const ADMIN_IDS = ['1014494449809772544', '1520176133461512324', '1322475983386837006'];
 
@@ -58,6 +60,8 @@ function apiRequest(method, path, body) {
 
 const client = new Client({
   intents: [GatewayIntentBits.Guilds],
+  rest: { timeout: 30000 },
+  presence: { activities: [{ name: 'Choatix V2', type: 3 }], status: 'online' },
 });
 
 async function registerCommands() {
@@ -665,18 +669,41 @@ client.on('interactionCreate', async (interaction) => {
   }
 });
 
-function startBot() {
+client.on('error', (err) => {
+  console.error('[BOT] Client error:', err.message);
+});
+
+client.on('shardDisconnect', () => {
+  console.warn('[BOT] Disconnected. Reconnecting...');
+});
+
+client.on('shardReconnecting', () => {
+  console.log('[BOT] Reconnecting...');
+});
+
+async function startBot(retryCount = 0) {
   if (!BOT_TOKEN || BOT_TOKEN === 'YOUR_BOT_TOKEN_HERE') {
-    console.log('Discord bot skipped — no DISCORD_BOT_TOKEN set');
+    console.log('[BOT] Skipped — no DISCORD_BOT_TOKEN set');
     return;
   }
-  registerCommands();
-  client.login(BOT_TOKEN).then(() => {
-    console.log('Choatix Bot is online!');
-  }).catch((err) => {
-    console.error('Failed to start bot:', err.message);
-  });
+  try {
+    await registerCommands();
+    await client.login(BOT_TOKEN);
+    console.log('[BOT] Online! Logged in as', client.user?.tag);
+  } catch (err) {
+    console.error(`[BOT] Login failed (attempt ${retryCount + 1}/${MAX_RETRIES}):`, err.message);
+    if (retryCount < MAX_RETRIES) {
+      setTimeout(() => startBot(retryCount + 1), RETRY_DELAY * (retryCount + 1));
+    } else {
+      console.error('[BOT] Max retries reached. Will retry in 60s...');
+      setTimeout(() => startBot(0), 60000);
+    }
+  }
 }
+
+process.on('unhandledRejection', (err) => {
+  console.error('[BOT] Unhandled rejection:', err);
+});
 
 startBot();
 

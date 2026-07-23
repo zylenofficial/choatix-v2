@@ -23,11 +23,9 @@
       --text-mid: #777;
       --accent: #fff;
       --green: #00e676;
-      --green2: #69f0ae;
       --blue: #2979ff;
       --purple: #7c4dff;
       --cyan: #00e5ff;
-      --pink: #ff4081;
     }
 
     html { scroll-behavior: smooth; }
@@ -38,53 +36,9 @@
       color: var(--text);
       line-height: 1.6;
       overflow-x: hidden;
-      cursor: none;
     }
 
-    a, button, input { cursor: none; }
-
-    ::selection {
-      background: rgba(0,230,118,0.2);
-      color: var(--text);
-    }
-
-    /* ─── CURSOR ──────────────────────────────── */
-    .cursor {
-      position: fixed;
-      z-index: 10000;
-      pointer-events: none;
-      mix-blend-mode: difference;
-    }
-
-    .cursor-dot {
-      width: 6px;
-      height: 6px;
-      background: #fff;
-      border-radius: 50%;
-      position: absolute;
-      top: -3px;
-      left: -3px;
-    }
-
-    .cursor-ring {
-      width: 36px;
-      height: 36px;
-      border: 1.5px solid rgba(255,255,255,0.25);
-      border-radius: 50%;
-      position: absolute;
-      top: -18px;
-      left: -18px;
-      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-
-    .cursor.expand .cursor-ring {
-      width: 60px;
-      height: 60px;
-      top: -30px;
-      left: -30px;
-      border-color: var(--green);
-      background: rgba(0,230,118,0.04);
-    }
+    ::selection { background: rgba(0,230,118,0.2); color: var(--text); }
 
     /* ─── SCROLL PROGRESS ────────────────────── */
     .scroll-bar {
@@ -94,10 +48,9 @@
       height: 2px;
       background: linear-gradient(90deg, var(--green), var(--cyan), var(--purple));
       z-index: 10001;
-      transform-origin: left;
     }
 
-    /* ─── PARTICLES CANVAS ───────────────────── */
+    /* ─── PARTICLES ──────────────────────────── */
     #particles {
       position: fixed;
       inset: 0;
@@ -111,7 +64,7 @@
       inset: 0;
       z-index: 9990;
       pointer-events: none;
-      opacity: 0.025;
+      opacity: 0.02;
       background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
     }
 
@@ -131,7 +84,7 @@
     }
 
     nav.scrolled {
-      background: rgba(2, 2, 2, 0.8);
+      background: rgba(2, 2, 2, 0.85);
       backdrop-filter: blur(40px) saturate(150%);
       -webkit-backdrop-filter: blur(40px) saturate(150%);
       border-bottom: 1px solid var(--border);
@@ -184,41 +137,16 @@
       text-decoration: none;
       transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
       border: none;
-      position: relative;
     }
 
-    .btn-primary {
-      background: #fff;
-      color: #000;
-    }
+    .btn-primary { background: #fff; color: #000; }
+    .btn-primary:hover { transform: translateY(-3px) scale(1.02); box-shadow: 0 12px 40px rgba(255,255,255,0.1); }
 
-    .btn-primary:hover {
-      transform: translateY(-3px) scale(1.02);
-      box-shadow: 0 12px 40px rgba(255,255,255,0.1);
-    }
+    .btn-secondary { background: transparent; color: var(--text); border: 1px solid var(--border3); }
+    .btn-secondary:hover { border-color: rgba(255,255,255,0.2); background: rgba(255,255,255,0.03); transform: translateY(-3px); }
 
-    .btn-secondary {
-      background: transparent;
-      color: var(--text);
-      border: 1px solid var(--border3);
-    }
-
-    .btn-secondary:hover {
-      border-color: rgba(255,255,255,0.2);
-      background: rgba(255,255,255,0.03);
-      transform: translateY(-3px);
-    }
-
-    .btn-discord {
-      background: #5865F2;
-      color: white;
-    }
-
-    .btn-discord:hover {
-      background: #4752C4;
-      transform: translateY(-3px);
-      box-shadow: 0 12px 40px rgba(88,101,242,0.3);
-    }
+    .btn-discord { background: #5865F2; color: white; }
+    .btn-discord:hover { background: #4752C4; transform: translateY(-3px); box-shadow: 0 12px 40px rgba(88,101,242,0.3); }
 
     /* ─── HERO ────────────────────────────────── */
     .hero {
@@ -233,11 +161,7 @@
       overflow: hidden;
     }
 
-    .hero-mesh {
-      position: absolute;
-      inset: 0;
-      overflow: hidden;
-    }
+    .hero-mesh { position: absolute; inset: 0; overflow: hidden; }
 
     .mesh-blob {
       position: absolute;
@@ -247,54 +171,31 @@
     }
 
     .mesh-blob-1 {
-      width: 600px;
-      height: 600px;
+      width: 600px; height: 600px;
       background: radial-gradient(circle, rgba(0,230,118,0.12) 0%, transparent 70%);
-      top: -10%;
-      left: 50%;
+      top: -10%; left: 50%;
       animation: meshMove1 20s ease-in-out infinite;
     }
 
     .mesh-blob-2 {
-      width: 400px;
-      height: 400px;
+      width: 400px; height: 400px;
       background: radial-gradient(circle, rgba(41,121,255,0.08) 0%, transparent 70%);
-      bottom: 10%;
-      right: 10%;
+      bottom: 10%; right: 10%;
       animation: meshMove2 25s ease-in-out infinite;
     }
 
     .mesh-blob-3 {
-      width: 300px;
-      height: 300px;
+      width: 300px; height: 300px;
       background: radial-gradient(circle, rgba(124,77,255,0.06) 0%, transparent 70%);
-      top: 40%;
-      left: 10%;
+      top: 40%; left: 10%;
       animation: meshMove3 18s ease-in-out infinite;
     }
 
-    @keyframes meshMove1 {
-      0%, 100% { transform: translate(0, 0) scale(1); }
-      25% { transform: translate(-60px, 40px) scale(1.1); }
-      50% { transform: translate(40px, -30px) scale(0.95); }
-      75% { transform: translate(-30px, -50px) scale(1.05); }
-    }
+    @keyframes meshMove1 { 0%,100%{transform:translate(0,0) scale(1)} 25%{transform:translate(-60px,40px) scale(1.1)} 50%{transform:translate(40px,-30px) scale(.95)} 75%{transform:translate(-30px,-50px) scale(1.05)} }
+    @keyframes meshMove2 { 0%,100%{transform:translate(0,0) scale(1)} 33%{transform:translate(50px,-40px) scale(1.15)} 66%{transform:translate(-40px,30px) scale(.9)} }
+    @keyframes meshMove3 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(60px,-60px)} }
 
-    @keyframes meshMove2 {
-      0%, 100% { transform: translate(0, 0) scale(1); }
-      33% { transform: translate(50px, -40px) scale(1.15); }
-      66% { transform: translate(-40px, 30px) scale(0.9); }
-    }
-
-    @keyframes meshMove3 {
-      0%, 100% { transform: translate(0, 0); }
-      50% { transform: translate(60px, -60px); }
-    }
-
-    .hero-content {
-      position: relative;
-      z-index: 1;
-    }
+    .hero-content { position: relative; z-index: 1; }
 
     .hero-badge {
       display: inline-flex;
@@ -313,18 +214,14 @@
     }
 
     .hero-badge .dot {
-      width: 6px;
-      height: 6px;
+      width: 6px; height: 6px;
       border-radius: 50%;
       background: var(--green);
       box-shadow: 0 0 12px var(--green);
       animation: pulse 2s ease-in-out infinite;
     }
 
-    @keyframes pulse {
-      0%, 100% { opacity: 1; box-shadow: 0 0 12px var(--green); }
-      50% { opacity: 0.4; box-shadow: 0 0 24px var(--green); }
-    }
+    @keyframes pulse { 0%,100%{opacity:1;box-shadow:0 0 12px var(--green)} 50%{opacity:.4;box-shadow:0 0 24px var(--green)} }
 
     .hero h1 {
       font-size: clamp(4rem, 11vw, 8rem);
@@ -353,10 +250,7 @@
       opacity: 0;
     }
 
-    @keyframes gradientShift {
-      0%, 100% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-    }
+    @keyframes gradientShift { 0%,100%{background-position:0% 50%} 50%{background-position:100% 50%} }
 
     .hero-desc {
       font-size: 1.1rem;
@@ -390,35 +284,13 @@
       opacity: 0;
     }
 
-    .hero-scroll-line {
-      width: 1px;
-      height: 40px;
-      background: linear-gradient(180deg, var(--text-dim), transparent);
-    }
-
-    .hero-scroll-text {
-      font-size: 0.6rem;
-      text-transform: uppercase;
-      letter-spacing: 0.15em;
-      color: var(--text-dim);
-    }
-
-    @keyframes float {
-      0%, 100% { transform: translateX(-50%) translateY(0); }
-      50% { transform: translateX(-50%) translateY(8px); }
-    }
-
-    @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(30px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
+    .hero-scroll-line { width: 1px; height: 40px; background: linear-gradient(180deg, var(--text-dim), transparent); }
+    .hero-scroll-text { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.15em; color: var(--text-dim); }
+    @keyframes float { 0%,100%{transform:translateX(-50%) translateY(0)} 50%{transform:translateX(-50%) translateY(8px)} }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(30px)} to{opacity:1;transform:translateY(0)} }
 
     /* ─── SECTIONS ────────────────────────────── */
-    section {
-      padding: 8rem 2rem;
-      max-width: 1100px;
-      margin: 0 auto;
-    }
+    section { padding: 8rem 2rem; max-width: 1100px; margin: 0 auto; }
 
     .section-label {
       display: inline-flex;
@@ -432,589 +304,208 @@
       margin-bottom: 1.25rem;
     }
 
-    .section-label::before {
-      content: '';
-      width: 6px;
-      height: 6px;
-      border-radius: 2px;
-      background: var(--green);
-      opacity: 0.6;
-    }
+    .section-label::before { content: ''; width: 6px; height: 6px; border-radius: 2px; background: var(--green); opacity: 0.6; }
 
-    .section-header {
-      text-align: center;
-      margin-bottom: 4rem;
-    }
-
-    .section-header h2 {
-      font-size: clamp(2rem, 4vw, 3rem);
-      font-weight: 900;
-      letter-spacing: -0.05em;
-      margin-bottom: 1rem;
-      line-height: 1.05;
-    }
-
-    .section-header p {
-      color: var(--text-dim);
-      max-width: 450px;
-      margin: 0 auto;
-      font-size: 1rem;
-    }
+    .section-header { text-align: center; margin-bottom: 4rem; }
+    .section-header h2 { font-size: clamp(2rem, 4vw, 3rem); font-weight: 900; letter-spacing: -0.05em; margin-bottom: 1rem; line-height: 1.05; }
+    .section-header p { color: var(--text-dim); max-width: 450px; margin: 0 auto; font-size: 1rem; }
 
     /* ─── STATS ────────────────────────────────── */
-    .stats-row {
-      display: flex;
-      gap: 1px;
-      background: var(--border);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      overflow: hidden;
-      max-width: 900px;
-      margin: 0 auto;
-    }
+    .stats-row { display: flex; gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; max-width: 900px; margin: 0 auto; }
 
     .stat-cell {
-      flex: 1;
-      text-align: center;
-      padding: 2.5rem 1.5rem;
-      background: var(--bg2);
-      transition: all 0.4s;
-      position: relative;
+      flex: 1; text-align: center; padding: 2.5rem 1.5rem;
+      background: var(--bg2); transition: all 0.4s; position: relative;
     }
 
     .stat-cell::after {
-      content: '';
-      position: absolute;
-      bottom: 0;
-      left: 50%;
-      width: 0;
-      height: 2px;
-      background: var(--green);
-      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-      transform: translateX(-50%);
+      content: ''; position: absolute; bottom: 0; left: 50%; width: 0; height: 2px;
+      background: var(--green); transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); transform: translateX(-50%);
     }
 
     .stat-cell:hover { background: var(--bg3); }
     .stat-cell:hover::after { width: 50px; }
 
-    .stat-num {
-      font-size: 2.25rem;
-      font-weight: 900;
-      color: var(--accent);
-      letter-spacing: -0.03em;
-      line-height: 1;
-    }
-
-    .stat-txt {
-      font-size: 0.7rem;
-      color: var(--text-dim);
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      margin-top: 0.5rem;
-    }
+    .stat-num { font-size: 2.25rem; font-weight: 900; color: var(--accent); letter-spacing: -0.03em; line-height: 1; }
+    .stat-txt { font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 0.5rem; }
 
     /* ─── STEPS ────────────────────────────────── */
-    .steps-row {
-      display: flex;
-      align-items: flex-start;
-      justify-content: center;
-    }
+    .steps-row { display: flex; align-items: flex-start; justify-content: center; }
 
-    .step-item {
-      flex: 1;
-      max-width: 260px;
-      padding: 0 1.5rem;
-      text-align: center;
-    }
+    .step-item { flex: 1; max-width: 260px; padding: 0 1.5rem; text-align: center; }
 
     .step-icon {
-      width: 56px;
-      height: 56px;
-      border-radius: 14px;
-      background: var(--bg3);
-      border: 1px solid var(--border2);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.3rem;
-      margin: 0 auto 1.25rem;
-      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-      position: relative;
+      width: 56px; height: 56px; border-radius: 14px; background: var(--bg3);
+      border: 1px solid var(--border2); display: flex; align-items: center;
+      justify-content: center; font-size: 1.3rem; margin: 0 auto 1.25rem;
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); position: relative;
     }
 
     .step-icon::before {
-      content: '';
-      position: absolute;
-      inset: -4px;
-      border-radius: 18px;
+      content: ''; position: absolute; inset: -4px; border-radius: 18px;
       background: conic-gradient(from 0deg, var(--green), var(--cyan), var(--purple), var(--green));
-      opacity: 0;
-      z-index: -1;
-      transition: opacity 0.4s;
-      filter: blur(8px);
+      opacity: 0; z-index: -1; transition: opacity 0.4s; filter: blur(8px);
     }
 
     .step-item:hover .step-icon::before { opacity: 0.2; }
+    .step-item:hover .step-icon { transform: translateY(-6px) scale(1.05); border-color: rgba(0,230,118,0.2); background: rgba(0,230,118,0.05); }
 
-    .step-item:hover .step-icon {
-      transform: translateY(-6px) scale(1.05);
-      border-color: rgba(0,230,118,0.2);
-      background: rgba(0,230,118,0.05);
-    }
+    .step-num { font-size: 0.6rem; font-weight: 700; color: var(--green); text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 0.5rem; }
+    .step-item h3 { font-size: 1rem; font-weight: 700; margin-bottom: 0.4rem; }
+    .step-item p { font-size: 0.8rem; color: var(--text-dim); line-height: 1.6; }
 
-    .step-num {
-      font-size: 0.6rem;
-      font-weight: 700;
-      color: var(--green);
-      text-transform: uppercase;
-      letter-spacing: 0.15em;
-      margin-bottom: 0.5rem;
-    }
-
-    .step-item h3 {
-      font-size: 1rem;
-      font-weight: 700;
-      margin-bottom: 0.4rem;
-    }
-
-    .step-item p {
-      font-size: 0.8rem;
-      color: var(--text-dim);
-      line-height: 1.6;
-    }
-
-    .step-line {
-      width: 50px;
-      height: 1px;
-      background: var(--border2);
-      margin-top: 28px;
-      flex-shrink: 0;
-      position: relative;
-    }
-
-    .step-line::before {
-      content: '';
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 4px;
-      height: 4px;
-      border-radius: 50%;
-      background: var(--bg4);
-      border: 1px solid var(--border2);
-    }
+    .step-line { width: 50px; height: 1px; background: var(--border2); margin-top: 28px; flex-shrink: 0; position: relative; }
+    .step-line::before { content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 4px; height: 4px; border-radius: 50%; background: var(--bg4); border: 1px solid var(--border2); }
 
     /* ─── FPS ──────────────────────────────────── */
-    .fps-grid {
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-      max-width: 660px;
-      margin: 0 auto;
-    }
+    .fps-grid { display: flex; flex-direction: column; gap: 0.5rem; max-width: 660px; margin: 0 auto; }
 
-    .fps-row {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      padding: 0.4rem 0;
-    }
+    .fps-row { display: flex; align-items: center; gap: 1rem; padding: 0.4rem 0; }
 
-    .fps-name {
-      width: 110px;
-      font-size: 0.8rem;
-      font-weight: 600;
-      text-align: right;
-      flex-shrink: 0;
-      color: var(--text-mid);
-    }
+    .fps-name { width: 110px; font-size: 0.8rem; font-weight: 600; text-align: right; flex-shrink: 0; color: var(--text-mid); }
 
-    .fps-bars {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
+    .fps-bars { flex: 1; display: flex; flex-direction: column; gap: 2px; }
 
     .fps-bar {
-      height: 18px;
-      border-radius: 3px;
-      display: flex;
-      align-items: center;
-      padding: 0 8px;
-      font-size: 0.6rem;
-      font-weight: 600;
-      width: 0;
+      height: 18px; border-radius: 3px; display: flex; align-items: center;
+      padding: 0 8px; font-size: 0.6rem; font-weight: 600; width: 0;
       transition: width 1.8s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
-    .fps-bar.before {
-      background: rgba(255,255,255,0.03);
-      color: var(--text-dim);
-    }
+    .fps-bar.before { background: rgba(255,255,255,0.03); color: var(--text-dim); }
+    .fps-bar.after { background: linear-gradient(90deg, rgba(0,230,118,0.2), rgba(0,230,118,0.06)); border: 1px solid rgba(0,230,118,0.12); color: var(--green); }
 
-    .fps-bar.after {
-      background: linear-gradient(90deg, rgba(0,230,118,0.2), rgba(0,230,118,0.06));
-      border: 1px solid rgba(0,230,118,0.12);
-      color: var(--green);
-    }
-
-    .fps-delta {
-      width: 55px;
-      font-size: 0.8rem;
-      font-weight: 700;
-      color: var(--green);
-      flex-shrink: 0;
-      opacity: 0;
-      transition: opacity 0.6s 1.2s;
-    }
-
+    .fps-delta { width: 55px; font-size: 0.8rem; font-weight: 700; color: var(--green); flex-shrink: 0; opacity: 0; transition: opacity 0.6s 1.2s; }
     .fps-row.animated .fps-delta { opacity: 1; }
 
-    .fps-legend {
-      display: flex;
-      gap: 2rem;
-      justify-content: center;
-      margin-top: 2.5rem;
-    }
-
-    .fps-legend-item {
-      display: flex;
-      align-items: center;
-      gap: 0.4rem;
-      font-size: 0.75rem;
-      color: var(--text-dim);
-    }
-
-    .fps-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 2px;
-    }
-
+    .fps-legend { display: flex; gap: 2rem; justify-content: center; margin-top: 2.5rem; }
+    .fps-legend-item { display: flex; align-items: center; gap: 0.4rem; font-size: 0.75rem; color: var(--text-dim); }
+    .fps-dot { width: 8px; height: 8px; border-radius: 2px; }
     .fps-dot.before { background: rgba(255,255,255,0.05); }
     .fps-dot.after { background: rgba(0,230,118,0.2); border: 1px solid rgba(0,230,118,0.15); }
 
     /* ─── FEATURES ──────────────────────────────── */
-    .features-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 1px;
-      background: var(--border);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      overflow: hidden;
-    }
+    .features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
 
     .feature-card {
-      background: var(--bg2);
-      padding: 2rem;
-      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-      position: relative;
-      transform-style: preserve-3d;
-      perspective: 800px;
+      background: var(--bg2); padding: 2rem;
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); position: relative;
     }
 
     .feature-card::before {
-      content: '';
-      position: absolute;
-      inset: 0;
+      content: ''; position: absolute; inset: 0;
       background: radial-gradient(600px circle at var(--mx, 50%) var(--my, 50%), rgba(0,230,118,0.04), transparent 40%);
-      opacity: 0;
-      transition: opacity 0.4s;
+      opacity: 0; transition: opacity 0.4s;
     }
 
-    .feature-card:hover { background: var(--bg3); transform: translateZ(10px); }
+    .feature-card:hover { background: var(--bg3); }
     .feature-card:hover::before { opacity: 1; }
 
     .feature-icon {
-      width: 40px;
-      height: 40px;
-      border-radius: 10px;
-      background: rgba(255,255,255,0.02);
-      border: 1px solid var(--border2);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.1rem;
-      margin-bottom: 1rem;
+      width: 40px; height: 40px; border-radius: 10px; background: rgba(255,255,255,0.02);
+      border: 1px solid var(--border2); display: flex; align-items: center;
+      justify-content: center; font-size: 1.1rem; margin-bottom: 1rem;
       transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     .feature-card:hover .feature-icon {
-      background: rgba(0,230,118,0.06);
-      border-color: rgba(0,230,118,0.15);
-      transform: scale(1.15) translateY(-3px) translateZ(20px);
-      box-shadow: 0 8px 24px rgba(0,230,118,0.1);
+      background: rgba(0,230,118,0.06); border-color: rgba(0,230,118,0.15);
+      transform: scale(1.15) translateY(-3px); box-shadow: 0 8px 24px rgba(0,230,118,0.1);
     }
 
-    .feature-card h3 {
-      font-size: 0.9rem;
-      font-weight: 700;
-      margin-bottom: 0.35rem;
-      transform: translateZ(15px);
-    }
-
-    .feature-card p {
-      font-size: 0.775rem;
-      color: var(--text-dim);
-      line-height: 1.55;
-      transform: translateZ(10px);
-    }
+    .feature-card h3 { font-size: 0.9rem; font-weight: 700; margin-bottom: 0.35rem; }
+    .feature-card p { font-size: 0.775rem; color: var(--text-dim); line-height: 1.55; }
 
     /* ─── TWEAKS ────────────────────────────────── */
-    .tweaks-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 0.75rem;
-    }
+    .tweaks-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.75rem; }
 
     .tweak-card {
-      background: var(--bg2);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 1.5rem 1rem;
-      text-align: center;
-      transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-      position: relative;
-      overflow: hidden;
+      background: var(--bg2); border: 1px solid var(--border); border-radius: 12px;
+      padding: 1.5rem 1rem; text-align: center; transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative; overflow: hidden;
     }
 
     .tweak-card::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 1px;
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
       background: linear-gradient(90deg, transparent, rgba(0,230,118,0.4), transparent);
-      opacity: 0;
-      transition: opacity 0.3s;
+      opacity: 0; transition: opacity 0.3s;
     }
 
-    .tweak-card:hover {
-      border-color: var(--border2);
-      transform: translateY(-4px);
-      box-shadow: 0 12px 32px rgba(0,0,0,0.4);
-    }
-
+    .tweak-card:hover { border-color: var(--border2); transform: translateY(-4px); box-shadow: 0 12px 32px rgba(0,0,0,0.4); }
     .tweak-card:hover::before { opacity: 1; }
-
-    .tweak-count {
-      font-size: 1.5rem;
-      font-weight: 900;
-      color: var(--accent);
-      letter-spacing: -0.02em;
-    }
-
-    .tweak-label {
-      font-size: 0.6rem;
-      color: var(--text-dim);
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      margin-top: 0.25rem;
-    }
+    .tweak-count { font-size: 1.5rem; font-weight: 900; color: var(--accent); letter-spacing: -0.02em; }
+    .tweak-label { font-size: 0.6rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 0.25rem; }
 
     /* ─── PRICING ─────────────────────────────── */
-    .pricing-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 1px;
-      background: var(--border);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      overflow: hidden;
-    }
+    .pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
 
-    .price-card {
-      background: var(--bg2);
-      padding: 2.5rem;
-      position: relative;
-      transition: all 0.4s;
-    }
-
+    .price-card { background: var(--bg2); padding: 2.5rem; position: relative; transition: all 0.4s; }
     .price-card:hover { background: var(--bg3); }
-
-    .price-card.featured {
-      background: var(--bg3);
-    }
+    .price-card.featured { background: var(--bg3); }
 
     .price-card.featured::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 2px;
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
       background: linear-gradient(90deg, var(--green), var(--cyan), var(--purple));
-      background-size: 200% 100%;
-      animation: gradientSlide 3s linear infinite;
+      background-size: 200% 100%; animation: gradientSlide 3s linear infinite;
     }
 
-    @keyframes gradientSlide {
-      0% { background-position: 0% 50%; }
-      100% { background-position: 200% 50%; }
-    }
+    @keyframes gradientSlide { 0%{background-position:0% 50%} 100%{background-position:200% 50%} }
 
     .price-popular {
-      position: absolute;
-      top: 1rem;
-      right: 1rem;
-      background: rgba(0,230,118,0.08);
-      color: var(--green);
-      font-size: 0.55rem;
-      font-weight: 700;
-      letter-spacing: 0.12em;
-      padding: 0.25rem 0.5rem;
-      border-radius: 4px;
-      border: 1px solid rgba(0,230,118,0.12);
+      position: absolute; top: 1rem; right: 1rem;
+      background: rgba(0,230,118,0.08); color: var(--green);
+      font-size: 0.55rem; font-weight: 700; letter-spacing: 0.12em;
+      padding: 0.25rem 0.5rem; border-radius: 4px; border: 1px solid rgba(0,230,118,0.12);
     }
 
-    .price-tier {
-      font-size: 0.7rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
-      color: var(--text-dim);
-      margin-bottom: 0.75rem;
-    }
+    .price-tier { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-dim); margin-bottom: 0.75rem; }
+    .price-amount { font-size: 2.75rem; font-weight: 900; letter-spacing: -0.04em; line-height: 1; }
+    .price-period { font-size: 0.8rem; color: var(--text-dim); margin-bottom: 2rem; }
 
-    .price-amount {
-      font-size: 2.75rem;
-      font-weight: 900;
-      letter-spacing: -0.04em;
-      line-height: 1;
-    }
+    .price-features { list-style: none; display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 2rem; }
+    .price-features li { font-size: 0.8rem; color: var(--text-mid); display: flex; align-items: center; gap: 0.5rem; }
 
-    .price-period {
-      font-size: 0.8rem;
-      color: var(--text-dim);
-      margin-bottom: 2rem;
-    }
-
-    .price-features {
-      list-style: none;
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-      margin-bottom: 2rem;
-    }
-
-    .price-features li {
-      font-size: 0.8rem;
-      color: var(--text-mid);
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .price-check {
-      width: 14px;
-      height: 14px;
-      border-radius: 4px;
-      background: rgba(0,230,118,0.08);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-    }
-
-    .price-check svg {
-      width: 8px;
-      height: 8px;
-      stroke: var(--green);
-      stroke-width: 2.5;
-      fill: none;
-    }
+    .price-check { width: 14px; height: 14px; border-radius: 4px; background: rgba(0,230,118,0.08); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .price-check svg { width: 8px; height: 8px; stroke: var(--green); stroke-width: 2.5; fill: none; }
 
     .price-card .btn { width: 100%; justify-content: center; }
 
     /* ─── CTA ─────────────────────────────────── */
     .cta-section {
-      padding: 10rem 2rem;
-      text-align: center;
-      position: relative;
-      overflow: hidden;
+      padding: 10rem 2rem; text-align: center; position: relative; overflow: hidden;
     }
 
     .cta-section::before {
-      content: '';
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 900px;
-      height: 500px;
+      content: ''; position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%, -50%); width: 900px; height: 500px;
       background: radial-gradient(ellipse, rgba(0,230,118,0.04) 0%, rgba(41,121,255,0.02) 40%, transparent 70%);
       pointer-events: none;
     }
 
-    .cta-section h2 {
-      font-size: clamp(2.25rem, 5vw, 3.5rem);
-      font-weight: 900;
-      letter-spacing: -0.05em;
-      margin-bottom: 1rem;
-      line-height: 1.05;
-    }
-
-    .cta-section p {
-      color: var(--text-dim);
-      margin-bottom: 2.5rem;
-      font-size: 1rem;
-    }
-
+    .cta-section h2 { font-size: clamp(2.25rem, 5vw, 3.5rem); font-weight: 900; letter-spacing: -0.05em; margin-bottom: 1rem; line-height: 1.05; }
+    .cta-section p { color: var(--text-dim); margin-bottom: 2.5rem; font-size: 1rem; }
     .cta-buttons { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
 
     /* ─── FOOTER ──────────────────────────────── */
-    footer {
-      padding: 3rem 2rem;
-      border-top: 1px solid var(--border);
-      text-align: center;
-    }
-
+    footer { padding: 3rem 2rem; border-top: 1px solid var(--border); text-align: center; }
     footer p { font-size: 0.75rem; color: var(--text-dim); }
     footer a { color: var(--text-dim); text-decoration: none; transition: color 0.2s; }
     footer a:hover { color: var(--text); }
-
-    .footer-links {
-      display: flex;
-      gap: 2rem;
-      justify-content: center;
-      margin-bottom: 1.5rem;
-    }
-
+    .footer-links { display: flex; gap: 2rem; justify-content: center; margin-bottom: 1.5rem; }
     .footer-links a { font-size: 0.8rem; }
 
     /* ─── REVEAL ──────────────────────────────── */
-    .reveal {
-      opacity: 0;
-      transform: translateY(40px);
-      transition: opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1), transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-
-    .reveal.visible {
-      opacity: 1;
-      transform: translateY(0);
-    }
-
+    .reveal { opacity: 0; transform: translateY(40px); transition: opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1), transform 0.9s cubic-bezier(0.16, 1, 0.3, 1); }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
     .reveal-d1 { transition-delay: 0.08s; }
     .reveal-d2 { transition-delay: 0.16s; }
     .reveal-d3 { transition-delay: 0.24s; }
     .reveal-d4 { transition-delay: 0.32s; }
-    .reveal-d5 { transition-delay: 0.4s; }
 
     /* ─── RESPONSIVE ──────────────────────────── */
-    @media (max-width: 900px) {
-      .features-grid { grid-template-columns: repeat(2, 1fr); }
-      .tweaks-grid { grid-template-columns: repeat(3, 1fr); }
-    }
-
+    @media (max-width: 900px) { .features-grid { grid-template-columns: repeat(2, 1fr); } .tweaks-grid { grid-template-columns: repeat(3, 1fr); } }
     @media (max-width: 768px) {
-      body { cursor: auto; }
-      .cursor { display: none; }
-      nav { padding: 0 1.5rem; }
-      .nav-links { display: none; }
+      nav { padding: 0 1.5rem; } .nav-links { display: none; }
       .hero h1 { font-size: clamp(2.5rem, 12vw, 4rem); }
       .stats-row { flex-direction: column; }
       section { padding: 5rem 1.5rem; }
@@ -1022,21 +513,15 @@
       .features-grid { grid-template-columns: 1fr; }
       .tweaks-grid { grid-template-columns: repeat(2, 1fr); }
       .steps-row { flex-direction: column; align-items: center; }
-      .step-line { width: 1px; height: 40px; margin: 0; }
-      .step-line::before { display: none; }
+      .step-line { width: 1px; height: 40px; margin: 0; } .step-line::before { display: none; }
       .fps-row { flex-direction: column; align-items: flex-start; gap: 0.25rem; }
-      .fps-name { width: auto; text-align: left; }
-      .fps-delta { width: auto; }
+      .fps-name { width: auto; text-align: left; } .fps-delta { width: auto; }
       .cta-section { padding: 5rem 1.5rem; }
     }
   </style>
 </head>
 <body>
 
-  <div class="cursor" id="cursor">
-    <div class="cursor-dot"></div>
-    <div class="cursor-ring"></div>
-  </div>
   <div class="scroll-bar" id="scrollBar"></div>
   <canvas id="particles"></canvas>
   <div class="noise"></div>
@@ -1060,227 +545,74 @@
       <div class="mesh-blob mesh-blob-2"></div>
       <div class="mesh-blob mesh-blob-3"></div>
     </div>
-
     <div class="hero-content">
-      <div class="hero-badge">
-        <span class="dot"></span>
-        v2.3.0 — 461 system tweaks
-      </div>
-
-      <h1>
-        <span class="line1">Maximize Your</span>
-        <span class="line2">FPS</span>
-      </h1>
-
+      <div class="hero-badge"><span class="dot"></span>v2.3.0 — 461 system tweaks</div>
+      <h1><span class="line1">Maximize Your</span><span class="line2">FPS</span></h1>
       <p class="hero-desc">Optimize your PC for maximum gaming performance. One click. Zero delay. Pure performance.</p>
-
       <div class="hero-buttons">
-        <a href="https://github.com/zylenofficial/choatix-v2/releases/latest" class="btn btn-primary" target="_blank">
-          ⬇ Download Free
-        </a>
-        <a href="https://discord.gg/AhEK85REhG" class="btn btn-discord" target="_blank">
-          Join Discord
-        </a>
+        <a href="https://github.com/zylenofficial/choatix-v2/releases/latest" class="btn btn-primary" target="_blank">⬇ Download Free</a>
+        <a href="https://discord.gg/AhEK85REhG" class="btn btn-discord" target="_blank">Join Discord</a>
       </div>
     </div>
-
-    <div class="hero-scroll">
-      <div class="hero-scroll-line"></div>
-      <div class="hero-scroll-text">Scroll</div>
-    </div>
+    <div class="hero-scroll"><div class="hero-scroll-line"></div><div class="hero-scroll-text">Scroll</div></div>
   </section>
 
   <!-- STATS -->
   <div class="stats-row reveal">
-    <div class="stat-cell">
-      <div class="stat-num">461</div>
-      <div class="stat-txt">System Tweaks</div>
-    </div>
-    <div class="stat-cell">
-      <div class="stat-num">12</div>
-      <div class="stat-txt">Game Profiles</div>
-    </div>
-    <div class="stat-cell">
-      <div class="stat-num">9</div>
-      <div class="stat-txt">Optimization Tools</div>
-    </div>
-    <div class="stat-cell">
-      <div class="stat-num">100%</div>
-      <div class="stat-txt">Free to Use</div>
-    </div>
+    <div class="stat-cell"><div class="stat-num">461</div><div class="stat-txt">System Tweaks</div></div>
+    <div class="stat-cell"><div class="stat-num">12</div><div class="stat-txt">Game Profiles</div></div>
+    <div class="stat-cell"><div class="stat-num">9</div><div class="stat-txt">Optimization Tools</div></div>
+    <div class="stat-cell"><div class="stat-num">100%</div><div class="stat-txt">Free to Use</div></div>
   </div>
 
   <!-- HOW IT WORKS -->
   <section id="how-it-works">
-    <div class="section-header reveal">
-      <div class="section-label">How It Works</div>
-      <h2>Three steps to peak performance</h2>
-    </div>
+    <div class="section-header reveal"><div class="section-label">How It Works</div><h2>Three steps to peak performance</h2></div>
     <div class="steps-row">
-      <div class="step-item reveal reveal-d1">
-        <div class="step-icon">📥</div>
-        <div class="step-num">Step 01</div>
-        <h3>Download & Install</h3>
-        <p>Install takes 10 seconds. No bloatware, no ads, no data collection.</p>
-      </div>
+      <div class="step-item reveal reveal-d1"><div class="step-icon">📥</div><div class="step-num">Step 01</div><h3>Download & Install</h3><p>Install takes 10 seconds. No bloatware, no ads, no data collection.</p></div>
       <div class="step-line"></div>
-      <div class="step-item reveal reveal-d2">
-        <div class="step-icon">🔍</div>
-        <div class="step-num">Step 02</div>
-        <h3>Scan Your PC</h3>
-        <p>Analyze your hardware, OS, and settings to find optimization opportunities.</p>
-      </div>
+      <div class="step-item reveal reveal-d2"><div class="step-icon">🔍</div><div class="step-num">Step 02</div><h3>Scan Your PC</h3><p>Analyze your hardware, OS, and settings to find optimization opportunities.</p></div>
       <div class="step-line"></div>
-      <div class="step-item reveal reveal-d3">
-        <div class="step-icon">⚡</div>
-        <div class="step-num">Step 03</div>
-        <h3>One-Click Optimize</h3>
-        <p>Apply all tweaks instantly. Every change is reversible. FPS jumps in seconds.</p>
-      </div>
+      <div class="step-item reveal reveal-d3"><div class="step-icon">⚡</div><div class="step-num">Step 03</div><h3>One-Click Optimize</h3><p>Apply all tweaks instantly. Every change is reversible. FPS jumps in seconds.</p></div>
     </div>
   </section>
 
   <!-- FPS -->
   <section id="fps-compare">
-    <div class="section-header reveal">
-      <div class="section-label">Performance</div>
-      <h2>Real FPS Gains</h2>
-      <p>Average improvements measured across 12 popular games</p>
-    </div>
+    <div class="section-header reveal"><div class="section-label">Performance</div><h2>Real FPS Gains</h2><p>Average improvements measured across 12 popular games</p></div>
     <div class="fps-grid" id="fpsGrid">
-      <div class="fps-row">
-        <div class="fps-name">Fortnite</div>
-        <div class="fps-bars">
-          <div class="fps-bar before" data-w="55%"><span>110 FPS</span></div>
-          <div class="fps-bar after" data-w="85%"><span>170 FPS</span></div>
-        </div>
-        <div class="fps-delta">+55%</div>
-      </div>
-      <div class="fps-row">
-        <div class="fps-name">Valorant</div>
-        <div class="fps-bars">
-          <div class="fps-bar before" data-w="50%"><span>200 FPS</span></div>
-          <div class="fps-bar after" data-w="80%"><span>320 FPS</span></div>
-        </div>
-        <div class="fps-delta">+60%</div>
-      </div>
-      <div class="fps-row">
-        <div class="fps-name">CS2</div>
-        <div class="fps-bars">
-          <div class="fps-bar before" data-w="45%"><span>180 FPS</span></div>
-          <div class="fps-bar after" data-w="75%"><span>300 FPS</span></div>
-        </div>
-        <div class="fps-delta">+67%</div>
-      </div>
-      <div class="fps-row">
-        <div class="fps-name">Apex Legends</div>
-        <div class="fps-bars">
-          <div class="fps-bar before" data-w="50%"><span>100 FPS</span></div>
-          <div class="fps-bar after" data-w="80%"><span>160 FPS</span></div>
-        </div>
-        <div class="fps-delta">+60%</div>
-      </div>
-      <div class="fps-row">
-        <div class="fps-name">Minecraft</div>
-        <div class="fps-bars">
-          <div class="fps-bar before" data-w="40%"><span>120 FPS</span></div>
-          <div class="fps-bar after" data-w="85%"><span>260 FPS</span></div>
-        </div>
-        <div class="fps-delta">+117%</div>
-      </div>
-      <div class="fps-row">
-        <div class="fps-name">GTA V</div>
-        <div class="fps-bars">
-          <div class="fps-bar before" data-w="55%"><span>85 FPS</span></div>
-          <div class="fps-bar after" data-w="80%"><span>125 FPS</span></div>
-        </div>
-        <div class="fps-delta">+47%</div>
-      </div>
+      <div class="fps-row"><div class="fps-name">Fortnite</div><div class="fps-bars"><div class="fps-bar before" data-w="55%"><span>110 FPS</span></div><div class="fps-bar after" data-w="85%"><span>170 FPS</span></div></div><div class="fps-delta">+55%</div></div>
+      <div class="fps-row"><div class="fps-name">Valorant</div><div class="fps-bars"><div class="fps-bar before" data-w="50%"><span>200 FPS</span></div><div class="fps-bar after" data-w="80%"><span>320 FPS</span></div></div><div class="fps-delta">+60%</div></div>
+      <div class="fps-row"><div class="fps-name">CS2</div><div class="fps-bars"><div class="fps-bar before" data-w="45%"><span>180 FPS</span></div><div class="fps-bar after" data-w="75%"><span>300 FPS</span></div></div><div class="fps-delta">+67%</div></div>
+      <div class="fps-row"><div class="fps-name">Apex Legends</div><div class="fps-bars"><div class="fps-bar before" data-w="50%"><span>100 FPS</span></div><div class="fps-bar after" data-w="80%"><span>160 FPS</span></div></div><div class="fps-delta">+60%</div></div>
+      <div class="fps-row"><div class="fps-name">Minecraft</div><div class="fps-bars"><div class="fps-bar before" data-w="40%"><span>120 FPS</span></div><div class="fps-bar after" data-w="85%"><span>260 FPS</span></div></div><div class="fps-delta">+117%</div></div>
+      <div class="fps-row"><div class="fps-name">GTA V</div><div class="fps-bars"><div class="fps-bar before" data-w="55%"><span>85 FPS</span></div><div class="fps-bar after" data-w="80%"><span>125 FPS</span></div></div><div class="fps-delta">+47%</div></div>
     </div>
-    <div class="fps-legend reveal">
-      <div class="fps-legend-item"><span class="fps-dot before"></span> Before</div>
-      <div class="fps-legend-item"><span class="fps-dot after"></span> After Choatix V2</div>
-    </div>
+    <div class="fps-legend reveal"><div class="fps-legend-item"><span class="fps-dot before"></span> Before</div><div class="fps-legend-item"><span class="fps-dot after"></span> After Choatix V2</div></div>
   </section>
 
   <!-- FEATURES -->
   <section id="features">
-    <div class="section-header reveal">
-      <div class="section-label">Features</div>
-      <h2>Everything You Need</h2>
-      <p>Complete PC optimization suite built for gamers</p>
-    </div>
+    <div class="section-header reveal"><div class="section-label">Features</div><h2>Everything You Need</h2><p>Complete PC optimization suite built for gamers</p></div>
     <div class="features-grid reveal">
-      <div class="feature-card">
-        <div class="feature-icon">⚡</div>
-        <h3>One-Click Optimize</h3>
-        <p>Apply 461 system tweaks instantly. CPU, GPU, RAM, network — all optimized.</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon">🎮</div>
-        <h3>Game Optimizer</h3>
-        <p>Per-game optimization for Fortnite, Valorant, CS2, Apex, Minecraft and more.</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon">🚀</div>
-        <h3>Quick Boost</h3>
-        <p>Instant performance boost. Free up RAM, kill bloat, boost GPU priority.</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon">⏱️</div>
-        <h3>Zero Delay</h3>
-        <p>Reduce input lag. Optimize timer resolution, mouse latency, render pipeline.</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon">📊</div>
-        <h3>Benchmark & FPS Compare</h3>
-        <p>Test before and after. See exact FPS improvement with side-by-side comparison.</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon">🏆</div>
-        <h3>Global Leaderboard</h3>
-        <p>Compete with others. Submit your benchmark score and climb the ranks.</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon">🔄</div>
-        <h3>Safe Rollback</h3>
-        <p>Every change is reversible. One click to restore original Windows settings.</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon">🧹</div>
-        <h3>Deep Clean</h3>
-        <p>Clean 10 system caches in one click. Temp files, DNS, Windows Store cache.</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon">💾</div>
-        <h3>Game Settings Backup</h3>
-        <p>Backup and restore game settings for Fortnite, Valorant, CS2, Apex.</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon">⌨️</div>
-        <h3>Keyboard Shortcuts</h3>
-        <p>Navigate pages instantly with number keys 1-9. Built for power users.</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon">✨</div>
-        <h3>Smooth Animations</h3>
-        <p>Skeleton loaders, glassmorphism tooltips, and hover effects throughout.</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon">🔗</div>
-        <h3>Discord Bot</h3>
-        <p>License management, giveaway system, and admin tools via Discord.</p>
-      </div>
+      <div class="feature-card"><div class="feature-icon">⚡</div><h3>One-Click Optimize</h3><p>Apply 461 system tweaks instantly. CPU, GPU, RAM, network — all optimized.</p></div>
+      <div class="feature-card"><div class="feature-icon">🎮</div><h3>Game Optimizer</h3><p>Per-game optimization for Fortnite, Valorant, CS2, Apex, Minecraft and more.</p></div>
+      <div class="feature-card"><div class="feature-icon">🚀</div><h3>Quick Boost</h3><p>Instant performance boost. Free up RAM, kill bloat, boost GPU priority.</p></div>
+      <div class="feature-card"><div class="feature-icon">⏱️</div><h3>Zero Delay</h3><p>Reduce input lag. Optimize timer resolution, mouse latency, render pipeline.</p></div>
+      <div class="feature-card"><div class="feature-icon">📊</div><h3>Benchmark & FPS Compare</h3><p>Test before and after. See exact FPS improvement with side-by-side comparison.</p></div>
+      <div class="feature-card"><div class="feature-icon">🏆</div><h3>Global Leaderboard</h3><p>Compete with others. Submit your benchmark score and climb the ranks.</p></div>
+      <div class="feature-card"><div class="feature-icon">🔄</div><h3>Safe Rollback</h3><p>Every change is reversible. One click to restore original Windows settings.</p></div>
+      <div class="feature-card"><div class="feature-icon">🧹</div><h3>Deep Clean</h3><p>Clean 10 system caches in one click. Temp files, DNS, Windows Store cache.</p></div>
+      <div class="feature-card"><div class="feature-icon">💾</div><h3>Game Settings Backup</h3><p>Backup and restore game settings for Fortnite, Valorant, CS2, Apex.</p></div>
+      <div class="feature-card"><div class="feature-icon">⌨️</div><h3>Keyboard Shortcuts</h3><p>Navigate pages instantly with number keys 1-9. Built for power users.</p></div>
+      <div class="feature-card"><div class="feature-icon">✨</div><h3>Smooth Animations</h3><p>Skeleton loaders, glassmorphism tooltips, and hover effects throughout.</p></div>
+      <div class="feature-card"><div class="feature-icon">🔗</div><h3>Discord Bot</h3><p>License management, giveaway system, and admin tools via Discord.</p></div>
     </div>
   </section>
 
   <!-- TWEAKS -->
   <section id="tweaks">
-    <div class="section-header reveal">
-      <div class="section-label">Tweaks</div>
-      <h2>461 System Tweaks</h2>
-      <p>Organized into 10 categories for maximum control</p>
-    </div>
+    <div class="section-header reveal"><div class="section-label">Tweaks</div><h2>461 System Tweaks</h2><p>Organized into 10 categories for maximum control</p></div>
     <div class="tweaks-grid reveal">
       <div class="tweak-card"><div class="tweak-count">14</div><div class="tweak-label">Deep Clean</div></div>
       <div class="tweak-card"><div class="tweak-count">6</div><div class="tweak-label">Network</div></div>
@@ -1299,16 +631,10 @@
 
   <!-- PRICING -->
   <section id="pricing">
-    <div class="section-header reveal">
-      <div class="section-label">Pricing</div>
-      <h2>Simple Pricing</h2>
-      <p>Start free. Upgrade when you need more.</p>
-    </div>
+    <div class="section-header reveal"><div class="section-label">Pricing</div><h2>Simple Pricing</h2><p>Start free. Upgrade when you need more.</p></div>
     <div class="pricing-grid reveal">
       <div class="price-card">
-        <div class="price-tier">Free</div>
-        <div class="price-amount">$0</div>
-        <div class="price-period">Forever</div>
+        <div class="price-tier">Free</div><div class="price-amount">$0</div><div class="price-period">Forever</div>
         <ul class="price-features">
           <li><span class="price-check"><svg viewBox="0 0 12 12"><path d="M2 6l3 3 5-5"/></svg></span> Basic system tweaks</li>
           <li><span class="price-check"><svg viewBox="0 0 12 12"><path d="M2 6l3 3 5-5"/></svg></span> Quick Boost</li>
@@ -1320,9 +646,7 @@
       </div>
       <div class="price-card featured">
         <div class="price-popular">POPULAR</div>
-        <div class="price-tier">Pro</div>
-        <div class="price-amount">$4.99</div>
-        <div class="price-period">One-time payment</div>
+        <div class="price-tier">Pro</div><div class="price-amount">$4.99</div><div class="price-period">One-time payment</div>
         <ul class="price-features">
           <li><span class="price-check"><svg viewBox="0 0 12 12"><path d="M2 6l3 3 5-5"/></svg></span> 461 system tweaks</li>
           <li><span class="price-check"><svg viewBox="0 0 12 12"><path d="M2 6l3 3 5-5"/></svg></span> Game Optimizer (all games)</li>
@@ -1334,9 +658,7 @@
         <a href="https://discord.gg/AhEK85REhG" class="btn btn-primary" target="_blank">Get Pro</a>
       </div>
       <div class="price-card">
-        <div class="price-tier">Premium</div>
-        <div class="price-amount">€7.99</div>
-        <div class="price-period">One-time payment</div>
+        <div class="price-tier">Premium</div><div class="price-amount">€7.99</div><div class="price-period">One-time payment</div>
         <ul class="price-features">
           <li><span class="price-check"><svg viewBox="0 0 12 12"><path d="M2 6l3 3 5-5"/></svg></span> Everything in Pro</li>
           <li><span class="price-check"><svg viewBox="0 0 12 12"><path d="M2 6l3 3 5-5"/></svg></span> Power Plan Manager</li>
@@ -1371,135 +693,67 @@
   </footer>
 
   <script>
-    // ── Cursor ──
-    const cursor = document.getElementById('cursor');
-    let mx = 0, my = 0, cx = 0, cy = 0;
-
-    document.addEventListener('mousemove', e => {
-      mx = e.clientX; my = e.clientY;
-    });
-
-    (function animCursor() {
-      cx += (mx - cx) * 0.12;
-      cy += (my - cy) * 0.12;
-      cursor.style.transform = `translate(${cx}px, ${cy}px)`;
-      requestAnimationFrame(animCursor);
-    })();
-
-    document.querySelectorAll('a, button, .feature-card, .tweak-card, .price-card, .step-item, .stat-cell').forEach(el => {
-      el.addEventListener('mouseenter', () => cursor.classList.add('expand'));
-      el.addEventListener('mouseleave', () => cursor.classList.remove('expand'));
-    });
-
-    // ── Nav scroll ──
+    // Nav scroll
     const nav = document.getElementById('nav');
     window.addEventListener('scroll', () => {
       nav.classList.toggle('scrolled', window.scrollY > 50);
-      const pct = (window.scrollY / (document.documentElement.scrollHeight - window.innerHeight)) * 100;
-      document.getElementById('scrollBar').style.width = pct + '%';
+      document.getElementById('scrollBar').style.width = (window.scrollY / (document.documentElement.scrollHeight - window.innerHeight) * 100) + '%';
     });
 
-    // ── Particles ──
+    // Particles
     const canvas = document.getElementById('particles');
     const ctx = canvas.getContext('2d');
-    let W, H;
-    const particles = [];
-    const PARTICLE_COUNT = 60;
-    const CONNECT_DIST = 120;
+    let W, H; const particles = []; const COUNT = 50; const DIST = 130;
+    function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
+    resize(); window.addEventListener('resize', resize);
 
-    function resize() {
-      W = canvas.width = window.innerWidth;
-      H = canvas.height = window.innerHeight;
-    }
-    resize();
-    window.addEventListener('resize', resize);
-
-    class Particle {
-      constructor() {
-        this.x = Math.random() * W;
-        this.y = Math.random() * H;
-        this.vx = (Math.random() - 0.5) * 0.3;
-        this.vy = (Math.random() - 0.5) * 0.3;
-        this.r = Math.random() * 1.5 + 0.5;
-      }
-      update() {
-        this.x += this.vx;
-        this.y += this.vy;
-        if (this.x < 0 || this.x > W) this.vx *= -1;
-        if (this.y < 0 || this.y > H) this.vy *= -1;
-      }
-      draw() {
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(255,255,255,0.15)';
-        ctx.fill();
-      }
+    class P {
+      constructor() { this.x = Math.random() * W; this.y = Math.random() * H; this.vx = (Math.random() - 0.5) * 0.3; this.vy = (Math.random() - 0.5) * 0.3; this.r = Math.random() * 1.5 + 0.5; }
+      update() { this.x += this.vx; this.y += this.vy; if (this.x < 0 || this.x > W) this.vx *= -1; if (this.y < 0 || this.y > H) this.vy *= -1; }
+      draw() { ctx.beginPath(); ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2); ctx.fillStyle = 'rgba(255,255,255,0.12)'; ctx.fill(); }
     }
 
-    for (let i = 0; i < PARTICLE_COUNT; i++) particles.push(new Particle());
+    for (let i = 0; i < COUNT; i++) particles.push(new P());
 
-    function drawLines() {
+    function anim() {
+      ctx.clearRect(0, 0, W, H);
+      particles.forEach(p => { p.update(); p.draw(); });
       for (let i = 0; i < particles.length; i++) {
         for (let j = i + 1; j < particles.length; j++) {
-          const dx = particles[i].x - particles[j].x;
-          const dy = particles[i].y - particles[j].y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-          if (dist < CONNECT_DIST) {
-            ctx.beginPath();
-            ctx.moveTo(particles[i].x, particles[i].y);
-            ctx.lineTo(particles[j].x, particles[j].y);
-            ctx.strokeStyle = `rgba(255,255,255,${0.03 * (1 - dist / CONNECT_DIST)})`;
-            ctx.lineWidth = 0.5;
-            ctx.stroke();
+          const dx = particles[i].x - particles[j].x, dy = particles[i].y - particles[j].y;
+          const d = Math.sqrt(dx * dx + dy * dy);
+          if (d < DIST) {
+            ctx.beginPath(); ctx.moveTo(particles[i].x, particles[i].y); ctx.lineTo(particles[j].x, particles[j].y);
+            ctx.strokeStyle = `rgba(255,255,255,${0.025 * (1 - d / DIST)})`; ctx.lineWidth = 0.5; ctx.stroke();
           }
         }
       }
+      requestAnimationFrame(anim);
     }
+    anim();
 
-    function animParticles() {
-      ctx.clearRect(0, 0, W, H);
-      particles.forEach(p => { p.update(); p.draw(); });
-      drawLines();
-      requestAnimationFrame(animParticles);
-    }
-    animParticles();
+    // Reveal
+    const obs = new IntersectionObserver(e => e.forEach(x => { if (x.isIntersecting) x.target.classList.add('visible'); }), { threshold: 0.1 });
+    document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
 
-    // ── Scroll reveal ──
-    const revealObs = new IntersectionObserver(entries => {
-      entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
-    }, { threshold: 0.1 });
-
-    document.querySelectorAll('.reveal').forEach(el => revealObs.observe(el));
-
-    // ── FPS bars ──
-    const fpsObs = new IntersectionObserver(entries => {
-      entries.forEach(e => {
-        if (e.isIntersecting) {
-          e.target.querySelectorAll('.fps-bar').forEach(bar => {
-            bar.style.width = bar.dataset.w;
-          });
-          e.target.querySelectorAll('.fps-row').forEach(row => row.classList.add('animated'));
-        }
-      });
-    }, { threshold: 0.3 });
-
+    // FPS bars
+    const fpsObs = new IntersectionObserver(e => e.forEach(x => {
+      if (x.isIntersecting) {
+        x.target.querySelectorAll('.fps-bar').forEach(b => b.style.width = b.dataset.w);
+        x.target.querySelectorAll('.fps-row').forEach(r => r.classList.add('animated'));
+      }
+    }), { threshold: 0.3 });
     fpsObs.observe(document.getElementById('fpsGrid'));
 
-    // ── Feature card mouse ──
-    document.querySelectorAll('.feature-card').forEach(card => {
-      card.addEventListener('mousemove', e => {
-        const r = card.getBoundingClientRect();
-        card.style.setProperty('--mx', ((e.clientX - r.left) / r.width * 100) + '%');
-        card.style.setProperty('--my', ((e.clientY - r.top) / r.height * 100) + '%');
-      });
+    // Feature card mouse
+    document.querySelectorAll('.feature-card').forEach(c => {
+      c.addEventListener('mousemove', e => { const r = c.getBoundingClientRect(); c.style.setProperty('--mx', ((e.clientX - r.left) / r.width * 100) + '%'); c.style.setProperty('--my', ((e.clientY - r.top) / r.height * 100) + '%'); });
     });
 
-    // ── Parallax for mesh blobs ──
+    // Parallax
     window.addEventListener('scroll', () => {
       const s = window.scrollY;
-      document.querySelectorAll('.mesh-blob').forEach((blob, i) => {
-        blob.style.transform = `translateY(${s * (0.1 + i * 0.05)}px)`;
-      });
+      document.querySelectorAll('.mesh-blob').forEach((b, i) => b.style.transform = `translateY(${s * (0.08 + i * 0.04)}px)`);
     });
   </script>
 
