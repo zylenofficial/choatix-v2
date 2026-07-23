@@ -673,12 +673,8 @@ client.on('error', (err) => {
   console.error('[BOT] Client error:', err.message);
 });
 
-client.on('shardDisconnect', () => {
-  console.warn('[BOT] Disconnected. Reconnecting...');
-});
-
-client.on('shardReconnecting', () => {
-  console.log('[BOT] Reconnecting...');
+client.on('warn', (info) => {
+  console.warn('[BOT] Warning:', info.message || info);
 });
 
 async function startBot(retryCount = 0) {
@@ -705,6 +701,8 @@ process.on('unhandledRejection', (err) => {
   console.error('[BOT] Unhandled rejection:', err);
 });
 
-startBot();
+process.on('uncaughtException', (err) => {
+  console.error('[BOT] Uncaught exception:', err);
+});
 
-module.exports = { startBot };
+startBot();
