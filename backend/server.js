@@ -850,3 +850,4 @@ initDB().then(() => {
     require('./bot.js');
   });
 });
+}
