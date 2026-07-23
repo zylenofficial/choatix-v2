@@ -148,6 +148,56 @@
     .btn-discord { background: #5865F2; color: white; }
     .btn-discord:hover { background: #4752C4; transform: translateY(-3px); box-shadow: 0 12px 40px rgba(88,101,242,0.3); }
 
+    /* ─── USER MENU ──────────────────────────── */
+    .user-menu { position: relative; }
+    .user-btn {
+      display: flex; align-items: center; gap: 0.5rem;
+      padding: 0.4rem 0.75rem 0.4rem 0.4rem;
+      background: rgba(88,101,242,0.1); border: 1px solid rgba(88,101,242,0.2);
+      border-radius: 100px; transition: all 0.3s; text-decoration: none;
+    }
+    .user-btn:hover { background: rgba(88,101,242,0.15); border-color: rgba(88,101,242,0.3); }
+    .user-avatar {
+      width: 28px; height: 28px; border-radius: 50%;
+      object-fit: cover; border: 1px solid rgba(255,255,255,0.1);
+    }
+    .user-avatar-fallback {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: linear-gradient(135deg, rgba(88,101,242,0.3), rgba(124,77,255,0.3));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.7rem; font-weight: 700; color: #fff;
+    }
+    .user-name { font-size: 0.8rem; font-weight: 600; color: var(--text); }
+    .user-tier {
+      font-size: 0.55rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.08em; padding: 0.1rem 0.35rem; border-radius: 3px;
+    }
+    .user-tier.free { background: rgba(255,255,255,0.05); color: var(--text-dim); }
+    .user-tier.pro { background: rgba(0,230,118,0.1); color: var(--green); }
+    .user-tier.premium { background: rgba(124,77,255,0.1); color: var(--purple); }
+
+    .user-dropdown {
+      position: absolute; top: calc(100% + 8px); right: 0;
+      background: var(--bg3); border: 1px solid var(--border2);
+      border-radius: 12px; padding: 0.5rem; min-width: 200px;
+      opacity: 0; pointer-events: none; transform: translateY(-8px);
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 16px 48px rgba(0,0,0,0.4);
+    }
+    .user-menu.open .user-dropdown { opacity: 1; pointer-events: all; transform: translateY(0); }
+
+    .dropdown-item {
+      display: flex; align-items: center; gap: 0.6rem;
+      padding: 0.6rem 0.75rem; border-radius: 8px;
+      font-size: 0.8rem; color: var(--text-mid);
+      text-decoration: none; transition: all 0.2s; cursor: pointer;
+    }
+    .dropdown-item:hover { background: rgba(255,255,255,0.04); color: var(--text); }
+    .dropdown-item svg { width: 14px; height: 14px; flex-shrink: 0; }
+    .dropdown-divider { height: 1px; background: var(--border); margin: 0.25rem 0; }
+    .dropdown-item.danger { color: #ff5252; }
+    .dropdown-item.danger:hover { background: rgba(255,82,82,0.08); }
+
     /* ─── HERO ────────────────────────────────── */
     .hero {
       min-height: 100vh;
@@ -617,6 +667,33 @@
       <a href="#team">Team</a>
       <a href="#pricing">Pricing</a>
       <a href="https://discord.gg/AhEK85REhG" target="_blank">Discord</a>
+      <div class="user-menu" id="userMenu" style="display:none">
+        <a href="#" class="user-btn" onclick="toggleDropdown(event)">
+          <img class="user-avatar" id="userAvatar" src="" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+          <div class="user-avatar-fallback" id="userAvatarFallback" style="display:none"></div>
+          <span class="user-name" id="userName"></span>
+          <span class="user-tier free" id="userTier">FREE</span>
+        </a>
+        <div class="user-dropdown">
+          <a class="dropdown-item" href="https://github.com/zylenofficial/choatix-v2/releases/latest" target="_blank">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+            Download App
+          </a>
+          <a class="dropdown-item" href="https://discord.gg/AhEK85REhG" target="_blank">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+            Join Discord
+          </a>
+          <a class="dropdown-item" href="#team">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4-4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+            Our Team
+          </a>
+          <div class="dropdown-divider"></div>
+          <a class="dropdown-item danger" href="#" onclick="handleLogout(event)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+            Logout
+          </a>
+        </div>
+      </div>
       <a href="#" class="btn btn-secondary" id="loginBtn" onclick="handleLogin(event)">Login</a>
       <a href="https://github.com/zylenofficial/choatix-v2/releases/latest" class="btn btn-primary" target="_blank">Download</a>
     </div>
@@ -1062,7 +1139,7 @@
     if (discordId) {
       localStorage.setItem('discord_id', discordId);
       localStorage.setItem('username', username);
-      localStorage.setItem('avatar', avatar);
+      localStorage.setItem('avatar', avatar || '');
       window.history.replaceState({}, '', '/');
     }
 
@@ -1071,28 +1148,55 @@
     const savedAvatar = localStorage.getItem('avatar');
 
     const loginBtn = document.getElementById('loginBtn');
+    const userMenu = document.getElementById('userMenu');
+
     if (savedId && savedUser) {
-      loginBtn.href = '#';
-      loginBtn.textContent = savedUser;
-      loginBtn.className = 'btn btn-discord';
-      loginBtn.onclick = (e) => {
-        e.preventDefault();
-        localStorage.clear();
-        window.location.reload();
-      };
-      loginBtn.title = 'Click to logout';
+      loginBtn.style.display = 'none';
+      userMenu.style.display = 'block';
+      document.getElementById('userName').textContent = savedUser;
+      document.getElementById('userAvatarFallback').textContent = savedUser.charAt(0).toUpperCase();
+      if (savedAvatar) {
+        const img = document.getElementById('userAvatar');
+        img.src = savedAvatar;
+        img.onload = () => { img.style.display = 'block'; document.getElementById('userAvatarFallback').style.display = 'none'; };
+      }
+      // Check license status
+      fetch(`https://choatix-v2.onrender.com/api/license/${savedId}`).then(r => r.json()).then(d => {
+        if (d.tier) {
+          const tierEl = document.getElementById('userTier');
+          tierEl.textContent = d.tier;
+          tierEl.className = 'user-tier ' + d.tier.toLowerCase();
+        }
+      }).catch(() => {});
+    } else {
+      loginBtn.style.display = '';
+      userMenu.style.display = 'none';
     }
 
     function handleLogin(e) {
       e.preventDefault();
-      if (localStorage.getItem('discord_id')) {
-        localStorage.clear();
-        window.location.reload();
-      } else {
-        window.location.href = 'https://choatix-v2.onrender.com/api/auth/discord';
-      }
+      window.location.href = 'https://choatix-v2.onrender.com/api/auth/discord';
     }
     window.handleLogin = handleLogin;
+
+    function handleLogout(e) {
+      e.preventDefault();
+      localStorage.clear();
+      window.location.reload();
+    }
+    window.handleLogout = handleLogout;
+
+    function toggleDropdown(e) {
+      e.preventDefault();
+      document.getElementById('userMenu').classList.toggle('open');
+    }
+    window.toggleDropdown = toggleDropdown;
+
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.user-menu')) {
+        document.getElementById('userMenu').classList.remove('open');
+      }
+    });
   </script>
 
 </body>
