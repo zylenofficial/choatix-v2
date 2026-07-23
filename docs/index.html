@@ -725,31 +725,31 @@
     <div class="section-header reveal"><div class="section-label">Team</div><h2>Meet the Crew</h2><p>The people behind Choatix V2</p></div>
     <div class="team-grid reveal">
       <div class="team-card">
-        <img class="team-avatar" src="https://cdn.discordapp.com/avatars/1014494449809772544/a_1a1a1a1a1a1a1a1a.png?size=256" alt="zylen" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+        <img class="team-avatar" id="avatar-1014494449809772544" src="" alt="zylen" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
         <div class="team-avatar-fallback" style="display:none">z</div>
         <div class="team-name">zylen</div>
         <div class="team-role owner">Owner</div>
       </div>
       <div class="team-card">
-        <img class="team-avatar" src="https://cdn.discordapp.com/avatars/1032970883192606780/a_1a1a1a1a1a1a1a1a.png?size=256" alt="domi" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+        <img class="team-avatar" id="avatar-1032970883192606780" src="" alt="domi" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
         <div class="team-avatar-fallback" style="display:none">d</div>
         <div class="team-name">domi</div>
         <div class="team-role admin">Admin</div>
       </div>
       <div class="team-card">
-        <img class="team-avatar" src="https://cdn.discordapp.com/avatars/398137085430726656/a_1a1a1a1a1a1a1a1a.png?size=256" alt="nedis" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+        <img class="team-avatar" id="avatar-398137085430726656" src="" alt="nedis" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
         <div class="team-avatar-fallback" style="display:none">n</div>
         <div class="team-name">nedis</div>
         <div class="team-role admin">Admin</div>
       </div>
       <div class="team-card">
-        <img class="team-avatar" src="https://cdn.discordapp.com/avatars/1322475983386837006/a_1a1a1a1a1a1a1a1a.png?size=256" alt="donce" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+        <img class="team-avatar" id="avatar-1322475983386837006" src="" alt="donce" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
         <div class="team-avatar-fallback" style="display:none">d</div>
         <div class="team-name">donce</div>
         <div class="team-role admin">Admin</div>
       </div>
       <div class="team-card">
-        <img class="team-avatar" src="https://cdn.discordapp.com/avatars/1402203036914290764/a_1a1a1a1a1a1a1a1a.png?size=256" alt="lukutis" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+        <img class="team-avatar" id="avatar-1402203036914290764" src="" alt="lukutis" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
         <div class="team-avatar-fallback" style="display:none">l</div>
         <div class="team-name">lukutis</div>
         <div class="team-role support">Support</div>
@@ -1034,6 +1034,19 @@
     }
 
     document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+    // ── Fetch team avatars ──
+    const TEAM_IDS = ['1014494449809772544','1032970883192606780','398137085430726656','1322475983386837006','1402203036914290764'];
+    const API = 'https://choatix-v2.onrender.com/api/team/';
+    TEAM_IDS.forEach(async id => {
+      try {
+        const r = await fetch(API + id);
+        const d = await r.json();
+        const img = document.getElementById('avatar-' + id);
+        if (img && d.avatar) { img.src = d.avatar; }
+        else if (img) { img.style.display = 'none'; img.nextElementSibling.style.display = 'flex'; }
+      } catch {}
+    });
   </script>
 
 </body>

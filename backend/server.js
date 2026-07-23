@@ -559,6 +559,31 @@ app.get('/api/leaderboard/user/:discordId', async (req, res) => {
   res.json({ entries: [] });
 });
 
+// ── Team avatars ──
+app.get('/api/team/:id', async (req, res) => {
+  try {
+    const { Client, GatewayIntentBits } = require('discord.js');
+    const token = process.env.DISCORD_BOT_TOKEN;
+    if (!token) return res.status(500).json({ error: 'No bot token' });
+
+    const response = await fetch(`https://discord.com/api/v10/users/${req.params.id}`, {
+      headers: { 'Authorization': `Bot ${token}` },
+    });
+    if (!response.ok) return res.status(404).json({ error: 'User not found' });
+    const user = await response.json();
+
+    let avatarUrl = null;
+    if (user.avatar) {
+      const ext = user.avatar.startsWith('a_') ? 'gif' : 'png';
+      avatarUrl = `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.${ext}?size=256`;
+    }
+
+    res.json({ username: user.username, global_name: user.global_name, avatar: avatarUrl, discriminator: user.discriminator });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 initDB().then(() => {
   app.listen(PORT, () => {
     console.log(`Choatix License Server running on port ${PORT} (${DB_URL ? 'PostgreSQL' : 'in-memory'})`);

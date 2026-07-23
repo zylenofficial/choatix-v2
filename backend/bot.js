@@ -59,7 +59,7 @@ function apiRequest(method, path, body) {
 }
 
 const client = new Client({
-  intents: [GatewayIntentBits.Guilds],
+  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers],
   rest: { timeout: 30000 },
   presence: { activities: [{ name: 'Choatix V2', type: 3 }], status: 'online' },
 });
