@@ -3,7 +3,7 @@ const https = require('https');
 
 const BOT_TOKEN = process.env.DISCORD_BOT_TOKEN || 'YOUR_BOT_TOKEN_HERE';
 const CLIENT_ID = process.env.DISCORD_CLIENT_ID || 'YOUR_CLIENT_ID_HERE';
-const API_URL = process.env.BACKEND_URL || 'http://localhost:3001';
+const API_URL = process.env.BACKEND_URL || `http://localhost:${process.env.PORT || 3001}`;
 const PRO_ROLE_ID = process.env.PRO_ROLE_ID || '1517719772702314616';
 const PREMIUM_ROLE_ID = process.env.PREMIUM_ROLE_ID || '1517719827580452994';
 const ADMIN_SECRET = 'choatix-admin-2024';
