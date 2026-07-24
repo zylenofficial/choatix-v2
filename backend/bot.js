@@ -714,9 +714,6 @@ client.on('interactionCreate', async (interaction) => {
       let totalReward = 0;
       for (const q of quests) {
         const progress = Math.min(q.progress, q.target);
-        const barLen = 10;
-        const filled = Math.floor(progress / q.target * barLen);
-        const bar = '█'.repeat(filled) + '░'.repeat(barLen - filled);
         const pct = Math.floor(progress / q.target * 100);
         const emoji = q.claimed ? '✅' : q.completed ? '🎁' : '⏳';
         const status = q.claimed ? 'Claimed' : q.completed ? 'Ready to claim!' : `${pct}%`;
