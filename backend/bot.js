@@ -176,6 +176,25 @@ async function registerCommands() {
     new SlashCommandBuilder()
       .setName('coins-leaderboard')
       .setDescription('View the coins leaderboard'),
+    new SlashCommandBuilder()
+      .setName('rate')
+      .setDescription('Rate a Choatix product (1-5 stars)')
+      .addStringOption(option =>
+        option.setName('product').setDescription('Product to rate').setRequired(true)
+          .addChoices(
+            { name: 'Basic Tweaks', value: 'basic' },
+            { name: 'Pro Tweaks', value: 'pro' },
+            { name: 'Extreme Tweaks', value: 'extreme' },
+            { name: 'Precision Pack', value: 'precision' },
+            { name: 'Full Optimization', value: 'full' }
+          )
+      )
+      .addIntegerOption(option =>
+        option.setName('rating').setDescription('Rating 1-5').setRequired(true).setMinValue(1).setMaxValue(5)
+      )
+      .addStringOption(option =>
+        option.setName('review').setDescription('Your review (optional)').setRequired(false)
+      ),
   ];
 
   const rest = new REST({ version: '10' }).setToken(BOT_TOKEN);
@@ -873,6 +892,53 @@ client.on('interactionCreate', async (interaction) => {
     } catch (error) {
       console.error('[COINS-LB ERROR]', error.message);
       const msg = { content: '❌ Error loading leaderboard. Make sure the server is running.' };
+      if (interaction.replied || interaction.deferred) {
+        await interaction.editReply(msg).catch(() => {});
+      } else {
+        await interaction.reply(msg).catch(() => {});
+      }
+    }
+  }
+
+  if (interaction.isChatInputCommand() && interaction.commandName === 'rate') {
+    try {
+      await interaction.deferReply();
+      const product = interaction.options.getString('product');
+      const rating = interaction.options.getInteger('rating');
+      const review = interaction.options.getString('review') || null;
+      const discordId = interaction.user.id;
+
+      const productNames = { basic: 'Basic Tweaks', pro: 'Pro Tweaks', extreme: 'Extreme Tweaks', precision: 'Precision Pack', full: 'Full Optimization' };
+
+      await dbQuery(
+        'INSERT INTO product_ratings (product_id, discord_id, rating, review) VALUES ($1, $2, $3, $4) ON CONFLICT (product_id, discord_id) DO UPDATE SET rating = $3, review = $4',
+        [product, discordId, rating, review]
+      );
+
+      const avgResult = await dbQuery(
+        'SELECT COALESCE(AVG(rating), 0) as avg, COUNT(*) as count FROM product_ratings WHERE product_id = $1',
+        [product]
+      );
+      const avg = parseFloat(avgResult.rows[0].avg).toFixed(1);
+      const count = parseInt(avgResult.rows[0].count);
+
+      const stars = '⭐'.repeat(rating) + '☆'.repeat(5 - rating);
+      const embed = new EmbedBuilder()
+        .setTitle(`⭐ Rating Submitted — ${productNames[product]}`)
+        .setDescription(`You rated **${productNames[product]}** ${stars}`)
+        .addFields(
+          { name: 'Your Rating', value: `${rating}/5`, inline: true },
+          { name: 'Product Average', value: `${avg}/5 (${count} reviews)`, inline: true }
+        )
+        .setColor(rating >= 4 ? 0x00e676 : rating >= 3 ? 0xfacc15 : 0xef4444)
+        .setFooter({ text: 'Thanks for your feedback!' });
+
+      if (review) embed.addFields({ name: 'Your Review', value: review });
+
+      await interaction.editReply({ embeds: [embed] });
+    } catch (error) {
+      console.error('[RATE ERROR]', error.message);
+      const msg = { content: '❌ Error submitting rating. Make sure the server is running.' };
       if (interaction.replied || interaction.deferred) {
         await interaction.editReply(msg).catch(() => {});
       } else {

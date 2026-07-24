@@ -528,82 +528,83 @@
     .tweak-label { font-size: 0.6rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 0.25rem; }
 
     /* ─── PRODUCTS ───────────────────────────── */
-    .products-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; max-width: 1100px; margin: 0 auto; }
+    .products-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.75rem; max-width: 1200px; margin: 0 auto; }
 
     .product-card {
-      background: var(--bg2); border: 1px solid var(--border); border-radius: 16px;
-      padding: 1.5rem; text-align: center; transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-      position: relative; overflow: visible;
+      background: var(--bg2); border: 1px solid var(--border); border-radius: 10px;
+      padding: 1.25rem; transition: all 0.25s ease; position: relative; display: flex; flex-direction: column;
     }
-    .product-card:hover { border-color: var(--border2); transform: translateY(-4px); }
-    .product-card.best-seller { border-color: var(--green); }
+    .product-card:hover { border-color: rgba(255,255,255,0.08); transform: translateY(-2px); }
+    .product-card.best-seller { border-color: rgba(0,230,118,0.25); }
     .product-card.best-seller::before {
-      content: 'Best Seller'; position: absolute; top: -10px; left: 50%; transform: translateX(-50%);
-      background: var(--green); color: #000; font-size: 0.55rem; font-weight: 800; letter-spacing: 0.08em;
-      padding: 0.2rem 0.6rem; border-radius: 20px; z-index: 2;
-    }
-    .product-card.new-badge::before {
-      content: 'New!'; position: absolute; top: -10px; left: 50%; transform: translateX(-50%);
-      background: #3b82f6; color: #fff; font-size: 0.55rem; font-weight: 800; letter-spacing: 0.08em;
-      padding: 0.2rem 0.6rem; border-radius: 20px; z-index: 2;
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: var(--green); border-radius: 10px 10px 0 0;
     }
 
-    /* 3D Product Box */
-    .product-box { perspective: 400px; width: 100px; height: 130px; margin: 0 auto 1.25rem; }
-    .product-box-inner {
-      width: 100%; height: 100%; position: relative;
-      transform-style: preserve-3d; transform: rotateY(-15deg) rotateX(5deg);
-      transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    .product-header { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.75rem; }
+    .product-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; flex-shrink: 0; }
+    .product-icon.basic { background: rgba(0,230,118,0.08); color: var(--green); }
+    .product-icon.pro { background: rgba(41,121,255,0.08); color: var(--blue); }
+    .product-icon.extreme { background: rgba(0,230,118,0.12); color: var(--green); }
+    .product-icon.precision { background: rgba(124,77,255,0.08); color: var(--purple); }
+    .product-icon.full { background: rgba(255,255,255,0.05); color: #fff; }
+    .product-title-group { flex: 1; min-width: 0; }
+    .product-name { font-size: 0.85rem; font-weight: 700; color: #fff; line-height: 1.2; }
+    .product-tier { font-size: 0.55rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-dim); }
+
+    .product-desc { font-size: 0.7rem; color: var(--text-mid); line-height: 1.5; margin-bottom: 0.75rem; flex: 1; }
+
+    .product-tweaks { display: flex; flex-wrap: wrap; gap: 0.3rem; margin-bottom: 0.75rem; }
+    .tweak-tag {
+      font-size: 0.55rem; padding: 0.15rem 0.4rem; border-radius: 3px;
+      background: rgba(255,255,255,0.03); border: 1px solid var(--border);
+      color: var(--text-dim); font-weight: 500;
     }
-    .product-card:hover .product-box-inner { transform: rotateY(-5deg) rotateX(2deg) scale(1.05); }
+    .tweak-tag.active { background: rgba(0,230,118,0.05); border-color: rgba(0,230,118,0.12); color: var(--green); }
 
-    .box-face { position: absolute; backface-visibility: hidden; }
-    .box-front {
-      width: 100%; height: 100%; background: linear-gradient(135deg, #1a1c23 0%, #0f1117 100%);
-      border: 1px solid rgba(255,255,255,0.08); border-radius: 6px;
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      padding: 0.5rem; box-shadow: 4px 4px 20px rgba(0,0,0,0.5);
-    }
-    .box-front .box-logo { font-size: 0.5rem; font-weight: 900; letter-spacing: 0.12em; text-transform: uppercase; color: var(--green); margin-bottom: 0.25rem; }
-    .box-front .box-title { font-size: 0.65rem; font-weight: 800; color: #fff; text-align: center; line-height: 1.3; }
-    .box-front .box-line { width: 20px; height: 1px; background: var(--green); margin: 0.3rem 0; opacity: 0.4; }
-    .box-front .box-sub { font-size: 0.4rem; color: rgba(255,255,255,0.3); text-transform: uppercase; letter-spacing: 0.1em; }
+    .product-stats { display: flex; align-items: center; justify-content: space-between; padding-top: 0.6rem; border-top: 1px solid var(--border); margin-bottom: 0.75rem; }
+    .product-rating { display: flex; align-items: center; gap: 0.25rem; }
+    .product-rating .stars { color: #facc15; font-size: 0.65rem; letter-spacing: 0.5px; }
+    .product-rating .count { font-size: 0.6rem; color: var(--text-dim); }
+    .product-tweak-count { font-size: 0.6rem; color: var(--text-dim); }
 
-    .box-side {
-      width: 14px; height: 100%; right: -7px; top: 0;
-      background: linear-gradient(180deg, #16181e 0%, #0d0f14 100%);
-      border: 1px solid rgba(255,255,255,0.05); border-left: none;
-      border-radius: 0 4px 4px 0;
-      transform: rotateY(90deg); transform-origin: left center;
-    }
-
-    .box-top {
-      width: 100%; height: 14px; left: 0; top: -7px;
-      background: linear-gradient(90deg, #1e2029 0%, #16181e 100%);
-      border: 1px solid rgba(255,255,255,0.06); border-bottom: none;
-      border-radius: 4px 4px 0 0;
-      transform: rotateX(90deg); transform-origin: bottom center;
-    }
-
-    .product-name { font-size: 0.9rem; font-weight: 700; color: #fff; margin-bottom: 0.15rem; }
-    .product-brand { font-size: 0.55rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.5rem; }
-
-    .product-stars { display: flex; align-items: center; justify-content: center; gap: 0.15rem; margin-bottom: 0.5rem; }
-    .product-stars span { color: #facc15; font-size: 0.75rem; }
-    .product-stars .star-count { color: var(--text-dim); font-size: 0.65rem; margin-left: 0.25rem; }
-
-    .product-price { font-size: 1.5rem; font-weight: 900; color: #fff; margin-bottom: 0.25rem; }
-    .product-price.from { font-size: 0.7rem; font-weight: 600; color: var(--text-dim); display: block; margin-bottom: -0.15rem; }
-    .product-price.from + span { font-size: 1.5rem; }
+    .product-bottom { display: flex; align-items: center; justify-content: space-between; }
+    .product-price { font-size: 1.25rem; font-weight: 900; color: #fff; letter-spacing: -0.02em; }
+    .product-price .from { font-size: 0.55rem; font-weight: 500; color: var(--text-dim); display: block; margin-bottom: -1px; }
 
     .product-btn {
-      display: inline-block; padding: 0.5rem 1.25rem; border: 1px solid var(--border2); border-radius: 8px;
-      color: var(--green); font-size: 0.7rem; font-weight: 600; text-decoration: none;
-      transition: all 0.3s; margin-top: 0.5rem; background: transparent; cursor: pointer;
+      padding: 0.4rem 0.85rem; border: 1px solid var(--border2); border-radius: 5px;
+      color: #fff; font-size: 0.65rem; font-weight: 600; text-decoration: none;
+      transition: all 0.2s; background: transparent; cursor: pointer;
     }
     .product-btn:hover { background: var(--green); color: #000; border-color: var(--green); }
     .product-card.best-seller .product-btn { background: var(--green); color: #000; border-color: var(--green); }
-    .product-card.best-seller .product-btn:hover { background: #00c853; box-shadow: 0 0 20px rgba(0,230,118,0.3); }
+
+    /* Category Picker */
+    .category-picker { max-width: 1200px; margin: 1.5rem auto 0; padding: 1.25rem; background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; }
+    .category-picker-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+    .category-picker-title { font-size: 0.8rem; font-weight: 700; color: #fff; }
+    .category-picker-sub { font-size: 0.65rem; color: var(--text-dim); }
+    .category-grid { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    .cat-toggle {
+      display: flex; align-items: center; gap: 0.35rem; padding: 0.35rem 0.65rem;
+      border-radius: 5px; border: 1px solid var(--border); background: transparent;
+      color: var(--text-mid); font-size: 0.65rem; font-weight: 500; cursor: pointer;
+      transition: all 0.15s; font-family: inherit;
+    }
+    .cat-toggle:hover { border-color: var(--border2); color: #fff; }
+    .cat-toggle.on { background: rgba(0,230,118,0.06); border-color: rgba(0,230,118,0.2); color: var(--green); }
+    .cat-toggle .dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; opacity: 0.3; }
+    .cat-toggle.on .dot { opacity: 1; background: var(--green); }
+    .custom-price { display: flex; align-items: center; justify-content: space-between; margin-top: 1rem; padding-top: 0.75rem; border-top: 1px solid var(--border); }
+    .custom-price-label { font-size: 0.7rem; color: var(--text-dim); }
+    .custom-price-value { font-size: 1.25rem; font-weight: 900; color: var(--green); }
+    .custom-buy-btn {
+      padding: 0.5rem 1.25rem; border-radius: 5px; border: none; background: var(--green);
+      color: #000; font-size: 0.75rem; font-weight: 700; cursor: pointer; transition: all 0.2s;
+      font-family: inherit;
+    }
+    .custom-buy-btn:hover { box-shadow: 0 0 16px rgba(0,230,118,0.25); }
 
     /* ─── PRICING ─────────────────────────────── */
     .pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
@@ -721,7 +722,7 @@
     .reveal-d4 { transition-delay: 0.32s; }
 
     /* ─── RESPONSIVE ──────────────────────────── */
-    @media (max-width: 900px) { .features-grid { grid-template-columns: repeat(2, 1fr); } .tweaks-grid { grid-template-columns: repeat(3, 1fr); } }
+    @media (max-width: 900px) { .features-grid { grid-template-columns: repeat(2, 1fr); } .tweaks-grid { grid-template-columns: repeat(3, 1fr); } .products-grid { grid-template-columns: repeat(3, 1fr); } }
     @media (max-width: 768px) {
       nav { padding: 0 1.5rem; } .nav-links { display: none; }
       .hero h1 { font-size: clamp(2.5rem, 12vw, 4rem); }
@@ -731,6 +732,7 @@
       .features-grid { grid-template-columns: 1fr; }
       .tweaks-grid { grid-template-columns: repeat(2, 1fr); }
       .products-grid { grid-template-columns: repeat(2, 1fr); }
+      .category-grid { gap: 0.35rem; }
       .steps-row { flex-direction: column; align-items: center; }
       .step-line { width: 1px; height: 40px; margin: 0; } .step-line::before { display: none; }
       .fps-row { flex-direction: column; align-items: flex-start; gap: 0.25rem; }
@@ -972,73 +974,202 @@
   <!-- PRODUCTS -->
   <section id="products">
     <div class="section-header reveal"><div class="section-label">Products</div><h2>Our Products</h2><p>Premium optimization packs for every need</p></div>
-    <div class="products-grid reveal">
-      <div class="product-card">
-        <div class="product-box"><div class="product-box-inner">
-          <div class="box-face box-front"><div class="box-logo">Choatix</div><div class="box-line"></div><div class="box-title">Basic<br>Tweaks</div><div class="box-sub">Essential</div></div>
-          <div class="box-face box-side"></div>
-          <div class="box-face box-top"></div>
-        </div></div>
-        <div class="product-name">Basic Tweaks</div>
-        <div class="product-brand">Choatix</div>
-        <div class="product-stars"><span>&#9733;&#9733;&#9733;&#9733;&#9733;</span><span class="star-count">(89)</span></div>
-        <div class="product-price">€1.99</div>
-        <a href="#pricing" class="product-btn">View Details</a>
+    <div class="products-grid reveal" id="products-grid">
+
+      <div class="product-card" data-product="basic">
+        <div class="product-header">
+          <div class="product-icon basic">%</div>
+          <div class="product-title-group"><div class="product-name">Basic Tweaks</div><div class="product-tier">Essential</div></div>
+        </div>
+        <div class="product-desc">Safe, essential Windows optimizations. Disable bloatware, telemetry, and optimize system settings.</div>
+        <div class="product-tweaks">
+          <span class="tweak-tag">System</span>
+          <span class="tweak-tag">Privacy</span>
+          <span class="tweak-tag">Debloat</span>
+          <span class="tweak-tag">Power</span>
+        </div>
+        <div class="product-stats">
+          <div class="product-rating"><span class="stars" data-stars="5"></span><span class="count" data-count="0"></span></div>
+          <div class="product-tweak-count">461 tweaks</div>
+        </div>
+        <div class="product-bottom">
+          <div class="product-price">&euro;1.99</div>
+          <a href="#pricing" class="product-btn">Get Basic</a>
+        </div>
       </div>
 
-      <div class="product-card">
-        <div class="product-box"><div class="product-box-inner">
-          <div class="box-face box-front"><div class="box-logo">Choatix</div><div class="box-line"></div><div class="box-title">Pro<br>Tweaks</div><div class="box-sub">Advanced</div></div>
-          <div class="box-face box-side"></div>
-          <div class="box-face box-top"></div>
-        </div></div>
-        <div class="product-name">Pro Tweaks</div>
-        <div class="product-brand">Choatix</div>
-        <div class="product-stars"><span>&#9733;&#9733;&#9733;&#9733;&#9733;</span><span class="star-count">(142)</span></div>
-        <div class="product-price">€3.99</div>
-        <a href="#pricing" class="product-btn">View Details</a>
+      <div class="product-card" data-product="pro">
+        <div class="product-header">
+          <div class="product-icon pro">&#9889;</div>
+          <div class="product-title-group"><div class="product-name">Pro Tweaks</div><div class="product-tier">Advanced</div></div>
+        </div>
+        <div class="product-desc">Advanced gaming optimizations. GPU tuning, CPU priority, memory management, network latency.</div>
+        <div class="product-tweaks">
+          <span class="tweak-tag active">NVIDIA</span>
+          <span class="tweak-tag active">CPU</span>
+          <span class="tweak-tag active">Memory</span>
+          <span class="tweak-tag active">Network</span>
+          <span class="tweak-tag active">Input</span>
+        </div>
+        <div class="product-stats">
+          <div class="product-rating"><span class="stars" data-stars="5"></span><span class="count" data-count="0"></span></div>
+          <div class="product-tweak-count">413 tweaks</div>
+        </div>
+        <div class="product-bottom">
+          <div class="product-price">&euro;3.99</div>
+          <a href="#pricing" class="product-btn">Get Pro</a>
+        </div>
       </div>
 
-      <div class="product-card best-seller">
-        <div class="product-box"><div class="product-box-inner">
-          <div class="box-face box-front"><div class="box-logo">Choatix</div><div class="box-line"></div><div class="box-title">Extreme<br>Tweaks</div><div class="box-sub">Maximum</div></div>
-          <div class="box-face box-side"></div>
-          <div class="box-face box-top"></div>
-        </div></div>
-        <div class="product-name">Extreme Tweaks</div>
-        <div class="product-brand">Choatix</div>
-        <div class="product-stars"><span>&#9733;&#9733;&#9733;&#9733;&#9733;</span><span class="star-count">(201)</span></div>
-        <div class="product-price">€5.99</div>
-        <a href="#pricing" class="product-btn">View Details</a>
+      <div class="product-card best-seller" data-product="extreme">
+        <div class="product-header">
+          <div class="product-icon extreme">&#9889;</div>
+          <div class="product-title-group"><div class="product-name">Extreme Tweaks</div><div class="product-tier">Maximum</div></div>
+        </div>
+        <div class="product-desc">Everything included. Maximum performance with aggressive system, GPU, CPU, and network optimizations.</div>
+        <div class="product-tweaks">
+          <span class="tweak-tag active">All Categories</span>
+          <span class="tweak-tag active">BCD Edit</span>
+          <span class="tweak-tag active">Driver</span>
+        </div>
+        <div class="product-stats">
+          <div class="product-rating"><span class="stars" data-stars="5"></span><span class="count" data-count="0"></span></div>
+          <div class="product-tweak-count">461 tweaks</div>
+        </div>
+        <div class="product-bottom">
+          <div class="product-price">&euro;5.99</div>
+          <a href="#pricing" class="product-btn">Get Extreme</a>
+        </div>
       </div>
 
-      <div class="product-card">
-        <div class="product-box"><div class="product-box-inner">
-          <div class="box-face box-front"><div class="box-logo">Choatix</div><div class="box-line"></div><div class="box-title">Precision<br>Optimization</div><div class="box-sub">Input</div></div>
-          <div class="box-face box-side"></div>
-          <div class="box-face box-top"></div>
-        </div></div>
-        <div class="product-name">Precision Pack</div>
-        <div class="product-brand">Choatix</div>
-        <div class="product-stars"><span>&#9733;&#9733;&#9733;&#9733;&#9733;</span><span class="star-count">(167)</span></div>
-        <div class="product-price">€2.99</div>
-        <a href="#pricing" class="product-btn">View Details</a>
+      <div class="product-card" data-product="precision">
+        <div class="product-header">
+          <div class="product-icon precision">&#9898;</div>
+          <div class="product-title-group"><div class="product-name">Precision Pack</div><div class="product-tier">Input</div></div>
+        </div>
+        <div class="product-desc">Mouse, keyboard, and latency optimizations. Perfect for competitive FPS gaming.</div>
+        <div class="product-tweaks">
+          <span class="tweak-tag active">Mouse</span>
+          <span class="tweak-tag active">Keyboard</span>
+          <span class="tweak-tag active">Latency</span>
+          <span class="tweak-tag active">Audio</span>
+        </div>
+        <div class="product-stats">
+          <div class="product-rating"><span class="stars" data-stars="5"></span><span class="count" data-count="0"></span></div>
+          <div class="product-tweak-count">38 tweaks</div>
+        </div>
+        <div class="product-bottom">
+          <div class="product-price">&euro;2.99</div>
+          <a href="#pricing" class="product-btn">Get Precision</a>
+        </div>
       </div>
 
-      <div class="product-card new-badge">
-        <div class="product-box"><div class="product-box-inner">
-          <div class="box-face box-front"><div class="box-logo">Choatix</div><div class="box-line"></div><div class="box-title">Full<br>Optimization</div><div class="box-sub">Complete</div></div>
-          <div class="box-face box-side"></div>
-          <div class="box-face box-top"></div>
-        </div></div>
-        <div class="product-name">Full Optimization</div>
-        <div class="product-brand">Choatix</div>
-        <div class="product-stars"><span>&#9733;&#9733;&#9733;&#9733;&#9733;</span><span class="star-count">(95)</span></div>
-        <div class="product-price"><span class="product-price-from">From</span><span>€9.99</span></div>
-        <a href="#pricing" class="product-btn">View Details</a>
+      <div class="product-card" data-product="full">
+        <div class="product-header">
+          <div class="product-icon full">&#10003;</div>
+          <div class="product-title-group"><div class="product-name">Full Optimization</div><div class="product-tier">Complete</div></div>
+        </div>
+        <div class="product-desc">Everything + custom .bat file. Complete PC overhaul with deep clean and all tweaks included.</div>
+        <div class="product-tweaks">
+          <span class="tweak-tag active">Everything</span>
+          <span class="tweak-tag active">Custom .bat</span>
+          <span class="tweak-tag active">Deep Clean</span>
+        </div>
+        <div class="product-stats">
+          <div class="product-rating"><span class="stars" data-stars="5"></span><span class="count" data-count="0"></span></div>
+          <div class="product-tweak-count">461+ tweaks</div>
+        </div>
+        <div class="product-bottom">
+          <div class="product-price"><span class="from">From</span>&euro;9.99</div>
+          <a href="#pricing" class="product-btn">Get Full</a>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Category Picker -->
+    <div class="category-picker reveal">
+      <div class="category-picker-header">
+        <div>
+          <div class="category-picker-title">Build Your Own Pack</div>
+          <div class="category-picker-sub">Select the categories you want and we'll create a custom optimization for you.</div>
+        </div>
+      </div>
+      <div class="category-grid">
+        <button class="cat-toggle on" data-cat="system"><span class="dot"></span>System</button>
+        <button class="cat-toggle" data-cat="nvidia"><span class="dot"></span>NVIDIA GPU</button>
+        <button class="cat-toggle" data-cat="radeon"><span class="dot"></span>AMD Radeon</button>
+        <button class="cat-toggle" data-cat="cpu"><span class="dot"></span>CPU</button>
+        <button class="cat-toggle" data-cat="memory"><span class="dot"></span>Memory</button>
+        <button class="cat-toggle" data-cat="network"><span class="dot"></span>Network</button>
+        <button class="cat-toggle" data-cat="mouse"><span class="dot"></span>Mouse</button>
+        <button class="cat-toggle" data-cat="keyboard"><span class="dot"></span>Keyboard</button>
+        <button class="cat-toggle" data-cat="audio"><span class="dot"></span>Audio</button>
+        <button class="cat-toggle" data-cat="storage"><span class="dot"></span>Storage</button>
+        <button class="cat-toggle" data-cat="privacy"><span class="dot"></span>Privacy</button>
+        <button class="cat-toggle" data-cat="debloat"><span class="dot"></span>Debloat</button>
+        <button class="cat-toggle" data-cat="gpu"><span class="dot"></span>GPU</button>
+        <button class="cat-toggle" data-cat="gaming"><span class="dot"></span>Gaming</button>
+        <button class="cat-toggle" data-cat="latency"><span class="dot"></span>Latency</button>
+        <button class="cat-toggle" data-cat="bcdedit"><span class="dot"></span>BCD Edit</button>
+        <button class="cat-toggle" data-cat="usb"><span class="dot"></span>USB</button>
+        <button class="cat-toggle" data-cat="power"><span class="dot"></span>Power</button>
+      </div>
+      <div class="custom-price">
+        <div>
+          <div class="custom-price-label">Custom pack with <strong id="cat-count">1</strong> categories</div>
+          <div class="custom-price-value" id="custom-price">&euro;0.99</div>
+        </div>
+        <button class="custom-buy-btn" onclick="document.getElementById('pricing').scrollIntoView({behavior:'smooth'})">Get Custom Pack</button>
       </div>
     </div>
   </section>
+
+  <script>
+    (function(){
+      const prices = { system:0.49, nvidia:0.79, radeon:0.79, cpu:0.69, memory:0.49, network:0.59, mouse:0.39, keyboard:0.29, audio:0.29, storage:0.39, privacy:0.49, debloat:0.59, gpu:0.69, gaming:0.79, latency:0.59, bcdedit:0.49, usb:0.19, power:0.39 };
+      const toggles = document.querySelectorAll('.cat-toggle');
+      const countEl = document.getElementById('cat-count');
+      const priceEl = document.getElementById('custom-price');
+      function update(){
+        let on=0, total=0;
+        toggles.forEach(t=>{ if(t.classList.contains('on')){ on++; total+=prices[t.dataset.cat]||0.39; }});
+        if(on<1){on=1;total=0.99;}
+        countEl.textContent=on;
+        priceEl.innerHTML='&euro;'+total.toFixed(2);
+      }
+      toggles.forEach(t=>t.addEventListener('click',()=>{ t.classList.toggle('on'); update(); }));
+      update();
+
+      // Fetch real ratings from API
+      fetch('https://choatix-v2.onrender.com/api/ratings')
+        .then(r=>r.json())
+        .then(data=>{
+          document.querySelectorAll('.product-card[data-product]').forEach(card=>{
+            const pid = card.dataset.product;
+            const info = data.products && data.products[pid];
+            if(!info) return;
+            const avg = parseFloat(info.avg)||0;
+            const count = parseInt(info.count)||0;
+            const starsEl = card.querySelector('.stars');
+            const countEl = card.querySelector('.count');
+            if(starsEl){
+              const full = Math.floor(avg);
+              const half = avg - full >= 0.5;
+              let s = '';
+              for(let i=0;i<5;i++){
+                if(i<full) s += '&#9733;';
+                else if(i===full && half) s += '&#9733;';
+                else s += '&#9734;';
+              }
+              starsEl.innerHTML = s;
+            }
+            if(countEl) countEl.textContent = '('+count+')';
+          });
+        })
+        .catch(()=>{});
+    })();
+  </script>
 
   <!-- PRICING -->
   <section id="pricing">

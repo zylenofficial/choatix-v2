@@ -133,6 +133,15 @@ async function initDB() {
       overall_score FLOAT NOT NULL,
       created_at TIMESTAMP DEFAULT NOW()
     );
+    CREATE TABLE IF NOT EXISTS product_ratings (
+      id SERIAL PRIMARY KEY,
+      product_id TEXT NOT NULL,
+      discord_id TEXT NOT NULL,
+      rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
+      review TEXT,
+      created_at TIMESTAMP DEFAULT NOW(),
+      UNIQUE(product_id, discord_id)
+    );
   `);
   console.log('PostgreSQL connected');
 
@@ -836,6 +845,77 @@ app.get('/api/auth/callback', async (req, res) => {
     res.redirect(`https://zylenofficial.github.io/choatix-v2?discord_id=${user.id}&username=${user.username}&avatar=${avatarUrl || ''}`);
   } catch (err) {
     res.redirect('https://zylenofficial.github.io/choatix-v2?error=auth_failed');
+  }
+});
+
+// ─── PRODUCT RATINGS API ──────────────────────
+app.get('/api/ratings/:productId', async (req, res) => {
+  const pool = app.locals.pool;
+  if (!pool) return res.json({ ratings: [], avg: 0, count: 0 });
+  try {
+    const result = await pool.query(
+      'SELECT rating, COUNT(*) as count FROM product_ratings WHERE product_id = $1 GROUP BY rating ORDER BY rating DESC',
+      [req.params.productId]
+    );
+    const avgResult = await pool.query(
+      'SELECT COALESCE(AVG(rating), 0) as avg, COUNT(*) as count FROM product_ratings WHERE product_id = $1',
+      [req.params.productId]
+    );
+    const totalRatings = await pool.query(
+      'SELECT COUNT(*) as total FROM product_ratings WHERE product_id = $1',
+      [req.params.productId]
+    );
+    res.json({
+      productId: req.params.productId,
+      avg: parseFloat(avgResult.rows[0].avg).toFixed(1),
+      count: parseInt(totalRatings.rows[0].total),
+      breakdown: result.rows
+    });
+  } catch (err) {
+    res.json({ ratings: [], avg: 0, count: 0 });
+  }
+});
+
+app.get('/api/ratings', async (req, res) => {
+  const pool = app.locals.pool;
+  if (!pool) return res.json({ products: {} });
+  try {
+    const products = ['basic', 'pro', 'extreme', 'precision', 'full'];
+    const result = {};
+    for (const pid of products) {
+      const avgResult = await pool.query(
+        'SELECT COALESCE(AVG(rating), 0) as avg, COUNT(*) as count FROM product_ratings WHERE product_id = $1',
+        [pid]
+      );
+      result[pid] = {
+        avg: parseFloat(avgResult.rows[0].avg).toFixed(1),
+        count: parseInt(avgResult.rows[0].count)
+      };
+    }
+    res.json({ products: result });
+  } catch (err) {
+    res.json({ products: {} });
+  }
+});
+
+app.post('/api/ratings', async (req, res) => {
+  const pool = app.locals.pool;
+  if (!pool) return res.status(500).json({ error: 'No database' });
+  const { productId, discordId, rating, review } = req.body;
+  if (!productId || !discordId || !rating) return res.status(400).json({ error: 'Missing fields' });
+  if (rating < 1 || rating > 5) return res.status(400).json({ error: 'Rating must be 1-5' });
+  try {
+    await pool.query(
+      'INSERT INTO product_ratings (product_id, discord_id, rating, review) VALUES ($1, $2, $3, $4) ON CONFLICT (product_id, discord_id) DO UPDATE SET rating = $3, review = $4',
+      [productId, discordId, rating, review || null]
+    );
+    const avgResult = await pool.query(
+      'SELECT COALESCE(AVG(rating), 0) as avg, COUNT(*) as count FROM product_ratings WHERE product_id = $1',
+      [productId]
+    );
+    res.json({ success: true, avg: parseFloat(avgResult.rows[0].avg).toFixed(1), count: parseInt(avgResult.rows[0].count) });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to submit rating' });
   }
 });
 
