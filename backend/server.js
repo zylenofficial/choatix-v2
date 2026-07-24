@@ -880,7 +880,7 @@ app.get('/api/ratings', async (req, res) => {
   const pool = app.locals.pool;
   if (!pool) return res.json({ products: {} });
   try {
-    const products = ['basic', 'pro', 'extreme', 'precision', 'power', 'full', 'xbox', 'playstation'];
+    const products = ['basic', 'pro', 'extreme', 'precision', 'power', 'full'];
     const result = {};
     for (const pid of products) {
       const avgResult = await pool.query(

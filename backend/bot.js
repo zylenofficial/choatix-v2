@@ -187,9 +187,7 @@ async function registerCommands() {
             { name: 'Extreme Tweaks', value: 'extreme' },
             { name: 'Precision Tweaks', value: 'precision' },
             { name: 'Premium Power Plan', value: 'power' },
-            { name: 'Full Optimization', value: 'full' },
-            { name: 'Xbox Optimization', value: 'xbox' },
-            { name: 'PlayStation Optimization', value: 'playstation' }
+            { name: 'Full Optimization', value: 'full' }
           )
       )
       .addIntegerOption(option =>
@@ -911,7 +909,7 @@ client.on('interactionCreate', async (interaction) => {
       const review = interaction.options.getString('review') || null;
       const discordId = interaction.user.id;
 
-      const productNames = { basic: 'Basic Tweaks', pro: 'Pro Tweaks', extreme: 'Extreme Tweaks', precision: 'Precision Tweaks', power: 'Premium Power Plan', full: 'Full Optimization', xbox: 'Xbox Optimization', playstation: 'PlayStation Optimization' };
+      const productNames = { basic: 'Basic Tweaks', pro: 'Pro Tweaks', extreme: 'Extreme Tweaks', precision: 'Precision Tweaks', power: 'Premium Power Plan', full: 'Full Optimization' };
 
       await dbQuery(
         'INSERT INTO product_ratings (product_id, discord_id, rating, review) VALUES ($1, $2, $3, $4) ON CONFLICT (product_id, discord_id) DO UPDATE SET rating = $3, review = $4',

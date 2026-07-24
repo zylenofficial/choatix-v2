@@ -529,7 +529,7 @@
 
     /* ─── PRODUCTS ───────────────────────────── */
     .products-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1rem; max-width: 1100px; margin: 0 auto; }
-    .products-grid.row-2 { grid-template-columns: repeat(3, 1fr); max-width: 680px; margin-top: 1rem; }
+    .products-grid.row-2 { grid-template-columns: repeat(2, 1fr); max-width: 440px; margin-top: 1rem; }
 
     .product-card {
       background: var(--bg2); border: 1px solid var(--border); border-radius: 12px;
@@ -796,7 +796,7 @@
     .reveal-d4 { transition-delay: 0.32s; }
 
     /* ─── RESPONSIVE ──────────────────────────── */
-    @media (max-width: 900px) { .features-grid { grid-template-columns: repeat(2, 1fr); } .tweaks-grid { grid-template-columns: repeat(3, 1fr); } .products-grid { grid-template-columns: repeat(3, 1fr); } .products-grid.row-2 { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 900px) { .features-grid { grid-template-columns: repeat(2, 1fr); } .tweaks-grid { grid-template-columns: repeat(3, 1fr); } .products-grid { grid-template-columns: repeat(3, 1fr); } .products-grid.row-2 { grid-template-columns: repeat(2, 1fr); max-width: 100%; } }
     @media (max-width: 768px) {
       nav { padding: 0 1.5rem; } .nav-links { display: none; }
       .hero h1 { font-size: clamp(2.5rem, 12vw, 4rem); }
@@ -806,7 +806,7 @@
       .features-grid { grid-template-columns: 1fr; }
       .tweaks-grid { grid-template-columns: repeat(2, 1fr); }
       .products-grid { grid-template-columns: repeat(2, 1fr); }
-      .products-grid.row-2 { grid-template-columns: 1fr; }
+      .products-grid.row-2 { grid-template-columns: 1fr; max-width: 100%; }
       .category-grid { gap: 0.35rem; }
       .steps-row { flex-direction: column; align-items: center; }
       .step-line { width: 1px; height: 40px; margin: 0; } .step-line::before { display: none; }
@@ -1113,7 +1113,7 @@
       </div>
     </div>
 
-    <!-- Row 2: 3 products -->
+    <!-- Row 2: 2 products -->
     <div class="products-grid row-2 reveal">
       <div class="product-card badge-save" data-product="full">
         <div class="product-box"><div class="product-box-inner">
@@ -1127,28 +1127,16 @@
         <button class="product-btn" onclick="openProductModal('full')">View Details</button>
       </div>
 
-      <div class="product-card" data-product="xbox">
+      <div class="product-card" data-product="power2">
         <div class="product-box"><div class="product-box-inner">
-          <div class="box-face box-front"><div class="box-logo">Choatix</div><div class="box-line"></div><div class="box-title">Xbox<br>Optimization</div><div class="box-sub">Console</div></div>
+          <div class="box-face box-front"><div class="box-logo">Choatix</div><div class="box-line"></div><div class="box-title">Extreme<br>Power</div><div class="box-sub">Maximum</div></div>
           <div class="box-face box-side"></div><div class="box-face box-top"></div>
         </div></div>
-        <div class="product-name">Xbox Optimization</div>
+        <div class="product-name">Extreme Power</div>
         <div class="product-brand">Choatix</div>
         <div class="product-stars"><span class="stars" data-stars="5"></span><span class="count" data-count="0"></span></div>
-        <div class="product-price">&euro;4.99</div>
-        <button class="product-btn" onclick="openProductModal('xbox')">View Details</button>
-      </div>
-
-      <div class="product-card" data-product="playstation">
-        <div class="product-box"><div class="product-box-inner">
-          <div class="box-face box-front"><div class="box-logo">Choatix</div><div class="box-line"></div><div class="box-title">PlayStation<br>Optimization</div><div class="box-sub">Console</div></div>
-          <div class="box-face box-side"></div><div class="box-face box-top"></div>
-        </div></div>
-        <div class="product-name">PlayStation Optimization</div>
-        <div class="product-brand">Choatix</div>
-        <div class="product-stars"><span class="stars" data-stars="5"></span><span class="count" data-count="0"></span></div>
-        <div class="product-price">&euro;4.99</div>
-        <button class="product-btn" onclick="openProductModal('playstation')">View Details</button>
+        <div class="product-price">&euro;7.99</div>
+        <button class="product-btn" onclick="openProductModal('extreme')">View Details</button>
       </div>
     </div>
   </section>
@@ -1249,30 +1237,6 @@
           { name: 'Ultimate Power Plan', desc: 'Ultimate Performance plan activated, all power saving disabled, max boost', count: 8 },
           { name: 'Advanced Debloat', desc: 'Windows Store apps removed, background access disabled, auto-updates off, widgets off', count: 18 },
           { name: 'Priority Support', desc: 'Direct Discord support, custom optimization requests, hardware-specific tweaks', count: 0 }
-        ]
-      },
-      xbox: {
-        tier: 'Console Pack', name: 'Xbox Optimization', price: '\u20ac4.99', tweaks: '30+',
-        subtitle: 'Optimize your Xbox console for maximum performance. Reduce input lag, improve frame rates, and get the best gaming experience.',
-        categories: [
-          { name: 'Display Settings', desc: 'Refresh rate optimization, VRR settings, HDR calibration, resolution priority', count: 8 },
-          { name: 'Network Config', desc: 'DNS optimization, QoS settings, port forwarding, low latency mode', count: 6 },
-          { name: 'System Cleanup', desc: 'Cache clearing, storage optimization, background app management', count: 5 },
-          { name: 'Power Settings', desc: 'Instant-on optimization, power mode performance, shutdown timers', count: 4 },
-          { name: 'Controller Settings', desc: 'Input latency reduction, sensitivity tuning, dead zone optimization', count: 4 },
-          { name: 'Audio Setup', desc: 'Spatial sound config, audio delay reduction, headset optimization', count: 3 }
-        ]
-      },
-      playstation: {
-        tier: 'Console Pack', name: 'PlayStation Optimization', price: '\u20ac4.99', tweaks: '30+',
-        subtitle: 'Optimize your PlayStation console for maximum performance. Reduce input lag, improve frame rates, and get the best gaming experience.',
-        categories: [
-          { name: 'Video Settings', desc: '120Hz mode, VRR optimization, HDR setup, resolution priority', count: 7 },
-          { name: 'Network Setup', desc: 'DNS optimization, MTU tuning, port configuration, low latency mode', count: 6 },
-          { name: 'System Storage', desc: 'Database rebuild, cache clearing, storage management, boost mode', count: 5 },
-          { name: 'Power Management', desc: 'Rest mode optimization, power saving settings, fast boot config', count: 4 },
-          { name: 'Controller Config', desc: 'Input lag reduction, adaptive triggers tuning, haptic optimization', count: 4 },
-          { name: 'Audio Settings', desc: '3D Audio setup, audio delay reduction, headset optimization', count: 3 }
         ]
       }
     };
