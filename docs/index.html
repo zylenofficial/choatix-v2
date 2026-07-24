@@ -606,6 +606,73 @@
     }
     .custom-buy-btn:hover { box-shadow: 0 0 16px rgba(0,230,118,0.25); }
 
+    /* ─── PRODUCT DETAIL MODAL ───────────────── */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px);
+      z-index: 10000; display: none; align-items: center; justify-content: center;
+      opacity: 0; transition: opacity 0.25s;
+    }
+    .modal-overlay.open { display: flex; opacity: 1; }
+    .modal-box {
+      background: var(--bg2); border: 1px solid var(--border); border-radius: 14px;
+      width: 90%; max-width: 580px; max-height: 85vh; overflow-y: auto;
+      padding: 2rem; position: relative;
+    }
+    .modal-box::-webkit-scrollbar { width: 4px; }
+    .modal-box::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+    .modal-close {
+      position: absolute; top: 1rem; right: 1rem; width: 28px; height: 28px; border-radius: 6px;
+      border: 1px solid var(--border); background: var(--bg3); color: var(--text-dim);
+      font-size: 0.8rem; cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: all 0.15s;
+    }
+    .modal-close:hover { border-color: var(--border2); color: #fff; }
+
+    .modal-header { margin-bottom: 1.5rem; }
+    .modal-tier { font-size: 0.6rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--green); margin-bottom: 0.3rem; }
+    .modal-title { font-size: 1.4rem; font-weight: 900; color: #fff; margin-bottom: 0.5rem; }
+    .modal-subtitle { font-size: 0.8rem; color: var(--text-mid); line-height: 1.6; }
+    .modal-price-row { display: flex; align-items: center; gap: 1rem; margin-top: 1rem; }
+    .modal-price { font-size: 1.75rem; font-weight: 900; color: #fff; }
+    .modal-rating { display: flex; align-items: center; gap: 0.3rem; }
+    .modal-rating .stars { color: #facc15; font-size: 0.8rem; }
+    .modal-rating .count { font-size: 0.7rem; color: var(--text-dim); }
+    .modal-tweak-count { font-size: 0.7rem; color: var(--text-dim); }
+
+    .modal-divider { height: 1px; background: var(--border); margin: 1.25rem 0; }
+
+    .modal-section-title { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-dim); margin-bottom: 0.75rem; }
+
+    .tweak-category-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+    .tweak-category {
+      background: var(--bg3); border: 1px solid var(--border); border-radius: 8px;
+      padding: 0.75rem; cursor: default; transition: border-color 0.2s;
+    }
+    .tweak-category:hover { border-color: var(--border2); }
+    .tweak-cat-header { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.4rem; }
+    .tweak-cat-num {
+      font-size: 0.55rem; font-weight: 800; color: var(--green); background: rgba(0,230,118,0.08);
+      width: 20px; height: 20px; border-radius: 4px; display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .tweak-cat-name { font-size: 0.75rem; font-weight: 700; color: #fff; }
+    .tweak-cat-desc { font-size: 0.6rem; color: var(--text-dim); line-height: 1.4; }
+    .tweak-cat-count { font-size: 0.55rem; color: var(--text-dim); margin-top: 0.3rem; }
+
+    .modal-cta { display: flex; gap: 0.75rem; margin-top: 1.5rem; }
+    .modal-btn-primary {
+      flex: 1; padding: 0.7rem 1rem; border-radius: 8px; border: none; background: var(--green);
+      color: #000; font-size: 0.8rem; font-weight: 700; cursor: pointer; transition: all 0.2s;
+      font-family: inherit;
+    }
+    .modal-btn-primary:hover { box-shadow: 0 0 20px rgba(0,230,118,0.3); }
+    .modal-btn-secondary {
+      padding: 0.7rem 1rem; border-radius: 8px; border: 1px solid var(--border2);
+      background: transparent; color: #fff; font-size: 0.8rem; font-weight: 600; cursor: pointer;
+      transition: all 0.2s; font-family: inherit;
+    }
+    .modal-btn-secondary:hover { border-color: var(--border3); background: var(--bg3); }
+
     /* ─── PRICING ─────────────────────────────── */
     .pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
 
@@ -994,7 +1061,7 @@
         </div>
         <div class="product-bottom">
           <div class="product-price">&euro;1.99</div>
-          <a href="#pricing" class="product-btn">Get Basic</a>
+          <button class="product-btn" onclick="openProductModal('basic')">View Details</button>
         </div>
       </div>
 
@@ -1017,7 +1084,7 @@
         </div>
         <div class="product-bottom">
           <div class="product-price">&euro;3.99</div>
-          <a href="#pricing" class="product-btn">Get Pro</a>
+          <button class="product-btn" onclick="openProductModal('pro')">View Details</button>
         </div>
       </div>
 
@@ -1038,7 +1105,7 @@
         </div>
         <div class="product-bottom">
           <div class="product-price">&euro;5.99</div>
-          <a href="#pricing" class="product-btn">Get Extreme</a>
+          <button class="product-btn" onclick="openProductModal('extreme')">View Details</button>
         </div>
       </div>
 
@@ -1060,7 +1127,7 @@
         </div>
         <div class="product-bottom">
           <div class="product-price">&euro;2.99</div>
-          <a href="#pricing" class="product-btn">Get Precision</a>
+          <button class="product-btn" onclick="openProductModal('precision')">View Details</button>
         </div>
       </div>
 
@@ -1081,7 +1148,7 @@
         </div>
         <div class="product-bottom">
           <div class="product-price"><span class="from">From</span>&euro;9.99</div>
-          <a href="#pricing" class="product-btn">Get Full</a>
+          <button class="product-btn" onclick="openProductModal('full')">View Details</button>
         </div>
       </div>
 
@@ -1124,6 +1191,152 @@
       </div>
     </div>
   </section>
+
+  <!-- Product Detail Modal -->
+  <div class="modal-overlay" id="productModal">
+    <div class="modal-box">
+      <button class="modal-close" onclick="closeProductModal()">&times;</button>
+      <div class="modal-header">
+        <div class="modal-tier" id="modalTier"></div>
+        <div class="modal-title" id="modalTitle"></div>
+        <div class="modal-subtitle" id="modalSubtitle"></div>
+        <div class="modal-price-row">
+          <div class="modal-price" id="modalPrice"></div>
+          <div class="modal-rating"><span class="stars" id="modalStars"></span><span class="count" id="modalCount"></span></div>
+          <div class="modal-tweak-count" id="modalTweakCount"></div>
+        </div>
+      </div>
+      <div class="modal-divider"></div>
+      <div class="modal-section-title">What's Included</div>
+      <div class="tweak-category-grid" id="modalCategories"></div>
+      <div class="modal-cta">
+        <a href="#pricing" class="modal-btn-primary" onclick="closeProductModal()">Get This Pack</a>
+        <button class="modal-btn-secondary" onclick="closeProductModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const productData = {
+      basic: {
+        tier: 'Essential Pack', name: 'Basic Tweaks', price: '\u20ac1.99', tweaks: '461',
+        subtitle: 'Safe, essential Windows optimizations. Disable bloatware, telemetry, and optimize system settings. Perfect for beginners who want a cleaner, faster PC without risky changes.',
+        categories: [
+          { name: 'Windows Settings', desc: 'Explorer optimizations, context menu speed, lock screen, tips, suggestions, search box', count: 22 },
+          { name: 'Privacy Controls', desc: 'Disable telemetry, activity history, location tracking, advertising ID, find my device', count: 15 },
+          { name: 'Bloatware Removal', desc: 'Remove Bing News, Weather, Finance, Feedback Hub, Get Help, disable background apps', count: 12 },
+          { name: 'Power Management', desc: 'Disable hibernation, sleep mode, set high performance power plan', count: 8 },
+          { name: 'Boot Optimization', desc: 'Fast boot, quiet boot, boot menu policy, no integrity checks', count: 6 },
+          { name: 'Service Cleanup', desc: 'Disable diagnostic tracking, remote registry, security center, delivery optimization', count: 10 }
+        ]
+      },
+      pro: {
+        tier: 'Advanced Pack', name: 'Pro Tweaks', price: '\u20ac3.99', tweaks: '413',
+        subtitle: 'Advanced gaming optimizations for serious players. GPU tuning, CPU priority, memory management, network latency reduction, and input lag elimination.',
+        categories: [
+          { name: 'NVIDIA GPU Tuning', desc: 'Max performance mode, power mizer, low latency, threaded optimization, TDR control', count: 14 },
+          { name: 'CPU Optimization', desc: 'Core parking disabled, power throttling off, max processor state, C-state control', count: 10 },
+          { name: 'Memory Management', desc: 'Paging executive disabled, large system cache, memory compression off, page lock limit', count: 8 },
+          { name: 'Network Latency', desc: 'Nagle algorithm off, TCP ack frequency, NetBIOS disabled, LLMNR off, DNS optimization', count: 12 },
+          { name: 'Input Precision', desc: 'Mouse acceleration off, raw input, keyboard repeat rate max, sticky/filter keys off', count: 10 },
+          { name: 'Process Priority', desc: 'CSRSS realtime priority, DWM high priority, multimedia scheduling, timer resolution', count: 8 }
+        ]
+      },
+      extreme: {
+        tier: 'Maximum Pack', name: 'Extreme Tweaks', price: '\u20ac5.99', tweaks: '461',
+        subtitle: 'The complete optimization experience. Every tweak we offer, maximum performance with aggressive system, GPU, CPU, network, and storage optimizations.',
+        categories: [
+          { name: 'Maximum GPU', desc: 'Ultra low latency, Reflex mode, hardware scheduling, max pre-rendered frames, power mizer forced', count: 18 },
+          { name: 'Extreme CPU', desc: 'C-states disabled, duty cycling off, max boost, core parking 100%, throttling off', count: 14 },
+          { name: 'Deep Memory', desc: 'Paging executive, page file cleared on shutdown, memory compression disabled, lock limit', count: 10 },
+          { name: 'Network Ultra', desc: 'All Pro network + network throttling index max, multimedia scheduling, Nagle fully off', count: 16 },
+          { name: 'BCD Edit', desc: 'Boot config: no integrity checks, quiet boot, no debug, fast boot policy', count: 8 },
+          { name: 'Driver Level', desc: 'NVIDIA max performance forced, TDR disabled, hardware GPU scheduling, power state locked', count: 12 }
+        ]
+      },
+      precision: {
+        tier: 'Input Pack', name: 'Precision Pack', price: '\u20ac2.99', tweaks: '38',
+        subtitle: 'Built for competitive FPS gamers. Mouse, keyboard, display, network, and audio latency optimizations for the fastest possible response time.',
+        categories: [
+          { name: 'Mouse Precision', desc: 'Acceleration off, 1:1 tracking, threshold zero, hover time 10ms, double-click speed', count: 7 },
+          { name: 'Keyboard Speed', desc: 'Repeat rate max, delay zero, sticky keys off, filter keys off, toggle keys off', count: 6 },
+          { name: 'GPU Latency', desc: 'Low latency ultra, pre-rendered frames 1, Reflex enabled, threaded optimization', count: 6 },
+          { name: 'Display Latency', desc: 'DWM composition off, max refresh rate forced, flip model optimized', count: 4 },
+          { name: 'Network Latency', desc: 'Nagle off, TCP ack frequency, network throttling max, LLMNR off, DNS flush', count: 8 },
+          { name: 'Audio Latency', desc: 'Audio enhancements disabled, buffer size minimum, effects off', count: 4 }
+        ]
+      },
+      full: {
+        tier: 'Complete Pack', name: 'Full Optimization', price: 'From \u20ac9.99', tweaks: '461+',
+        subtitle: 'Everything included plus a custom .bat file built for your system. Complete PC overhaul with deep clean, all optimizations, and priority support.',
+        categories: [
+          { name: 'Everything Included', desc: 'All Basic, Pro, Extreme, and Precision tweaks combined in one complete package', count: 461 },
+          { name: 'Custom .bat File', desc: 'Personalized batch script built for your specific hardware and Windows version', count: 1 },
+          { name: 'Deep Clean', desc: 'Temp files, thumbnail cache, icon cache, recycle bin, DNS cache, system cleanup', count: 12 },
+          { name: 'Ultimate Power Plan', desc: 'Ultimate Performance plan activated, all power saving disabled, max boost', count: 8 },
+          { name: 'Advanced Debloat', desc: 'Windows Store apps removed, background access disabled, auto-updates off, widgets off', count: 18 },
+          { name: 'Priority Support', desc: 'Direct Discord support, custom optimization requests, hardware-specific tweaks', count: 0 }
+        ]
+      }
+    };
+
+    function openProductModal(productId) {
+      const p = productData[productId];
+      if (!p) return;
+      document.getElementById('modalTier').textContent = p.tier;
+      document.getElementById('modalTitle').textContent = p.name;
+      document.getElementById('modalSubtitle').textContent = p.subtitle;
+      document.getElementById('modalPrice').textContent = p.price;
+      document.getElementById('modalTweakCount').textContent = p.tweaks + ' tweaks';
+      const catGrid = document.getElementById('modalCategories');
+      catGrid.innerHTML = p.categories.map((c, i) =>
+        '<div class="tweak-category">' +
+          '<div class="tweak-cat-header">' +
+            '<div class="tweak-cat-num">' + (i + 1) + '</div>' +
+            '<div class="tweak-cat-name">' + c.name + '</div>' +
+          '</div>' +
+          '<div class="tweak-cat-desc">' + c.desc + '</div>' +
+          (c.count > 0 ? '<div class="tweak-cat-count">' + c.count + ' tweaks</div>' : '') +
+        '</div>'
+      ).join('');
+      // Fetch rating for this product
+      fetch('https://choatix-v2.onrender.com/api/ratings/' + productId)
+        .then(r => r.json())
+        .then(data => {
+          const avg = parseFloat(data.avg) || 0;
+          const count = parseInt(data.count) || 0;
+          const full = Math.floor(avg);
+          const half = avg - full >= 0.5;
+          let s = '';
+          for (let i = 0; i < 5; i++) {
+            if (i < full) s += '\u2605';
+            else if (i === full && half) s += '\u2605';
+            else s += '\u2606';
+          }
+          document.getElementById('modalStars').textContent = s;
+          document.getElementById('modalCount').textContent = '(' + count + ')';
+        })
+        .catch(() => {
+          document.getElementById('modalStars').textContent = '\u2606\u2606\u2606\u2606\u2606';
+          document.getElementById('modalCount').textContent = '(0)';
+        });
+      document.getElementById('productModal').classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeProductModal() {
+      document.getElementById('productModal').classList.remove('open');
+      document.body.style.overflow = '';
+    }
+
+    document.getElementById('productModal').addEventListener('click', function(e) {
+      if (e.target === this) closeProductModal();
+    });
+
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') closeProductModal();
+    });
+  </script>
 
   <script>
     (function(){
