@@ -860,16 +860,12 @@ client.on('messageCreate', async (message) => {
 });
 
 // Track command usage for quests
-const origHandler = client.listeners('interactionCreate')[0];
-client.removeAllListeners('interactionCreate');
 client.on('interactionCreate', async (interaction) => {
   if (interaction.isChatInputCommand()) {
     try {
       await apiRequest('POST', '/api/quests/progress', { discordId: interaction.user.id, type: 'commands', amount: 1 });
     } catch {}
   }
-  // Call original handler
-  if (origHandler) origHandler(interaction);
 });
 
 client.on('error', (err) => {
