@@ -41,6 +41,7 @@ function apiRequest(method, path, body) {
       path: url.pathname,
       method,
       headers: { 'Content-Type': 'application/json' },
+      timeout: 8000,
     };
 
     const lib = url.protocol === 'https:' ? https : require('http');
@@ -52,6 +53,7 @@ function apiRequest(method, path, body) {
       });
     });
 
+    req.on('timeout', () => { req.destroy(); reject(new Error('Request timeout')); });
     req.on('error', reject);
     if (body) req.write(JSON.stringify(body));
     req.end();
@@ -691,9 +693,10 @@ client.on('interactionCreate', async (interaction) => {
   // ─── /daily ──────────────────────────────────────────────
   if (interaction.isChatInputCommand() && interaction.commandName === 'daily') {
     const discordId = interaction.user.id;
-    await interaction.deferReply();
 
     try {
+      await interaction.deferReply();
+
       const result = await apiRequest('GET', `/api/quests/today/${discordId}`);
       const quests = result.quests || [];
 
@@ -703,35 +706,40 @@ client.on('interactionCreate', async (interaction) => {
 
       const embed = new EmbedBuilder()
         .setTitle('📋 Daily Quests')
-        .setDescription('Complete quests to earn coins! Use coins to buy Pro access.')
-        .setColor(0xffffff)
-        .setFooter({ text: 'Use /buy-pro to spend coins • /balance to check balance' });
+        .setDescription('Complete quests to earn coins!\n100 coins = 1 hour Pro access')
+        .setColor(0x2b2d31)
+        .setThumbnail(interaction.user.displayAvatarURL())
+        .setTimestamp();
 
       let totalReward = 0;
       for (const q of quests) {
         const progress = Math.min(q.progress, q.target);
-        const bar = '█'.repeat(Math.floor(progress / q.target * 8)) + '░'.repeat(8 - Math.floor(progress / q.target * 8));
-        const status = q.claimed ? '✅ Claimed' : q.completed ? '🎁 Ready to claim!' : `\`${bar}\` ${progress}/${q.target}`;
+        const barLen = 10;
+        const filled = Math.floor(progress / q.target * barLen);
+        const bar = '█'.repeat(filled) + '░'.repeat(barLen - filled);
+        const pct = Math.floor(progress / q.target * 100);
+        const emoji = q.claimed ? '✅' : q.completed ? '🎁' : '⏳';
+        const status = q.claimed ? 'Claimed' : q.completed ? 'Ready to claim!' : `${pct}%`;
+
         embed.addFields({
-          name: `${q.name} — ${q.reward} coins`,
-          value: `${q.description}\n${status}`,
+          name: `${emoji} ${q.name}`,
+          value: `${q.description}\n\`${bar}\` **${progress}/${q.target}** — ${status} · **${q.reward}** coins`,
           inline: false,
         });
         totalReward += q.reward;
       }
 
-      embed.setDescription(`Complete quests to earn coins! Total possible: **${totalReward} coins**\n\n100 coins = 1 hour Pro access`);
-
-      // Add claim buttons for completed unclaimed quests
       const claimable = quests.filter(q => q.completed && !q.claimed);
+      const totalClaimed = quests.filter(q => q.claimed).length;
       const components = [];
+
       if (claimable.length > 0) {
         const row = new ActionRowBuilder();
         for (const q of claimable.slice(0, 5)) {
           row.addComponents(
             new ButtonBuilder()
               .setCustomId(`quest_claim_${q.id}`)
-              .setLabel(`Claim ${q.name}`)
+              .setLabel(`Claim ${q.name} (+${q.reward})`)
               .setStyle(ButtonStyle.Success)
               .setEmoji('🎁'),
           );
@@ -739,9 +747,17 @@ client.on('interactionCreate', async (interaction) => {
         components.push(row);
       }
 
+      embed.setFooter({ text: `${totalClaimed}/${quests.length} claimed today · Total: ${totalReward} coins possible` });
+
       await interaction.editReply({ embeds: [embed], components });
     } catch (error) {
-      await interaction.editReply({ content: '❌ **Error** Could not connect to license server.' });
+      console.error('[DAILY ERROR]', error.message);
+      const msg = { content: '❌ Error loading daily quests. Make sure the server is running.' };
+      if (interaction.replied || interaction.deferred) {
+        await interaction.editReply(msg).catch(() => {});
+      } else {
+        await interaction.reply(msg).catch(() => {});
+      }
     }
   }
 
@@ -765,9 +781,10 @@ client.on('interactionCreate', async (interaction) => {
   // ─── /balance ────────────────────────────────────────────
   if (interaction.isChatInputCommand() && interaction.commandName === 'balance') {
     const discordId = interaction.user.id;
-    await interaction.deferReply();
 
     try {
+      await interaction.deferReply();
+
       const result = await apiRequest('GET', `/api/coins/${discordId}`);
       const coins = result.coins || 0;
       const totalEarned = result.total_earned || 0;
@@ -783,12 +800,19 @@ client.on('interactionCreate', async (interaction) => {
           { name: 'Total Earned', value: `${totalEarned}`, inline: true },
           { name: 'Pro Status', value: proActive ? `✅ Active until <t:${Math.floor(new Date(proUntil).getTime() / 1000)}:R>` : '❌ Not active', inline: true },
         )
-        .setColor(0xffffff)
+        .setColor(0x2b2d31)
+        .setThumbnail(interaction.user.displayAvatarURL())
         .setFooter({ text: '100 coins = 1 hour Pro • Use /daily for quests' });
 
       await interaction.editReply({ embeds: [embed] });
     } catch (error) {
-      await interaction.editReply({ content: '❌ **Error** Could not connect to license server.' });
+      console.error('[BALANCE ERROR]', error.message);
+      const msg = { content: '❌ Error loading balance. Make sure the server is running.' };
+      if (interaction.replied || interaction.deferred) {
+        await interaction.editReply(msg).catch(() => {});
+      } else {
+        await interaction.reply(msg).catch(() => {});
+      }
     }
   }
 
@@ -796,29 +820,43 @@ client.on('interactionCreate', async (interaction) => {
   if (interaction.isChatInputCommand() && interaction.commandName === 'buy-pro') {
     const discordId = interaction.user.id;
     const hours = interaction.options.getInteger('hours') || 1;
-    await interaction.deferReply();
 
     try {
+      await interaction.deferReply();
+
       const result = await apiRequest('POST', '/api/coins/buy-pro', { discordId, hours });
       if (result.success) {
-        await interaction.editReply({
-          content: `✅ **Pro Activated!**\n\nDuration: **${hours} hour${hours > 1 ? 's' : ''}**\nExpires: <t:${Math.floor(new Date(result.proUntil).getTime() / 1000)}:R>\nRemaining coins: **${result.coins}**`,
-        });
+        const embed = new EmbedBuilder()
+          .setTitle('✅ Pro Activated!')
+          .setDescription(`**${hours} hour${hours > 1 ? 's' : ''}** of Pro access`)
+          .addFields(
+            { name: 'Expires', value: `<t:${Math.floor(new Date(result.proUntil).getTime() / 1000)}:R>`, inline: true },
+            { name: 'Coins Left', value: `**${result.coins}**`, inline: true },
+          )
+          .setColor(0x2b2d31)
+          .setThumbnail(interaction.user.displayAvatarURL());
+        await interaction.editReply({ embeds: [embed] });
       } else {
         await interaction.editReply({
-          content: `❌ **${result.message}**`,
+          content: `❌ ${result.message}`,
         });
       }
     } catch (error) {
-      await interaction.editReply({ content: '❌ **Error** Could not connect to license server.' });
+      console.error('[BUY-PRO ERROR]', error.message);
+      const msg = { content: '❌ Error buying Pro. Make sure the server is running.' };
+      if (interaction.replied || interaction.deferred) {
+        await interaction.editReply(msg).catch(() => {});
+      } else {
+        await interaction.reply(msg).catch(() => {});
+      }
     }
   }
 
   // ─── /coins-leaderboard ──────────────────────────────────
   if (interaction.isChatInputCommand() && interaction.commandName === 'coins-leaderboard') {
-    await interaction.deferReply();
-
     try {
+      await interaction.deferReply();
+
       const result = await apiRequest('GET', '/api/coins/leaderboard');
       const entries = result.entries || [];
 
@@ -832,12 +870,18 @@ client.on('interactionCreate', async (interaction) => {
           const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `#${i + 1}`;
           return `${medal} <@${e.discord_id}> — **${e.coins}** coins (${e.total_earned} earned)`;
         }).join('\n'))
-        .setColor(0xffffff)
+        .setColor(0x2b2d31)
         .setFooter({ text: 'Use /daily for quests • /buy-pro to spend coins' });
 
       await interaction.editReply({ embeds: [embed] });
     } catch (error) {
-      await interaction.editReply({ content: '❌ **Error** Could not connect to license server.' });
+      console.error('[COINS-LB ERROR]', error.message);
+      const msg = { content: '❌ Error loading leaderboard. Make sure the server is running.' };
+      if (interaction.replied || interaction.deferred) {
+        await interaction.editReply(msg).catch(() => {});
+      } else {
+        await interaction.reply(msg).catch(() => {});
+      }
     }
   }
 });
