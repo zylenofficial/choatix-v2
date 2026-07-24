@@ -148,6 +148,7 @@ async function initDB() {
     `);
     console.log('Default quests seeded');
   }
+}
 
 async function getKey(key) {
   if (app.locals.pool) {
@@ -850,4 +851,4 @@ initDB().then(() => {
     require('./bot.js');
   });
 });
-}
+
