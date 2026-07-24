@@ -716,11 +716,11 @@ client.on('interactionCreate', async (interaction) => {
         const progress = Math.min(q.progress, q.target);
         const pct = Math.floor(progress / q.target * 100);
         const emoji = q.claimed ? '✅' : q.completed ? '🎁' : '⏳';
-        const status = q.claimed ? 'Claimed' : q.completed ? 'Ready to claim!' : `${pct}%`;
+        const status = q.claimed ? 'Claimed ✨' : q.completed ? '🎁 Ready to claim!' : `${pct}% done`;
 
         embed.addFields({
-          name: `${emoji} ${q.name}`,
-          value: `${q.description}\n\`${bar}\` **${progress}/${q.target}** — ${status} · **${q.reward}** coins`,
+          name: `${emoji} ${q.name} — ${q.reward} coins`,
+          value: `${q.description}\n**${progress}** / **${q.target}** — ${status}`,
           inline: false,
         });
         totalReward += q.reward;
