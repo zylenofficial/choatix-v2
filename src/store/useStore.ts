@@ -7,6 +7,8 @@ interface AppState {
   // License
   license: LicenseInfo
   setLicense: (license: LicenseInfo) => void
+  proTimeUntil: string | null
+  setProTimeUntil: (until: string | null) => void
   
   // Scan
   lastScan: ScanResult | null
@@ -99,6 +101,8 @@ export const useStore = create<AppState>()(
       // License
       license: defaultLicense,
       setLicense: (license) => set({ license }),
+      proTimeUntil: null,
+      setProTimeUntil: (until) => set({ proTimeUntil: until }),
       
       // Scan
       lastScan: null,

@@ -717,7 +717,7 @@ app.post('/api/coins/buy-pro', async (req, res) => {
   if (!discordId) return res.status(400).json({ error: 'discordId required' });
   if (!app.locals.pool) return res.json({ success: false, message: 'No database' });
 
-  const cost = hours * 10;
+  const cost = hours * 100;
   const userCoins = await app.locals.pool.query('SELECT * FROM user_coins WHERE discord_id = $1', [discordId]);
   if (userCoins.rows.length === 0 || userCoins.rows[0].coins < cost) {
     return res.json({ success: false, message: `Not enough coins. Need ${cost}, have ${userCoins.rows[0]?.coins || 0}` });

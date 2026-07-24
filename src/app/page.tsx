@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useEffect } from 'react'
 import { useStore } from '@/store/useStore'
+import { LicenseTier } from '@/types'
 import { Sidebar, Page } from '@/components/Sidebar'
 import { UpgradeModal } from '@/components/UpgradeModal'
 import dynamic from 'next/dynamic'
@@ -71,9 +72,39 @@ export default function Home() {
         if (res.state.discordId) s.setDiscordId(res.state.discordId)
         if (res.state.appliedTweaks) s.setAppliedTweaks(res.state.appliedTweaks)
         if (res.state.rollbackEntries) s.setRollbackEntries(res.state.rollbackEntries)
+
+        if (res.state.discordId) {
+          fetch(`https://choatix-v2.onrender.com/api/pro-time/${res.state.discordId}`)
+            .then(r => r.json())
+            .then(data => {
+              const st = useStore.getState()
+              if (data.active) {
+                s.setProTimeUntil(data.proUntil)
+                if (st.license.tier === LicenseTier.FREE) {
+                  s.setLicense({ ...st.license, tier: LicenseTier.PRO, activated: true })
+                }
+              } else {
+                s.setProTimeUntil(null)
+              }
+            })
+            .catch(() => {})
+        }
       }
     })
   }, [saveState])
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const s = useStore.getState()
+      if (s.proTimeUntil && new Date(s.proTimeUntil) <= new Date()) {
+        s.setProTimeUntil(null)
+        if (!s.license.key) {
+          s.setLicense({ ...s.license, tier: LicenseTier.FREE, activated: false })
+        }
+      }
+    }, 30000)
+    return () => clearInterval(interval)
+  }, [])
 
   // Auto-save when important state changes
   useEffect(() => { saveState() }, [appliedTweaks, discordId, license, selectedGames, autopilotEnabled, rollbackEntries, saveState])

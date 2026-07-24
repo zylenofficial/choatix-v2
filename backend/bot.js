@@ -167,7 +167,7 @@ async function registerCommands() {
       .setDescription('Check your coin balance'),
     new SlashCommandBuilder()
       .setName('buy-pro')
-      .setDescription('Spend coins for Pro access (10 coins = 1 hour)')
+      .setDescription('Spend coins for Pro access (100 coins = 1 hour)')
       .addIntegerOption(option =>
         option.setName('hours').setDescription('Hours of Pro (default 1)').setMinValue(1).setMaxValue(24).setRequired(false)
       ),
@@ -720,7 +720,7 @@ client.on('interactionCreate', async (interaction) => {
         totalReward += q.reward;
       }
 
-      embed.setDescription(`Complete quests to earn coins! Total possible: **${totalReward} coins**\n\n10 coins = 1 hour Pro access`);
+      embed.setDescription(`Complete quests to earn coins! Total possible: **${totalReward} coins**\n\n100 coins = 1 hour Pro access`);
 
       // Add claim buttons for completed unclaimed quests
       const claimable = quests.filter(q => q.completed && !q.claimed);
@@ -784,7 +784,7 @@ client.on('interactionCreate', async (interaction) => {
           { name: 'Pro Status', value: proActive ? `✅ Active until <t:${Math.floor(new Date(proUntil).getTime() / 1000)}:R>` : '❌ Not active', inline: true },
         )
         .setColor(0xffffff)
-        .setFooter({ text: '10 coins = 1 hour Pro • Use /daily for quests' });
+        .setFooter({ text: '100 coins = 1 hour Pro • Use /daily for quests' });
 
       await interaction.editReply({ embeds: [embed] });
     } catch (error) {
