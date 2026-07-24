@@ -608,6 +608,15 @@ app.get('/api/leaderboard/user/:discordId', async (req, res) => {
 
 // ── Daily Quests & Coins ──
 
+// Coins leaderboard (must be before /:discordId)
+app.get('/api/coins/leaderboard', async (req, res) => {
+  if (!app.locals.pool) return res.json({ entries: [] });
+  const r = await app.locals.pool.query(
+    'SELECT discord_id, coins, total_earned, ROW_NUMBER() OVER (ORDER BY coins DESC) as rank FROM user_coins ORDER BY coins DESC LIMIT 20'
+  );
+  res.json({ entries: r.rows });
+});
+
 // Get user coins
 app.get('/api/coins/:discordId', async (req, res) => {
   if (!app.locals.pool) return res.json({ coins: 0, total_earned: 0 });
@@ -738,15 +747,6 @@ app.get('/api/pro-time/:discordId', async (req, res) => {
   if (r.rows.length === 0) return res.json({ active: false });
   const active = new Date(r.rows[0].pro_until) > new Date();
   res.json({ active, proUntil: r.rows[0].pro_until });
-});
-
-// Coins leaderboard
-app.get('/api/coins/leaderboard', async (req, res) => {
-  if (!app.locals.pool) return res.json({ entries: [] });
-  const r = await app.locals.pool.query(
-    'SELECT discord_id, coins, total_earned, ROW_NUMBER() OVER (ORDER BY coins DESC) as rank FROM user_coins ORDER BY coins DESC LIMIT 20'
-  );
-  res.json({ entries: r.rows });
 });
 
 // ── Team avatars ──
