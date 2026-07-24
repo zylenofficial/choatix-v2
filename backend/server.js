@@ -842,13 +842,15 @@ app.get('/api/auth/callback', async (req, res) => {
 initDB().then(() => {
   app.listen(PORT, () => {
     console.log(`Choatix License Server running on port ${PORT} (${DB_URL ? 'PostgreSQL' : 'in-memory'})`);
-    require('./bot.js');
+    const bot = require('./bot.js');
+    bot.start(app, app.locals.pool);
   });
 }).catch((err) => {
   console.error('Failed to init DB, falling back to memory:', err.message);
   app.listen(PORT, () => {
     console.log(`Choatix License Server running on port ${PORT} (in-memory fallback)`);
-    require('./bot.js');
+    const bot = require('./bot.js');
+    bot.start(app, app.locals.pool);
   });
 });
 

@@ -697,8 +697,7 @@ client.on('interactionCreate', async (interaction) => {
     try {
       await interaction.deferReply();
 
-      const result = await apiRequest('GET', `/api/quests/today/${discordId}`);
-      const quests = result.quests || [];
+      const quests = await getQuestsToday(discordId);
 
       if (quests.length === 0) {
         return interaction.editReply({ content: '📋 No quests available today. Check back tomorrow!' });
@@ -764,7 +763,7 @@ client.on('interactionCreate', async (interaction) => {
     const discordId = interaction.user.id;
 
     try {
-      const result = await apiRequest('POST', '/api/quests/claim', { discordId, questId });
+      const result = await claimQuest(discordId, questId);
       if (result.success) {
         await interaction.reply({ content: `✅ Claimed! You now have **${result.coins} coins**.`, ephemeral: true });
       } else {
@@ -782,11 +781,11 @@ client.on('interactionCreate', async (interaction) => {
     try {
       await interaction.deferReply();
 
-      const result = await apiRequest('GET', `/api/coins/${discordId}`);
+      const result = await getCoins(discordId);
       const coins = result.coins || 0;
       const totalEarned = result.total_earned || 0;
 
-      const proResult = await apiRequest('GET', `/api/pro-time/${discordId}`);
+      const proResult = await getProTime(discordId);
       const proActive = proResult.active;
       const proUntil = proResult.proUntil;
 
@@ -821,7 +820,7 @@ client.on('interactionCreate', async (interaction) => {
     try {
       await interaction.deferReply();
 
-      const result = await apiRequest('POST', '/api/coins/buy-pro', { discordId, hours });
+      const result = await buyPro(discordId, hours);
       if (result.success) {
         const embed = new EmbedBuilder()
           .setTitle('✅ Pro Activated!')
@@ -854,7 +853,7 @@ client.on('interactionCreate', async (interaction) => {
     try {
       await interaction.deferReply();
 
-      const result = await apiRequest('GET', '/api/coins/leaderboard');
+      const result = await getCoinsLeaderboard();
       const entries = result.entries || [];
 
       if (entries.length === 0) {
@@ -883,6 +882,94 @@ client.on('interactionCreate', async (interaction) => {
   }
 });
 
+let pool = null;
+
+async function dbQuery(text, params) {
+  if (!pool) return { rows: [] };
+  return pool.query(text, params);
+}
+
+async function getQuestsToday(discordId) {
+  const today = new Date().toISOString().split('T')[0];
+  const quests = await dbQuery('SELECT * FROM daily_quests WHERE active = true ORDER BY id');
+  const userQuests = await dbQuery('SELECT * FROM user_quests WHERE discord_id = $1 AND date = $2', [discordId, today]);
+  const userMap = {};
+  userQuests.rows.forEach(uq => { userMap[uq.quest_id] = uq; });
+  return quests.rows.map(q => {
+    const uq = userMap[q.id] || { progress: 0, completed: false, claimed: false };
+    return { ...q, progress: uq.progress, completed: uq.completed, claimed: uq.claimed };
+  });
+}
+
+async function claimQuest(discordId, questId) {
+  const today = new Date().toISOString().split('T')[0];
+  const uq = await dbQuery('SELECT * FROM user_quests WHERE discord_id = $1 AND quest_id = $2 AND date = $3', [discordId, questId, today]);
+  if (uq.rows.length === 0) return { success: false, message: 'Quest not found' };
+  if (!uq.rows[0].completed) return { success: false, message: 'Quest not completed' };
+  if (uq.rows[0].claimed) return { success: false, message: 'Already claimed' };
+
+  const quest = await dbQuery('SELECT * FROM daily_quests WHERE id = $1', [questId]);
+  if (quest.rows.length === 0) return { success: false, message: 'Quest not found' };
+
+  const reward = quest.rows[0].reward;
+  await dbQuery('UPDATE user_quests SET claimed = true WHERE id = $1', [uq.rows[0].id]);
+  await dbQuery(`INSERT INTO user_coins (discord_id, coins, total_earned) VALUES ($1, $2, $2) ON CONFLICT (discord_id) DO UPDATE SET coins = user_coins.coins + $2, total_earned = user_coins.total_earned + $2`, [discordId, reward]);
+  const balance = await dbQuery('SELECT coins FROM user_coins WHERE discord_id = $1', [discordId]);
+  return { success: true, coins: balance.rows[0]?.coins || 0 };
+}
+
+async function getCoins(discordId) {
+  const r = await dbQuery('SELECT * FROM user_coins WHERE discord_id = $1', [discordId]);
+  if (r.rows.length === 0) return { coins: 0, total_earned: 0 };
+  return { coins: r.rows[0].coins, total_earned: r.rows[0].total_earned };
+}
+
+async function getProTime(discordId) {
+  const r = await dbQuery('SELECT * FROM user_pro_time WHERE discord_id = $1', [discordId]);
+  if (r.rows.length === 0) return { active: false };
+  const active = new Date(r.rows[0].pro_until) > new Date();
+  return { active, proUntil: r.rows[0].pro_until };
+}
+
+async function buyPro(discordId, hours) {
+  const cost = hours * 100;
+  const userCoins = await dbQuery('SELECT * FROM user_coins WHERE discord_id = $1', [discordId]);
+  if (userCoins.rows.length === 0 || userCoins.rows[0].coins < cost) {
+    return { success: false, message: `Not enough coins. Need ${cost}, have ${userCoins.rows[0]?.coins || 0}` };
+  }
+
+  await dbQuery('UPDATE user_coins SET coins = coins - $1 WHERE discord_id = $2', [cost, discordId]);
+  const existing = await dbQuery('SELECT * FROM user_pro_time WHERE discord_id = $1', [discordId]);
+  const now = new Date();
+  const base = existing.rows.length > 0 && new Date(existing.rows[0].pro_until) > now
+    ? new Date(existing.rows[0].pro_until) : now;
+  const proUntil = new Date(base.getTime() + hours * 3600000);
+
+  await dbQuery(`INSERT INTO user_pro_time (discord_id, pro_until, activated_at) VALUES ($1, $2, $3) ON CONFLICT (discord_id) DO UPDATE SET pro_until = $2, activated_at = $3`, [discordId, proUntil.toISOString(), now.toISOString()]);
+
+  const balance = await dbQuery('SELECT coins FROM user_coins WHERE discord_id = $1', [discordId]);
+  return { success: true, proUntil: proUntil.toISOString(), coins: balance.rows[0]?.coins || 0 };
+}
+
+async function getCoinsLeaderboard() {
+  const r = await dbQuery('SELECT discord_id, coins, total_earned, ROW_NUMBER() OVER (ORDER BY coins DESC) as rank FROM user_coins ORDER BY coins DESC LIMIT 20');
+  return { entries: r.rows };
+}
+
+async function updateQuestProgress(discordId, type, amount) {
+  const today = new Date().toISOString().split('T')[0];
+  const quests = await dbQuery('SELECT * FROM daily_quests WHERE active = true AND type = $1', [type]);
+  for (const quest of quests.rows) {
+    await dbQuery(`INSERT INTO user_quests (discord_id, quest_id, progress, completed, claimed, date) VALUES ($1, $2, 0, false, false, $3) ON CONFLICT (discord_id, quest_id, date) DO NOTHING`, [discordId, quest.id, today]);
+    const uq = await dbQuery('SELECT * FROM user_quests WHERE discord_id = $1 AND quest_id = $2 AND date = $3 AND completed = false', [discordId, quest.id, today]);
+    if (uq.rows.length > 0) {
+      const newProgress = uq.rows[0].progress + amount;
+      const completed = newProgress >= quest.target;
+      await dbQuery('UPDATE user_quests SET progress = $1, completed = $2 WHERE id = $3', [newProgress, completed, uq.rows[0].id]);
+    }
+  }
+}
+
 // ─── Message tracking for daily quests ──────────────────────
 const chatCooldown = new Map();
 
@@ -896,7 +983,7 @@ client.on('messageCreate', async (message) => {
   chatCooldown.set(userId, now);
 
   try {
-    await apiRequest('POST', '/api/quests/progress', { discordId: userId, type: 'chat', amount: 1 });
+    await updateQuestProgress(userId, 'chat', 1);
   } catch {}
 });
 
@@ -904,7 +991,7 @@ client.on('messageCreate', async (message) => {
 client.on('interactionCreate', async (interaction) => {
   if (interaction.isChatInputCommand()) {
     try {
-      await apiRequest('POST', '/api/quests/progress', { discordId: interaction.user.id, type: 'commands', amount: 1 });
+      await updateQuestProgress(interaction.user.id, 'commands', 1);
     } catch {}
   }
 });
@@ -946,3 +1033,8 @@ process.on('uncaughtException', (err) => {
 });
 
 startBot();
+
+module.exports = { start: (expressApp, dbPool) => {
+  pool = dbPool;
+  console.log('[BOT] Pool connected from server');
+}};
