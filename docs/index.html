@@ -528,88 +528,90 @@
     .tweak-label { font-size: 0.6rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 0.25rem; }
 
     /* ─── PRODUCTS ───────────────────────────── */
-    .products-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; max-width: 1000px; margin: 0 auto; }
+    .products-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1rem; max-width: 1100px; margin: 0 auto; }
+    .products-grid.row-2 { grid-template-columns: repeat(3, 1fr); max-width: 680px; margin-top: 1rem; }
 
     .product-card {
-      background: var(--bg2); border: 1px solid var(--border); border-radius: 14px;
-      padding: 0; transition: all 0.3s ease; position: relative; overflow: hidden; display: flex; flex-direction: column;
+      background: var(--bg2); border: 1px solid var(--border); border-radius: 12px;
+      padding: 1.5rem 1rem; text-align: center; transition: all 0.3s ease; position: relative; display: flex; flex-direction: column; align-items: center;
     }
-    .product-card:hover { border-color: rgba(255,255,255,0.08); transform: translateY(-3px); box-shadow: 0 12px 40px rgba(0,0,0,0.3); }
+    .product-card:hover { border-color: rgba(255,255,255,0.08); transform: translateY(-3px); box-shadow: 0 8px 30px rgba(0,0,0,0.25); }
+    .product-card.featured { border-color: rgba(0,230,118,0.3); }
+    .product-card.featured::after {
+      content: 'Best Seller'; position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+      background: var(--green); color: #000; font-size: 0.5rem; font-weight: 800; letter-spacing: 0.08em;
+      padding: 0.2rem 0.6rem; border-radius: 0 0 6px 6px; z-index: 2;
+    }
+    .product-card.badge-new::after {
+      content: 'New!'; position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+      background: #3b82f6; color: #fff; font-size: 0.5rem; font-weight: 800; letter-spacing: 0.08em;
+      padding: 0.2rem 0.6rem; border-radius: 0 0 6px 6px; z-index: 2;
+    }
+    .product-card.badge-aim::after {
+      content: 'Better Aim'; position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+      background: #a855f7; color: #fff; font-size: 0.5rem; font-weight: 800; letter-spacing: 0.08em;
+      padding: 0.2rem 0.6rem; border-radius: 0 0 6px 6px; z-index: 2;
+    }
+    .product-card.badge-save::after {
+      content: 'Save Bills'; position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+      background: #f59e0b; color: #000; font-size: 0.5rem; font-weight: 800; letter-spacing: 0.08em;
+      padding: 0.2rem 0.6rem; border-radius: 0 0 6px 6px; z-index: 2;
+    }
 
-    .product-top { padding: 1.75rem 1.75rem 0; }
-    .product-icon-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; }
-    .product-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
-    .product-icon.basic { background: rgba(0,230,118,0.1); color: var(--green); }
-    .product-icon.pro { background: rgba(41,121,255,0.1); color: var(--blue); }
-    .product-icon.extreme { background: rgba(0,230,118,0.15); color: var(--green); }
-    .product-icon.precision { background: rgba(124,77,255,0.1); color: var(--purple); }
-    .product-icon.full { background: rgba(255,255,255,0.06); color: #fff; }
-    .product-badge { font-size: 0.55rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; padding: 0.25rem 0.6rem; border-radius: 4px; }
-    .product-badge.green { background: rgba(0,230,118,0.1); color: var(--green); }
-    .product-badge.blue { background: rgba(41,121,255,0.1); color: var(--blue); }
-    .product-badge.purple { background: rgba(124,77,255,0.1); color: var(--purple); }
-    .product-badge.white { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.6); }
+    /* 3D Product Box */
+    .product-box { perspective: 400px; width: 90px; height: 120px; margin: 0 auto 1rem; }
+    .product-box-inner {
+      width: 100%; height: 100%; position: relative;
+      transform-style: preserve-3d; transform: rotateY(-15deg) rotateX(5deg);
+      transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .product-card:hover .product-box-inner { transform: rotateY(-5deg) rotateX(2deg) scale(1.05); }
 
-    .product-name { font-size: 1.1rem; font-weight: 800; color: #fff; margin-bottom: 0.4rem; }
-    .product-desc { font-size: 0.78rem; color: var(--text-mid); line-height: 1.6; margin-bottom: 1.25rem; }
+    .box-face { position: absolute; backface-visibility: hidden; }
+    .box-front {
+      width: 100%; height: 100%; background: linear-gradient(135deg, #1a1c23 0%, #0f1117 100%);
+      border: 1px solid rgba(255,255,255,0.08); border-radius: 6px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 0.5rem; box-shadow: 4px 4px 20px rgba(0,0,0,0.5);
+    }
+    .box-front .box-logo { font-size: 0.45rem; font-weight: 900; letter-spacing: 0.12em; text-transform: uppercase; color: var(--green); margin-bottom: 0.2rem; }
+    .box-front .box-title { font-size: 0.6rem; font-weight: 800; color: #fff; text-align: center; line-height: 1.3; }
+    .box-front .box-line { width: 20px; height: 1px; background: var(--green); margin: 0.25rem 0; opacity: 0.4; }
+    .box-front .box-sub { font-size: 0.35rem; color: rgba(255,255,255,0.3); text-transform: uppercase; letter-spacing: 0.1em; }
 
-    .product-divider { height: 1px; background: var(--border); margin: 0 1.75rem; }
+    .box-side {
+      width: 12px; height: 100%; right: -6px; top: 0;
+      background: linear-gradient(180deg, #16181e 0%, #0d0f14 100%);
+      border: 1px solid rgba(255,255,255,0.05); border-left: none;
+      border-radius: 0 4px 4px 0;
+      transform: rotateY(90deg); transform-origin: left center;
+    }
+    .box-top {
+      width: 100%; height: 12px; left: 0; top: -6px;
+      background: linear-gradient(90deg, #1e2029 0%, #16181e 100%);
+      border: 1px solid rgba(255,255,255,0.06); border-bottom: none;
+      border-radius: 4px 4px 0 0;
+      transform: rotateX(90deg); transform-origin: bottom center;
+    }
 
-    .product-body { padding: 1.25rem 1.75rem; flex: 1; display: flex; flex-direction: column; }
+    .product-name { font-size: 0.95rem; font-weight: 800; color: #fff; margin-bottom: 0.15rem; }
+    .product-brand { font-size: 0.5rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.5rem; }
 
-    .product-features { list-style: none; display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1.25rem; flex: 1; }
-    .product-features li { font-size: 0.72rem; color: var(--text-mid); display: flex; align-items: flex-start; gap: 0.5rem; line-height: 1.4; }
-    .product-features li::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: var(--green); margin-top: 0.35rem; flex-shrink: 0; }
+    .product-stars { display: flex; align-items: center; justify-content: center; gap: 0.2rem; margin-bottom: 0.5rem; }
+    .product-stars .stars { color: #facc15; font-size: 0.7rem; }
+    .product-stars .count { color: var(--text-dim); font-size: 0.6rem; margin-left: 0.15rem; }
 
-    .product-footer { display: flex; align-items: center; justify-content: space-between; padding: 1.25rem 1.75rem; border-top: 1px solid var(--border); }
-    .product-price-group {}
-    .product-price { font-size: 1.5rem; font-weight: 900; color: #fff; letter-spacing: -0.02em; }
-    .product-price .from { font-size: 0.6rem; font-weight: 500; color: var(--text-dim); display: block; margin-bottom: -2px; }
-    .product-rating { display: flex; align-items: center; gap: 0.3rem; margin-top: 0.2rem; }
-    .product-rating .stars { color: #facc15; font-size: 0.65rem; }
-    .product-rating .count { font-size: 0.6rem; color: var(--text-dim); }
+    .product-price { font-size: 1.3rem; font-weight: 900; color: #fff; margin-bottom: 1rem; letter-spacing: -0.02em; }
+    .product-price .from { font-size: 0.55rem; font-weight: 500; color: var(--text-dim); display: block; margin-bottom: -2px; }
 
     .product-btn {
-      padding: 0.55rem 1.25rem; border-radius: 8px; border: none;
-      font-size: 0.75rem; font-weight: 700; cursor: pointer; transition: all 0.2s;
-      font-family: inherit; text-decoration: none; display: inline-flex; align-items: center;
+      display: inline-block; padding: 0.5rem 1.25rem; border: 1px solid var(--green); border-radius: 6px;
+      color: #fff; font-size: 0.7rem; font-weight: 600; text-decoration: none;
+      transition: all 0.2s; background: transparent; cursor: pointer; font-family: inherit;
     }
-    .product-btn.primary { background: var(--green); color: #000; }
-    .product-btn.primary:hover { box-shadow: 0 0 20px rgba(0,230,118,0.3); }
-    .product-btn.secondary { background: transparent; color: #fff; border: 1px solid var(--border2); }
-    .product-btn.secondary:hover { border-color: var(--border3); background: var(--bg3); }
-
-    .product-card.featured { border-color: rgba(0,230,118,0.2); }
-    .product-card.featured::before {
-      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
-      background: linear-gradient(90deg, var(--green), #00c853);
-    }
-
-    /* Category Picker */
-    .category-picker { max-width: 1000px; margin: 1.5rem auto 0; padding: 1.5rem; background: var(--bg2); border: 1px solid var(--border); border-radius: 14px; }
-    .category-picker-header { margin-bottom: 1rem; }
-    .category-picker-title { font-size: 0.85rem; font-weight: 700; color: #fff; margin-bottom: 0.2rem; }
-    .category-picker-sub { font-size: 0.7rem; color: var(--text-dim); }
-    .category-grid { display: flex; flex-wrap: wrap; gap: 0.4rem; }
-    .cat-toggle {
-      display: flex; align-items: center; gap: 0.35rem; padding: 0.4rem 0.75rem;
-      border-radius: 6px; border: 1px solid var(--border); background: transparent;
-      color: var(--text-mid); font-size: 0.7rem; font-weight: 500; cursor: pointer;
-      transition: all 0.15s; font-family: inherit;
-    }
-    .cat-toggle:hover { border-color: var(--border2); color: #fff; }
-    .cat-toggle.on { background: rgba(0,230,118,0.06); border-color: rgba(0,230,118,0.2); color: var(--green); }
-    .cat-toggle .dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; opacity: 0.3; }
-    .cat-toggle.on .dot { opacity: 1; background: var(--green); }
-    .custom-price { display: flex; align-items: center; justify-content: space-between; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border); }
-    .custom-price-label { font-size: 0.75rem; color: var(--text-dim); }
-    .custom-price-value { font-size: 1.25rem; font-weight: 900; color: var(--green); }
-    .custom-buy-btn {
-      padding: 0.55rem 1.5rem; border-radius: 8px; border: none; background: var(--green);
-      color: #000; font-size: 0.8rem; font-weight: 700; cursor: pointer; transition: all 0.2s;
-      font-family: inherit;
-    }
-    .custom-buy-btn:hover { box-shadow: 0 0 16px rgba(0,230,118,0.25); }
+    .product-btn:hover { background: var(--green); color: #000; }
+    .product-card.featured .product-btn { background: var(--green); color: #000; }
+    .product-card.featured .product-btn:hover { box-shadow: 0 0 20px rgba(0,230,118,0.3); }
 
     /* ─── PRODUCT DETAIL MODAL ───────────────── */
     .modal-overlay {
@@ -794,7 +796,7 @@
     .reveal-d4 { transition-delay: 0.32s; }
 
     /* ─── RESPONSIVE ──────────────────────────── */
-    @media (max-width: 900px) { .features-grid { grid-template-columns: repeat(2, 1fr); } .tweaks-grid { grid-template-columns: repeat(3, 1fr); } .products-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 900px) { .features-grid { grid-template-columns: repeat(2, 1fr); } .tweaks-grid { grid-template-columns: repeat(3, 1fr); } .products-grid { grid-template-columns: repeat(3, 1fr); } .products-grid.row-2 { grid-template-columns: repeat(2, 1fr); } }
     @media (max-width: 768px) {
       nav { padding: 0 1.5rem; } .nav-links { display: none; }
       .hero h1 { font-size: clamp(2.5rem, 12vw, 4rem); }
@@ -803,8 +805,8 @@
       .pricing-grid { grid-template-columns: 1fr; }
       .features-grid { grid-template-columns: 1fr; }
       .tweaks-grid { grid-template-columns: repeat(2, 1fr); }
-      .products-grid { grid-template-columns: 1fr; }
-      .products-grid[style] { grid-template-columns: 1fr !important; }
+      .products-grid { grid-template-columns: repeat(2, 1fr); }
+      .products-grid.row-2 { grid-template-columns: 1fr; }
       .category-grid { gap: 0.35rem; }
       .steps-row { flex-direction: column; align-items: center; }
       .step-line { width: 1px; height: 40px; margin: 0; } .step-line::before { display: none; }
@@ -1047,185 +1049,106 @@
   <!-- PRODUCTS -->
   <section id="products">
     <div class="section-header reveal"><div class="section-label">Products</div><h2>Our Products</h2><p>Premium optimization packs for every need</p></div>
-    <div class="products-grid reveal" id="products-grid">
 
+    <!-- Row 1: 5 products -->
+    <div class="products-grid reveal">
       <div class="product-card" data-product="basic">
-        <div class="product-top">
-          <div class="product-icon-row">
-            <div class="product-icon basic">%</div>
-            <div class="product-badge green">Essential</div>
-          </div>
-          <div class="product-name">Basic Tweaks</div>
-          <div class="product-desc">Safe Windows optimizations. Clean bloatware, disable telemetry, and speed up your system.</div>
-        </div>
-        <div class="product-divider"></div>
-        <div class="product-body">
-          <ul class="product-features">
-            <li>Disable Windows tips and suggestions</li>
-            <li>Remove pre-installed bloatware apps</li>
-            <li>Turn off telemetry and diagnostics</li>
-            <li>Optimize power and boot settings</li>
-            <li>Privacy controls and activity tracking off</li>
-          </ul>
-        </div>
-        <div class="product-footer">
-          <div class="product-price-group">
-            <div class="product-price">&euro;1.99</div>
-            <div class="product-rating"><span class="stars" data-stars="5"></span><span class="count" data-count="0"></span></div>
-          </div>
-          <button class="product-btn secondary" onclick="openProductModal('basic')">View Details</button>
-        </div>
+        <div class="product-box"><div class="product-box-inner">
+          <div class="box-face box-front"><div class="box-logo">Choatix</div><div class="box-line"></div><div class="box-title">Basic<br>Tweaks</div><div class="box-sub">Essential</div></div>
+          <div class="box-face box-side"></div><div class="box-face box-top"></div>
+        </div></div>
+        <div class="product-name">Basic Tweaks</div>
+        <div class="product-brand">Choatix</div>
+        <div class="product-stars"><span class="stars" data-stars="5"></span><span class="count" data-count="0"></span></div>
+        <div class="product-price">&euro;1.99</div>
+        <button class="product-btn" onclick="openProductModal('basic')">View Details</button>
       </div>
 
       <div class="product-card" data-product="pro">
-        <div class="product-top">
-          <div class="product-icon-row">
-            <div class="product-icon pro">&#9889;</div>
-            <div class="product-badge blue">Advanced</div>
-          </div>
-          <div class="product-name">Pro Tweaks</div>
-          <div class="product-desc">Advanced gaming optimizations. GPU tuning, CPU priority, memory, and network latency.</div>
-        </div>
-        <div class="product-divider"></div>
-        <div class="product-body">
-          <ul class="product-features">
-            <li>NVIDIA max performance and low latency</li>
-            <li>CPU core parking and throttle control</li>
-            <li>Memory paging and compression off</li>
-            <li>Nagle algorithm and TCP optimization</li>
-            <li>Mouse raw input and keyboard speed</li>
-          </ul>
-        </div>
-        <div class="product-footer">
-          <div class="product-price-group">
-            <div class="product-price">&euro;3.99</div>
-            <div class="product-rating"><span class="stars" data-stars="5"></span><span class="count" data-count="0"></span></div>
-          </div>
-          <button class="product-btn secondary" onclick="openProductModal('pro')">View Details</button>
-        </div>
+        <div class="product-box"><div class="product-box-inner">
+          <div class="box-face box-front"><div class="box-logo">Choatix</div><div class="box-line"></div><div class="box-title">Pro<br>Tweaks</div><div class="box-sub">Advanced</div></div>
+          <div class="box-face box-side"></div><div class="box-face box-top"></div>
+        </div></div>
+        <div class="product-name">Pro Tweaks</div>
+        <div class="product-brand">Choatix</div>
+        <div class="product-stars"><span class="stars" data-stars="5"></span><span class="count" data-count="0"></span></div>
+        <div class="product-price">&euro;3.99</div>
+        <button class="product-btn" onclick="openProductModal('pro')">View Details</button>
       </div>
 
       <div class="product-card featured" data-product="extreme">
-        <div class="product-top">
-          <div class="product-icon-row">
-            <div class="product-icon extreme">&#9889;</div>
-            <div class="product-badge green">Best Value</div>
-          </div>
-          <div class="product-name">Extreme Tweaks</div>
-          <div class="product-desc">Everything included. Maximum performance with aggressive GPU, CPU, and network tweaks.</div>
-        </div>
-        <div class="product-divider"></div>
-        <div class="product-body">
-          <ul class="product-features">
-            <li>All Pro tweaks plus driver-level tuning</li>
-            <li>Ultra low latency and Reflex mode</li>
-            <li>BCD edit for fast boot and no integrity checks</li>
-            <li>Hardware GPU scheduling enabled</li>
-            <li>Network throttling and multimedia priority</li>
-          </ul>
-        </div>
-        <div class="product-footer">
-          <div class="product-price-group">
-            <div class="product-price">&euro;5.99</div>
-            <div class="product-rating"><span class="stars" data-stars="5"></span><span class="count" data-count="0"></span></div>
-          </div>
-          <button class="product-btn primary" onclick="openProductModal('extreme')">View Details</button>
-        </div>
+        <div class="product-box"><div class="product-box-inner">
+          <div class="box-face box-front"><div class="box-logo">Choatix</div><div class="box-line"></div><div class="box-title">Extreme<br>Tweaks</div><div class="box-sub">Maximum</div></div>
+          <div class="box-face box-side"></div><div class="box-face box-top"></div>
+        </div></div>
+        <div class="product-name">Extreme Tweaks</div>
+        <div class="product-brand">Choatix</div>
+        <div class="product-stars"><span class="stars" data-stars="5"></span><span class="count" data-count="0"></span></div>
+        <div class="product-price">&euro;5.99</div>
+        <button class="product-btn" onclick="openProductModal('extreme')">View Details</button>
       </div>
 
+      <div class="product-card badge-aim" data-product="precision">
+        <div class="product-box"><div class="product-box-inner">
+          <div class="box-face box-front"><div class="box-logo">Choatix</div><div class="box-line"></div><div class="box-title">Precision<br>Tweaks</div><div class="box-sub">Input</div></div>
+          <div class="box-face box-side"></div><div class="box-face box-top"></div>
+        </div></div>
+        <div class="product-name">Precision Tweaks</div>
+        <div class="product-brand">Choatix</div>
+        <div class="product-stars"><span class="stars" data-stars="5"></span><span class="count" data-count="0"></span></div>
+        <div class="product-price">&euro;2.99</div>
+        <button class="product-btn" onclick="openProductModal('precision')">View Details</button>
+      </div>
+
+      <div class="product-card badge-new" data-product="power">
+        <div class="product-box"><div class="product-box-inner">
+          <div class="box-face box-front"><div class="box-logo">Choatix</div><div class="box-line"></div><div class="box-title">Premium<br>Power Plan</div><div class="box-sub">Efficiency</div></div>
+          <div class="box-face box-side"></div><div class="box-face box-top"></div>
+        </div></div>
+        <div class="product-name">Power Plan</div>
+        <div class="product-brand">Choatix</div>
+        <div class="product-stars"><span class="stars" data-stars="5"></span><span class="count" data-count="0"></span></div>
+        <div class="product-price">&euro;3.99</div>
+        <button class="product-btn" onclick="openProductModal('power')">View Details</button>
+      </div>
     </div>
 
-    <!-- Row 2 -->
-    <div class="products-grid reveal" style="grid-template-columns: repeat(2, 1fr); max-width: 660px; margin-top: 1rem;">
-
-      <div class="product-card" data-product="precision">
-        <div class="product-top">
-          <div class="product-icon-row">
-            <div class="product-icon precision">&#9898;</div>
-            <div class="product-badge purple">Input</div>
-          </div>
-          <div class="product-name">Precision Pack</div>
-          <div class="product-desc">Mouse, keyboard, and latency optimizations for competitive FPS gaming.</div>
-        </div>
-        <div class="product-divider"></div>
-        <div class="product-body">
-          <ul class="product-features">
-            <li>Mouse acceleration off, 1:1 raw tracking</li>
-            <li>Keyboard repeat rate and delay maxed</li>
-            <li>NVIDIA Reflex and low latency ultra</li>
-            <li>Display DWM composition disabled</li>
-          </ul>
-        </div>
-        <div class="product-footer">
-          <div class="product-price-group">
-            <div class="product-price">&euro;2.99</div>
-            <div class="product-rating"><span class="stars" data-stars="5"></span><span class="count" data-count="0"></span></div>
-          </div>
-          <button class="product-btn secondary" onclick="openProductModal('precision')">View Details</button>
-        </div>
+    <!-- Row 2: 3 products -->
+    <div class="products-grid row-2 reveal">
+      <div class="product-card badge-save" data-product="full">
+        <div class="product-box"><div class="product-box-inner">
+          <div class="box-face box-front"><div class="box-logo">Choatix</div><div class="box-line"></div><div class="box-title">Full<br>Optimization</div><div class="box-sub">Complete</div></div>
+          <div class="box-face box-side"></div><div class="box-face box-top"></div>
+        </div></div>
+        <div class="product-name">Full Optimization</div>
+        <div class="product-brand">Choatix</div>
+        <div class="product-stars"><span class="stars" data-stars="5"></span><span class="count" data-count="0"></span></div>
+        <div class="product-price"><span class="from">From</span>&euro;9.99</div>
+        <button class="product-btn" onclick="openProductModal('full')">View Details</button>
       </div>
 
-      <div class="product-card" data-product="full">
-        <div class="product-top">
-          <div class="product-icon-row">
-            <div class="product-icon full">&#10003;</div>
-            <div class="product-badge white">Complete</div>
-          </div>
-          <div class="product-name">Full Optimization</div>
-          <div class="product-desc">Everything plus a custom .bat file. Complete PC overhaul with deep clean.</div>
-        </div>
-        <div class="product-divider"></div>
-        <div class="product-body">
-          <ul class="product-features">
-            <li>All 461 tweaks from every pack</li>
-            <li>Custom batch script for your hardware</li>
-            <li>Deep clean temp files and caches</li>
-            <li>Ultimate Performance power plan</li>
-          </ul>
-        </div>
-        <div class="product-footer">
-          <div class="product-price-group">
-            <div class="product-price"><span class="from">From</span>&euro;9.99</div>
-            <div class="product-rating"><span class="stars" data-stars="5"></span><span class="count" data-count="0"></span></div>
-          </div>
-          <button class="product-btn secondary" onclick="openProductModal('full')">View Details</button>
-        </div>
+      <div class="product-card" data-product="xbox">
+        <div class="product-box"><div class="product-box-inner">
+          <div class="box-face box-front"><div class="box-logo">Choatix</div><div class="box-line"></div><div class="box-title">Xbox<br>Optimization</div><div class="box-sub">Console</div></div>
+          <div class="box-face box-side"></div><div class="box-face box-top"></div>
+        </div></div>
+        <div class="product-name">Xbox Optimization</div>
+        <div class="product-brand">Choatix</div>
+        <div class="product-stars"><span class="stars" data-stars="5"></span><span class="count" data-count="0"></span></div>
+        <div class="product-price">&euro;4.99</div>
+        <button class="product-btn" onclick="openProductModal('xbox')">View Details</button>
       </div>
 
-    </div>
-
-    <!-- Category Picker -->
-    <div class="category-picker reveal">
-      <div class="category-picker-header">
-        <div class="category-picker-title">Build Your Own Pack</div>
-        <div class="category-picker-sub">Select the categories you want and we'll create a custom optimization for you.</div>
-      </div>
-      <div class="category-grid">
-        <button class="cat-toggle on" data-cat="system"><span class="dot"></span>System</button>
-        <button class="cat-toggle" data-cat="nvidia"><span class="dot"></span>NVIDIA GPU</button>
-        <button class="cat-toggle" data-cat="radeon"><span class="dot"></span>AMD Radeon</button>
-        <button class="cat-toggle" data-cat="cpu"><span class="dot"></span>CPU</button>
-        <button class="cat-toggle" data-cat="memory"><span class="dot"></span>Memory</button>
-        <button class="cat-toggle" data-cat="network"><span class="dot"></span>Network</button>
-        <button class="cat-toggle" data-cat="mouse"><span class="dot"></span>Mouse</button>
-        <button class="cat-toggle" data-cat="keyboard"><span class="dot"></span>Keyboard</button>
-        <button class="cat-toggle" data-cat="audio"><span class="dot"></span>Audio</button>
-        <button class="cat-toggle" data-cat="storage"><span class="dot"></span>Storage</button>
-        <button class="cat-toggle" data-cat="privacy"><span class="dot"></span>Privacy</button>
-        <button class="cat-toggle" data-cat="debloat"><span class="dot"></span>Debloat</button>
-        <button class="cat-toggle" data-cat="gpu"><span class="dot"></span>GPU</button>
-        <button class="cat-toggle" data-cat="gaming"><span class="dot"></span>Gaming</button>
-        <button class="cat-toggle" data-cat="latency"><span class="dot"></span>Latency</button>
-        <button class="cat-toggle" data-cat="bcdedit"><span class="dot"></span>BCD Edit</button>
-        <button class="cat-toggle" data-cat="usb"><span class="dot"></span>USB</button>
-        <button class="cat-toggle" data-cat="power"><span class="dot"></span>Power</button>
-      </div>
-      <div class="custom-price">
-        <div>
-          <div class="custom-price-label">Custom pack with <strong id="cat-count">1</strong> categories</div>
-          <div class="custom-price-value" id="custom-price">&euro;0.99</div>
-        </div>
-        <button class="custom-buy-btn" onclick="document.getElementById('pricing').scrollIntoView({behavior:'smooth'})">Get Custom Pack</button>
+      <div class="product-card" data-product="playstation">
+        <div class="product-box"><div class="product-box-inner">
+          <div class="box-face box-front"><div class="box-logo">Choatix</div><div class="box-line"></div><div class="box-title">PlayStation<br>Optimization</div><div class="box-sub">Console</div></div>
+          <div class="box-face box-side"></div><div class="box-face box-top"></div>
+        </div></div>
+        <div class="product-name">PlayStation Optimization</div>
+        <div class="product-brand">Choatix</div>
+        <div class="product-stars"><span class="stars" data-stars="5"></span><span class="count" data-count="0"></span></div>
+        <div class="product-price">&euro;4.99</div>
+        <button class="product-btn" onclick="openProductModal('playstation')">View Details</button>
       </div>
     </div>
   </section>
@@ -1258,7 +1181,7 @@
     const productData = {
       basic: {
         tier: 'Essential Pack', name: 'Basic Tweaks', price: '\u20ac1.99', tweaks: '461',
-        subtitle: 'Safe, essential Windows optimizations. Disable bloatware, telemetry, and optimize system settings. Perfect for beginners who want a cleaner, faster PC without risky changes.',
+        subtitle: 'Safe, essential Windows optimizations. Disable bloatware, telemetry, and optimize system settings. Perfect for beginners who want a cleaner, faster PC.',
         categories: [
           { name: 'Windows Settings', desc: 'Explorer optimizations, context menu speed, lock screen, tips, suggestions, search box', count: 22 },
           { name: 'Privacy Controls', desc: 'Disable telemetry, activity history, location tracking, advertising ID, find my device', count: 15 },
@@ -1270,7 +1193,7 @@
       },
       pro: {
         tier: 'Advanced Pack', name: 'Pro Tweaks', price: '\u20ac3.99', tweaks: '413',
-        subtitle: 'Advanced gaming optimizations for serious players. GPU tuning, CPU priority, memory management, network latency reduction, and input lag elimination.',
+        subtitle: 'Advanced gaming optimizations. GPU tuning, CPU priority, memory management, network latency reduction, and input lag elimination.',
         categories: [
           { name: 'NVIDIA GPU Tuning', desc: 'Max performance mode, power mizer, low latency, threaded optimization, TDR control', count: 14 },
           { name: 'CPU Optimization', desc: 'Core parking disabled, power throttling off, max processor state, C-state control', count: 10 },
@@ -1293,7 +1216,7 @@
         ]
       },
       precision: {
-        tier: 'Input Pack', name: 'Precision Pack', price: '\u20ac2.99', tweaks: '38',
+        tier: 'Input Pack', name: 'Precision Tweaks', price: '\u20ac2.99', tweaks: '38',
         subtitle: 'Built for competitive FPS gamers. Mouse, keyboard, display, network, and audio latency optimizations for the fastest possible response time.',
         categories: [
           { name: 'Mouse Precision', desc: 'Acceleration off, 1:1 tracking, threshold zero, hover time 10ms, double-click speed', count: 7 },
@@ -1304,16 +1227,52 @@
           { name: 'Audio Latency', desc: 'Audio enhancements disabled, buffer size minimum, effects off', count: 4 }
         ]
       },
+      power: {
+        tier: 'Power Pack', name: 'Choatix Premium Power Plan', price: '\u20ac3.99', tweaks: '45+',
+        subtitle: 'Custom power plan better than Ultimate Performance. Maximum FPS while using less electricity. Save money on your power bills while gaming.',
+        categories: [
+          { name: 'Choatix Power Plan', desc: 'Custom power plan with optimized voltage curves, faster boost, lower idle power', count: 12 },
+          { name: 'CPU Efficiency', desc: 'Per-core P-state control, efficient turbo boost, C-state optimization for gaming', count: 8 },
+          { name: 'GPU Power Saving', desc: 'NVIDIA adaptive power, clock speed management, memory p-state optimization', count: 6 },
+          { name: 'Storage Power', desc: 'NVMe idle states, HDD spin-down timers, SSD power management', count: 5 },
+          { name: 'USB Power', desc: 'USB selective suspend, hub power saving, device wake control', count: 4 },
+          { name: 'Display Power', desc: 'Monitor brightness optimization, DPMS settings, refresh rate management', count: 5 }
+        ]
+      },
       full: {
         tier: 'Complete Pack', name: 'Full Optimization', price: 'From \u20ac9.99', tweaks: '461+',
         subtitle: 'Everything included plus a custom .bat file built for your system. Complete PC overhaul with deep clean, all optimizations, and priority support.',
         categories: [
-          { name: 'Everything Included', desc: 'All Basic, Pro, Extreme, and Precision tweaks combined in one complete package', count: 461 },
+          { name: 'Everything Included', desc: 'All Basic, Pro, Extreme, Precision, and Power tweaks combined', count: 461 },
           { name: 'Custom .bat File', desc: 'Personalized batch script built for your specific hardware and Windows version', count: 1 },
           { name: 'Deep Clean', desc: 'Temp files, thumbnail cache, icon cache, recycle bin, DNS cache, system cleanup', count: 12 },
           { name: 'Ultimate Power Plan', desc: 'Ultimate Performance plan activated, all power saving disabled, max boost', count: 8 },
           { name: 'Advanced Debloat', desc: 'Windows Store apps removed, background access disabled, auto-updates off, widgets off', count: 18 },
           { name: 'Priority Support', desc: 'Direct Discord support, custom optimization requests, hardware-specific tweaks', count: 0 }
+        ]
+      },
+      xbox: {
+        tier: 'Console Pack', name: 'Xbox Optimization', price: '\u20ac4.99', tweaks: '30+',
+        subtitle: 'Optimize your Xbox console for maximum performance. Reduce input lag, improve frame rates, and get the best gaming experience.',
+        categories: [
+          { name: 'Display Settings', desc: 'Refresh rate optimization, VRR settings, HDR calibration, resolution priority', count: 8 },
+          { name: 'Network Config', desc: 'DNS optimization, QoS settings, port forwarding, low latency mode', count: 6 },
+          { name: 'System Cleanup', desc: 'Cache clearing, storage optimization, background app management', count: 5 },
+          { name: 'Power Settings', desc: 'Instant-on optimization, power mode performance, shutdown timers', count: 4 },
+          { name: 'Controller Settings', desc: 'Input latency reduction, sensitivity tuning, dead zone optimization', count: 4 },
+          { name: 'Audio Setup', desc: 'Spatial sound config, audio delay reduction, headset optimization', count: 3 }
+        ]
+      },
+      playstation: {
+        tier: 'Console Pack', name: 'PlayStation Optimization', price: '\u20ac4.99', tweaks: '30+',
+        subtitle: 'Optimize your PlayStation console for maximum performance. Reduce input lag, improve frame rates, and get the best gaming experience.',
+        categories: [
+          { name: 'Video Settings', desc: '120Hz mode, VRR optimization, HDR setup, resolution priority', count: 7 },
+          { name: 'Network Setup', desc: 'DNS optimization, MTU tuning, port configuration, low latency mode', count: 6 },
+          { name: 'System Storage', desc: 'Database rebuild, cache clearing, storage management, boost mode', count: 5 },
+          { name: 'Power Management', desc: 'Rest mode optimization, power saving settings, fast boot config', count: 4 },
+          { name: 'Controller Config', desc: 'Input lag reduction, adaptive triggers tuning, haptic optimization', count: 4 },
+          { name: 'Audio Settings', desc: '3D Audio setup, audio delay reduction, headset optimization', count: 3 }
         ]
       }
     };
@@ -1337,7 +1296,6 @@
           (c.count > 0 ? '<div class="tweak-cat-count">' + c.count + ' tweaks</div>' : '') +
         '</div>'
       ).join('');
-      // Fetch rating for this product
       fetch('https://choatix-v2.onrender.com/api/ratings/' + productId)
         .then(r => r.json())
         .then(data => {
@@ -1374,52 +1332,34 @@
     document.addEventListener('keydown', function(e) {
       if (e.key === 'Escape') closeProductModal();
     });
-  </script>
 
-  <script>
-    (function(){
-      const prices = { system:0.49, nvidia:0.79, radeon:0.79, cpu:0.69, memory:0.49, network:0.59, mouse:0.39, keyboard:0.29, audio:0.29, storage:0.39, privacy:0.49, debloat:0.59, gpu:0.69, gaming:0.79, latency:0.59, bcdedit:0.49, usb:0.19, power:0.39 };
-      const toggles = document.querySelectorAll('.cat-toggle');
-      const countEl = document.getElementById('cat-count');
-      const priceEl = document.getElementById('custom-price');
-      function update(){
-        let on=0, total=0;
-        toggles.forEach(t=>{ if(t.classList.contains('on')){ on++; total+=prices[t.dataset.cat]||0.39; }});
-        if(on<1){on=1;total=0.99;}
-        countEl.textContent=on;
-        priceEl.innerHTML='&euro;'+total.toFixed(2);
-      }
-      toggles.forEach(t=>t.addEventListener('click',()=>{ t.classList.toggle('on'); update(); }));
-      update();
-
-      // Fetch real ratings from API
-      fetch('https://choatix-v2.onrender.com/api/ratings')
-        .then(r=>r.json())
-        .then(data=>{
-          document.querySelectorAll('.product-card[data-product]').forEach(card=>{
-            const pid = card.dataset.product;
-            const info = data.products && data.products[pid];
-            if(!info) return;
-            const avg = parseFloat(info.avg)||0;
-            const count = parseInt(info.count)||0;
-            const starsEl = card.querySelector('.stars');
-            const countEl = card.querySelector('.count');
-            if(starsEl){
-              const full = Math.floor(avg);
-              const half = avg - full >= 0.5;
-              let s = '';
-              for(let i=0;i<5;i++){
-                if(i<full) s += '&#9733;';
-                else if(i===full && half) s += '&#9733;';
-                else s += '&#9734;';
-              }
-              starsEl.innerHTML = s;
+    // Fetch real ratings
+    fetch('https://choatix-v2.onrender.com/api/ratings')
+      .then(r=>r.json())
+      .then(data=>{
+        document.querySelectorAll('.product-card[data-product]').forEach(card=>{
+          const pid = card.dataset.product;
+          const info = data.products && data.products[pid];
+          if(!info) return;
+          const avg = parseFloat(info.avg)||0;
+          const count = parseInt(info.count)||0;
+          const starsEl = card.querySelector('.stars');
+          const countEl = card.querySelector('.count');
+          if(starsEl){
+            const full = Math.floor(avg);
+            const half = avg - full >= 0.5;
+            let s = '';
+            for(let i=0;i<5;i++){
+              if(i<full) s += '\u2605';
+              else if(i===full && half) s += '\u2605';
+              else s += '\u2606';
             }
-            if(countEl) countEl.textContent = '('+count+')';
-          });
-        })
-        .catch(()=>{});
-    })();
+            starsEl.innerHTML = s;
+          }
+          if(countEl) countEl.textContent = '('+count+')';
+        });
+      })
+      .catch(()=>{});
   </script>
 
   <!-- PRICING -->
