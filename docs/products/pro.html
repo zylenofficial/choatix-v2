@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title id="pageTitle">Choatix V2 - Product</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --bg: #0a0a0a; --bg2: #111111; --bg3: #181818;
+      --border: rgba(255,255,255,0.06); --border2: rgba(255,255,255,0.1); --border3: rgba(255,255,255,0.15);
+      --text: #fafafa; --text-dim: #555; --text-mid: #888;
+      --green: #00e676; --cyan: #00e5ff;
+    }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+    .nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; padding: 1rem 2rem; display: flex; align-items: center; justify-content: space-between; background: rgba(10,10,10,0.8); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); }
+    .nav-brand { font-size: 1.1rem; font-weight: 900; color: #fff; text-decoration: none; }
+    .nav-brand span { color: var(--green); }
+    .nav-back { font-size: 0.75rem; color: var(--text-dim); text-decoration: none; display: flex; align-items: center; gap: 0.4rem; transition: color 0.2s; }
+    .nav-back:hover { color: #fff; }
+
+    .page { display: flex; min-height: 100vh; padding-top: 60px; }
+
+    .sidebar { width: 320px; min-width: 320px; background: var(--bg2); border-right: 1px solid var(--border); padding: 2rem; display: flex; flex-direction: column; position: sticky; top: 60px; height: calc(100vh - 60px); overflow-y: auto; }
+    .sidebar::-webkit-scrollbar { width: 3px; }
+    .sidebar::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+    .product-badge { display: inline-block; font-size: 0.55rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; padding: 0.25rem 0.6rem; border-radius: 4px; background: rgba(0,230,118,0.1); color: var(--green); margin-bottom: 0.75rem; }
+    .product-badge.purple { background: rgba(124,77,255,0.1); color: #a78bfa; }
+    .product-badge.blue { background: rgba(59,130,246,0.1); color: #60a5fa; }
+    .product-badge.amber { background: rgba(245,158,11,0.1); color: #fbbf24; }
+
+    .product-name { font-size: 1.5rem; font-weight: 900; color: #fff; margin-bottom: 0.25rem; }
+    .product-brand { font-size: 0.65rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 1rem; }
+
+    .product-pricing { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem; }
+    .product-price-old { font-size: 1rem; color: var(--text-dim); text-decoration: line-through; }
+    .product-price { font-size: 1.75rem; font-weight: 900; color: var(--cyan); }
+    .product-save { font-size: 0.6rem; font-weight: 700; color: #00e676; background: rgba(0,230,118,0.1); padding: 0.2rem 0.5rem; border-radius: 4px; }
+
+    .discord-input { margin-bottom: 1.25rem; }
+    .discord-input label { display: block; font-size: 0.7rem; font-weight: 600; color: var(--text-mid); margin-bottom: 0.4rem; }
+    .discord-input input {
+      width: 100%; padding: 0.65rem 0.85rem; border-radius: 8px; border: 1px solid var(--border2);
+      background: var(--bg); color: #fff; font-size: 0.8rem; font-family: inherit;
+      transition: border-color 0.2s; outline: none;
+    }
+    .discord-input input:focus { border-color: var(--cyan); }
+    .discord-input input::placeholder { color: var(--text-dim); }
+
+    .add-to-cart {
+      width: 100%; padding: 0.75rem; border-radius: 8px; border: none; background: var(--cyan);
+      color: #000; font-size: 0.85rem; font-weight: 800; cursor: pointer; transition: all 0.2s;
+      font-family: inherit; text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    .add-to-cart:hover { box-shadow: 0 0 24px rgba(0,229,255,0.3); transform: translateY(-1px); }
+
+    .sidebar-rating { display: flex; align-items: center; gap: 0.4rem; margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid var(--border); }
+    .sidebar-rating .stars { color: #facc15; font-size: 0.8rem; }
+    .sidebar-rating .count { font-size: 0.7rem; color: var(--text-dim); }
+
+    .main { flex: 1; padding: 2.5rem 3rem; max-width: 800px; }
+
+    .section-title { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-dim); margin-bottom: 1rem; }
+
+    .description { font-size: 0.85rem; color: var(--text-mid); line-height: 1.7; margin-bottom: 2rem; }
+
+    .includes-list { list-style: none; display: flex; flex-direction: column; gap: 0.6rem; margin-bottom: 2rem; }
+    .includes-list li { font-size: 0.8rem; color: var(--text-mid); display: flex; align-items: flex-start; gap: 0.6rem; line-height: 1.5; }
+    .includes-list li::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: var(--green); margin-top: 0.4rem; flex-shrink: 0; }
+
+    .tweak-categories { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 2rem; }
+    .tweak-cat {
+      background: var(--bg2); border: 1px solid var(--border); border-radius: 10px;
+      padding: 1rem; transition: border-color 0.2s;
+    }
+    .tweak-cat:hover { border-color: var(--border2); }
+    .tweak-cat-header { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; }
+    .tweak-cat-num {
+      font-size: 0.6rem; font-weight: 800; color: var(--cyan); background: rgba(0,229,255,0.08);
+      width: 22px; height: 22px; border-radius: 5px; display: flex; align-items: center; justify-content: center;
+    }
+    .tweak-cat-name { font-size: 0.8rem; font-weight: 700; color: #fff; }
+    .tweak-cat-desc { font-size: 0.7rem; color: var(--text-dim); line-height: 1.5; }
+    .tweak-cat-count { font-size: 0.6rem; color: var(--text-dim); margin-top: 0.4rem; }
+
+    .tos { font-size: 0.65rem; color: var(--text-dim); margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--border); }
+    .tos strong { color: var(--text-mid); }
+
+    @media (max-width: 768px) {
+      .page { flex-direction: column; }
+      .sidebar { width: 100%; min-width: 0; position: static; height: auto; padding: 1.5rem; }
+      .main { padding: 1.5rem; }
+      .tweak-categories { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="nav">
+    <a href="../index.html" class="nav-brand">choatix<span>.</span></a>
+    <a href="../index.html" class="nav-back">&larr; Back to Store</a>
+  </nav>
+
+  <div class="page">
+    <aside class="sidebar" id="sidebar"></aside>
+    <main class="main" id="main"></main>
+  </div>
+
+  <script>
+    const products = {
+      basic: {
+        name: 'Basic Tweaks', brand: 'Choatix', badge: '', badgeClass: '', price: '\u20ac1.99', oldPrice: '', save: '',
+        description: 'The Basic Tweaks pack includes essential Windows optimizations that improve your PC\'s performance without risky changes. Perfect for beginners who want a cleaner, faster system.',
+        includes: [
+          'Best Windows Settings',
+          'Disable useless features',
+          'Unseen Explorer Tweaks',
+          'Menu kill time fix',
+          'Additional Tweaks',
+          'Windows Update Blocker',
+          'Best System Registry',
+          'Best Power Settings',
+          'Best Latency Optimization',
+          'Disable All Power Saving'
+        ],
+        categories: [
+          { name: 'Windows Settings', desc: 'Explorer optimizations, context menu speed, lock screen, tips, suggestions, search box', count: 22 },
+          { name: 'Privacy Controls', desc: 'Disable telemetry, activity history, location tracking, advertising ID, find my device', count: 15 },
+          { name: 'Bloatware Removal', desc: 'Remove Bing News, Weather, Finance, Feedback Hub, Get Help, disable background apps', count: 12 },
+          { name: 'Power Management', desc: 'Disable hibernation, sleep mode, set high performance power plan', count: 8 },
+          { name: 'Boot Optimization', desc: 'Fast boot, quiet boot, boot menu policy, no integrity checks', count: 6 },
+          { name: 'Service Cleanup', desc: 'Disable diagnostic tracking, remote registry, security center, delivery optimization', count: 10 }
+        ],
+        tos: 'Windows 10/11 supported. Reversible with system restore.'
+      },
+      pro: {
+        name: 'Pro Tweaks', brand: 'Choatix', badge: '', badgeClass: '', price: '\u20ac3.99', oldPrice: '\u20ac5.99', save: 'SAVE 33%',
+        description: 'Pro Tweaking Panel: 413+ Tweaks, Significant FPS Boost, Close to 0 Input Delay, Overall Performance Boost. The most popular pack for competitive gamers.',
+        includes: [
+          'Best Windows Settings',
+          'Best System Registry',
+          'Unseen Explorer Tweaks',
+          'Best Network Settings',
+          'Disable All Power Saving',
+          'Custom Power Plan',
+          'Best Power Settings',
+          'Best Performance Tweaks',
+          'Best Latency Optimization',
+          'Custom Graphics Driver',
+          'Best BCDEdit',
+          'NVIDIA GPU Tweaks',
+          'Radeon GPU Tweaks',
+          'Complete Windows Debloat',
+          'Complete Sound Optimization (Lowest Sound Latency)',
+          'Better Alt Tab',
+          '+ Tons of extras not listed & multiple updates a month.'
+        ],
+        categories: [
+          { name: 'NVIDIA GPU Tuning', desc: 'Max performance mode, power mizer, low latency, threaded optimization, TDR control', count: 14 },
+          { name: 'CPU Optimization', desc: 'Core parking disabled, power throttling off, max processor state, C-state control', count: 10 },
+          { name: 'Memory Management', desc: 'Paging executive disabled, large system cache, memory compression off, page lock limit', count: 8 },
+          { name: 'Network Latency', desc: 'Nagle algorithm off, TCP ack frequency, NetBIOS disabled, LLMNR off, DNS optimization', count: 12 },
+          { name: 'Input Precision', desc: 'Mouse acceleration off, raw input, keyboard repeat rate max, sticky/filter keys off', count: 10 },
+          { name: 'Process Priority', desc: 'CSRSS realtime priority, DWM high priority, multimedia scheduling, timer resolution', count: 8 }
+        ],
+        outcome: 'FPS Boost, Reduction in Delay, Overall better performing machine.',
+        tos: 'Windows 10/11 supported. Reversible with system restore.'
+      },
+      extreme: {
+        name: 'Extreme Tweaks', brand: 'Choatix', badge: 'Best Seller', badgeClass: '', price: '\u20ac5.99', oldPrice: '\u20ac9.99', save: 'SAVE 40%',
+        description: 'The complete optimization experience. Every tweak we offer, maximum performance with aggressive system, GPU, CPU, network, and storage optimizations. For those who want the absolute best.',
+        includes: [
+          'Everything in Pro',
+          'Maximum GPU Performance',
+          'Extreme CPU Optimization',
+          'Deep Memory Tweaks',
+          'Network Ultra Low Latency',
+          'BCD Edit Optimizations',
+          'Driver Level Tuning',
+          'Hardware GPU Scheduling',
+          'C-States Disabled',
+          'Power Throttling Off',
+          'Ultimate Performance Plan',
+          'Complete System Debloat',
+          '+ Everything else included'
+        ],
+        categories: [
+          { name: 'Maximum GPU', desc: 'Ultra low latency, Reflex mode, hardware scheduling, max pre-rendered frames, power mizer forced', count: 18 },
+          { name: 'Extreme CPU', desc: 'C-states disabled, duty cycling off, max boost, core parking 100%, throttling off', count: 14 },
+          { name: 'Deep Memory', desc: 'Paging executive, page file cleared on shutdown, memory compression disabled, lock limit', count: 10 },
+          { name: 'Network Ultra', desc: 'All Pro network + network throttling index max, multimedia scheduling, Nagle fully off', count: 16 },
+          { name: 'BCD Edit', desc: 'Boot config: no integrity checks, quiet boot, no debug, fast boot policy', count: 8 },
+          { name: 'Driver Level', desc: 'NVIDIA max performance forced, TDR disabled, hardware GPU scheduling, power state locked', count: 12 }
+        ],
+        outcome: 'Maximum FPS, Zero Input Delay, Best Possible Performance.',
+        tos: 'Windows 10/11 supported. Some features require restart.'
+      },
+      precision: {
+        name: 'Precision Tweaks', brand: 'Choatix', badge: 'Better Aim', badgeClass: 'purple', price: '\u20ac2.99', oldPrice: '', save: '',
+        description: 'Built for competitive FPS gamers. Mouse, keyboard, display, network, and audio latency optimizations for the fastest possible response time. Get the edge in every game.',
+        includes: [
+          'Mouse Acceleration Off',
+          '1:1 Raw Mouse Tracking',
+          'Keyboard Repeat Rate Max',
+          'NVIDIA Reflex Enabled',
+          'Low Latency Ultra Mode',
+          'DWM Composition Off',
+          'Max Refresh Rate Forced',
+          'Nagle Algorithm Disabled',
+          'Audio Enhancements Off',
+          'Network Throttling Max',
+          '+ More input optimizations'
+        ],
+        categories: [
+          { name: 'Mouse Precision', desc: 'Acceleration off, 1:1 tracking, threshold zero, hover time 10ms, double-click speed', count: 7 },
+          { name: 'Keyboard Speed', desc: 'Repeat rate max, delay zero, sticky keys off, filter keys off, toggle keys off', count: 6 },
+          { name: 'GPU Latency', desc: 'Low latency ultra, pre-rendered frames 1, Reflex enabled, threaded optimization', count: 6 },
+          { name: 'Display Latency', desc: 'DWM composition off, max refresh rate forced, flip model optimized', count: 4 },
+          { name: 'Network Latency', desc: 'Nagle off, TCP ack frequency, network throttling max, LLMNR off, DNS flush', count: 8 },
+          { name: 'Audio Latency', desc: 'Audio enhancements disabled, buffer size minimum, effects off', count: 4 }
+        ],
+        outcome: 'Zero Input Delay, Better Aim, Faster Response Time.',
+        tos: 'Windows 10/11 supported. Works with any mouse/keyboard.'
+      },
+      power: {
+        name: 'Choatix Premium Power Plan', brand: 'Choatix', badge: 'New', badgeClass: 'amber', price: '\u20ac3.99', oldPrice: '', save: '',
+        description: 'Custom power plan better than Ultimate Performance. Maximum FPS while using less electricity. Save money on your power bills while gaming. Our exclusive power optimization.',
+        includes: [
+          'Choatix Custom Power Plan',
+          'Better than Ultimate Performance',
+          'CPU P-State Optimization',
+          'GPU Adaptive Power',
+          'NVMe Idle States',
+          'HDD Spin-Down Timers',
+          'USB Selective Suspend',
+          'Display DPMS Settings',
+          'Lower Idle Power Usage',
+          'Same Max Performance Under Load',
+          '+ More power optimizations'
+        ],
+        categories: [
+          { name: 'Choatix Power Plan', desc: 'Custom power plan with optimized voltage curves, faster boost, lower idle power', count: 12 },
+          { name: 'CPU Efficiency', desc: 'Per-core P-state control, efficient turbo boost, C-state optimization for gaming', count: 8 },
+          { name: 'GPU Power Saving', desc: 'NVIDIA adaptive power, clock speed management, memory p-state optimization', count: 6 },
+          { name: 'Storage Power', desc: 'NVMe idle states, HDD spin-down timers, SSD power management', count: 5 },
+          { name: 'USB Power', desc: 'USB selective suspend, hub power saving, device wake control', count: 4 },
+          { name: 'Display Power', desc: 'Monitor brightness optimization, DPMS settings, refresh rate management', count: 5 }
+        ],
+        outcome: 'Lower Electricity Bills, Same Gaming Performance, Better Efficiency.',
+        tos: 'Windows 10/11 supported. Reversible anytime.'
+      },
+      full: {
+        name: 'Full Optimization', brand: 'Choatix', badge: 'Save Bills', badgeClass: 'amber', price: 'From \u20ac9.99', oldPrice: '', save: '',
+        description: 'Everything included plus a custom optimization built for your system. Complete PC overhaul with deep clean, all optimizations, and priority support. The ultimate package.',
+        includes: [
+          'All 461+ Tweaks From Every Pack',
+          'Custom Batch Script For Your Hardware',
+          'Deep Clean (Temp, Cache, DNS)',
+          'Ultimate Performance Power Plan',
+          'Complete Windows Debloat',
+          'Priority Discord Support',
+          'Hardware-Specific Optimizations',
+          'Custom Optimization Requests',
+          'Multiple Updates Per Month',
+          '+ Everything else included'
+        ],
+        categories: [
+          { name: 'Everything Included', desc: 'All Basic, Pro, Extreme, Precision, and Power tweaks combined', count: 461 },
+          { name: 'Custom .bat File', desc: 'Personalized batch script built for your specific hardware and Windows version', count: 1 },
+          { name: 'Deep Clean', desc: 'Temp files, thumbnail cache, icon cache, recycle bin, DNS cache, system cleanup', count: 12 },
+          { name: 'Ultimate Power Plan', desc: 'Ultimate Performance plan activated, all power saving disabled, max boost', count: 8 },
+          { name: 'Advanced Debloat', desc: 'Windows Store apps removed, background access disabled, auto-updates off, widgets off', count: 18 },
+          { name: 'Priority Support', desc: 'Direct Discord support, custom optimization requests, hardware-specific tweaks', count: 0 }
+        ],
+        outcome: 'Complete PC Overhaul, Maximum Performance, Priority Support.',
+        tos: 'Windows 10/11 supported. Custom builds take 24-48 hours.'
+      }
+    };
+
+    function getUrlParam(name) {
+      const params = new URLSearchParams(window.location.search);
+      return params.get(name);
+    }
+
+    function render() {
+      const id = getUrlParam('id') || 'pro';
+      const p = products[id];
+      if (!p) { document.body.innerHTML = '<p style="padding:4rem;text-align:center;color:#666;">Product not found.</p>'; return; }
+
+      document.getElementById('pageTitle').textContent = 'Choatix V2 - ' + p.name;
+
+      const badgeHtml = p.badge ? '<div class="product-badge ' + p.badgeClass + '">' + p.badge + '</div>' : '';
+      const oldPriceHtml = p.oldPrice ? '<span class="product-price-old">' + p.oldPrice + '</span>' : '';
+      const saveHtml = p.save ? '<span class="product-save">' + p.save + '</span>' : '';
+      const outcomeHtml = p.outcome ? '<div style="margin-top:1rem;"><div class="section-title">Outcome</div><p style="font-size:0.8rem;color:var(--green);font-weight:600;">' + p.outcome + '</p></div>' : '';
+
+      document.getElementById('sidebar').innerHTML =
+        badgeHtml +
+        '<div class="product-name">' + p.name + '</div>' +
+        '<div class="product-brand">by ' + p.brand + '</div>' +
+        '<div class="product-pricing">' + oldPriceHtml + '<span class="product-price">' + p.price + '</span>' + saveHtml + '</div>' +
+        '<div class="discord-input">' +
+          '<label>Discord Username</label>' +
+          '<input type="text" placeholder="username" id="discordInput">' +
+        '</div>' +
+        '<button class="add-to-cart" onclick="addToCart(\'' + id + '\')">Add to Cart</button>' +
+        '<div class="sidebar-rating"><span class="stars" id="sidebarStars"></span><span class="count" id="sidebarCount"></span></div>';
+
+      document.getElementById('main').innerHTML =
+        '<div class="section-title">Pro Tweaking Panel: ' + (p.categories.reduce((a,c)=>a+c.count,0)) + '+ Tweaks, Significant FPS Boost, Close to 0 Input Delay, Overall Performance Boost.</div>' +
+        '<div class="description">' + p.description + '</div>' +
+        '<div class="section-title">Includes:</div>' +
+        '<ul class="includes-list">' + p.includes.map(i => '<li>' + i + '</li>').join('') + '</ul>' +
+        outcomeHtml +
+        '<div class="section-title">What\'s Included</div>' +
+        '<div class="tweak-categories">' +
+          p.categories.map((c, i) =>
+            '<div class="tweak-cat">' +
+              '<div class="tweak-cat-header"><div class="tweak-cat-num">' + (i+1) + '</div><div class="tweak-cat-name">' + c.name + '</div></div>' +
+              '<div class="tweak-cat-desc">' + c.desc + '</div>' +
+              '<div class="tweak-cat-count">' + c.count + ' tweaks</div>' +
+            '</div>'
+          ).join('') +
+        '</div>' +
+        '<div class="tos"><strong>TOS:</strong> ' + p.tos + '</div>';
+
+      fetch('https://choatix-v2.onrender.com/api/ratings/' + id)
+        .then(r => r.json())
+        .then(data => {
+          const avg = parseFloat(data.avg) || 0;
+          const count = parseInt(data.count) || 0;
+          const full = Math.floor(avg);
+          const half = avg - full >= 0.5;
+          let s = '';
+          for (let i = 0; i < 5; i++) {
+            if (i < full) s += '\u2605';
+            else if (i === full && half) s += '\u2605';
+            else s += '\u2606';
+          }
+          document.getElementById('sidebarStars').textContent = s;
+          document.getElementById('sidebarCount').textContent = '(' + count + ')';
+        })
+        .catch(() => {
+          document.getElementById('sidebarStars').textContent = '\u2606\u2606\u2606\u2606\u2606';
+          document.getElementById('sidebarCount').textContent = '(0)';
+        });
+    }
+
+    function addToCart(productId) {
+      const username = document.getElementById('discordInput').value.trim();
+      if (!username) { alert('Please enter your Discord username.'); return; }
+      window.location.href = '../index.html#pricing';
+    }
+
+    render();
+  </script>
+</body>
+</html>
