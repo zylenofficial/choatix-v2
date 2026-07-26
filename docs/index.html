@@ -1613,13 +1613,53 @@
     }
     window.closeCart = closeCart;
 
-    function checkout() {
+    async function checkout() {
       if (cart.length === 0) return;
-      const items = cart.map(i => `${i.name} x${i.qty} = \u20ac${(i.price * i.qty).toFixed(2)}`).join('%0A');
-      const total = getCartTotal().toFixed(2);
-      const msg = encodeURIComponent(`Order:%0A${items}%0ATotal: \u20ac${total}%0A%0APlease provide your Discord username for delivery.`);
-      window.open(`https://discord.gg/AhEK85REhG?modal=orders=${msg}`, '_blank');
-      alert('Redirecting to Discord to complete your order. Send the order summary in #orders channel.');
+      const username = localStorage.getItem('username') || prompt('Enter your Discord username for key delivery:');
+      if (!username) return;
+
+      const checkout = document.getElementById('cartCheckout');
+      checkout.textContent = 'Redirecting...';
+      checkout.disabled = true;
+
+      // If single item, use direct Stripe checkout
+      if (cart.length === 1) {
+        const item = cart[0];
+        try {
+          const r = await fetch('https://choatix-v2.onrender.com/api/checkout', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ productId: item.id, discordUsername: username })
+          });
+          const data = await r.json();
+          if (data.url) {
+            localStorage.removeItem(CART_KEY);
+            window.location.href = data.url;
+            return;
+          }
+        } catch (e) {}
+      }
+
+      // Multiple items: checkout one by one
+      for (const item of cart) {
+        try {
+          const r = await fetch('https://choatix-v2.onrender.com/api/checkout', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ productId: item.id, discordUsername: username })
+          });
+          const data = await r.json();
+          if (data.url) {
+            localStorage.removeItem(CART_KEY);
+            window.location.href = data.url;
+            return;
+          }
+        } catch (e) {}
+      }
+
+      checkout.textContent = 'Checkout via Discord';
+      checkout.disabled = false;
+      alert('Checkout failed. Please try again or contact support on Discord.');
     }
     window.checkout = checkout;
 
