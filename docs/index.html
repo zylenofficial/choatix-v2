@@ -728,7 +728,114 @@
     .reveal-d3 { transition-delay: 0.24s; }
     .reveal-d4 { transition-delay: 0.32s; }
 
-    /* ─── RESPONSIVE ──────────────────────────── */
+    /* ─── CART ──────────────────────────────────── */
+    .cart-btn {
+      position: relative; width: 36px; height: 36px; border-radius: 8px;
+      background: transparent; border: 1px solid var(--border3); color: var(--text-mid);
+      display: flex; align-items: center; justify-content: center; cursor: pointer;
+      transition: all 0.2s; font-size: 1rem; text-decoration: none;
+    }
+    .cart-btn:hover { border-color: var(--text-dim); color: var(--text); background: rgba(255,255,255,0.03); }
+    .cart-badge {
+      position: absolute; top: -4px; right: -4px; min-width: 16px; height: 16px;
+      border-radius: 8px; background: var(--green); color: #000; font-size: 0.55rem;
+      font-weight: 800; display: flex; align-items: center; justify-content: center;
+      padding: 0 4px; opacity: 0; transform: scale(0); transition: all 0.25s;
+    }
+    .cart-badge.show { opacity: 1; transform: scale(1); }
+
+    .cart-overlay {
+      position: fixed; inset: 0; z-index: 10002; background: rgba(0,0,0,0.6);
+      opacity: 0; pointer-events: none; transition: opacity 0.3s;
+    }
+    .cart-overlay.open { opacity: 1; pointer-events: all; }
+
+    .cart-sidebar {
+      position: fixed; top: 0; right: 0; bottom: 0; z-index: 10003;
+      width: 380px; max-width: 90vw; background: var(--bg2);
+      border-left: 1px solid var(--border2);
+      transform: translateX(100%); transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex; flex-direction: column;
+    }
+    .cart-sidebar.open { transform: translateX(0); }
+
+    .cart-head {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border);
+    }
+    .cart-head h3 { font-size: 1rem; font-weight: 700; }
+    .cart-close {
+      width: 28px; height: 28px; border-radius: 6px; background: transparent;
+      border: 1px solid var(--border2); color: var(--text-dim); font-size: 0.8rem;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: all 0.15s;
+    }
+    .cart-close:hover { background: rgba(255,255,255,0.05); color: var(--text); }
+
+    .cart-items { flex: 1; overflow-y: auto; padding: 1rem 1.5rem; }
+    .cart-empty {
+      text-align: center; padding: 3rem 1rem; color: var(--text-dim); font-size: 0.85rem;
+    }
+    .cart-empty-icon { font-size: 2.5rem; margin-bottom: 0.75rem; opacity: 0.3; }
+
+    .cart-item {
+      display: flex; align-items: center; gap: 1rem;
+      padding: 0.85rem 0; border-bottom: 1px solid var(--border);
+    }
+    .cart-item:last-child { border-bottom: none; }
+    .cart-item-icon {
+      width: 40px; height: 40px; border-radius: 8px; background: var(--bg4);
+      border: 1px solid var(--border2); display: flex; align-items: center;
+      justify-content: center; font-size: 0.9rem; flex-shrink: 0;
+    }
+    .cart-item-info { flex: 1; min-width: 0; }
+    .cart-item-name { font-size: 0.82rem; font-weight: 600; color: var(--text); }
+    .cart-item-price { font-size: 0.75rem; color: var(--green); font-weight: 600; margin-top: 2px; }
+    .cart-item-qty {
+      display: flex; align-items: center; gap: 0; border: 1px solid var(--border2); border-radius: 6px; overflow: hidden;
+    }
+    .cart-item-qty button {
+      width: 26px; height: 26px; border: none; background: transparent;
+      color: var(--text-mid); font-size: 0.75rem; cursor: pointer; transition: background 0.15s;
+    }
+    .cart-item-qty button:hover { background: var(--bg4); color: var(--text); }
+    .cart-item-qty span {
+      width: 24px; text-align: center; font-size: 0.72rem; font-weight: 600; color: var(--text);
+      border-left: 1px solid var(--border2); border-right: 1px solid var(--border2);
+      line-height: 26px;
+    }
+    .cart-item-remove {
+      width: 24px; height: 24px; border: none; background: transparent;
+      color: var(--text-dim); font-size: 0.7rem; cursor: pointer; border-radius: 4px;
+      transition: all 0.15s;
+    }
+    .cart-item-remove:hover { background: rgba(255,82,82,0.1); color: #ff5252; }
+
+    .cart-foot { padding: 1.25rem 1.5rem; border-top: 1px solid var(--border); }
+    .cart-total {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 1rem;
+    }
+    .cart-total-label { font-size: 0.85rem; color: var(--text-mid); font-weight: 500; }
+    .cart-total-price { font-size: 1.3rem; font-weight: 800; color: var(--text); }
+    .cart-checkout {
+      width: 100%; padding: 0.75rem; border-radius: 8px; border: none;
+      background: var(--green); color: #000; font-size: 0.85rem; font-weight: 700;
+      cursor: pointer; transition: all 0.2s; font-family: inherit;
+    }
+    .cart-checkout:hover { background: #00c864; transform: translateY(-1px); }
+    .cart-checkout:disabled { opacity: 0.4; cursor: default; transform: none; }
+
+    .product-card .add-cart-btn {
+      display: inline-block; padding: 0.5rem 1.25rem; border: 1px solid var(--green); border-radius: 6px;
+      color: #fff; font-size: 0.7rem; font-weight: 600; text-decoration: none;
+      transition: all 0.2s; background: transparent; cursor: pointer; font-family: inherit;
+    }
+    .product-card .add-cart-btn:hover { background: var(--green); color: #000; }
+    .product-card.featured .add-cart-btn { background: var(--green); color: #000; }
+    .product-card.featured .add-cart-btn:hover { box-shadow: 0 0 20px rgba(0,230,118,0.3); }
+
+    @media (max-width: 900px) { .features-grid { grid-template-columns: repeat(2, 1fr); } .tweaks-grid { grid-template-columns: repeat(3, 1fr); } .products-grid { grid-template-columns: repeat(3, 1fr); } .products-grid.row-2 { grid-template-columns: repeat(2, 1fr); max-width: 100%; } }
     @media (max-width: 900px) { .features-grid { grid-template-columns: repeat(2, 1fr); } .tweaks-grid { grid-template-columns: repeat(3, 1fr); } .products-grid { grid-template-columns: repeat(3, 1fr); } .products-grid.row-2 { grid-template-columns: repeat(2, 1fr); max-width: 100%; } }
     @media (max-width: 768px) {
       nav { padding: 0 1.5rem; } .nav-links { display: none; }
@@ -766,6 +873,10 @@
       <a href="#team">Team</a>
       <a href="#pricing">Pricing</a>
       <a href="https://discord.gg/AhEK85REhG" target="_blank">Discord</a>
+      <button class="cart-btn" onclick="openCart()" id="cartBtn">
+        &#128722;
+        <span class="cart-badge" id="cartBadge">0</span>
+      </button>
       <div class="user-menu" id="userMenu" style="display:none">
         <a href="#" class="user-btn" onclick="toggleDropdown(event)">
           <img class="user-avatar" id="userAvatar" src="" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
@@ -985,7 +1096,7 @@
 
     <!-- Row 1: 5 products -->
     <div class="products-grid reveal">
-      <a href="products/basic.html" data-product="basic" class="product-card" style="text-decoration:none;color:inherit;">
+      <div data-product="basic" class="product-card" style="cursor:default">
         <div class="product-box"><div class="product-box-inner">
           <div class="box-face box-front"><div class="box-logo">Choatix</div><div class="box-line"></div><div class="box-title">Basic<br>Tweaks</div><div class="box-sub">Essential</div></div>
           <div class="box-face box-side"></div><div class="box-face box-top"></div>
@@ -994,10 +1105,10 @@
         <div class="product-brand">Choatix</div>
         <div class="product-stars"><span class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</span><span class="count">(0)</span></div>
         <div class="product-price">&euro;1.99</div>
-        <span class="product-btn">View Details</span>
-      </a>
+        <button class="add-cart-btn" onclick="addToCart('basic','Basic Tweaks',1.99)">Add to Cart</button>
+      </div>
 
-      <a href="products/pro.html" data-product="pro" class="product-card" style="text-decoration:none;color:inherit;">
+      <div data-product="pro" class="product-card" style="cursor:default">
         <div class="product-box"><div class="product-box-inner">
           <div class="box-face box-front"><div class="box-logo">Choatix</div><div class="box-line"></div><div class="box-title">Pro<br>Tweaks</div><div class="box-sub">Advanced</div></div>
           <div class="box-face box-side"></div><div class="box-face box-top"></div>
@@ -1006,10 +1117,10 @@
         <div class="product-brand">Choatix</div>
         <div class="product-stars"><span class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</span><span class="count">(0)</span></div>
         <div class="product-price">&euro;3.99</div>
-        <span class="product-btn">View Details</span>
-      </a>
+        <button class="add-cart-btn" onclick="addToCart('pro','Pro Tweaks',3.99)">Add to Cart</button>
+      </div>
 
-      <a href="products/extreme.html" data-product="extreme" class="product-card featured" style="text-decoration:none;color:inherit;">
+      <div data-product="extreme" class="product-card featured" style="cursor:default">
         <div class="product-box"><div class="product-box-inner">
           <div class="box-face box-front"><div class="box-logo">Choatix</div><div class="box-line"></div><div class="box-title">Extreme<br>Tweaks</div><div class="box-sub">Maximum</div></div>
           <div class="box-face box-side"></div><div class="box-face box-top"></div>
@@ -1018,10 +1129,10 @@
         <div class="product-brand">Choatix</div>
         <div class="product-stars"><span class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</span><span class="count">(0)</span></div>
         <div class="product-price">&euro;5.99</div>
-        <span class="product-btn">View Details</span>
-      </a>
+        <button class="add-cart-btn" onclick="addToCart('extreme','Extreme Tweaks',5.99)">Add to Cart</button>
+      </div>
 
-      <a href="products/precision.html" data-product="precision" class="product-card badge-aim" style="text-decoration:none;color:inherit;">
+      <div data-product="precision" class="product-card badge-aim" style="cursor:default">
         <div class="product-box"><div class="product-box-inner">
           <div class="box-face box-front"><div class="box-logo">Choatix</div><div class="box-line"></div><div class="box-title">Precision<br>Tweaks</div><div class="box-sub">Input</div></div>
           <div class="box-face box-side"></div><div class="box-face box-top"></div>
@@ -1030,10 +1141,10 @@
         <div class="product-brand">Choatix</div>
         <div class="product-stars"><span class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</span><span class="count">(0)</span></div>
         <div class="product-price">&euro;2.99</div>
-        <span class="product-btn">View Details</span>
-      </a>
+        <button class="add-cart-btn" onclick="addToCart('precision','Precision Tweaks',2.99)">Add to Cart</button>
+      </div>
 
-      <a href="products/power.html" data-product="power" class="product-card badge-new" style="text-decoration:none;color:inherit;">
+      <div data-product="power" class="product-card badge-new" style="cursor:default">
         <div class="product-box"><div class="product-box-inner">
           <div class="box-face box-front"><div class="box-logo">Choatix</div><div class="box-line"></div><div class="box-title">Premium<br>Power Plan</div><div class="box-sub">Efficiency</div></div>
           <div class="box-face box-side"></div><div class="box-face box-top"></div>
@@ -1042,13 +1153,13 @@
         <div class="product-brand">Choatix</div>
         <div class="product-stars"><span class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</span><span class="count">(0)</span></div>
         <div class="product-price">&euro;3.99</div>
-        <span class="product-btn">View Details</span>
-      </a>
+        <button class="add-cart-btn" onclick="addToCart('power','Power Plan',3.99)">Add to Cart</button>
+      </div>
     </div>
 
     <!-- Row 2: 1 product -->
     <div class="products-grid row-2 reveal">
-      <a href="products/full.html" data-product="full" class="product-card badge-save" style="text-decoration:none;color:inherit;">
+      <div data-product="full" class="product-card badge-save" style="cursor:default">
         <div class="product-box"><div class="product-box-inner">
           <div class="box-face box-front"><div class="box-logo">Choatix</div><div class="box-line"></div><div class="box-title">Full<br>Optimization</div><div class="box-sub">Complete</div></div>
           <div class="box-face box-side"></div><div class="box-face box-top"></div>
@@ -1057,8 +1168,8 @@
         <div class="product-brand">Choatix</div>
         <div class="product-stars"><span class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</span><span class="count">(0)</span></div>
         <div class="product-price"><span class="from">From</span>&euro;9.99</div>
-        <span class="product-btn">View Details</span>
-      </a>
+        <button class="add-cart-btn" onclick="addToCart('full','Full Optimization',9.99)">Add to Cart</button>
+      </div>
     </div>
   </section>
 
@@ -1143,6 +1254,23 @@
       <a href="https://discord.gg/AhEK85REhG" class="btn btn-discord" target="_blank">Join Discord</a>
     </div>
   </section>
+
+  <!-- CART -->
+  <div class="cart-overlay" id="cartOverlay" onclick="closeCart()"></div>
+  <div class="cart-sidebar" id="cartSidebar">
+    <div class="cart-head">
+      <h3>Shopping Cart</h3>
+      <button class="cart-close" onclick="closeCart()">&#10005;</button>
+    </div>
+    <div class="cart-items" id="cartItems"></div>
+    <div class="cart-foot">
+      <div class="cart-total">
+        <span class="cart-total-label">Total</span>
+        <span class="cart-total-price" id="cartTotal">&euro;0.00</span>
+      </div>
+      <button class="cart-checkout" id="cartCheckout" onclick="checkout()" disabled>Checkout via Discord</button>
+    </div>
+  </div>
 
   <!-- FOOTER -->
   <footer>
@@ -1392,7 +1520,114 @@
       document.body.style.overflow = '';
     }
 
-    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+    // ── Shopping Cart ──
+    const CART_KEY = 'choatix_cart';
+    let cart = JSON.parse(localStorage.getItem(CART_KEY) || '[]');
+
+    function saveCart() {
+      localStorage.setItem(CART_KEY, JSON.stringify(cart));
+      updateCartBadge();
+    }
+
+    function updateCartBadge() {
+      const badge = document.getElementById('cartBadge');
+      const count = cart.reduce((a, i) => a + i.qty, 0);
+      badge.textContent = count;
+      badge.classList.toggle('show', count > 0);
+    }
+
+    function addToCart(id, name, price) {
+      const existing = cart.find(i => i.id === id);
+      if (existing) { existing.qty++; }
+      else { cart.push({ id, name, price, qty: 1 }); }
+      saveCart();
+      renderCart();
+      openCart();
+    }
+    window.addToCart = addToCart;
+
+    function removeFromCart(id) {
+      cart = cart.filter(i => i.id !== id);
+      saveCart();
+      renderCart();
+    }
+    window.removeFromCart = removeFromCart;
+
+    function changeQty(id, delta) {
+      const item = cart.find(i => i.id === id);
+      if (!item) return;
+      item.qty += delta;
+      if (item.qty <= 0) { removeFromCart(id); return; }
+      saveCart();
+      renderCart();
+    }
+    window.changeQty = changeQty;
+
+    function getCartTotal() {
+      return cart.reduce((a, i) => a + (i.price * i.qty), 0);
+    }
+
+    function renderCart() {
+      const el = document.getElementById('cartItems');
+      const total = document.getElementById('cartTotal');
+      const checkout = document.getElementById('cartCheckout');
+
+      if (cart.length === 0) {
+        el.innerHTML = '<div class="cart-empty"><div class="cart-empty-icon">&#128722;</div>Your cart is empty</div>';
+        total.innerHTML = '&euro;0.00';
+        checkout.disabled = true;
+        return;
+      }
+
+      el.innerHTML = cart.map(i => `
+        <div class="cart-item">
+          <div class="cart-item-icon">&#9733;</div>
+          <div class="cart-item-info">
+            <div class="cart-item-name">${i.name}</div>
+            <div class="cart-item-price">&euro;${i.price.toFixed(2)}</div>
+          </div>
+          <div class="cart-item-qty">
+            <button onclick="changeQty('${i.id}',-1)">&#8722;</button>
+            <span>${i.qty}</span>
+            <button onclick="changeQty('${i.id}',1)">+</button>
+          </div>
+          <button class="cart-item-remove" onclick="removeFromCart('${i.id}')">&#10005;</button>
+        </div>
+      `).join('');
+
+      total.innerHTML = '&euro;' + getCartTotal().toFixed(2);
+      checkout.disabled = false;
+    }
+
+    function openCart() {
+      document.getElementById('cartOverlay').classList.add('open');
+      document.getElementById('cartSidebar').classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+    window.openCart = openCart;
+
+    function closeCart() {
+      document.getElementById('cartOverlay').classList.remove('open');
+      document.getElementById('cartSidebar').classList.remove('open');
+      document.body.style.overflow = '';
+    }
+    window.closeCart = closeCart;
+
+    function checkout() {
+      if (cart.length === 0) return;
+      const items = cart.map(i => `${i.name} x${i.qty} = \u20ac${(i.price * i.qty).toFixed(2)}`).join('%0A');
+      const total = getCartTotal().toFixed(2);
+      const msg = encodeURIComponent(`Order:%0A${items}%0ATotal: \u20ac${total}%0A%0APlease provide your Discord username for delivery.`);
+      window.open(`https://discord.gg/AhEK85REhG?modal=orders=${msg}`, '_blank');
+      alert('Redirecting to Discord to complete your order. Send the order summary in #orders channel.');
+    }
+    window.checkout = checkout;
+
+    // Init cart
+    updateCartBadge();
+    renderCart();
+
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeModal(); closeCart(); } });
 
     // ── Fetch team avatars ──
     const TEAM_IDS = ['1014494449809772544','1032970883192606780','398137085430726656','1322475983386837006','1402203036914290764'];
