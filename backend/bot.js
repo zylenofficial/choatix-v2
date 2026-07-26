@@ -196,6 +196,26 @@ async function registerCommands() {
       .addStringOption(option =>
         option.setName('review').setDescription('Your review (optional)').setRequired(false)
       ),
+    new SlashCommandBuilder()
+      .setName('deliver')
+      .setDescription('Deliver a product key after PayPal payment (admin)')
+      .addStringOption(option =>
+        option.setName('username').setDescription('Discord username of buyer').setRequired(true)
+      )
+      .addStringOption(option =>
+        option.setName('product').setDescription('Product').setRequired(true)
+          .addChoices(
+            { name: 'Basic Tweaks', value: 'basic' },
+            { name: 'Pro Tweaks', value: 'pro' },
+            { name: 'Extreme Tweaks', value: 'extreme' },
+            { name: 'Precision Tweaks', value: 'precision' },
+            { name: 'Premium Power Plan', value: 'power' },
+            { name: 'Full Optimization', value: 'full' }
+          )
+      ),
+    new SlashCommandBuilder()
+      .setName('claim')
+      .setDescription('Claim your key after purchasing on the website'),
   ];
 
   const rest = new REST({ version: '10' }).setToken(BOT_TOKEN);
@@ -508,9 +528,10 @@ client.on('interactionCreate', async (interaction) => {
         { name: '🔑 License', value: '`/redeem` — Redeem a license key\n`/status` — Check your license\n`/unlink` — Unlink your license', inline: false },
         { name: '🔗 Referrals', value: '`/refer` — Get your referral code\n`/redeem-referral` — Redeem a referral code', inline: false },
         { name: '💰 Coins & Quests', value: '`/daily` — View daily quests\n`/balance` — Check coin balance\n`/buy-pro` — Spend coins for Pro access\n`/coins-leaderboard` — Top coin earners', inline: false },
+        { name: '🛒 Purchase', value: '`/claim` — Claim your key after website purchase', inline: false },
         { name: '🎉 Fun', value: '`/giveaway` — Start a giveaway (admin)\n`/profile` — View your profile', inline: false },
         { name: 'ℹ️ Info', value: '`/help` — This message\n`/ping` — Bot latency\n`/invite` — Server invite\n`/download` — Download Choatix V2\n`/changelog` — Latest updates', inline: false },
-        { name: '🛠️ Admin', value: '`/generate-key` — Generate keys\n`/revoke` — Revoke a key\n`/announce` — Send announcement\n`/stats` — Server statistics\n`/broadcast` — DM all users', inline: false },
+        { name: '🛠️ Admin', value: '`/generate-key` — Generate keys\n`/deliver` — Deliver key after PayPal payment\n`/revoke` — Revoke a key\n`/announce` — Send announcement\n`/stats` — Server statistics\n`/broadcast` — DM all users', inline: false },
       )
       .setColor(0xffffff)
       .setFooter({ text: 'Choatix V2 — Gaming Optimization' });
@@ -945,6 +966,105 @@ client.on('interactionCreate', async (interaction) => {
       } else {
         await interaction.reply(msg).catch(() => {});
       }
+    }
+  }
+
+  if (interaction.isChatInputCommand() && interaction.commandName === 'deliver') {
+    const ADMIN_IDS = ['1014494449809772544', '1520176133461512324', '1322475983386837006'];
+    if (!ADMIN_IDS.includes(interaction.user.id)) {
+      return interaction.reply({ content: '❌ Admin only.', ephemeral: true });
+    }
+    await interaction.deferReply();
+    const username = interaction.options.getString('username');
+    const product = interaction.options.getString('product');
+
+    const PRODUCTS = {
+      basic:     { name: 'Basic Tweaks',       tier: 'PRO' },
+      pro:       { name: 'Pro Tweaks',          tier: 'PRO' },
+      extreme:   { name: 'Extreme Tweaks',      tier: 'PREMIUM' },
+      precision: { name: 'Precision Tweaks',    tier: 'PRO' },
+      power:     { name: 'Premium Power Plan',  tier: 'PRO' },
+      full:      { name: 'Full Optimization',   tier: 'PREMIUM' },
+    };
+
+    const p = PRODUCTS[product];
+    if (!p) return interaction.editReply({ content: '❌ Invalid product.' });
+
+    try {
+      const key = generateKeyLocal(p.tier);
+      const expiry = new Date(Date.now() + 365 * 86400000).toISOString().split('T')[0];
+
+      await dbQuery(
+        'INSERT INTO keys_table (key, tier, expiry, redeemed, created_at) VALUES ($1, $2, $3, false, NOW()::TEXT)',
+        [key, p.tier, expiry]
+      );
+
+      await dbQuery(`
+        CREATE TABLE IF NOT EXISTS pending_deliveries (
+          id SERIAL PRIMARY KEY,
+          discord_username TEXT,
+          key TEXT,
+          product_id TEXT,
+          claimed BOOLEAN DEFAULT false,
+          created_at TEXT DEFAULT NOW()::TEXT
+        )
+      `);
+      await dbQuery(
+        'INSERT INTO pending_deliveries (discord_username, key, product_id) VALUES ($1, $2, $3)',
+        [username, key, product]
+      );
+
+      const embed = new EmbedBuilder()
+        .setTitle('✅ Key Delivered')
+        .setDescription(`Key for **${p.name}** generated and stored.\n\n**Key:** ||${key}||\n**Buyer:** ${username}\n**Tier:** ${p.tier}\n**Expires:** ${expiry}`)
+        .setColor(0x00e676);
+
+      await interaction.editReply({ embeds: [embed] });
+    } catch (err) {
+      console.error('[DELIVER ERROR]', err.message);
+      await interaction.editReply({ content: '❌ Error generating key.' });
+    }
+  }
+
+  if (interaction.isChatInputCommand() && interaction.commandName === 'claim') {
+    await interaction.deferReply({ ephemeral: true });
+    const username = interaction.user.username;
+
+    try {
+      await dbQuery(`
+        CREATE TABLE IF NOT EXISTS pending_deliveries (
+          id SERIAL PRIMARY KEY,
+          discord_username TEXT,
+          key TEXT,
+          product_id TEXT,
+          claimed BOOLEAN DEFAULT false,
+          created_at TEXT DEFAULT NOW()::TEXT
+        )
+      `);
+
+      const result = await dbQuery(
+        'SELECT key, product_id FROM pending_deliveries WHERE discord_username = $1 AND claimed = false ORDER BY created_at DESC LIMIT 1',
+        [username]
+      );
+
+      if (result.rows.length === 0) {
+        return interaction.editReply({ content: '❌ No pending order found. Purchase at https://zylenofficial.github.io/choatix-v2' });
+      }
+
+      const row = result.rows[0];
+      await dbQuery('UPDATE pending_deliveries SET claimed = true WHERE key = $1', [row.key]);
+
+      const productNames = { basic: 'Basic Tweaks', pro: 'Pro Tweaks', extreme: 'Extreme Tweaks', precision: 'Precision Tweaks', power: 'Premium Power Plan', full: 'Full Optimization' };
+
+      const embed = new EmbedBuilder()
+        .setTitle('🎉 Your Key')
+        .setDescription(`**${productNames[row.product_id] || row.product_id}**\n\nYour key: ||${row.key}||\n\nUse \`/redeem ${row.key}\` to activate.`)
+        .setColor(0x00e676);
+
+      await interaction.editReply({ embeds: [embed] });
+    } catch (err) {
+      console.error('[CLAIM ERROR]', err.message);
+      await interaction.editReply({ content: '❌ Error claiming key.' });
     }
   }
 });

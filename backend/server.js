@@ -1,16 +1,12 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
 app.use(cors());
 app.use(express.json());
-
-// Stripe webhook needs raw body
-app.post('/api/webhook/stripe', express.raw({ type: 'application/json' }));
 
 const DB_URL = process.env.DATABASE_URL;
 const SECRET = process.env.KEY_SECRET || 'choatix-secret-key-2024';
@@ -923,14 +919,14 @@ app.post('/api/ratings', async (req, res) => {
   }
 });
 
-// ── Stripe Checkout ──
+// ── PayPal Checkout ──
 const PRODUCTS = {
-  basic:     { name: 'Choatix Basic Tweaks',       price: 199,  tier: 'PRO' },
-  pro:       { name: 'Choatix Pro Tweaks',          price: 399,  tier: 'PRO' },
-  extreme:   { name: 'Choatix Extreme Tweaks',      price: 599,  tier: 'PREMIUM' },
-  precision: { name: 'Choatix Precision Tweaks',    price: 299,  tier: 'PRO' },
-  power:     { name: 'Choatix Premium Power Plan',  price: 399,  tier: 'PRO' },
-  full:      { name: 'Choatix Full Optimization',   price: 999,  tier: 'PREMIUM' },
+  basic:     { name: 'Choatix Basic Tweaks',       price: '1.99',  tier: 'PRO' },
+  pro:       { name: 'Choatix Pro Tweaks',          price: '3.99',  tier: 'PRO' },
+  extreme:   { name: 'Choatix Extreme Tweaks',      price: '5.99',  tier: 'PREMIUM' },
+  precision: { name: 'Choatix Precision Tweaks',    price: '2.99',  tier: 'PRO' },
+  power:     { name: 'Choatix Premium Power Plan',  price: '3.99',  tier: 'PRO' },
+  full:      { name: 'Choatix Full Optimization',   price: '9.99',  tier: 'PREMIUM' },
 };
 
 app.post('/api/checkout', async (req, res) => {
@@ -939,101 +935,86 @@ app.post('/api/checkout', async (req, res) => {
   if (!discordUsername) return res.status(400).json({ error: 'Discord username required' });
 
   const product = PRODUCTS[productId];
-  const successUrl = `${req.headers.origin || 'https://zylenofficial.github.io/choatix-v2'}/?checkout=success&product=${productId}`;
-  const cancelUrl = `${req.headers.origin || 'https://zylenofficial.github.io/choatix-v2'}/?checkout=cancelled`;
+  const paypalEmail = process.env.PAYPAL_EMAIL || 'seller@paypal.me';
+  const successUrl = `${req.headers.origin || 'https://zylenofficial.github.io/choatix-v2'}/?checkout=success&product=${productId}&user=${encodeURIComponent(discordUsername)}`;
 
-  try {
-    const session = await stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
-      line_items: [{
-        price_data: {
-          currency: 'eur',
-          product_data: { name: product.name, description: `License key for ${product.name}` },
-          unit_amount: product.price,
-        },
-        quantity: 1,
-      }],
-      mode: 'payment',
-      success_url: successUrl,
-      cancel_url: cancelUrl,
-      metadata: { productId, discordUsername, tier: product.tier },
-    });
-    res.json({ url: session.url });
-  } catch (err) {
-    console.error('Stripe checkout error:', err.message);
-    res.status(500).json({ error: 'Failed to create checkout session' });
-  }
-});
+  // PayPal.me payment link with note
+  const note = encodeURIComponent(`Choatix - ${product.name} (${discordUsername})`);
+  const paypalUrl = `https://paypal.me/${paypalEmail}/${product.price}?currencyCode=EUR&note=${note}`;
 
-app.post('/api/webhook/stripe', async (req, res) => {
-  const sig = req.headers['stripe-signature'];
-  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
-
-  let event;
-  try {
-    if (webhookSecret) {
-      event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
-    } else {
-      event = JSON.parse(req.body.toString());
-    }
-  } catch (err) {
-    console.error('Webhook signature failed:', err.message);
-    return res.status(400).send(`Webhook Error: ${err.message}`);
-  }
-
-  if (event.type === 'checkout.session.completed') {
-    const session = event.data.object;
-    const { productId, discordUsername, tier } = session.metadata || {};
-
-    console.log(`Payment successful: ${productId} for ${discordUsername}`);
-
-    const pool = app.locals.pool;
-    if (pool) {
-      try {
-        const key = generateKey(tier || 'PRO');
-        const expiry = new Date(Date.now() + 365 * 86400000).toISOString().split('T')[0];
-        await pool.query(
-          'INSERT INTO keys_table (key, tier, expiry, redeemed, created_at) VALUES ($1, $2, $3, false, NOW()::TEXT)',
-          [key, tier || 'PRO', expiry]
-        );
-        console.log(`Generated key: ${key} for ${discordUsername}`);
-
-        // Store pending delivery so user can claim it
-        await pool.query(`
-          CREATE TABLE IF NOT EXISTS pending_deliveries (
-            id SERIAL PRIMARY KEY,
-            discord_username TEXT,
-            key TEXT,
-            product_id TEXT,
-            claimed BOOLEAN DEFAULT false,
-            created_at TEXT DEFAULT NOW()::TEXT
-          )
-        `);
-        await pool.query(
-          'INSERT INTO pending_deliveries (discord_username, key, product_id) VALUES ($1, $2, $3)',
-          [discordUsername, key, productId]
-        );
-      } catch (err) {
-        console.error('Key generation error:', err.message);
-      }
+  // Store pending order
+  const pool = app.locals.pool;
+  if (pool) {
+    try {
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS pending_orders (
+          id SERIAL PRIMARY KEY,
+          discord_username TEXT,
+          product_id TEXT,
+          product_name TEXT,
+          price TEXT,
+          tier TEXT,
+          status TEXT DEFAULT 'pending',
+          created_at TEXT DEFAULT NOW()::TEXT
+        )
+      `);
+      await pool.query(
+        'INSERT INTO pending_orders (discord_username, product_id, product_name, price, tier) VALUES ($1, $2, $3, $4, $5)',
+        [discordUsername, productId, product.name, product.price, product.tier]
+      );
+    } catch (err) {
+      console.error('Order storage error:', err.message);
     }
   }
 
-  res.json({ received: true });
+  res.json({ url: paypalUrl, orderId: `${productId}_${discordUsername}_${Date.now()}` });
 });
 
 app.get('/api/claim-key/:username', async (req, res) => {
   const pool = app.locals.pool;
   if (!pool) return res.status(500).json({ error: 'No database' });
   try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS pending_deliveries (
+        id SERIAL PRIMARY KEY,
+        discord_username TEXT,
+        key TEXT,
+        product_id TEXT,
+        claimed BOOLEAN DEFAULT false,
+        created_at TEXT DEFAULT NOW()::TEXT
+      )
+    `);
     const result = await pool.query(
       'SELECT key, product_id FROM pending_deliveries WHERE discord_username = $1 AND claimed = false ORDER BY created_at DESC LIMIT 1',
       [req.params.username]
     );
-    if (result.rows.length === 0) return res.status(404).json({ error: 'No pending order found' });
+    if (result.rows.length === 0) return res.status(404).json({ error: 'No pending order found. Complete payment first.' });
     const row = result.rows[0];
     await pool.query('UPDATE pending_deliveries SET claimed = true WHERE key = $1', [row.key]);
     res.json({ key: row.key, product: row.product_id });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/admin/deliver', async (req, res) => {
+  const { discordUsername, productId } = req.body;
+  if (!discordUsername || !productId || !PRODUCTS[productId]) return res.status(400).json({ error: 'Invalid' });
+  const product = PRODUCTS[productId];
+  const pool = app.locals.pool;
+  if (!pool) return res.status(500).json({ error: 'No database' });
+  try {
+    const key = generateKey(product.tier);
+    const expiry = new Date(Date.now() + 365 * 86400000).toISOString().split('T')[0];
+    await pool.query(
+      'INSERT INTO keys_table (key, tier, expiry, redeemed, created_at) VALUES ($1, $2, $3, false, NOW()::TEXT)',
+      [key, product.tier, expiry]
+    );
+    await pool.query(
+      'INSERT INTO pending_deliveries (discord_username, key, product_id) VALUES ($1, $2, $3)',
+      [discordUsername, key, productId]
+    );
+    res.json({ success: true, key });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

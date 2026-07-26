@@ -1268,7 +1268,7 @@
         <span class="cart-total-label">Total</span>
         <span class="cart-total-price" id="cartTotal">&euro;0.00</span>
       </div>
-      <button class="cart-checkout" id="cartCheckout" onclick="checkout()" disabled>Checkout via Discord</button>
+      <button class="cart-checkout" id="cartCheckout" onclick="checkout()" disabled>Checkout via PayPal</button>
     </div>
   </div>
 
@@ -1615,14 +1615,16 @@
 
     async function checkout() {
       if (cart.length === 0) return;
-      const username = localStorage.getItem('username') || prompt('Enter your Discord username for key delivery:');
+      let username = localStorage.getItem('username');
+      if (!username) username = prompt('Enter your Discord username (for key delivery):');
       if (!username) return;
+      localStorage.setItem('username', username);
 
-      const checkout = document.getElementById('cartCheckout');
-      checkout.textContent = 'Redirecting...';
-      checkout.disabled = true;
+      const btn = document.getElementById('cartCheckout');
+      btn.textContent = 'Redirecting to PayPal...';
+      btn.disabled = true;
 
-      // If single item, use direct Stripe checkout
+      // Single item: direct PayPal redirect
       if (cart.length === 1) {
         const item = cart[0];
         try {
@@ -1640,32 +1642,42 @@
         } catch (e) {}
       }
 
-      // Multiple items: checkout one by one
-      for (const item of cart) {
-        try {
-          const r = await fetch('https://choatix-v2.onrender.com/api/checkout', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ productId: item.id, discordUsername: username })
-          });
-          const data = await r.json();
-          if (data.url) {
-            localStorage.removeItem(CART_KEY);
-            window.location.href = data.url;
-            return;
-          }
-        } catch (e) {}
-      }
+      // Multiple: checkout first item
+      const item = cart[0];
+      try {
+        const r = await fetch('https://choatix-v2.onrender.com/api/checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ productId: item.id, discordUsername: username })
+        });
+        const data = await r.json();
+        if (data.url) {
+          localStorage.removeItem(CART_KEY);
+          window.location.href = data.url;
+          return;
+        }
+      } catch (e) {}
 
-      checkout.textContent = 'Checkout via Discord';
-      checkout.disabled = false;
-      alert('Checkout failed. Please try again or contact support on Discord.');
+      btn.textContent = 'Checkout via PayPal';
+      btn.disabled = false;
+      alert('Checkout failed. Try again or contact support on Discord.');
     }
     window.checkout = checkout;
 
     // Init cart
     updateCartBadge();
     renderCart();
+
+    // Handle PayPal checkout success
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('checkout') === 'success') {
+      const product = urlParams.get('product');
+      const user = urlParams.get('user');
+      setTimeout(() => {
+        alert('Payment received! Your key will be delivered shortly.\n\nRun /claim in our Discord server to get your key:\nhttps://discord.gg/AhEK85REhG');
+        window.history.replaceState({}, '', '/');
+      }, 500);
+    }
 
     document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeModal(); closeCart(); } });
 
