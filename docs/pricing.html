@@ -12,8 +12,8 @@
     .compare-table{width:100%;max-width:900px;margin:0 auto;border-collapse:collapse}
     .compare-table th,.compare-table td{padding:0.85rem 1.25rem;text-align:left;border-bottom:1px solid var(--border);font-size:0.85rem}
     .compare-table th{color:var(--text-dim);font-weight:600;font-size:0.7rem;text-transform:uppercase;letter-spacing:0.1em}
-    .compare-table td:nth-child(2),.compare-table td:nth-child(3),.compare-table td:nth-child(4),
-    .compare-table th:nth-child(2),.compare-table th:nth-child(3),.compare-table th:nth-child(4){text-align:center}
+    .compare-table td:nth-child(2),.compare-table td:nth-child(3),.compare-table td:nth-child(4),.compare-table td:nth-child(5),
+    .compare-table th:nth-child(2),.compare-table th:nth-child(3),.compare-table th:nth-child(4),.compare-table th:nth-child(5){text-align:center}
     .compare-table thead th{border-bottom:2px solid var(--border2);padding-bottom:1rem}
     .compare-table tbody tr:hover{background:rgba(255,255,255,0.02)}
     .compare-table .cat-row td{font-weight:700;color:var(--text);font-size:0.8rem;letter-spacing:0.03em;padding-top:1.25rem;border-bottom:1px solid var(--border2)}
@@ -125,6 +125,34 @@
         <a href="https://discord.gg/AhEK85REhG" target="_blank" class="btn btn-secondary price-btn">Get Premium</a>
       </div>
 
+      <div class="price-card reveal reveal-d4" style="border:1px solid var(--green)">
+        <div class="price-tier" style="color:var(--green)">Full Optimization</div>
+        <div class="price-amount">&euro;9.99+</div>
+        <div class="price-period">One-time payment + Addons</div>
+        <ul class="price-features">
+          <li><span class="price-check"><svg viewBox="0 0 12 12"><path d="M2 6l3 3 5-5"/></svg></span>Everything in Premium</li>
+          <li><span class="price-check"><svg viewBox="0 0 12 12"><path d="M2 6l3 3 5-5"/></svg></span>120 Full System Tweaks</li>
+          <li><span class="price-check"><svg viewBox="0 0 12 12"><path d="M2 6l3 3 5-5"/></svg></span>Best Windows &amp; NVIDIA Settings</li>
+          <li><span class="price-check"><svg viewBox="0 0 12 12"><path d="M2 6l3 3 5-5"/></svg></span>Under 100 Processes</li>
+          <li><span class="price-check"><svg viewBox="0 0 12 12"><path d="M2 6l3 3 5-5"/></svg></span>Buffer Bloat Fix</li>
+          <li><span class="price-check"><svg viewBox="0 0 12 12"><path d="M2 6l3 3 5-5"/></svg></span>Registry Optimization</li>
+        </ul>
+        <div class="price-addons" style="margin-top:0.75rem;border-top:1px solid var(--border);padding-top:0.75rem">
+          <div style="font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-dim);margin-bottom:0.5rem">Addons (€2 each)</div>
+          <ul class="price-features" style="gap:0.25rem">
+            <li style="font-size:0.75rem"><span class="price-check"><svg viewBox="0 0 12 12"><path d="M2 6l3 3 5-5"/></svg></span>Controller Overclock</li>
+            <li style="font-size:0.75rem"><span class="price-check"><svg viewBox="0 0 12 12"><path d="M2 6l3 3 5-5"/></svg></span>GPU Overclock</li>
+            <li style="font-size:0.75rem"><span class="price-check"><svg viewBox="0 0 12 12"><path d="M2 6l3 3 5-5"/></svg></span>CPU Overclock</li>
+            <li style="font-size:0.75rem"><span class="price-check"><svg viewBox="0 0 12 12"><path d="M2 6l3 3 5-5"/></svg></span>Advanced BIOS Tweaks</li>
+            <li style="font-size:0.75rem"><span class="price-check"><svg viewBox="0 0 12 12"><path d="M2 6l3 3 5-5"/></svg></span>Upgrade Advice</li>
+            <li style="font-size:0.75rem"><span class="price-check"><svg viewBox="0 0 12 12"><path d="M2 6l3 3 5-5"/></svg></span>Under 60 Processes</li>
+            <li style="font-size:0.75rem"><span class="price-check"><svg viewBox="0 0 12 12"><path d="M2 6l3 3 5-5"/></svg></span>Risxn Custom OS</li>
+            <li style="font-size:0.75rem"><span class="price-check"><svg viewBox="0 0 12 12"><path d="M2 6l3 3 5-5"/></svg></span>Malware Removal</li>
+          </ul>
+        </div>
+        <a href="https://discord.gg/AhEK85REhG" target="_blank" class="btn btn-primary price-btn" style="margin-top:0.75rem">Get Full Opti</a>
+      </div>
+
     </div>
   </section>
 
@@ -138,67 +166,81 @@
     <table class="compare-table reveal">
       <thead>
         <tr>
-          <th style="width:50%">Feature</th>
-          <th style="width:16.6%">Free</th>
-          <th style="width:16.6%">Pro <span class="compare-badge pop">Popular</span></th>
-          <th style="width:16.6%">Premium</th>
+          <th style="width:40%">Feature</th>
+          <th style="width:15%">Free</th>
+          <th style="width:15%">Pro <span class="compare-badge pop">Popular</span></th>
+          <th style="width:15%">Premium</th>
+          <th style="width:15%">Full Opti <span class="compare-badge new">Best</span></th>
         </tr>
       </thead>
       <tbody>
-        <tr class="cat-row"><td colspan="4">Dashboard</td></tr>
-        <tr><td>System Health Overview</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
-        <tr><td>CPU / RAM / GPU / Disk Monitor</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
-        <tr><td>Ping & Network Stats</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
-        <tr><td>Optimization Counter & Rollback</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
+        <tr class="cat-row"><td colspan="5">Dashboard</td></tr>
+        <tr><td>System Health Overview</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
+        <tr><td>CPU / RAM / GPU / Disk Monitor</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
+        <tr><td>Ping & Network Stats</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
+        <tr><td>Optimization Counter & Rollback</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
 
-        <tr class="cat-row"><td colspan="4">Scan PC</td></tr>
-        <tr><td>Hardware Analysis</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
-        <tr><td>OS & Settings Scan</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
-        <tr><td>Optimization Recommendations</td><td class="cross">&#8212;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
+        <tr class="cat-row"><td colspan="5">Scan PC</td></tr>
+        <tr><td>Hardware Analysis</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
+        <tr><td>OS & Settings Scan</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
+        <tr><td>Optimization Recommendations</td><td class="cross">&#8212;</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
 
-        <tr class="cat-row"><td colspan="4">Optimize</td></tr>
-        <tr><td>Basic System Tweaks</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
-        <tr><td>Full 461 System Tweaks</td><td class="cross">&#8212;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
-        <tr><td>CPU / GPU / RAM Optimizer</td><td class="cross">&#8212;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
-        <tr><td>Network Optimizer</td><td class="cross">&#8212;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
-        <tr><td>One-Click Apply All</td><td class="cross">&#8212;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
+        <tr class="cat-row"><td colspan="5">Optimize</td></tr>
+        <tr><td>Basic System Tweaks</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
+        <tr><td>Full 461 System Tweaks</td><td class="cross">&#8212;</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
+        <tr><td>CPU / GPU / RAM Optimizer</td><td class="cross">&#8212;</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
+        <tr><td>Network Optimizer</td><td class="cross">&#8212;</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
+        <tr><td>One-Click Apply All</td><td class="cross">&#8212;</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
+        <tr><td>Best Windows & NVIDIA Settings</td><td class="cross">&#8212;</td><td class="cross">&#8212;</td><td class="cross">&#8212;</td><td class="check">&#10003;</td></tr>
+        <tr><td>Buffer Bloat Fix</td><td class="cross">&#8212;</td><td class="cross">&#8212;</td><td class="cross">&#8212;</td><td class="check">&#10003;</td></tr>
+        <tr><td>Registry Optimization</td><td class="cross">&#8212;</td><td class="cross">&#8212;</td><td class="cross">&#8212;</td><td class="check">&#10003;</td></tr>
 
-        <tr class="cat-row"><td colspan="4">Quick Boost</td></tr>
-        <tr><td>Free Up RAM</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
-        <tr><td>Kill Bloat Processes</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
-        <tr><td>Boost GPU Priority</td><td class="cross">&#8212;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
+        <tr class="cat-row"><td colspan="5">Quick Boost</td></tr>
+        <tr><td>Free Up RAM</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
+        <tr><td>Kill Bloat Processes</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
+        <tr><td>Boost GPU Priority</td><td class="cross">&#8212;</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
 
-        <tr class="cat-row"><td colspan="4">0 Delay</td></tr>
-        <tr><td>Timer Resolution Fix</td><td class="cross">&#8212;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
-        <tr><td>Mouse Latency Reduction</td><td class="cross">&#8212;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
-        <tr><td>Input Lag Optimizer</td><td class="cross">&#8212;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
-        <tr><td>Sensitivity Calculator</td><td class="cross">&#8212;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
+        <tr class="cat-row"><td colspan="5">0 Delay</td></tr>
+        <tr><td>Timer Resolution Fix</td><td class="cross">&#8212;</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
+        <tr><td>Mouse Latency Reduction</td><td class="cross">&#8212;</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
+        <tr><td>Input Lag Optimizer</td><td class="cross">&#8212;</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
+        <tr><td>Sensitivity Calculator</td><td class="cross">&#8212;</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
 
-        <tr class="cat-row"><td colspan="4">Games</td></tr>
-        <tr><td>Game Profiles (12 Games)</td><td class="cross">&#8212;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
-        <tr><td>Per-Game Optimization</td><td class="cross">&#8212;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
-        <tr><td>Game Settings Backup & Restore</td><td class="cross">&#8212;</td><td class="cross">&#8212;</td><td class="check">&#10003;</td></tr>
+        <tr class="cat-row"><td colspan="5">Games</td></tr>
+        <tr><td>Game Profiles (12 Games)</td><td class="cross">&#8212;</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
+        <tr><td>Per-Game Optimization</td><td class="cross">&#8212;</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
+        <tr><td>Game Settings Backup & Restore</td><td class="cross">&#8212;</td><td class="cross">&#8212;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
 
-        <tr class="cat-row"><td colspan="4">Leaderboard</td></tr>
-        <tr><td>Run Benchmark</td><td class="cross">&#8212;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
-        <tr><td>Global Scores</td><td class="cross">&#8212;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
-        <tr><td>Submit Score & Rank Up</td><td class="cross">&#8212;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
+        <tr class="cat-row"><td colspan="5">Leaderboard</td></tr>
+        <tr><td>Run Benchmark</td><td class="cross">&#8212;</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
+        <tr><td>Global Scores</td><td class="cross">&#8212;</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
+        <tr><td>Submit Score & Rank Up</td><td class="cross">&#8212;</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
 
-        <tr class="cat-row"><td colspan="4">System</td></tr>
-        <tr><td>System Info</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
-        <tr><td>Process Manager</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
-        <tr><td>Power Plan Manager</td><td class="cross">&#8212;</td><td class="cross">&#8212;</td><td class="check">&#10003;</td></tr>
-        <tr><td>Network Speed Test</td><td class="cross">&#8212;</td><td class="cross">&#8212;</td><td class="check">&#10003;</td></tr>
+        <tr class="cat-row"><td colspan="5">System</td></tr>
+        <tr><td>System Info</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
+        <tr><td>Process Manager</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
+        <tr><td>Power Plan Manager</td><td class="cross">&#8212;</td><td class="cross">&#8212;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
+        <tr><td>Network Speed Test</td><td class="cross">&#8212;</td><td class="cross">&#8212;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
 
-        <tr class="cat-row"><td colspan="4">Settings</td></tr>
-        <tr><td>Revert All Changes</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
-        <tr><td>Keyboard Shortcuts</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
+        <tr class="cat-row"><td colspan="5">Settings</td></tr>
+        <tr><td>Revert All Changes</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
+        <tr><td>Keyboard Shortcuts</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
 
-        <tr class="cat-row"><td colspan="4">Extras</td></tr>
-        <tr><td>Deep Clean (10 Caches)</td><td class="cross">&#8212;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
-        <tr><td>FPS Compare (Before / After)</td><td class="cross">&#8212;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
-        <tr><td>Priority Support</td><td class="cross">&#8212;</td><td class="cross">&#8212;</td><td class="check">&#10003;</td></tr>
-        <tr><td>Early Access Features</td><td class="cross">&#8212;</td><td class="cross">&#8212;</td><td class="check">&#10003;</td></tr>
+        <tr class="cat-row"><td colspan="5">Extras</td></tr>
+        <tr><td>Deep Clean (10 Caches)</td><td class="cross">&#8212;</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
+        <tr><td>FPS Compare (Before / After)</td><td class="cross">&#8212;</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
+        <tr><td>Priority Support</td><td class="cross">&#8212;</td><td class="cross">&#8212;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
+        <tr><td>Early Access Features</td><td class="cross">&#8212;</td><td class="cross">&#8212;</td><td class="check">&#10003;</td><td class="check">&#10003;</td></tr>
+
+        <tr class="cat-row"><td colspan="5">Full Opti Addons</td></tr>
+        <tr><td>Controller Overclock</td><td class="cross">&#8212;</td><td class="cross">&#8212;</td><td class="cross">&#8212;</td><td class="check">&#10003;</td></tr>
+        <tr><td>GPU Overclock</td><td class="cross">&#8212;</td><td class="cross">&#8212;</td><td class="cross">&#8212;</td><td class="check">&#10003;</td></tr>
+        <tr><td>CPU Overclock</td><td class="cross">&#8212;</td><td class="cross">&#8212;</td><td class="cross">&#8212;</td><td class="check">&#10003;</td></tr>
+        <tr><td>Advanced BIOS Tweaks</td><td class="cross">&#8212;</td><td class="cross">&#8212;</td><td class="cross">&#8212;</td><td class="check">&#10003;</td></tr>
+        <tr><td>Upgrade Advice</td><td class="cross">&#8212;</td><td class="cross">&#8212;</td><td class="cross">&#8212;</td><td class="check">&#10003;</td></tr>
+        <tr><td>Under 60 Processes</td><td class="cross">&#8212;</td><td class="cross">&#8212;</td><td class="cross">&#8212;</td><td class="check">&#10003;</td></tr>
+        <tr><td>Risxn Custom OS</td><td class="cross">&#8212;</td><td class="cross">&#8212;</td><td class="cross">&#8212;</td><td class="check">&#10003;</td></tr>
+        <tr><td>Malware Removal</td><td class="cross">&#8212;</td><td class="cross">&#8212;</td><td class="cross">&#8212;</td><td class="check">&#10003;</td></tr>
       </tbody>
     </table>
 
