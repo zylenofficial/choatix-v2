@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Features — Choatix V2</title>
+  <meta name="description" content="Explore all features of Choatix V2 — one-click optimization, game profiles, benchmarking, deep clean, and more.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div class="scroll-bar" id="scrollBar"></div>
+  <canvas id="particles"></canvas>
+  <div class="noise"></div>
+
+  <nav id="nav">
+    <a href="index.html" class="nav-brand">choatix<span>.</span></a>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="features.html" class="active">Features</a>
+      <a href="tweaks.html">Tweaks</a>
+      <a href="products.html">Products</a>
+      <a href="pricing.html">Pricing</a>
+      <a href="faq.html">FAQ</a>
+      <a href="team.html">Team</a>
+      <a href="https://discord.gg/AhEK85REhG" target="_blank">Discord</a>
+      <button class="cart-btn" onclick="openCart()" id="cartBtn">&#128722;<span class="cart-badge" id="cartBadge">0</span></button>
+      <div class="user-menu" id="userMenu" style="display:none">
+        <a href="#" class="user-btn" onclick="toggleDropdown(event)">
+          <img class="user-avatar" id="userAvatar" src="" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+          <div class="user-avatar-fallback" id="userAvatarFallback" style="display:none"></div>
+          <span class="user-name" id="userName"></span>
+          <span class="user-tier free" id="userTier">FREE</span>
+        </a>
+        <div class="user-dropdown">
+          <a class="dropdown-item" href="https://github.com/zylenofficial/choatix-v2/releases/latest" target="_blank"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>Download App</a>
+          <a class="dropdown-item" href="https://discord.gg/AhEK85REhG" target="_blank"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Join Discord</a>
+          <div class="dropdown-divider"></div>
+          <a class="dropdown-item danger" href="#" onclick="handleLogout(event)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>Logout</a>
+        </div>
+      </div>
+      <a href="#" class="btn btn-secondary" id="loginBtn" onclick="handleLogin(event)">Login</a>
+    </div>
+  </nav>
+
+  <section class="page-hero">
+    <div class="hero-mesh">
+      <div class="mesh-blob mesh-blob-1"></div>
+      <div class="mesh-blob mesh-blob-2"></div>
+      <div class="mesh-blob mesh-blob-3"></div>
+    </div>
+    <div class="hero-content">
+      <h1><span class="line1">Everything You</span><span class="line2">Need</span></h1>
+      <p class="hero-desc">Complete PC optimization suite built for gamers</p>
+    </div>
+  </section>
+
+  <section id="features-grid">
+    <div class="features-grid">
+      <div class="feature-card reveal reveal-d1">
+        <div class="feature-icon">&#9889;</div>
+        <h3>One-Click Optimize</h3>
+        <p>Apply 461 system tweaks instantly. CPU, GPU, RAM, network — all optimized.</p>
+      </div>
+      <div class="feature-card reveal reveal-d2">
+        <div class="feature-icon">&#127918;</div>
+        <h3>Game Optimizer</h3>
+        <p>Per-game optimization for Fortnite, Valorant, CS2, Apex, Minecraft and more.</p>
+      </div>
+      <div class="feature-card reveal reveal-d3">
+        <div class="feature-icon">&#128640;</div>
+        <h3>Quick Boost</h3>
+        <p>Instant performance boost. Free up RAM, kill bloat, boost GPU priority.</p>
+      </div>
+      <div class="feature-card reveal reveal-d4">
+        <div class="feature-icon">&#9201;</div>
+        <h3>Zero Delay</h3>
+        <p>Reduce input lag. Optimize timer resolution, mouse latency, render pipeline.</p>
+      </div>
+      <div class="feature-card reveal reveal-d5">
+        <div class="feature-icon">&#128202;</div>
+        <h3>Benchmark &amp; FPS Compare</h3>
+        <p>Test before and after. See exact FPS improvement with side-by-side comparison.</p>
+      </div>
+      <div class="feature-card reveal reveal-d6">
+        <div class="feature-icon">&#127942;</div>
+        <h3>Global Leaderboard</h3>
+        <p>Compete with others. Submit your benchmark score and climb the ranks.</p>
+      </div>
+      <div class="feature-card reveal reveal-d7">
+        <div class="feature-icon">&#128260;</div>
+        <h3>Safe Rollback</h3>
+        <p>Every change is reversible. One click to restore original Windows settings.</p>
+      </div>
+      <div class="feature-card reveal reveal-d8">
+        <div class="feature-icon">&#129529;</div>
+        <h3>Deep Clean</h3>
+        <p>Clean 10 system caches in one click. Temp files, DNS, Windows Store cache.</p>
+      </div>
+      <div class="feature-card reveal reveal-d9">
+        <div class="feature-icon">&#128190;</div>
+        <h3>Game Settings Backup</h3>
+        <p>Backup and restore game settings for Fortnite, Valorant, CS2, Apex.</p>
+      </div>
+      <div class="feature-card reveal reveal-d10">
+        <div class="feature-icon">&#9000;&#65039;</div>
+        <h3>Keyboard Shortcuts</h3>
+        <p>Navigate pages instantly with number keys 1-9. Built for power users.</p>
+      </div>
+      <div class="feature-card reveal reveal-d11">
+        <div class="feature-icon">&#10024;</div>
+        <h3>Smooth Animations</h3>
+        <p>Skeleton loaders, glassmorphism tooltips, and hover effects throughout.</p>
+      </div>
+      <div class="feature-card reveal reveal-d12">
+        <div class="feature-icon">&#128279;</div>
+        <h3>Discord Bot</h3>
+        <p>License management, giveaway system, and admin tools via Discord.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="cta-section">
+    <h2 class="reveal">Ready to Boost<br>Your FPS?</h2>
+    <p class="reveal">Join gamers optimizing their PCs with Choatix V2</p>
+    <div class="cta-buttons reveal">
+      <a href="https://github.com/zylenofficial/choatix-v2/releases/latest" class="btn btn-primary" target="_blank">Download Free</a>
+      <a href="https://discord.gg/AhEK85REhG" class="btn btn-discord" target="_blank">Join Discord</a>
+    </div>
+  </section>
+
+  <div class="cart-overlay" id="cartOverlay" onclick="closeCart()"></div>
+  <div class="cart-sidebar" id="cartSidebar">
+    <div class="cart-head"><h3>Shopping Cart</h3><button class="cart-close" onclick="closeCart()">&#10005;</button></div>
+    <div class="cart-items" id="cartItems"></div>
+    <div class="cart-foot"><div class="cart-total"><span class="cart-total-label">Total</span><span class="cart-total-price" id="cartTotal">&euro;0.00</span></div><button class="cart-checkout" id="cartCheckout" onclick="checkout()" disabled>Checkout via PayPal</button></div>
+  </div>
+
+  <footer>
+    <div class="footer-links">
+      <a href="features.html">Features</a>
+      <a href="tweaks.html">Tweaks</a>
+      <a href="products.html">Products</a>
+      <a href="pricing.html">Pricing</a>
+      <a href="faq.html">FAQ</a>
+      <a href="team.html">Team</a>
+      <a href="https://discord.gg/AhEK85REhG" target="_blank">Discord</a>
+    </div>
+    <p>&copy; 2026 Choatix V2. Built by zylenofficial.</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -930,19 +930,39 @@ const PRODUCTS = {
 };
 
 app.post('/api/checkout', async (req, res) => {
-  const { productId, discordUsername } = req.body;
-  if (!productId || !PRODUCTS[productId]) return res.status(400).json({ error: 'Invalid product' });
+  const { productId, items: cartItems, discordUsername } = req.body;
   if (!discordUsername) return res.status(400).json({ error: 'Discord username required' });
 
-  const product = PRODUCTS[productId];
-  const paypalEmail = process.env.PAYPAL_EMAIL || 'seller@paypal.me';
-  const successUrl = `${req.headers.origin || 'https://zylenofficial.github.io/choatix-v2'}/?checkout=success&product=${productId}&user=${encodeURIComponent(discordUsername)}`;
+  const paypalEmail = process.env.PAYPAL_EMAIL || 'RememberSkill';
 
-  // PayPal.me payment link with note
-  const note = encodeURIComponent(`Choatix - ${product.name} (${discordUsername})`);
-  const paypalUrl = `https://paypal.me/${paypalEmail}/${product.price}?currencyCode=EUR&note=${note}`;
+  let orderItems = [];
+  let total = 0;
 
-  // Store pending order
+  if (cartItems && Array.isArray(cartItems) && cartItems.length > 0) {
+    for (const ci of cartItems) {
+      const product = PRODUCTS[ci.id];
+      if (!product) continue;
+      const qty = ci.qty || 1;
+      const price = parseFloat(product.price) * qty;
+      total += price;
+      orderItems.push({ id: ci.id, name: product.name, price: product.price, qty, tier: product.tier });
+    }
+  } else if (productId && PRODUCTS[productId]) {
+    const product = PRODUCTS[productId];
+    total = parseFloat(product.price);
+    orderItems.push({ id: productId, name: product.name, price: product.price, qty: 1, tier: product.tier });
+  } else {
+    return res.status(400).json({ error: 'Invalid product' });
+  }
+
+  if (orderItems.length === 0) return res.status(400).json({ error: 'Invalid product' });
+
+  const totalStr = total.toFixed(2);
+  const names = orderItems.map(i => i.name).join(', ');
+  const successUrl = `${req.headers.origin || 'https://zylenofficial.github.io/choatix-v2'}/?checkout=success&user=${encodeURIComponent(discordUsername)}`;
+  const note = encodeURIComponent(`Choatix - ${names} (${discordUsername})`);
+  const paypalUrl = `https://paypal.me/${paypalEmail}/${totalStr}?currencyCode=EUR&note=${note}`;
+
   const pool = app.locals.pool;
   if (pool) {
     try {
@@ -958,16 +978,18 @@ app.post('/api/checkout', async (req, res) => {
           created_at TEXT DEFAULT NOW()::TEXT
         )
       `);
-      await pool.query(
-        'INSERT INTO pending_orders (discord_username, product_id, product_name, price, tier) VALUES ($1, $2, $3, $4, $5)',
-        [discordUsername, productId, product.name, product.price, product.tier]
-      );
+      for (const item of orderItems) {
+        await pool.query(
+          'INSERT INTO pending_orders (discord_username, product_id, product_name, price, tier) VALUES ($1, $2, $3, $4, $5)',
+          [discordUsername, item.id, item.name, String(parseFloat(item.price) * item.qty), item.tier]
+        );
+      }
     } catch (err) {
       console.error('Order storage error:', err.message);
     }
   }
 
-  res.json({ url: paypalUrl, orderId: `${productId}_${discordUsername}_${Date.now()}` });
+  res.json({ url: paypalUrl, orderId: `order_${discordUsername}_${Date.now()}` });
 });
 
 app.get('/api/claim-key/:username', async (req, res) => {
