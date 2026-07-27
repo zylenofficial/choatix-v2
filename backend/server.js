@@ -959,12 +959,14 @@ app.post('/api/checkout', async (req, res) => {
 
   const totalStr = total.toFixed(2);
   const names = orderItems.map(i => i.name).join(', ');
-  const successUrl = `${req.headers.origin || 'https://zylenofficial.github.io/choatix-v2'}/?checkout=success&user=${encodeURIComponent(discordUsername)}`;
-  const note = encodeURIComponent(`Choatix - ${names} (${discordUsername})`);
-  const paypalUrl = `https://paypal.me/${paypalEmail}/${totalStr}?currencyCode=EUR&note=${note}`;
 
   const crypto = require('crypto');
   const downloadToken = crypto.randomBytes(16).toString('hex');
+  const productIds = orderItems.map(i => i.id).join(',');
+
+  const successUrl = `${req.headers.origin || 'https://zylenofficial.github.io/choatix-v2'}/?checkout=success&user=${encodeURIComponent(discordUsername)}&token=${downloadToken}&products=${encodeURIComponent(productIds)}`;
+  const note = encodeURIComponent(`Choatix - ${names} (${discordUsername})`);
+  const paypalUrl = `https://paypal.me/${paypalEmail}/${totalStr}?currencyCode=EUR&note=${note}`;
 
   const pool = app.locals.pool;
   if (pool) {

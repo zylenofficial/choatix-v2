@@ -186,8 +186,11 @@ renderCart();
 // ── PayPal success ──
 const urlParams = new URLSearchParams(window.location.search);
 if (urlParams.get('checkout') === 'success') {
+  const user = urlParams.get('user') || '';
+  const token = urlParams.get('token') || '';
+  const products = urlParams.get('products') || '';
   window.history.replaceState({}, '', window.location.pathname);
-  window.location.href = 'download.html';
+  window.location.href = 'download.html?token=' + encodeURIComponent(token) + '&user=' + encodeURIComponent(user) + '&products=' + encodeURIComponent(products);
 }
 
 // ── Discord Login ──
