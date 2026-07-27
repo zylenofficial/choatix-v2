@@ -8,6 +8,19 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
+  <style>
+    .product-card{position:relative;overflow:visible}
+    .product-features{max-height:0;overflow:hidden;transition:max-height 0.4s ease;text-align:left;padding:0 20px}
+    .product-card.open .product-features{max-height:600px;padding:16px 20px}
+    .features-toggle{background:none;border:1px solid rgba(255,255,255,0.12);color:#aaa;font-size:11px;padding:6px 14px;border-radius:6px;cursor:pointer;width:100%;margin-top:8px;transition:all 0.2s}
+    .features-toggle:hover{border-color:#4ec95e;color:#4ec95e}
+    .product-card.open .features-toggle{border-color:#4ec95e;color:#4ec95e}
+    .features-title{font-size:12px;font-weight:700;color:#4ec95e;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px}
+    .features-list{list-style:none;padding:0;margin:0}
+    .features-list li{font-size:12px;color:#999;padding:4px 0 4px 16px;position:relative;line-height:1.5}
+    .features-list li::before{content:'\2713';position:absolute;left:0;color:#4ec95e;font-size:11px}
+    .features-list li.highlight{color:#ccc;font-weight:500}
+  </style>
 </head>
 <body>
 
@@ -52,6 +65,7 @@
 
   <section>
     <div class="products-grid">
+
       <div class="product-card">
         <div class="product-box"><div class="product-box-inner">
           <div class="box-face box-front"><div class="box-logo">Choatix</div><div class="box-line"></div><div class="box-title">Basic Tweaks</div><div class="box-sub">Essential</div></div>
@@ -62,6 +76,21 @@
         <div class="product-stars"><span class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</span><span class="count">(0)</span></div>
         <div class="product-price">&euro;1.99</div>
         <button class="add-cart-btn" onclick="addToCart('basic','Basic Tweaks',1.99)">Add to Cart</button>
+        <button class="features-toggle" onclick="this.parentElement.classList.toggle('open')">What's Inside</button>
+        <div class="product-features">
+          <div class="features-title">&#128295; What's Inside</div>
+          <ul class="features-list">
+            <li>Windows Debloat</li>
+            <li>Essential Windows Settings (Limited)</li>
+            <li>Basic NVIDIA / AMD Optimization</li>
+            <li>Process Reduction (30&ndash;70 fewer processes)</li>
+            <li>Light Network Adjustments</li>
+            <li>Custom Power Plan</li>
+            <li>Basic Game Prioritization</li>
+            <li>GPU Overclock Support (AMD + NVIDIA)</li>
+            <li class="highlight">+ Over 100 More Adjustments</li>
+          </ul>
+        </div>
       </div>
 
       <div class="product-card">
@@ -74,6 +103,25 @@
         <div class="product-stars"><span class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</span><span class="count">(0)</span></div>
         <div class="product-price">&euro;3.99</div>
         <button class="add-cart-btn" onclick="addToCart('pro','Pro Tweaks',3.99)">Add to Cart</button>
+        <button class="features-toggle" onclick="this.parentElement.classList.toggle('open')">What's Inside</button>
+        <div class="product-features">
+          <div class="features-title">&#128295; What's Inside</div>
+          <ul class="features-list">
+            <li>Windows Debloat</li>
+            <li>Essential Windows Settings</li>
+            <li>Basic NVIDIA / AMD Optimization</li>
+            <li>Process Reduction</li>
+            <li>Light Network Configuration</li>
+            <li>Custom Power Plan</li>
+            <li>Basic Power Plan Adjustments</li>
+            <li>Game Priority Adjustments</li>
+            <li>BCD Adjustments</li>
+            <li>USB &amp; Input Device Optimization</li>
+            <li>RAM Optimization</li>
+            <li>Deep System Cleanup</li>
+            <li class="highlight">+ 100+ Additional Enhancements</li>
+          </ul>
+        </div>
       </div>
 
       <div class="product-card featured">
@@ -86,6 +134,30 @@
         <div class="product-stars"><span class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</span><span class="count">(0)</span></div>
         <div class="product-price">&euro;5.99</div>
         <button class="add-cart-btn" onclick="addToCart('extreme','Extreme Tweaks',5.99)">Add to Cart</button>
+        <button class="features-toggle" onclick="this.parentElement.classList.toggle('open')">What's Inside</button>
+        <div class="product-features">
+          <div class="features-title">&#128295; What's Inside</div>
+          <ul class="features-list">
+            <li>Full Windows Debloat</li>
+            <li>Optimal Windows Settings</li>
+            <li>NVIDIA / AMD GPU Optimization</li>
+            <li>Process Lowering (Under 100 Active Processes)</li>
+            <li>Network Stack Optimization</li>
+            <li>Buffer Bloat Optimization</li>
+            <li>Custom Power Plan</li>
+            <li>Game-Specific Prioritization</li>
+            <li>BCD Adjustments</li>
+            <li>USB &amp; HID Optimization</li>
+            <li>GPU / CPU / RAM Fine-Tuning</li>
+            <li>DirectX Optimization</li>
+            <li>Storage Optimization</li>
+            <li>Advanced RAM Optimization</li>
+            <li>Advanced System Registry Optimization</li>
+            <li>Experimental &amp; Beta Adjustments</li>
+            <li>Frequent Updates</li>
+            <li class="highlight">+ Hundreds More</li>
+          </ul>
+        </div>
       </div>
 
       <div class="product-card badge-aim">
@@ -98,6 +170,21 @@
         <div class="product-stars"><span class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</span><span class="count">(0)</span></div>
         <div class="product-price">&euro;2.99</div>
         <button class="add-cart-btn" onclick="addToCart('precision','Precision Tweaks',2.99)">Add to Cart</button>
+        <button class="features-toggle" onclick="this.parentElement.classList.toggle('open')">What's Inside</button>
+        <div class="product-features">
+          <div class="features-title">&#127918; What's Inside</div>
+          <ul class="features-list">
+            <li>Mouse &amp; Keyboard Input Optimization</li>
+            <li>Sensitivity &amp; DPI Fine-Tuning</li>
+            <li>Raw Input &amp; Windows Pointer Enhancements</li>
+            <li>USB Polling Rate Optimization</li>
+            <li>Input Latency Reduction</li>
+            <li>Controller &amp; Peripheral Tuning</li>
+            <li>Game-Specific Sensitivity Profiles</li>
+            <li>Anti-Aliasing &amp; Render Settings</li>
+            <li class="highlight">+ Aim-Focused Optimizations</li>
+          </ul>
+        </div>
       </div>
 
       <div class="product-card badge-new">
@@ -110,11 +197,26 @@
         <div class="product-stars"><span class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</span><span class="count">(0)</span></div>
         <div class="product-price">&euro;3.99</div>
         <button class="add-cart-btn" onclick="addToCart('power','Power Plan',3.99)">Add to Cart</button>
+        <button class="features-toggle" onclick="this.parentElement.classList.toggle('open')">What's Inside</button>
+        <div class="product-features">
+          <div class="features-title">&#9889; What's Inside</div>
+          <ul class="features-list">
+            <li>Custom High-Performance Power Plan</li>
+            <li>Disable All Power Saving Features</li>
+            <li>CPU Core Parking Optimization</li>
+            <li>Processor State Management</li>
+            <li>PCI Express Power Tuning</li>
+            <li>Sleep &amp; Hibernate Disabled</li>
+            <li>Timer Resolution Optimization</li>
+            <li>Energy Saving Overrides</li>
+            <li class="highlight">+ Maximum Performance Boost</li>
+          </ul>
+        </div>
       </div>
     </div>
 
     <div class="products-grid row-2">
-      <div class="product-card badge-save">
+      <div class="product-card badge-save" style="max-width:400px;margin:0 auto">
         <div class="product-box"><div class="product-box-inner">
           <div class="box-face box-front"><div class="box-logo">Choatix</div><div class="box-line"></div><div class="box-title">Full Optimization</div><div class="box-sub">Complete</div></div>
           <div class="box-face box-side"></div><div class="box-face box-top"></div>
@@ -124,6 +226,39 @@
         <div class="product-stars"><span class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</span><span class="count">(0)</span></div>
         <div class="product-price"><span class="from">From</span>&euro;9.99</div>
         <button class="add-cart-btn" onclick="addToCart('full','Full Optimization',9.99)">Add to Cart</button>
+        <button class="features-toggle" onclick="this.parentElement.classList.toggle('open')">What's Inside</button>
+        <div class="product-features">
+          <div class="features-title">&#128736; What's Inside</div>
+          <ul class="features-list">
+            <li class="highlight">Everything in Extreme Tweaks</li>
+            <li>Best Settings For Your Computer</li>
+            <li>Diagnostic of Any Issues</li>
+            <li>Complete Windows Debloat</li>
+            <li>Best Windows Settings</li>
+            <li>Best NVIDIA / AMD Settings</li>
+            <li>Best In Game Settings</li>
+            <li>Disable All Power Saving</li>
+            <li>Ethernet / WiFi Adjustment</li>
+            <li>Basic BIOS Adjustment</li>
+            <li>Full Windows Debloat</li>
+            <li>Optimal Windows Settings</li>
+            <li>NVIDIA / AMD GPU Optimization</li>
+            <li>Process Lowering (Under 100 Active Processes)</li>
+            <li>Network Stack Optimization</li>
+            <li>Buffer Bloat Optimization</li>
+            <li>Custom Power Plan</li>
+            <li>Game-Specific Prioritization</li>
+            <li>BCD Adjustments</li>
+            <li>USB &amp; HID Optimization</li>
+            <li>GPU / CPU / RAM Fine-Tuning</li>
+            <li>DirectX Optimization</li>
+            <li>Storage Optimization</li>
+            <li>Advanced RAM Optimization</li>
+            <li>Advanced System Registry Optimization</li>
+            <li>Experimental &amp; Beta Adjustments</li>
+            <li class="highlight">+ Everything Else Combined</li>
+          </ul>
+        </div>
       </div>
     </div>
   </section>
