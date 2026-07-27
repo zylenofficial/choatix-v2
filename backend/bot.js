@@ -215,7 +215,7 @@ async function registerCommands() {
       ),
     new SlashCommandBuilder()
       .setName('claim')
-      .setDescription('Claim your key after purchasing on the website'),
+      .setDescription('Get download links for your website purchases'),
   ];
 
   const rest = new REST({ version: '10' }).setToken(BOT_TOKEN);
@@ -1031,40 +1031,32 @@ client.on('interactionCreate', async (interaction) => {
     const username = interaction.user.username;
 
     try {
-      await dbQuery(`
-        CREATE TABLE IF NOT EXISTS pending_deliveries (
-          id SERIAL PRIMARY KEY,
-          discord_username TEXT,
-          key TEXT,
-          product_id TEXT,
-          claimed BOOLEAN DEFAULT false,
-          created_at TEXT DEFAULT NOW()::TEXT
-        )
-      `);
-
-      const result = await dbQuery(
-        'SELECT key, product_id FROM pending_deliveries WHERE discord_username = $1 AND claimed = false ORDER BY created_at DESC LIMIT 1',
+      // Check pending_orders (PayPal purchases)
+      const orders = await dbQuery(
+        'SELECT download_token, product_id, product_name, tier, price FROM pending_orders WHERE discord_username = $1 ORDER BY created_at DESC',
         [username]
       );
 
-      if (result.rows.length === 0) {
-        return interaction.editReply({ content: '❌ No pending order found. Purchase at https://zylenofficial.github.io/choatix-v2' });
+      if (orders.rows.length === 0) {
+        return interaction.editReply({ content: '❌ No purchases found. Buy at https://zylenofficial.github.io/choatix-v2/products.html' });
       }
 
-      const row = result.rows[0];
-      await dbQuery('UPDATE pending_deliveries SET claimed = true WHERE key = $1', [row.key]);
-
-      const productNames = { basic: 'Basic Tweaks', pro: 'Pro Tweaks', extreme: 'Extreme Tweaks', precision: 'Precision Tweaks', power: 'Premium Power Plan', full: 'Full Optimization' };
+      const downloadBase = 'https://zylenofficial.github.io/choatix-v2/download.html';
+      const lines = orders.rows.map(o => {
+        const url = `${downloadBase}?token=${o.download_token}&user=${encodeURIComponent(username)}&products=${o.product_id}`;
+        return `**${o.product_name}** (${o.tier}) — €${o.price}\n${url}`;
+      });
 
       const embed = new EmbedBuilder()
-        .setTitle('🎉 Your Key')
-        .setDescription(`**${productNames[row.product_id] || row.product_id}**\n\nYour key: ||${row.key}||\n\nUse \`/redeem ${row.key}\` to activate.`)
-        .setColor(0x00e676);
+        .setTitle('📦 Your Downloads')
+        .setDescription(lines.join('\n\n'))
+        .setColor(0x00e676)
+        .setFooter({ text: 'Click links to download. Run as Administrator for tweaks to apply.' });
 
       await interaction.editReply({ embeds: [embed] });
     } catch (err) {
       console.error('[CLAIM ERROR]', err.message);
-      await interaction.editReply({ content: '❌ Error claiming key.' });
+      await interaction.editReply({ content: '❌ Error fetching purchases.' });
     }
   }
 });
