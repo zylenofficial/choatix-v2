@@ -963,6 +963,9 @@ app.post('/api/checkout', async (req, res) => {
   const note = encodeURIComponent(`Choatix - ${names} (${discordUsername})`);
   const paypalUrl = `https://paypal.me/${paypalEmail}/${totalStr}?currencyCode=EUR&note=${note}`;
 
+  const crypto = require('crypto');
+  const downloadToken = crypto.randomBytes(16).toString('hex');
+
   const pool = app.locals.pool;
   if (pool) {
     try {
@@ -975,13 +978,14 @@ app.post('/api/checkout', async (req, res) => {
           price TEXT,
           tier TEXT,
           status TEXT DEFAULT 'pending',
+          download_token TEXT,
           created_at TEXT DEFAULT NOW()::TEXT
         )
       `);
       for (const item of orderItems) {
         await pool.query(
-          'INSERT INTO pending_orders (discord_username, product_id, product_name, price, tier) VALUES ($1, $2, $3, $4, $5)',
-          [discordUsername, item.id, item.name, String(parseFloat(item.price) * item.qty), item.tier]
+          'INSERT INTO pending_orders (discord_username, product_id, product_name, price, tier, download_token) VALUES ($1, $2, $3, $4, $5, $6)',
+          [discordUsername, item.id, item.name, String(parseFloat(item.price) * item.qty), item.tier, downloadToken]
         );
       }
     } catch (err) {
@@ -989,7 +993,25 @@ app.post('/api/checkout', async (req, res) => {
     }
   }
 
-  res.json({ url: paypalUrl, orderId: `order_${discordUsername}_${Date.now()}` });
+  res.json({ url: paypalUrl, orderId: `order_${discordUsername}_${Date.now()}`, downloadToken });
+});
+
+app.post('/api/verify-download', async (req, res) => {
+  const { token, discordUsername } = req.body;
+  if (!token || !discordUsername) return res.status(400).json({ valid: false });
+  const pool = app.locals.pool;
+  if (!pool) return res.status(500).json({ valid: false });
+  try {
+    const result = await pool.query(
+      'SELECT product_id FROM pending_orders WHERE download_token = $1 AND discord_username = $2',
+      [token, discordUsername]
+    );
+    if (result.rows.length === 0) return res.json({ valid: false });
+    const products = result.rows.map(r => r.product_id);
+    res.json({ valid: true, products: [...new Set(products)] });
+  } catch (err) {
+    res.status(500).json({ valid: false });
+  }
 });
 
 app.get('/api/claim-key/:username', async (req, res) => {

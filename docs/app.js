@@ -168,7 +168,12 @@ async function checkout() {
       body: JSON.stringify({ items, discordUsername: username })
     });
     const data = await r.json();
-    if (data.url) { localStorage.removeItem(CART_KEY); window.location.href = data.url; return; }
+    if (data.url) {
+      localStorage.removeItem(CART_KEY);
+      if (data.downloadToken) localStorage.setItem('choatix_download_token', data.downloadToken);
+      window.location.href = data.url;
+      return;
+    }
   } catch (e) {}
   btn.textContent = 'Checkout via PayPal';
   btn.disabled = false;

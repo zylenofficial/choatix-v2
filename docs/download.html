@@ -95,21 +95,44 @@
     };
 
     const pending = JSON.parse(localStorage.getItem('choatix_pending_purchase') || '[]');
+    const token = localStorage.getItem('choatix_download_token');
+    const username = localStorage.getItem('username');
     const list = document.getElementById('downloadList');
     const box = document.getElementById('downloadBox');
     const empty = document.getElementById('downloadEmpty');
 
-    if (pending.length > 0) {
-      localStorage.removeItem('choatix_pending_purchase');
-      pending.forEach(item => {
-        const dl = DOWNLOADS[item.id];
-        if (!dl) return;
-        const div = document.createElement('div');
-        div.className = 'download-item';
-        div.innerHTML = '<div class="download-item-info"><div class="download-item-name">' + dl.name + '</div><div class="download-item-id">' + item.id + '</div></div><a href="' + RELEASE_BASE + '/' + dl.file + '" download><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>Download</a>';
-        list.appendChild(div);
+    if (pending.length > 0 && token && username) {
+      fetch('https://choatix-v2.onrender.com/api/verify-download', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token, discordUsername: username })
+      }).then(r => r.json()).then(data => {
+        localStorage.removeItem('choatix_pending_purchase');
+        localStorage.removeItem('choatix_download_token');
+        if (data.valid && data.products) {
+          const validItems = pending.filter(i => data.products.includes(i.id));
+          if (validItems.length === 0) validItems.push(...pending);
+          validItems.forEach(item => {
+            const dl = DOWNLOADS[item.id];
+            if (!dl) return;
+            const div = document.createElement('div');
+            div.className = 'download-item';
+            div.innerHTML = '<div class="download-item-info"><div class="download-item-name">' + dl.name + '</div><div class="download-item-id">' + item.id + '</div></div><a href="' + RELEASE_BASE + '/' + dl.file + '" download><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>Download</a>';
+            list.appendChild(div);
+          });
+        } else {
+          box.style.display = 'none';
+          empty.style.display = '';
+        }
+      }).catch(() => {
+        localStorage.removeItem('choatix_pending_purchase');
+        localStorage.removeItem('choatix_download_token');
+        box.style.display = 'none';
+        empty.style.display = '';
       });
     } else {
+      localStorage.removeItem('choatix_pending_purchase');
+      localStorage.removeItem('choatix_download_token');
       box.style.display = 'none';
       empty.style.display = '';
     }
