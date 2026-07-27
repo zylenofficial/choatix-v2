@@ -232,6 +232,8 @@ footer p{font-size:0.75rem;color:var(--text-dim)}
 .product-btn:hover,.add-cart-btn:hover{background:var(--green);color:#000}
 .product-card.featured .product-btn,.product-card.featured .add-cart-btn{background:var(--green);color:#000}
 .product-card.featured .product-btn:hover,.product-card.featured .add-cart-btn:hover{box-shadow:0 0 20px rgba(0,230,118,0.3)}
+.product-link{display:block;margin-top:0.75rem;font-size:0.7rem;color:var(--text-dim);transition:color 0.2s;text-decoration:none}
+.product-link:hover{color:var(--green)}
 
 .pricing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:16px;overflow:hidden}
 .price-card{background:var(--bg2);padding:2.5rem;position:relative;transition:all 0.4s}

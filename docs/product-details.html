@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Product Details — Choatix V2</title>
+  <meta name="description" content="Full breakdown of every Choatix V2 product. See exactly what each optimization pack includes.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .detail-section{padding:3rem 2rem;max-width:1000px;margin:0 auto}
+    .detail-card{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:2.5rem;margin-bottom:2rem}
+    .detail-card.featured{border-color:rgba(0,230,118,0.2)}
+    .detail-head{display:flex;align-items:flex-start;justify-content:space-between;gap:2rem;margin-bottom:2rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border)}
+    .detail-info{flex:1}
+    .detail-badge{display:inline-block;font-size:0.55rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;padding:0.2rem 0.6rem;border-radius:4px;margin-bottom:0.75rem}
+    .detail-badge.pop{background:var(--green);color:#000}
+    .detail-badge.new{background:#3b82f6;color:#fff}
+    .detail-badge.aim{background:#a855f7;color:#fff}
+    .detail-badge.save{background:#f59e0b;color:#000}
+    .detail-badge.extreme{background:#ef4444;color:#fff}
+    .detail-name{font-size:1.75rem;font-weight:900;letter-spacing:-0.03em;margin-bottom:0.25rem}
+    .detail-sub{font-size:0.8rem;color:var(--text-dim);margin-bottom:0.5rem}
+    .detail-price{font-size:1.5rem;font-weight:900;color:var(--green)}
+    .detail-price .from{font-size:0.65rem;font-weight:500;color:var(--text-dim);display:block;margin-bottom:-2px}
+    .detail-right{text-align:right;flex-shrink:0}
+    .detail-right .add-cart-btn{margin-bottom:0.5rem}
+    .detail-right .detail-link{font-size:0.7rem;color:var(--text-dim);text-decoration:none}
+    .detail-right .detail-link:hover{color:var(--green)}
+    .detail-categories{display:flex;flex-direction:column;gap:1.5rem}
+    .detail-cat{background:rgba(255,255,255,0.01);border:1px solid var(--border);border-radius:10px;padding:1.25rem 1.5rem}
+    .detail-cat-name{font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--green);margin-bottom:0.75rem;display:flex;align-items:center;gap:0.5rem}
+    .detail-cat-name::before{content:'';width:5px;height:5px;border-radius:2px;background:var(--green);opacity:0.5}
+    .detail-tweaks{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:0.5rem}
+    .detail-tweak{display:flex;align-items:flex-start;gap:0.6rem;padding:0.4rem 0}
+    .detail-tweak .check{color:var(--green);font-size:0.75rem;flex-shrink:0;margin-top:2px}
+    .detail-tweak span{font-size:0.8rem;color:var(--text-mid);line-height:1.4}
+    .detail-count{display:inline-flex;align-items:center;gap:0.3rem;font-size:0.65rem;font-weight:600;color:var(--text-dim);background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:6px;padding:0.2rem 0.6rem;margin-top:1rem}
+    .detail-count em{color:var(--green);font-style:normal}
+    .detail-addons{margin-top:1.5rem;padding-top:1.25rem;border-top:1px solid var(--border)}
+    .detail-addons-title{font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-dim);margin-bottom:0.75rem}
+    .addon-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:0.5rem}
+    .addon-item{display:flex;align-items:center;gap:0.5rem;padding:0.5rem 0.75rem;background:rgba(0,230,118,0.03);border:1px solid rgba(0,230,118,0.08);border-radius:8px;font-size:0.75rem;color:var(--text-mid)}
+    .addon-item .check{color:var(--green);font-size:0.7rem}
+    .detail-nav{position:sticky;top:72px;z-index:100;background:rgba(2,2,2,0.9);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:0.75rem 2rem;margin-bottom:0}
+    .detail-nav-inner{display:flex;gap:0.5rem;overflow-x:auto;max-width:1000px;margin:0 auto;scrollbar-width:none}
+    .detail-nav-inner::-webkit-scrollbar{display:none}
+    .detail-nav a{padding:0.5rem 1rem;border-radius:8px;font-size:0.75rem;font-weight:600;color:var(--text-dim);white-space:nowrap;text-decoration:none;transition:all 0.2s;border:1px solid transparent}
+    .detail-nav a:hover{color:var(--text);background:rgba(255,255,255,0.03)}
+    .detail-nav a.active{color:var(--green);background:rgba(0,230,118,0.05);border-color:rgba(0,230,118,0.1)}
+    .detail-nav a.nav-featured{color:var(--green);border-color:rgba(0,230,118,0.15)}
+    @media(max-width:768px){.detail-head{flex-direction:column}.detail-right{text-align:left}.detail-tweaks{grid-template-columns:1fr}.addon-grid{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+
+  <div class="scroll-bar" id="scrollBar"></div>
+  <canvas id="particles"></canvas>
+  <div class="noise"></div>
+
+  <nav id="nav">
+    <a href="index.html" class="nav-brand">choatix<span>.</span></a>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="features.html">Features</a>
+      <a href="tweaks.html">Tweaks</a>
+      <a href="products.html">Products</a>
+      <a href="product-details.html" class="active">Details</a>
+      <a href="pricing.html">Pricing</a>
+      <a href="faq.html">FAQ</a>
+      <a href="team.html">Team</a>
+      <a href="https://discord.gg/AhEK85REhG" target="_blank">Discord</a>
+      <button class="cart-btn" onclick="openCart()" id="cartBtn">&#128722;<span class="cart-badge" id="cartBadge">0</span></button>
+      <div class="user-menu" id="userMenu" style="display:none">
+        <a href="#" class="user-btn" onclick="toggleDropdown(event)">
+          <img class="user-avatar" id="userAvatar" src="" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+          <div class="user-avatar-fallback" id="userAvatarFallback" style="display:none"></div>
+          <span class="user-name" id="userName"></span>
+          <span class="user-tier free" id="userTier">FREE</span>
+        </a>
+        <div class="user-dropdown">
+          <a class="dropdown-item" href="https://github.com/zylenofficial/choatix-v2/releases/latest" target="_blank"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>Download App</a>
+          <a class="dropdown-item" href="https://discord.gg/AhEK85REhG" target="_blank"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Join Discord</a>
+          <div class="dropdown-divider"></div>
+          <a class="dropdown-item danger" href="#" onclick="handleLogout(event)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>Logout</a>
+        </div>
+      </div>
+      <a href="#" class="btn btn-secondary" id="loginBtn" onclick="handleLogin(event)">Login</a>
+    </div>
+  </nav>
+
+  <section class="page-hero">
+    <h1>Product <em>Details</em></h1>
+    <p>See exactly what's inside every Choatix optimization pack</p>
+  </section>
+
+  <div class="detail-nav">
+    <div class="detail-nav-inner">
+      <a href="#basic">Basic</a>
+      <a href="#pro">Pro</a>
+      <a href="#extreme" class="nav-featured">Extreme</a>
+      <a href="#precision">Precision</a>
+      <a href="#power">Power Plan</a>
+      <a href="#full" class="nav-featured">Full Opti</a>
+    </div>
+  </div>
+
+  <div class="detail-section">
+
+    <!-- BASIC -->
+    <div class="detail-card" id="basic">
+      <div class="detail-head">
+        <div class="detail-info">
+          <div class="detail-badge" style="background:rgba(255,255,255,0.06);color:var(--text-dim)">STARTER</div>
+          <div class="detail-name">Basic Tweaks</div>
+          <div class="detail-sub">69 tweaks &middot; Essential Windows, GPU, Network, Power</div>
+          <div class="detail-price">&euro;1.99</div>
+        </div>
+        <div class="detail-right">
+          <button class="add-cart-btn" onclick="addToCart('basic','Basic Tweaks',1.99)">Add to Cart</button>
+        </div>
+      </div>
+      <div class="detail-categories">
+        <div class="detail-cat">
+          <div class="detail-cat-name">Windows Settings</div>
+          <div class="detail-tweaks">
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Show File Extensions</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Show Hidden Files</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Dark Mode</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Show This PC on Desktop</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Left Align Taskbar</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Hide News & Interests</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Disable Lock Screen</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Classic Context Menu</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Disable Visual Effects</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Disable Animations</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Disable Transparency</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Disable Smooth Scrolling</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Remove Menu Delay</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Disable Prefetch</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Disable Superfetch</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Disable Startup Delay</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Enable Game Mode</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Disable Game DVR</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Hardware GPU Scheduling</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Timer Resolution</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Remove Bing News</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Remove Weather</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Remove Finance</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Remove Feedback Hub</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Remove Get Help</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Remove Get Started</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Remove Solitaire</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Remove Paint 3D</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Remove 3D Builder</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Remove Alarms & Clock</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Disable Telemetry</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Disable DiagTrack</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Disable Windows Push</span></div>
+          </div>
+        </div>
+        <div class="detail-cat">
+          <div class="detail-cat-name">Network</div>
+          <div class="detail-tweaks">
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Disable Nagle Algorithm</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Disable Network Throttling</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Flush DNS Cache</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Disable LLMNR</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Cloudflare DNS (1.1.1.1)</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Google DNS (8.8.8.8)</span></div>
+          </div>
+        </div>
+        <div class="detail-cat">
+          <div class="detail-cat-name">GPU</div>
+          <div class="detail-tweaks">
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>NVIDIA Max Performance Mode</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>NVIDIA Force PowerMizer</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>NVIDIA Threaded Optimization</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>AMD Disable Flip Queue</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>AMD Disable Tessellation</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Hardware GPU Scheduling</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Disable MPO</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>GPU Priority (High)</span></div>
+          </div>
+        </div>
+        <div class="detail-cat">
+          <div class="detail-cat-name">Power</div>
+          <div class="detail-tweaks">
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Ultimate Performance Plan</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>High Performance Plan</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Disable Sleep</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Disable Hibernate</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Disable Core Parking</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Disable Power Throttling</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Max Processor State 100%</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Disable Idle Reduction</span></div>
+          </div>
+        </div>
+        <div class="detail-cat">
+          <div class="detail-cat-name">Extra</div>
+          <div class="detail-tweaks">
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Disable Xbox Services</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Disable Print Spooler</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Disable Diagnostic Services</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Disable Windows Push Notifications</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Disable Mouse Acceleration</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Mouse Threshold Zero</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Max Keyboard Repeat</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Min Keyboard Delay</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Disable Audio Enhancements</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Disable Spatial Sound</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Clean Temp Files</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Flush DNS Cache</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Empty Recycle Bin</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Clean Windows Temp</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="detail-count"><em>69</em> total tweaks</div>
+    </div>
+
+    <!-- PRO -->
+    <div class="detail-card" id="pro">
+      <div class="detail-head">
+        <div class="detail-info">
+          <div class="detail-badge pop">POPULAR</div>
+          <div class="detail-name">Pro Tweaks</div>
+          <div class="detail-sub">100+ tweaks &middot; Everything in Basic + BCD, RAM, USB, Deep Cleanup</div>
+          <div class="detail-price">&euro;3.99</div>
+        </div>
+        <div class="detail-right">
+          <button class="add-cart-btn" onclick="addToCart('pro','Pro Tweaks',3.99)">Add to Cart</button>
+        </div>
+      </div>
+      <div class="detail-categories">
+        <div class="detail-cat">
+          <div class="detail-cat-name">Windows Settings</div>
+          <div class="detail-tweaks">
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>All Basic Explorer Tweaks</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>All Basic Performance Tweaks</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>All Basic Gaming Tweaks</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>All Basic Debloat (10 apps)</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Disable Delivery Optimization</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Disable Boot UI (BCD)</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Enable TSC Timer (BCD)</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Disable Dynamic Tick (BCD)</span></div>
+          </div>
+        </div>
+        <div class="detail-cat">
+          <div class="detail-cat-name">Network</div>
+          <div class="detail-tweaks">
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>All Basic Network Tweaks</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Disable TCP Timestamps</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Disable Auto Tuning</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Enable RSS</span></div>
+          </div>
+        </div>
+        <div class="detail-cat">
+          <div class="detail-cat-name">GPU</div>
+          <div class="detail-tweaks">
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>All Basic GPU Tweaks</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>NVIDIA Max Pre-Rendered Frames</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>NVIDIA Disable TDR</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>NVIDIA Ultra Low Latency</span></div>
+          </div>
+        </div>
+        <div class="detail-cat">
+          <div class="detail-cat-name">Power</div>
+          <div class="detail-tweaks">
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>All Basic Power Tweaks</span></div>
+          </div>
+        </div>
+        <div class="detail-cat">
+          <div class="detail-cat-name">Extra</div>
+          <div class="detail-tweaks">
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>All Basic Extra Tweaks</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>USB Selective Suspend Off</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Disable USB Power Saving</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Disable Windows Search</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Disable SysMain</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>RAM Clear Working Set</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Optimize Memory Management</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Large System Cache</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Optimize Swap File</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Clean Thumbnail Cache</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Clean Icon Cache</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="detail-count"><em>100+</em> total tweaks</div>
+    </div>
+
+    <!-- EXTREME -->
+    <div class="detail-card featured" id="extreme">
+      <div class="detail-head">
+        <div class="detail-info">
+          <div class="detail-badge extreme">BEST SELLER</div>
+          <div class="detail-name">Extreme Tweaks</div>
+          <div class="detail-sub">100+ tweaks &middot; Full debloat, DirectX, Registry, Buffer Bloat</div>
+          <div class="detail-price">&euro;5.99</div>
+        </div>
+        <div class="detail-right">
+          <button class="add-cart-btn" onclick="addToCart('extreme','Extreme Tweaks',5.99)">Add to Cart</button>
+        </div>
+      </div>
+      <div class="detail-categories">
+        <div class="detail-cat">
+          <div class="detail-cat-name">Windows Settings</div>
+          <div class="detail-tweaks">
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>All Basic + Pro Windows Tweaks</span></div>
+          </div>
+        </div>
+        <div class="detail-cat">
+          <div class="detail-cat-name">Network</div>
+          <div class="detail-tweaks">
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>All Pro Network Tweaks</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Disable NetBIOS</span></div>
+          </div>
+        </div>
+        <div class="detail-cat">
+          <div class="detail-cat-name">Debloat</div>
+          <div class="detail-tweaks">
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Remove Bing News</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Remove Weather</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Remove Finance</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Remove Feedback Hub</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Remove Get Help</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Remove Get Started</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Remove Solitaire</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Remove Paint 3D</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Remove 3D Builder</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Remove Alarms & Clock</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Disable Telemetry</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Disable DiagTrack</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Disable Windows Push</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Disable Delivery Optimization</span></div>
+          </div>
+        </div>
+        <div class="detail-cat">
+          <div class="detail-cat-name">GPU</div>
+          <div class="detail-tweaks">
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>All Pro GPU Tweaks</span></div>
+          </div>
+        </div>
+        <div class="detail-cat">
+          <div class="detail-cat-name">Power</div>
+          <div class="detail-tweaks">
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>All Pro Power Tweaks</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Enable TRIM</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Disable Storage Prefetch</span></div>
+          </div>
+        </div>
+        <div class="detail-cat">
+          <div class="detail-cat-name">Extra</div>
+          <div class="detail-tweaks">
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>All Pro Extra Tweaks</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>DirectX Optimization</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Disable DirectX Telemetry</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Advanced RAM Optimization</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Advanced Registry Optimization</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Process Lowering (Under 100)</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="detail-count"><em>100+</em> total tweaks</div>
+    </div>
+
+    <!-- PRECISION -->
+    <div class="detail-card" id="precision">
+      <div class="detail-head">
+        <div class="detail-info">
+          <div class="detail-badge aim">BETTER AIM</div>
+          <div class="detail-name">Precision Tweaks</div>
+          <div class="detail-sub">20 tweaks &middot; Input lag, mouse, keyboard, GPU latency</div>
+          <div class="detail-price">&euro;2.99</div>
+        </div>
+        <div class="detail-right">
+          <button class="add-cart-btn" onclick="addToCart('precision','Precision Tweaks',2.99)">Add to Cart</button>
+        </div>
+      </div>
+      <div class="detail-categories">
+        <div class="detail-cat">
+          <div class="detail-cat-name">GPU</div>
+          <div class="detail-tweaks">
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>NVIDIA Max Performance Mode</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>NVIDIA Max Pre-Rendered Frames</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>NVIDIA Disable TDR</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>NVIDIA Threaded Optimization</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>NVIDIA Ultra Low Latency</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Hardware GPU Scheduling</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Disable MPO</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>GPU Priority (High)</span></div>
+          </div>
+        </div>
+        <div class="detail-cat">
+          <div class="detail-cat-name">Network</div>
+          <div class="detail-tweaks">
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Disable Nagle Algorithm</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Disable Network Throttling</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Flush DNS Cache</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Disable TCP Timestamps</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Disable Auto Tuning</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Enable RSS</span></div>
+          </div>
+        </div>
+        <div class="detail-cat">
+          <div class="detail-cat-name">Input</div>
+          <div class="detail-tweaks">
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Disable Mouse Acceleration</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Mouse Threshold Zero</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Max Keyboard Repeat</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Min Keyboard Delay</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Disable Audio Enhancements</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Disable Spatial Sound</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="detail-count"><em>20</em> total tweaks</div>
+    </div>
+
+    <!-- POWER PLAN -->
+    <div class="detail-card" id="power">
+      <div class="detail-head">
+        <div class="detail-info">
+          <div class="detail-badge new">NEW</div>
+          <div class="detail-name">Premium Power Plan</div>
+          <div class="detail-sub">10 tweaks &middot; Max CPU, storage, disable all power saving</div>
+          <div class="detail-price">&euro;3.99</div>
+        </div>
+        <div class="detail-right">
+          <button class="add-cart-btn" onclick="addToCart('power','Power Plan',3.99)">Add to Cart</button>
+        </div>
+      </div>
+      <div class="detail-categories">
+        <div class="detail-cat">
+          <div class="detail-cat-name">Power</div>
+          <div class="detail-tweaks">
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Ultimate Performance Plan</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>High Performance Plan</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Disable Sleep</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Disable Hibernate</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Disable Core Parking</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Disable Power Throttling</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Max Processor State 100%</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Disable Idle Reduction</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Enable TRIM</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Disable Storage Prefetch</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="detail-count"><em>10</em> total tweaks</div>
+    </div>
+
+    <!-- FULL OPTIMIZATION -->
+    <div class="detail-card featured" id="full">
+      <div class="detail-head">
+        <div class="detail-info">
+          <div class="detail-badge save">SAVE BILLS</div>
+          <div class="detail-name">Full Optimization</div>
+          <div class="detail-sub">120 tweaks &middot; Everything in Extreme + best settings, addons</div>
+          <div class="detail-price"><span class="from">From</span>&euro;9.99</div>
+        </div>
+        <div class="detail-right">
+          <button class="add-cart-btn" onclick="addToCart('full','Full Optimization',9.99)">Add to Cart</button>
+        </div>
+      </div>
+      <div class="detail-categories">
+        <div class="detail-cat">
+          <div class="detail-cat-name">Windows Settings</div>
+          <div class="detail-tweaks">
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>All Extreme Windows Tweaks</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Disable All Notifications</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Disable Focus Assist</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Disable Action Center</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Disable Cortana</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Force NX Always On (BCD)</span></div>
+          </div>
+        </div>
+        <div class="detail-cat">
+          <div class="detail-cat-name">Network</div>
+          <div class="detail-tweaks">
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>All Extreme Network Tweaks</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Disable ECN Capability</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Enable DCA</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Buffer Bloat Fixes</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Disable QoS Packet Scheduler</span></div>
+          </div>
+        </div>
+        <div class="detail-cat">
+          <div class="detail-cat-name">Debloat</div>
+          <div class="detail-tweaks">
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>All Extreme Debloat</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Remove People</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Remove Phone Link</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Remove Maps</span></div>
+          </div>
+        </div>
+        <div class="detail-cat">
+          <div class="detail-cat-name">GPU</div>
+          <div class="detail-tweaks">
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>All Extreme GPU Tweaks</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>GPU Power Management Max</span></div>
+          </div>
+        </div>
+        <div class="detail-cat">
+          <div class="detail-cat-name">Power</div>
+          <div class="detail-tweaks">
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>All Extreme Power Tweaks</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Disable USB Selective Suspend</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Disable PCI Express Power Mgmt</span></div>
+          </div>
+        </div>
+        <div class="detail-cat">
+          <div class="detail-cat-name">Extra</div>
+          <div class="detail-tweaks">
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>All Extreme Extra Tweaks</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Max HID Polling Rate</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Set Game Priority High</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Foreground Boost</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Game Scheduling Priority</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Large File Cache</span></div>
+            <div class="detail-tweak"><span class="check">&#10003;</span><span>Process Lowering Under 100 (9 services)</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="detail-addons">
+        <div class="detail-addons-title">Premium Addons (€2 each)</div>
+        <div class="addon-grid">
+          <div class="addon-item"><span class="check">&#10003;</span>Controller Overclock</div>
+          <div class="addon-item"><span class="check">&#10003;</span>GPU Overclock</div>
+          <div class="addon-item"><span class="check">&#10003;</span>CPU Overclock</div>
+          <div class="addon-item"><span class="check">&#10003;</span>Advanced BIOS Tweaks</div>
+          <div class="addon-item"><span class="check">&#10003;</span>Upgrade Advice</div>
+          <div class="addon-item"><span class="check">&#10003;</span>Under 60 Processes</div>
+          <div class="addon-item"><span class="check">&#10003;</span>Risxn Custom OS</div>
+          <div class="addon-item"><span class="check">&#10003;</span>Malware Removal</div>
+        </div>
+      </div>
+      <div class="detail-count"><em>120</em> total tweaks + addons</div>
+    </div>
+
+  </div>
+
+  <section class="cta-section">
+    <h2>Ready to Boost<br>Your FPS?</h2>
+    <p>Download free. Upgrade anytime.</p>
+    <div class="cta-buttons">
+      <a href="products.html" class="btn btn-primary">Back to Products</a>
+      <a href="https://discord.gg/AhEK85REhG" class="btn btn-discord" target="_blank">Join Discord</a>
+    </div>
+  </section>
+
+  <div class="cart-overlay" id="cartOverlay" onclick="closeCart()"></div>
+  <div class="cart-sidebar" id="cartSidebar">
+    <div class="cart-head"><h3>Shopping Cart</h3><button class="cart-close" onclick="closeCart()">&#10005;</button></div>
+    <div class="cart-items" id="cartItems"></div>
+    <div class="cart-foot"><div class="cart-total"><span class="cart-total-label">Total</span><span class="cart-total-price" id="cartTotal">&euro;0.00</span></div><button class="cart-checkout" id="cartCheckout" onclick="checkout()" disabled>Checkout via PayPal</button></div>
+  </div>
+
+  <footer>
+    <div class="footer-links">
+      <a href="features.html">Features</a>
+      <a href="tweaks.html">Tweaks</a>
+      <a href="products.html">Products</a>
+      <a href="pricing.html">Pricing</a>
+      <a href="faq.html">FAQ</a>
+      <a href="team.html">Team</a>
+      <a href="https://discord.gg/AhEK85REhG" target="_blank">Discord</a>
+    </div>
+    <p>&copy; 2026 Choatix V2. Built by zylenofficial.</p>
+  </footer>
+
+  <script src="app.js"></script>
+  <script>
+    document.querySelectorAll('.detail-nav a').forEach(function(a){
+      a.addEventListener('click',function(e){
+        document.querySelectorAll('.detail-nav a').forEach(function(x){x.classList.remove('active')});
+        a.classList.add('active');
+      });
+    });
+    if(window.location.hash){
+      var el=document.querySelector(window.location.hash);
+      if(el)setTimeout(function(){el.scrollIntoView({behavior:'smooth',block:'start'})},300);
+    }
+  </script>
+</body>
+</html>
