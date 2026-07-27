@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Download — Choatix V2</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .download-page{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:120px 20px 60px}
+    .download-box{max-width:520px;width:100%;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:48px 40px;text-align:center}
+    .download-check{width:64px;height:64px;border-radius:50%;background:rgba(78,201,94,0.15);display:flex;align-items:center;justify-content:center;margin:0 auto 24px}
+    .download-check svg{width:32px;height:32px;stroke:#4ec95e;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+    .download-box h1{font-size:24px;font-weight:700;color:#fff;margin-bottom:8px}
+    .download-box p{font-size:14px;color:#888;margin-bottom:32px;line-height:1.6}
+    .download-list{display:flex;flex-direction:column;gap:12px;margin-bottom:32px}
+    .download-item{display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:16px 20px}
+    .download-item-info{text-align:left}
+    .download-item-name{font-size:14px;font-weight:600;color:#fff}
+    .download-item-id{font-size:11px;color:#666;margin-top:2px}
+    .download-item a{display:inline-flex;align-items:center;gap:6px;background:#4ec95e;color:#000;font-size:13px;font-weight:600;padding:8px 18px;border-radius:8px;text-decoration:none;transition:background 0.2s}
+    .download-item a:hover{background:#3db84d}
+    .download-item a svg{width:14px;height:14px;fill:currentColor}
+    .download-alt{font-size:12px;color:#555;margin-top:8px}
+    .download-alt a{color:#4ec95e;text-decoration:none}
+    .download-alt a:hover{text-decoration:underline}
+    .download-empty{text-align:center;padding:80px 20px}
+    .download-empty h2{font-size:20px;color:#fff;margin-bottom:8px}
+    .download-empty p{font-size:14px;color:#666;margin-bottom:24px}
+    .download-empty a{color:#4ec95e;text-decoration:none;font-weight:600}
+  </style>
+</head>
+<body>
+
+  <div class="scroll-bar" id="scrollBar"></div>
+  <canvas id="particles"></canvas>
+  <div class="noise"></div>
+
+  <nav id="nav">
+    <a href="index.html" class="nav-brand">choatix<span>.</span></a>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="features.html">Features</a>
+      <a href="tweaks.html">Tweaks</a>
+      <a href="products.html">Products</a>
+      <a href="pricing.html">Pricing</a>
+      <a href="faq.html">FAQ</a>
+      <a href="team.html">Team</a>
+      <a href="https://discord.gg/AhEK85REhG" target="_blank">Discord</a>
+    </div>
+  </nav>
+
+  <div class="download-page">
+    <div class="download-box" id="downloadBox">
+      <div class="download-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+      <h1>Payment Received!</h1>
+      <p>Thank you for your purchase. Your downloads are ready.</p>
+      <div class="download-list" id="downloadList"></div>
+      <div class="download-alt">Need help? <a href="https://discord.gg/AhEK85REhG" target="_blank">Join our Discord</a></div>
+    </div>
+  </div>
+
+  <div class="download-empty" id="downloadEmpty" style="display:none">
+    <div class="download-box">
+      <h2>No purchases found</h2>
+      <p>You haven't completed a purchase yet.</p>
+      <a href="products.html">Browse Products</a>
+    </div>
+  </div>
+
+  <footer>
+    <div class="footer-links">
+      <a href="features.html">Features</a>
+      <a href="tweaks.html">Tweaks</a>
+      <a href="products.html">Products</a>
+      <a href="pricing.html">Pricing</a>
+      <a href="faq.html">FAQ</a>
+      <a href="team.html">Team</a>
+      <a href="https://discord.gg/AhEK85REhG" target="_blank">Discord</a>
+    </div>
+    <p>&copy; 2026 Choatix V2. Built by zylenofficial.</p>
+  </footer>
+
+  <script src="app.js"></script>
+  <script>
+    const RELEASE_BASE = 'https://github.com/zylenofficial/choatix-v2/releases/download/products-v1.0.0';
+    const DOWNLOADS = {
+      basic:     { name: 'Choatix Basic Tweaks',          file: 'Choatix.Basic.Tweaks.Setup.1.0.0.exe' },
+      pro:       { name: 'Choatix Pro Tweaks',            file: 'Choatix.Pro.Tweaks.Setup.1.0.0.exe' },
+      extreme:   { name: 'Choatix Extreme Tweaks',        file: 'Choatix.Extreme.Tweaks.Setup.1.0.0.exe' },
+      precision: { name: 'Choatix Precision Tweaks',      file: 'Choatix.Precision.Tweaks.Setup.1.0.0.exe' },
+      power:     { name: 'Choatix Premium Power Plan',    file: 'Choatix.Premium.Power.Plan.Setup.1.0.0.exe' },
+      full:      { name: 'Choatix Full Optimization',     file: 'Choatix.Full.Optimization.Setup.1.0.0.exe' }
+    };
+
+    const pending = JSON.parse(localStorage.getItem('choatix_pending_purchase') || '[]');
+    const list = document.getElementById('downloadList');
+    const box = document.getElementById('downloadBox');
+    const empty = document.getElementById('downloadEmpty');
+
+    if (pending.length > 0) {
+      localStorage.removeItem('choatix_pending_purchase');
+      pending.forEach(item => {
+        const dl = DOWNLOADS[item.id];
+        if (!dl) return;
+        const div = document.createElement('div');
+        div.className = 'download-item';
+        div.innerHTML = '<div class="download-item-info"><div class="download-item-name">' + dl.name + '</div><div class="download-item-id">' + item.id + '</div></div><a href="' + RELEASE_BASE + '/' + dl.file + '" download><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>Download</a>';
+        list.appendChild(div);
+      });
+    } else {
+      box.style.display = 'none';
+      empty.style.display = '';
+    }
+  </script>
+</body>
+</html>

@@ -151,9 +151,12 @@ function closeCart() {
 async function checkout() {
   if (cart.length === 0) return;
   let username = localStorage.getItem('username');
-  if (!username) username = prompt('Enter your Discord username (for key delivery):');
-  if (!username) return;
-  localStorage.setItem('username', username);
+  if (!username) {
+    username = prompt('Enter your Discord username (for delivery):');
+    if (!username) return;
+    localStorage.setItem('username', username);
+  }
+  localStorage.setItem('choatix_pending_purchase', JSON.stringify(cart.map(i => ({ id: i.id, name: i.name }))));
   const btn = document.getElementById('cartCheckout');
   btn.textContent = 'Redirecting to PayPal...';
   btn.disabled = true;
@@ -178,10 +181,8 @@ renderCart();
 // ── PayPal success ──
 const urlParams = new URLSearchParams(window.location.search);
 if (urlParams.get('checkout') === 'success') {
-  setTimeout(() => {
-    alert('Payment received! Your key will be delivered shortly.\n\nRun /claim in our Discord server to get your key:\nhttps://discord.gg/AhEK85REhG');
-    window.history.replaceState({}, '', window.location.pathname);
-  }, 500);
+  window.history.replaceState({}, '', window.location.pathname);
+  window.location.href = 'download.html';
 }
 
 // ── Discord Login ──
