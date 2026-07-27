@@ -4,9 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Download — Choatix V2</title>
-  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-  <meta http-equiv="Pragma" content="no-cache">
-  <meta http-equiv="Expires" content="0">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
@@ -16,24 +13,21 @@
     .dl-check{width:64px;height:64px;border-radius:50%;background:rgba(78,201,94,0.15);display:flex;align-items:center;justify-content:center;margin:0 auto 24px}
     .dl-check svg{width:32px;height:32px;stroke:#4ec95e;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
     .dl-box h1{font-size:24px;font-weight:700;color:#fff;margin-bottom:8px}
-    .dl-box p{font-size:14px;color:#888;margin-bottom:32px;line-height:1.6}
+    .dl-box>p{font-size:14px;color:#888;margin-bottom:32px;line-height:1.6}
     .dl-list{display:flex;flex-direction:column;gap:12px;margin-bottom:32px}
     .dl-item{display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:16px 20px}
     .dl-item-info{text-align:left}
     .dl-item-name{font-size:14px;font-weight:600;color:#fff}
     .dl-item-id{font-size:11px;color:#666;margin-top:2px}
-    .dl-item a{display:inline-flex;align-items:center;gap:6px;background:#4ec95e;color:#000;font-size:13px;font-weight:600;padding:8px 18px;border-radius:8px;text-decoration:none;transition:background 0.2s}
+    .dl-item a{display:inline-flex;align-items:center;gap:6px;background:#4ec95e;color:#000;font-size:13px;font-weight:600;padding:8px 18px;border-radius:8px;text-decoration:none}
     .dl-item a:hover{background:#3db84d}
     .dl-item a svg{width:14px;height:14px;fill:currentColor}
     .dl-alt{font-size:12px;color:#555;margin-top:8px}
     .dl-alt a{color:#4ec95e;text-decoration:none}
-    .dl-alt a:hover{text-decoration:underline}
     .dl-empty{text-align:center;padding:80px 20px}
     .dl-empty h2{font-size:20px;color:#fff;margin-bottom:8px}
     .dl-empty p{font-size:14px;color:#666;margin-bottom:24px}
     .dl-empty a{color:#4ec95e;text-decoration:none;font-weight:600}
-    .dl-loading{color:#666;font-size:14px;padding:40px 0}
-    .dl-error{color:#e55;font-size:14px;padding:40px 0}
   </style>
 </head>
 <body>
@@ -43,23 +37,18 @@
     <div class="nav-links">
       <a href="index.html">Home</a>
       <a href="features.html">Features</a>
-      <a href="tweaks.html">Tweaks</a>
       <a href="products.html">Products</a>
       <a href="pricing.html">Pricing</a>
-      <a href="faq.html">FAQ</a>
-      <a href="team.html">Team</a>
       <a href="https://discord.gg/AhEK85REhG" target="_blank">Discord</a>
     </div>
   </nav>
 
-  <div class="dl-page">
-    <div class="dl-box" id="dlBox">
+  <div class="dl-page" id="dlPage" style="display:none">
+    <div class="dl-box">
       <div class="dl-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
       <h1>Payment Received!</h1>
       <p>Thank you for your purchase. Your downloads are ready.</p>
       <div class="dl-list" id="dlList"></div>
-      <div class="dl-loading" id="dlLoading">Verifying your purchase...</div>
-      <div class="dl-error" id="dlError" style="display:none"></div>
       <div class="dl-alt">Need help? <a href="https://discord.gg/AhEK85REhG" target="_blank">Join our Discord</a></div>
     </div>
   </div>
@@ -75,88 +64,44 @@
   <footer>
     <div class="footer-links">
       <a href="features.html">Features</a>
-      <a href="tweaks.html">Tweaks</a>
       <a href="products.html">Products</a>
       <a href="pricing.html">Pricing</a>
-      <a href="faq.html">FAQ</a>
-      <a href="team.html">Team</a>
       <a href="https://discord.gg/AhEK85REhG" target="_blank">Discord</a>
     </div>
     <p>&copy; 2026 Choatix V2. Built by zylenofficial.</p>
   </footer>
 
   <script>
-    (function() {
-      var RELEASE_BASE = 'https://github.com/zylenofficial/choatix-v2/releases/download/products-v1.0.0';
-      var DOWNLOADS = {
-        basic:     { name: 'Choatix Basic Tweaks',          file: 'Choatix.Basic.Tweaks.Setup.1.0.0.exe' },
-        pro:       { name: 'Choatix Pro Tweaks',            file: 'Choatix.Pro.Tweaks.Setup.1.0.0.exe' },
-        extreme:   { name: 'Choatix Extreme Tweaks',        file: 'Choatix.Extreme.Tweaks.Setup.1.0.0.exe' },
-        precision: { name: 'Choatix Precision Tweaks',      file: 'Choatix.Precision.Tweaks.Setup.1.0.0.exe' },
-        power:     { name: 'Choatix Premium Power Plan',    file: 'Choatix.Premium.Power.Plan.Setup.1.0.0.exe' },
-        full:      { name: 'Choatix Full Optimization',     file: 'Choatix.Full.Optimization.Setup.1.0.0.exe' }
-      };
+    var RELEASE_BASE = 'https://github.com/zylenofficial/choatix-v2/releases/download/products-v1.0.0';
+    var PRODUCTS = {
+      basic:     { name: 'Choatix Basic Tweaks',          file: 'Choatix.Basic.Tweaks.Setup.1.0.0.exe' },
+      pro:       { name: 'Choatix Pro Tweaks',            file: 'Choatix.Pro.Tweaks.Setup.1.0.0.exe' },
+      extreme:   { name: 'Choatix Extreme Tweaks',        file: 'Choatix.Extreme.Tweaks.Setup.1.0.0.exe' },
+      precision: { name: 'Choatix Precision Tweaks',      file: 'Choatix.Precision.Tweaks.Setup.1.0.0.exe' },
+      power:     { name: 'Choatix Premium Power Plan',    file: 'Choatix.Premium.Power.Plan.Setup.1.0.0.exe' },
+      full:      { name: 'Choatix Full Optimization',     file: 'Choatix.Full.Optimization.Setup.1.0.0.exe' }
+    };
 
-      var params = new URLSearchParams(window.location.search);
-      var token = localStorage.getItem('choatix_download_token') || params.get('token');
-      var username = localStorage.getItem('username') || params.get('user');
-      var pending = [];
-      try { pending = JSON.parse(localStorage.getItem('choatix_pending_purchase') || '[]'); } catch(e) {}
-      var urlProducts = params.get('products') ? params.get('products').split(',').map(function(id) { return { id: id, name: id }; }) : [];
-      var items = pending.length > 0 ? pending : urlProducts;
+    var p = new URLSearchParams(window.location.search);
+    var token = p.get('token');
+    var user = p.get('user');
+    var prods = p.get('products');
 
-      var box = document.getElementById('dlBox');
+    if (!token || !user || !prods) {
+      document.getElementById('dlEmpty').style.display = '';
+    } else {
+      var ids = prods.split(',');
       var list = document.getElementById('dlList');
-      var loading = document.getElementById('dlLoading');
-      var errorEl = document.getElementById('dlError');
-      var empty = document.getElementById('dlEmpty');
-
-      function showError(msg) {
-        loading.style.display = 'none';
-        errorEl.textContent = msg;
-        errorEl.style.display = '';
-      }
-
-      function renderItems(validItems) {
-        loading.style.display = 'none';
-        validItems.forEach(function(item) {
-          var dl = DOWNLOADS[item.id];
-          if (!dl) return;
-          var div = document.createElement('div');
-          div.className = 'dl-item';
-          div.innerHTML = '<div class="dl-item-info"><div class="dl-item-name">' + dl.name + '</div><div class="dl-item-id">' + item.id + '</div></div><a href="' + RELEASE_BASE + '/' + dl.file + '" download><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>Download</a>';
-          list.appendChild(div);
-        });
-      }
-
-      function showEmpty() {
-        box.style.display = 'none';
-        empty.style.display = '';
-      }
-
-      if (!items.length || !token || !username) {
-        showEmpty();
-        return;
-      }
-
-      fetch('https://choatix-v2.onrender.com/api/verify-download', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token: token, discordUsername: username })
-      }).then(function(r) { return r.json(); }).then(function(data) {
-        try { localStorage.removeItem('choatix_pending_purchase'); } catch(e) {}
-        try { localStorage.removeItem('choatix_download_token'); } catch(e) {}
-        if (data.valid && data.products) {
-          var validItems = items.filter(function(i) { return data.products.indexOf(i.id) !== -1; });
-          if (validItems.length === 0) validItems = items;
-          renderItems(validItems);
-        } else {
-          showError('Purchase not verified. Please complete payment first.');
-        }
-      }).catch(function(err) {
-        showError('Could not verify purchase. Please try again or contact support.');
+      ids.forEach(function(id) {
+        var info = PRODUCTS[id];
+        if (!info) return;
+        var d = document.createElement('div');
+        d.className = 'dl-item';
+        d.innerHTML = '<div class="dl-item-info"><div class="dl-item-name">' + info.name + '</div><div class="dl-item-id">' + id + '</div></div><a href="' + RELEASE_BASE + '/' + info.file + '" download><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>Download</a>';
+        list.appendChild(d);
       });
-    })();
+      document.getElementById('dlPage').style.display = '';
+    }
   </script>
 </body>
 </html>
