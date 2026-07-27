@@ -982,6 +982,7 @@ app.post('/api/checkout', async (req, res) => {
           created_at TEXT DEFAULT NOW()::TEXT
         )
       `);
+      await pool.query("ALTER TABLE pending_orders ADD COLUMN IF NOT EXISTS download_token TEXT");
       for (const item of orderItems) {
         await pool.query(
           'INSERT INTO pending_orders (discord_username, product_id, product_name, price, tier, download_token) VALUES ($1, $2, $3, $4, $5, $6)',
