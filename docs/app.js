@@ -134,6 +134,15 @@ function renderCart() {
   el.innerHTML = cart.map(i => '<div class="cart-item"><div class="cart-item-icon">&#9733;</div><div class="cart-item-info"><div class="cart-item-name">' + i.name + '</div><div class="cart-item-price">&euro;' + i.price.toFixed(2) + '</div></div><div class="cart-item-qty"><button onclick="changeQty(\'' + i.id + '\',-1)">&#8722;</button><span>' + i.qty + '</span><button onclick="changeQty(\'' + i.id + '\',1)">+</button></div><button class="cart-item-remove" onclick="removeFromCart(\'' + i.id + '\')">&#10005;</button></div>').join('');
   if (total) total.innerHTML = '\u20AC' + getCartTotal().toFixed(2);
   if (checkoutBtn) checkoutBtn.disabled = false;
+  
+  // Add no-refund notice
+  const foot = document.querySelector('.cart-foot');
+  if (foot && !foot.querySelector('.no-refund')) {
+    const notice = document.createElement('div');
+    notice.className = 'no-refund';
+    notice.innerHTML = '<span style="color:#ff5252;font-size:0.65rem;font-weight:700">&#9888; All sales final &mdash; no refunds. Digital products delivered instantly.</span>';
+    foot.insertBefore(notice, checkoutBtn);
+  }
 }
 
 function openCart() {

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Refund Policy — Choatix V2</title>
+  <meta name="description" content="Choatix V2 refund policy. All sales are final for digital products.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div class="scroll-bar" id="scrollBar"></div>
+  <canvas id="particles"></canvas>
+  <div class="noise"></div>
+
+  <nav id="nav">
+    <a href="index.html" class="nav-brand">choatix<span>.</span></a>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="features.html">Features</a>
+      <a href="tweaks.html">Tweaks</a>
+      <a href="products.html">Products</a>
+      <a href="pricing.html">Pricing</a>
+      <a href="faq.html">FAQ</a>
+      <a href="refund-policy.html" class="active">Refund Policy</a>
+      <a href="team.html">Team</a>
+      <a href="https://discord.gg/AhEK85REhG" target="_blank">Discord</a>
+      <button class="cart-btn" onclick="openCart()" id="cartBtn">&#128722;<span class="cart-badge" id="cartBadge">0</span></button>
+      <div class="user-menu" id="userMenu" style="display:none">
+        <a href="#" class="user-btn" onclick="toggleDropdown(event)">
+          <img class="user-avatar" id="userAvatar" src="" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+          <div class="user-avatar-fallback" id="userAvatarFallback" style="display:none"></div>
+          <span class="user-name" id="userName"></span>
+          <span class="user-tier free" id="userTier">FREE</span>
+        </a>
+        <div class="user-dropdown">
+          <a class="dropdown-item" href="https://github.com/zylenofficial/choatix-v2/releases/latest" target="_blank"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>Download App</a>
+          <a class="dropdown-item" href="https://discord.gg/AhEK85REhG" target="_blank"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Join Discord</a>
+          <div class="dropdown-divider"></div>
+          <a class="dropdown-item danger" href="#" onclick="handleLogout(event)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>Logout</a>
+        </div>
+      </div>
+      <a href="#" class="btn btn-secondary" id="loginBtn" onclick="handleLogin(event)">Login</a>
+    </div>
+  </nav>
+
+  <section class="page-hero">
+    <h1>Refund <em>Policy</em></h1>
+    <p>Digital products — all sales final</p>
+  </section>
+
+  <section>
+    <div style="max-width:700px;margin:0 auto;padding:0 2rem">
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:3rem">
+        <h2 style="font-size:1.5rem;font-weight:800;margin-bottom:1.5rem;color:var(--text)">All Sales Are Final</h2>
+        <p style="font-size:1rem;color:var(--text-mid);line-height:1.7;margin-bottom:2rem">Choatix V2 sells digital products (downloadable .exe installers). Once a purchase is completed and the download link is delivered, the product cannot be returned, exchanged, or refunded.</p>
+        
+        <h3 style="font-size:1.1rem;font-weight:700;margin-bottom:1rem;color:var(--text)">Why No Refunds?</h3>
+        <ul style="color:var(--text-mid);line-height:1.8;margin-bottom:2rem;padding-left:1.5rem">
+          <li>Digital goods cannot be "returned" — the installer and tweaks are delivered instantly</li>
+          <li>Download links are one-time use tokens tied to your Discord username</li>
+          <li>All tweaks are fully documented before purchase on the <a href="product-details.html" style="color:var(--green);text-decoration:underline">Product Details</a> page</li>
+          <li>The free version is available to test compatibility before buying</li>
+        </ul>
+
+        <h3 style="font-size:1.1rem;font-weight:700;margin-bottom:1rem;color:var(--text)">What If It Doesn't Work?</h3>
+        <p style="color:var(--text-mid);line-height:1.7;margin-bottom:2rem">We don't offer refunds, but we <strong>do</strong> offer support:</p>
+        <ul style="color:var(--text-mid);line-height:1.8;margin-bottom:2rem;padding-left:1.5rem">
+          <li>Join our <a href="https://discord.gg/AhEK85REhG" target="_blank" style="color:var(--green);text-decoration:underline">Discord</a> and open a support ticket</li>
+          <li>We'll help troubleshoot: admin rights, antivirus, Windows version, driver issues</li>
+          <li>Every tweak has a revert command — use "Revert All" in the app if needed</li>
+        </ul>
+
+        <h3 style="font-size:1.1rem;font-weight:700;margin-bottom:1rem;color:var(--text)">Exceptions (Rare)</h3>
+        <p style="color:var(--text-mid);line-height:1.7;margin-bottom:2rem">We may issue a refund <strong>only</strong> if:</p>
+        <ul style="color:var(--text-mid);line-height:1.8;margin-bottom:2rem;padding-left:1.5rem">
+          <li>Duplicate charge for the same order (contact support with both transaction IDs)</li>
+          <li>Payment processed but download token never generated (system error — we'll fix and resend)</li>
+        </ul>
+
+        <div style="background:rgba(255,82,82,0.1);border:1px solid rgba(255,82,82,0.2);border-radius:10px;padding:1.5rem;margin-top:2rem">
+          <p style="color:#ff5252;font-weight:600;margin:0"><strong>By completing a purchase, you agree to this policy.</strong> If you do not agree, do not purchase.</p>
+        </div>
+      </div>
+
+      <div style="text-align:center;margin-top:2rem">
+        <a href="products.html" class="btn btn-primary">Back to Products</a>
+        <a href="https://discord.gg/AhEK85REhG" class="btn btn-discord" target="_blank" style="margin-left:1rem">Contact Support</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="footer-links">
+      <a href="features.html">Features</a>
+      <a href="tweaks.html">Tweaks</a>
+      <a href="products.html">Products</a>
+      <a href="pricing.html">Pricing</a>
+      <a href="faq.html">FAQ</a>
+      <a href="refund-policy.html">Refund Policy</a>
+      <a href="team.html">Team</a>
+      <a href="https://discord.gg/AhEK85REhG" target="_blank">Discord</a>
+    </div>
+    <p>&copy; 2026 Choatix V2. Built by zylenofficial.</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
