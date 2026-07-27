@@ -1011,6 +1011,10 @@ app.post('/api/verify-download', async (req, res) => {
     );
     if (result.rows.length === 0) return res.json({ valid: false });
     const products = result.rows.map(r => r.product_id);
+    await pool.query(
+      'DELETE FROM pending_orders WHERE download_token = $1 AND discord_username = $2',
+      [token, discordUsername]
+    );
     res.json({ valid: true, products: [...new Set(products)] });
   } catch (err) {
     res.status(500).json({ valid: false });
