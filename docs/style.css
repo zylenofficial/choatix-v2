@@ -277,16 +277,9 @@ footer p{font-size:0.75rem;color:var(--text-dim)}
 .cta-section h2{font-size:clamp(2.25rem,5vw,3.5rem);font-weight:900;letter-spacing:-0.05em;margin-bottom:1rem;line-height:1.05}
 .cta-section p{color:var(--text-dim);margin-bottom:2.5rem;font-size:1rem}
 .cta-buttons{display:flex;gap:1rem;justify-content:center;flex-wrap:wrap}
-.product-features{max-height:0;overflow:hidden;transition:max-height 0.4s ease;text-align:left;padding:0 20px}
-.product-card.open .product-features{max-height:600px;padding:16px 20px}
-.features-toggle{background:none;border:1px solid rgba(255,255,255,0.12);color:#aaa;font-size:11px;padding:6px 14px;border-radius:6px;cursor:pointer;width:100%;margin-top:8px;transition:all 0.2s}
-.features-toggle:hover{border-color:#4ec95e;color:#4ec95e}
-.product-card.open .features-toggle{border-color:#4ec95e;color:#4ec95e}
-.features-title{font-size:12px;font-weight:700;color:#4ec95e;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px}
-.features-list{list-style:none;padding:0;margin:0}
-.features-list li{font-size:12px;color:#999;padding:4px 0 4px 16px;position:relative;line-height:1.5}
-.features-list li::before{content:'\2713';position:absolute;left:0;color:#4ec95e;font-size:11px}
-.features-list li.highlight{color:#ccc;font-weight:500}
+.badge-new::after{content:'New!';position:absolute;top:0;left:50%;transform:translateX(-50%);background:#3b82f6;color:#fff;font-size:0.5rem;font-weight:800;letter-spacing:0.08em;padding:0.2rem 0.6rem;border-radius:0 0 6px 6px;z-index:2}
+.badge-aim::after{content:'Better Aim';position:absolute;top:0;left:50%;transform:translateX(-50%);background:#a855f7;color:#fff;font-size:0.5rem;font-weight:800;letter-spacing:0.08em;padding:0.2rem 0.6rem;border-radius:0 0 6px 6px;z-index:2}
+.badge-save::after{content:'Save Bills';position:absolute;top:0;left:50%;transform:translateX(-50%);background:#f59e0b;color:#000;font-size:0.5rem;font-weight:800;letter-spacing:0.08em;padding:0.2rem 0.6rem;border-radius:0 0 6px 6px;z-index:2}
 
 .product-lineup-section{padding:4rem 2rem;max-width:1100px;margin:0 auto}
 .product-lineup-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem}
