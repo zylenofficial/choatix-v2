@@ -94,14 +94,17 @@
       full:      { name: 'Choatix Full Optimization',     file: 'Choatix.Full.Optimization.Setup.1.0.0.exe' }
     };
 
+    const urlParams = new URLSearchParams(window.location.search);
     const pending = JSON.parse(localStorage.getItem('choatix_pending_purchase') || '[]');
-    const token = localStorage.getItem('choatix_download_token');
-    const username = localStorage.getItem('username');
+    const token = localStorage.getItem('choatix_download_token') || urlParams.get('token');
+    const username = localStorage.getItem('username') || urlParams.get('user');
+    const urlProducts = urlParams.get('products') ? urlParams.get('products').split(',').map(id => ({ id, name: id })) : [];
+    const items = pending.length > 0 ? pending : urlProducts;
     const list = document.getElementById('downloadList');
     const box = document.getElementById('downloadBox');
     const empty = document.getElementById('downloadEmpty');
 
-    if (pending.length > 0 && token && username) {
+    if (items.length > 0 && token && username) {
       fetch('https://choatix-v2.onrender.com/api/verify-download', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -110,8 +113,8 @@
         localStorage.removeItem('choatix_pending_purchase');
         localStorage.removeItem('choatix_download_token');
         if (data.valid && data.products) {
-          const validItems = pending.filter(i => data.products.includes(i.id));
-          if (validItems.length === 0) validItems.push(...pending);
+          const validItems = items.filter(i => data.products.includes(i.id));
+          if (validItems.length === 0) validItems.push(...items);
           validItems.forEach(item => {
             const dl = DOWNLOADS[item.id];
             if (!dl) return;

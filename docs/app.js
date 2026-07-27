@@ -190,6 +190,17 @@ if (urlParams.get('checkout') === 'success') {
   window.location.href = 'download.html';
 }
 
+// ── Test mode (skip PayPal) ──
+if (urlParams.get('test') === 'download') {
+  const testUser = urlParams.get('user') || localStorage.getItem('username') || 'zylenoff';
+  const testProducts = (urlParams.get('products') || 'basic').split(',');
+  localStorage.setItem('username', testUser);
+  localStorage.setItem('choatix_pending_purchase', JSON.stringify(testProducts.map(id => ({ id, name: id }))));
+  localStorage.setItem('choatix_download_token', urlParams.get('token') || 'test');
+  window.history.replaceState({}, '', window.location.pathname);
+  window.location.href = 'download.html';
+}
+
 // ── Discord Login ──
 const params = new URLSearchParams(window.location.search);
 const discordId = params.get('discord_id');
