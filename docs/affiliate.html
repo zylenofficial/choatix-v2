@@ -207,7 +207,7 @@
       <div class="faq-grid">
         <div class="faq-item">
           <h4>How do I get paid?</h4>
-          <p>Request a payout from your dashboard. We send money manually via PayPal within 24-48 hours. Minimum payout is €5.</p>
+          <p>Request a payout from your dashboard. We send money manually via PayPal monthly. Minimum payout is €5.</p>
         </div>
         <div class="faq-item">
           <h4>How long does the cookie last?</h4>
@@ -219,7 +219,7 @@
         </div>
         <div class="faq-item">
           <h4>Is there a limit on earnings?</h4>
-          <p>No limits. Some affiliates earn €100+/month. The more you promote, the more you earn.</p>
+          <p>No limits. The more you promote, the more you earn.</p>
         </div>
       </div>
     </section>
@@ -380,7 +380,7 @@
 
     async function requestPayout(){
       if(!user)return;
-      try{const r=await fetch(API+'/api/affiliate/'+user.discord_id+'/payout',{method:'POST',headers:{'Content-Type':'application/json'}});const d=await r.json();if(d.success){alert('Payout of €'+d.amount.toFixed(2)+' requested! We will send it to your PayPal within 24-48 hours.');loadStats();}else{alert(d.error||'Failed');}}catch(e){alert('Network error');}
+      try{const r=await fetch(API+'/api/affiliate/'+user.discord_id+'/payout',{method:'POST',headers:{'Content-Type':'application/json'}});const d=await r.json();if(d.success){alert('Payout of €'+d.amount.toFixed(2)+' requested! We will send it to your PayPal monthly.');loadStats();}else{alert(d.error||'Failed');}}catch(e){alert('Network error');}
     }
 
     function switchTab(btn,tab){
