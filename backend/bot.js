@@ -216,6 +216,10 @@ async function registerCommands() {
     new SlashCommandBuilder()
       .setName('claim')
       .setDescription('Get download links for your website purchases'),
+    new SlashCommandBuilder()
+      .setName('affiliate-stats')
+      .setDescription('View affiliate earnings (admin only)')
+      .addUserOption(opt => opt.setName('affiliate').setDescription('Check specific affiliate').setRequired(false)),
   ];
 
   const rest = new REST({ version: '10' }).setToken(BOT_TOKEN);
@@ -1057,6 +1061,65 @@ client.on('interactionCreate', async (interaction) => {
     } catch (err) {
       console.error('[CLAIM ERROR]', err.message);
       await interaction.editReply({ content: '❌ Error fetching purchases.' });
+    }
+  }
+
+  // ─── /affiliate-stats ──────────────────────────────────────
+  if (interaction.isChatInputCommand() && interaction.commandName === 'affiliate-stats') {
+    if (!ADMIN_IDS.includes(interaction.user.id)) {
+      return interaction.reply({ content: '❌ Admin only.', ephemeral: true });
+    }
+    await interaction.deferReply({ ephemeral: true });
+
+    const targetUser = interaction.options.getUser('affiliate');
+    const embed = new EmbedBuilder().setColor(0x4ec95e).setTimestamp();
+
+    try {
+      if (targetUser) {
+        // Check specific affiliate
+        const stats = await dbQuery(
+          `SELECT * FROM affiliates WHERE discord_id = $1`, [targetUser.id]
+        );
+        if (stats.rows.length === 0) {
+          return interaction.editReply({ content: '❌ That user is not an affiliate.' });
+        }
+        const aff = stats.rows[0];
+        const clicks = await dbQuery('SELECT COALESCE(SUM(clicks), 0) as t FROM affiliate_links WHERE affiliate_id = $1', [targetUser.id]);
+        const conv = await dbQuery('SELECT COALESCE(SUM(conversions), 0) as t FROM affiliate_links WHERE affiliate_id = $1', [targetUser.id]);
+        const sales = await dbQuery("SELECT COALESCE(SUM(commission), 0) as t FROM affiliate_sales WHERE affiliate_id = $1 AND status = 'pending'", [targetUser.id]);
+        const total = await dbQuery('SELECT COALESCE(SUM(commission), 0) as t FROM affiliate_sales WHERE affiliate_id = $1', [targetUser.id]);
+        const paid = await dbQuery('SELECT COALESCE(SUM(amount), 0) as t FROM affiliate_payouts WHERE affiliate_id = $1', [targetUser.id]);
+
+        embed.setTitle(`📊 Affiliate: ${aff.display_name}`);
+        embed.addFields(
+          { name: 'Earnings', value: `**€${parseFloat(total.rows[0].t).toFixed(2)}**`, inline: true },
+          { name: 'Pending', value: `**€${parseFloat(sales.rows[0].t).toFixed(2)}**`, inline: true },
+          { name: 'Paid Out', value: `**€${parseFloat(paid.rows[0].t).toFixed(2)}**`, inline: true },
+          { name: 'Clicks', value: `${clicks.rows[0].t}`, inline: true },
+          { name: 'Conversions', value: `${conv.rows[0].t}`, inline: true },
+          { name: 'PayPal', value: `\`${aff.paypal_email}\``, inline: true }
+        );
+      } else {
+        // Show all affiliates
+        const all = await dbQuery('SELECT * FROM affiliates ORDER BY total_earned DESC');
+        if (all.rows.length === 0) {
+          return interaction.editReply({ content: 'No affiliates registered yet.' });
+        }
+        const lines = [];
+        for (const aff of all.rows) {
+          const sales = await dbQuery('SELECT COALESCE(SUM(commission), 0) as t FROM affiliate_sales WHERE affiliate_id = $1', [aff.discord_id]);
+          const pending = await dbQuery("SELECT COALESCE(SUM(commission), 0) as t FROM affiliate_sales WHERE affiliate_id = $1 AND status = 'pending'", [aff.discord_id]);
+          const conv = await dbQuery('SELECT COALESCE(SUM(conversions), 0) as t FROM affiliate_links WHERE affiliate_id = $1', [aff.discord_id]);
+          lines.push(`**${aff.display_name}** — €${parseFloat(sales.rows[0].t).toFixed(2)} earned | €${parseFloat(pending.rows[0].t).toFixed(2)} pending | ${conv.rows[0].t} sales`);
+        }
+        embed.setTitle('📊 All Affiliates');
+        embed.setDescription(lines.join('\n'));
+        embed.setFooter({ text: `${all.rows.length} affiliate(s) total` });
+      }
+      await interaction.editReply({ embeds: [embed] });
+    } catch (err) {
+      console.error('[AFFILIATE-STATS ERROR]', err.message);
+      await interaction.editReply({ content: '❌ Error fetching affiliate stats.' });
     }
   }
 });
