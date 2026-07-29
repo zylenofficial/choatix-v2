@@ -3,72 +3,120 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Choatix Affiliate Program</title>
-  <meta name="description" content="Earn money by referring friends to Choatix. 10% commission on every sale.">
+  <title>Affiliate Program — Choatix</title>
+  <meta name="description" content="Earn money promoting Choatix. 10% commission on every sale.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
   <style>
-    .affiliate-hero{padding:120px 20px 60px;text-align:center;position:relative}
-    .affiliate-hero h1{font-size:clamp(2rem,5vw,3.5rem);font-weight:900;margin-bottom:16px}
-    .affiliate-hero h1 span{color:var(--accent)}
-    .affiliate-hero p{color:var(--text-secondary);font-size:1.1rem;max-width:600px;margin:0 auto 32px}
-    .affiliate-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:20px;max-width:900px;margin:0 auto 60px}
-    .aff-stat{background:var(--card-bg);border:1px solid var(--border);border-radius:16px;padding:32px 24px;text-align:center}
-    .aff-stat .num{font-size:2.5rem;font-weight:800;color:var(--accent);margin-bottom:4px}
-    .aff-stat .lbl{color:var(--text-secondary);font-size:0.85rem;text-transform:uppercase;letter-spacing:0.05em}
-    .affiliate-section{max-width:900px;margin:0 auto 60px;padding:0 20px}
-    .section-title{font-size:1.8rem;font-weight:800;margin-bottom:8px}
-    .section-desc{color:var(--text-secondary);margin-bottom:32px}
-    .register-form{background:var(--card-bg);border:1px solid var(--border);border-radius:16px;padding:40px}
-    .form-group{margin-bottom:20px}
-    .form-group label{display:block;font-weight:600;margin-bottom:8px;font-size:0.9rem}
-    .form-group input{width:100%;padding:12px 16px;background:var(--input-bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:0.95rem;font-family:inherit;transition:border-color 0.2s}
-    .form-group input:focus{outline:none;border-color:var(--accent)}
-    .form-group .hint{font-size:0.8rem;color:var(--text-secondary);margin-top:6px}
-    .btn-affiliate{padding:14px 32px;background:var(--accent);color:#000;border:none;border-radius:8px;font-weight:700;font-size:1rem;cursor:pointer;font-family:inherit;transition:all 0.2s}
-    .btn-affiliate:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(78,201,94,0.3)}
-    .btn-secondary{background:transparent;border:1px solid var(--border);color:var(--text);padding:10px 20px;border-radius:8px;font-weight:600;cursor:pointer;font-family:inherit;transition:all 0.2s}
-    .btn-secondary:hover{border-color:var(--accent);color:var(--accent)}
-    .dashboard{display:none}
-    .dash-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:32px;flex-wrap:wrap;gap:16px}
-    .dash-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:32px}
-    .dash-card{background:var(--card-bg);border:1px solid var(--border);border-radius:12px;padding:24px}
-    .dash-card .num{font-size:2rem;font-weight:800;margin-bottom:4px}
-    .dash-card .lbl{color:var(--text-secondary);font-size:0.8rem;text-transform:uppercase}
-    .dash-card.green .num{color:var(--accent)}
-    .dash-card.blue .num{color:#54a0ff}
-    .dash-card.orange .num{color:#ffa502}
-    .dash-card.red .num{color:#ff6b6b}
-    .link-box{background:var(--card-bg);border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:16px}
-    .link-url{display:flex;gap:8px;align-items:center;margin-top:12px}
-    .link-url input{flex:1;padding:10px 14px;background:var(--input-bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:monospace;font-size:0.85rem}
-    .link-url button{padding:10px 20px;background:var(--accent);color:#000;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap}
-    .sales-table{width:100%;border-collapse:collapse}
-    .sales-table th{text-align:left;padding:12px 16px;border-bottom:2px solid var(--border);color:var(--text-secondary);font-size:0.8rem;text-transform:uppercase;letter-spacing:0.05em}
-    .sales-table td{padding:12px 16px;border-bottom:1px solid var(--border);font-size:0.9rem}
-    .sales-table .status{display:inline-block;padding:2px 8px;border-radius:4px;font-size:0.75rem;font-weight:600}
-    .sales-table .status.pending{background:rgba(255,165,2,0.15);color:#ffa502}
-    .sales-table .status.paid{background:rgba(78,201,94,0.15);color:var(--accent)}
-    .how-it-works{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:24px;margin-top:40px}
-    .step{background:var(--card-bg);border:1px solid var(--border);border-radius:12px;padding:32px 24px;text-align:center}
-    .step-num{width:48px;height:48px;border-radius:50%;background:var(--accent);color:#000;display:flex;align-items:center;justify-content:center;font-size:1.2rem;font-weight:800;margin:0 auto 16px}
-    .step h3{font-size:1.1rem;margin-bottom:8px}
-    .step p{color:var(--text-secondary);font-size:0.9rem;line-height:1.5}
-    .tiers-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-top:24px}
-    .tier-card{background:var(--card-bg);border:1px solid var(--border);border-radius:12px;padding:24px;text-align:center}
-    .tier-card .price{font-size:1.5rem;font-weight:800;color:var(--accent);margin-bottom:4px}
-    .tier-card .name{font-weight:600;margin-bottom:4px}
-    .tier-card .commission{color:var(--text-secondary);font-size:0.85rem}
-    .tab-nav{display:flex;gap:4px;margin-bottom:24px;border-bottom:1px solid var(--border);padding-bottom:4px}
-    .tab-btn{padding:10px 20px;background:transparent;border:none;color:var(--text-secondary);font-weight:600;cursor:pointer;font-family:inherit;border-radius:8px 8px 0 0;transition:all 0.2s}
-    .tab-btn.active{background:var(--card-bg);color:var(--accent)}
-    .tab-content{display:none}
-    .tab-content.active{display:block}
-    @media(max-width:640px){
-      .affiliate-stats{grid-template-columns:1fr 1fr}
-      .dash-grid{grid-template-columns:1fr 1fr}
-      .link-url{flex-direction:column}
+    .aff-hero{padding:140px 20px 80px;text-align:center;position:relative;overflow:hidden}
+    .aff-hero::before{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:600px;height:600px;background:radial-gradient(circle,rgba(78,201,94,0.08) 0%,transparent 70%);pointer-events:none}
+    .aff-badge{display:inline-block;padding:6px 16px;border:1px solid rgba(78,201,94,0.2);border-radius:100px;font-size:0.75rem;font-weight:600;color:#4ec95e;margin-bottom:24px;letter-spacing:0.05em;background:rgba(78,201,94,0.05)}
+    .aff-hero h1{font-size:clamp(2.5rem,6vw,4rem);font-weight:900;line-height:1.1;margin-bottom:20px;letter-spacing:-0.03em}
+    .aff-hero h1 .green{color:#4ec95e}
+    .aff-hero .subtitle{color:#8395a7;font-size:1.15rem;max-width:520px;margin:0 auto 40px;line-height:1.6}
+    .aff-metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.06);border-radius:16px;overflow:hidden;max-width:700px;margin:0 auto}
+    .aff-metric{background:#111;padding:28px 20px;text-align:center}
+    .aff-metric .val{font-size:2rem;font-weight:900;color:#fff;margin-bottom:4px}
+    .aff-metric .lbl{font-size:0.7rem;color:#576574;text-transform:uppercase;letter-spacing:0.08em;font-weight:600}
+
+    .aff-section{max-width:960px;margin:0 auto;padding:80px 20px}
+    .aff-section-title{text-align:center;margin-bottom:48px}
+    .aff-section-title h2{font-size:2rem;font-weight:800;margin-bottom:8px}
+    .aff-section-title p{color:#8395a7;font-size:1rem}
+
+    .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+    .step{background:#111;border:1px solid rgba(255,255,255,0.06);border-radius:16px;padding:36px 28px;text-align:center;position:relative;transition:border-color 0.3s}
+    .step:hover{border-color:rgba(78,201,94,0.2)}
+    .step-num{width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#4ec95e,#2ea043);color:#000;display:flex;align-items:center;justify-content:center;font-size:1.3rem;font-weight:900;margin:0 auto 20px;box-shadow:0 4px 20px rgba(78,201,94,0.25)}
+    .step h3{font-size:1.1rem;font-weight:700;margin-bottom:8px}
+    .step p{color:#8395a7;font-size:0.9rem;line-height:1.6}
+
+    .products-table{width:100%;border-collapse:collapse;background:#111;border:1px solid rgba(255,255,255,0.06);border-radius:16px;overflow:hidden}
+    .products-table thead{background:rgba(255,255,255,0.03)}
+    .products-table th{text-align:left;padding:16px 24px;font-size:0.7rem;font-weight:700;color:#576574;text-transform:uppercase;letter-spacing:0.08em;border-bottom:1px solid rgba(255,255,255,0.06)}
+    .products-table td{padding:16px 24px;border-bottom:1px solid rgba(255,255,255,0.03);font-size:0.9rem}
+    .products-table tr:last-child td{border-bottom:none}
+    .products-table .price{color:#fff;font-weight:700}
+    .products-table .commission{color:#4ec95e;font-weight:700;font-size:1rem}
+    .products-table .tier-badge{display:inline-block;padding:3px 10px;border-radius:6px;font-size:0.7rem;font-weight:700}
+    .tier-pro{background:rgba(78,201,94,0.1);color:#4ec95e}
+    .tier-premium{background:rgba(168,85,247,0.1);color:#a855f7}
+
+    .faq-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+    .faq-item{background:#111;border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:24px}
+    .faq-item h4{font-size:0.95rem;font-weight:700;margin-bottom:8px;color:#fff}
+    .faq-item p{color:#8395a7;font-size:0.85rem;line-height:1.6}
+
+    .register-section{background:#0a0a0a;border-top:1px solid rgba(255,255,255,0.06);padding:80px 20px}
+    .register-box{max-width:520px;margin:0 auto;background:#111;border:1px solid rgba(255,255,255,0.06);border-radius:20px;padding:48px 40px}
+    .register-box h2{font-size:1.6rem;font-weight:800;margin-bottom:6px;text-align:center}
+    .register-box .sub{color:#8395a7;text-align:center;margin-bottom:32px;font-size:0.9rem}
+    .form-row{margin-bottom:20px}
+    .form-row label{display:block;font-weight:600;margin-bottom:8px;font-size:0.85rem;color:#ccc}
+    .form-row input{width:100%;padding:14px 16px;background:#1a1a1a;border:1px solid rgba(255,255,255,0.08);border-radius:10px;color:#fff;font-size:0.95rem;font-family:inherit;transition:border-color 0.2s}
+    .form-row input:focus{outline:none;border-color:#4ec95e}
+    .form-row input::placeholder{color:#444}
+    .form-row .hint{font-size:0.75rem;color:#576574;margin-top:6px}
+    .btn-register{width:100%;padding:16px;background:linear-gradient(135deg,#4ec95e,#2ea043);color:#000;border:none;border-radius:10px;font-weight:800;font-size:1rem;cursor:pointer;font-family:inherit;transition:all 0.2s;margin-top:8px}
+    .btn-register:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(78,201,94,0.3)}
+    .btn-register:active{transform:scale(0.98)}
+    .reg-error{color:#ff6b6b;font-size:0.85rem;text-align:center;margin-top:12px;display:none}
+
+    .dash-section{display:none;max-width:960px;margin:0 auto;padding:100px 20px 60px}
+    .dash-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:32px;flex-wrap:wrap;gap:16px}
+    .dash-head h1{font-size:1.8rem;font-weight:800}
+    .dash-head p{color:#8395a7;font-size:0.9rem}
+    .dash-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:32px}
+    .dash-stat{background:#111;border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:24px}
+    .dash-stat .num{font-size:1.8rem;font-weight:800;margin-bottom:2px}
+    .dash-stat .lbl{color:#576574;font-size:0.7rem;text-transform:uppercase;letter-spacing:0.06em;font-weight:600}
+    .dash-stat.green .num{color:#4ec95e}
+    .dash-stat.orange .num{color:#ffa502}
+    .dash-stat.blue .num{color:#54a0ff}
+
+    .link-card{background:#111;border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:20px;margin-bottom:12px}
+    .link-card-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+    .link-card-code{font-family:monospace;font-weight:700;font-size:0.95rem;color:#fff}
+    .link-card-stats{font-size:0.8rem;color:#576574}
+    .link-card-url{display:flex;gap:8px}
+    .link-card-url input{flex:1;padding:10px 14px;background:#1a1a1a;border:1px solid rgba(255,255,255,0.08);border-radius:8px;color:#ccc;font-family:monospace;font-size:0.8rem}
+    .link-card-url button{padding:10px 20px;background:#4ec95e;color:#000;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-family:inherit;font-size:0.85rem;white-space:nowrap;transition:all 0.15s}
+    .link-card-url button:hover{background:#45b553}
+
+    .btn-payout{padding:12px 24px;background:transparent;border:1px solid rgba(255,255,255,0.1);color:#ccc;border-radius:8px;font-weight:600;cursor:pointer;font-family:inherit;font-size:0.85rem;transition:all 0.2s}
+    .btn-payout:hover{border-color:#4ec95e;color:#4ec95e}
+    .btn-newlink{padding:12px 24px;background:#4ec95e;color:#000;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-family:inherit;font-size:0.85rem;transition:all 0.2s}
+    .btn-newlink:hover{background:#45b553}
+
+    .tab-bar{display:flex;gap:4px;margin-bottom:24px;border-bottom:1px solid rgba(255,255,255,0.06);padding-bottom:0}
+    .tab-btn{padding:12px 20px;background:transparent;border:none;border-bottom:2px solid transparent;color:#576574;font-weight:600;cursor:pointer;font-family:inherit;font-size:0.85rem;transition:all 0.2s}
+    .tab-btn.active{color:#4ec95e;border-bottom-color:#4ec95e}
+    .tab-btn:hover{color:#ccc}
+    .tab-panel{display:none}
+    .tab-panel.active{display:block}
+
+    .sale-row{display:flex;align-items:center;padding:14px 0;border-bottom:1px solid rgba(255,255,255,0.03);font-size:0.9rem}
+    .sale-row:last-child{border-bottom:none}
+    .sale-date{width:120px;color:#576574}
+    .sale-product{flex:1;font-weight:600}
+    .sale-amount{width:80px;text-align:right;color:#ccc}
+    .sale-commission{width:80px;text-align:right;color:#4ec95e;font-weight:700}
+    .sale-status{width:80px;text-align:right}
+    .status-badge{display:inline-block;padding:3px 10px;border-radius:6px;font-size:0.7rem;font-weight:700}
+    .status-pending{background:rgba(255,165,2,0.1);color:#ffa502}
+    .status-paid{background:rgba(78,201,94,0.1);color:#4ec95e}
+
+    .empty-state{text-align:center;padding:48px 20px;color:#576574}
+    .empty-state p{font-size:0.9rem}
+
+    @media(max-width:768px){
+      .aff-metrics{grid-template-columns:repeat(2,1fr)}
+      .steps{grid-template-columns:1fr}
+      .faq-grid{grid-template-columns:1fr}
+      .dash-stats{grid-template-columns:repeat(2,1fr)}
+      .register-box{padding:32px 24px}
+      .sale-row{flex-wrap:wrap;gap:4px}
     }
   </style>
 </head>
@@ -84,7 +132,7 @@
       <a href="features.html">Features</a>
       <a href="products.html">Products</a>
       <a href="pricing.html">Pricing</a>
-      <a href="affiliate.html" style="color:var(--accent)">Affiliates</a>
+      <a href="affiliate.html" class="active" style="color:#4ec95e">Affiliates</a>
       <a href="https://discord.gg/AhEK85REhG" target="_blank">Discord</a>
       <a href="#" class="btn btn-secondary" id="loginBtn" onclick="handleLogin(event)">Login</a>
       <div class="user-menu" id="userMenu" style="display:none">
@@ -96,332 +144,250 @@
     </div>
   </nav>
 
-  <!-- Registration / Hero Section -->
-  <div id="affiliateHero" class="affiliate-hero">
-    <h1>Earn <span>10%</span> Commission</h1>
-    <p>Refer friends to Choatix and earn money on every sale. No limits, no hidden fees.</p>
-    
-    <div class="affiliate-stats">
-      <div class="aff-stat"><div class="num">10%</div><div class="lbl">Commission Rate</div></div>
-      <div class="aff-stat"><div class="num">€5</div><div class="lbl">Minimum Payout</div></div>
-      <div class="aff-stat"><div class="num">30</div><div class="lbl">Day Cookie</div></div>
-      <div class="aff-stat"><div class="num">6</div><div class="lbl">Products</div></div>
-    </div>
-
-    <div class="affiliate-section">
-      <h2 class="section-title">How It Works</h2>
-      <div class="how-it-works">
-        <div class="step"><div class="step-num">1</div><h3>Register</h3><p>Sign up with your Discord ID and PayPal email</p></div>
-        <div class="step"><div class="step-num">2</div><h3>Share</h3><p>Get your unique referral link and share it anywhere</p></div>
-        <div class="step"><div class="step-num">3</div><h3>Earn</h3><p>Earn 10% commission on every sale made through your link</p></div>
+  <!-- PUBLIC PAGE -->
+  <div id="publicPage">
+    <section class="aff-hero">
+      <div class="aff-badge">Affiliate Program</div>
+      <h1>Earn <span class="green">10%</span><br>On Every Sale</h1>
+      <p class="subtitle">Promote Choatix with your unique referral link. Earn commission on every customer you bring — no limits, no expiration.</p>
+      <div class="aff-metrics">
+        <div class="aff-metric"><div class="val">10%</div><div class="lbl">Commission</div></div>
+        <div class="aff-metric"><div class="val">€5</div><div class="lbl">Min Payout</div></div>
+        <div class="aff-metric"><div class="val">30 Days</div><div class="lbl">Cookie Life</div></div>
+        <div class="aff-metric"><div class="val">6</div><div class="lbl">Products</div></div>
       </div>
+    </section>
 
-      <h2 class="section-title" style="margin-top:48px">Commission Per Product</h2>
-      <div class="tiers-grid">
-        <div class="tier-card"><div class="price">€0.20</div><div class="name">Basic</div><div class="commission">€1.99 product</div></div>
-        <div class="tier-card"><div class="price">€0.40</div><div class="name">Pro</div><div class="commission">€3.99 product</div></div>
-        <div class="tier-card"><div class="price">€0.30</div><div class="name">Precision</div><div class="commission">€2.99 product</div></div>
-        <div class="tier-card"><div class="price">€0.60</div><div class="name">Extreme</div><div class="commission">€5.99 product</div></div>
-        <div class="tier-card"><div class="price">€0.40</div><div class="name">Power Plan</div><div class="commission">€3.99 product</div></div>
-        <div class="tier-card"><div class="price">€1.00</div><div class="name">Full Opti</div><div class="commission">€9.99 product</div></div>
+    <section class="aff-section">
+      <div class="aff-section-title">
+        <h2>How It Works</h2>
+        <p>Three simple steps to start earning</p>
       </div>
-    </div>
-
-    <div class="affiliate-section">
-      <div class="register-form" id="registerForm">
-        <h2 class="section-title">Become an Affiliate</h2>
-        <p class="section-desc">Enter your details below to start earning.</p>
-        <div class="form-group">
-          <label>Discord ID</label>
-          <input type="text" id="regDiscordId" placeholder="e.g. 1014494449809772544">
-          <div class="hint">Right-click your name in Discord → Copy User ID</div>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <h3>Sign Up</h3>
+          <p>Register with your Discord ID and PayPal email. Instant approval — no waiting.</p>
         </div>
-        <div class="form-group">
+        <div class="step">
+          <div class="step-num">2</div>
+          <h3>Share Your Link</h3>
+          <p>Get a unique referral link. Share it on YouTube, Twitter, Discord, or anywhere.</p>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <h3>Get Paid</h3>
+          <p>Earn 10% on every sale. Request a payout anytime (min €5). Sent via PayPal.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="aff-section" style="padding-top:0">
+      <div class="aff-section-title">
+        <h2>Commission Rates</h2>
+        <p>Earn on every product tier</p>
+      </div>
+      <table class="products-table">
+        <thead><tr><th>Product</th><th>Price</th><th>Your Commission</th><th>Tier</th></tr></thead>
+        <tbody>
+          <tr><td>Basic Tweaks</td><td class="price">€1.99</td><td class="commission">€0.20</td><td><span class="tier-badge tier-pro">PRO</span></td></tr>
+          <tr><td>Pro Tweaks</td><td class="price">€3.99</td><td class="commission">€0.40</td><td><span class="tier-badge tier-pro">PRO</span></td></tr>
+          <tr><td>Precision Tweaks</td><td class="price">€2.99</td><td class="commission">€0.30</td><td><span class="tier-badge tier-pro">PRO</span></td></tr>
+          <tr><td>Extreme Tweaks</td><td class="price">€5.99</td><td class="commission">€0.60</td><td><span class="tier-badge tier-premium">PREMIUM</span></td></tr>
+          <tr><td>Power Plan</td><td class="price">€3.99</td><td class="commission">€0.40</td><td><span class="tier-badge tier-pro">PRO</span></td></tr>
+          <tr><td>Full Optimization</td><td class="price">€9.99</td><td class="commission">€1.00</td><td><span class="tier-badge tier-premium">PREMIUM</span></td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="aff-section" style="padding-top:0">
+      <div class="aff-section-title">
+        <h2>Frequently Asked</h2>
+      </div>
+      <div class="faq-grid">
+        <div class="faq-item">
+          <h4>How do I get paid?</h4>
+          <p>Request a payout from your dashboard. We send money manually via PayPal within 24-48 hours. Minimum payout is €5.</p>
+        </div>
+        <div class="faq-item">
+          <h4>How long does the cookie last?</h4>
+          <p>30 days. If someone clicks your link and buys within 30 days, you get the commission.</p>
+        </div>
+        <div class="faq-item">
+          <h4>Can I promote on YouTube/TikTok?</h4>
+          <p>Absolutely. Share your link anywhere — YouTube descriptions, TikTok bios, Twitter, Discord servers, blogs, etc.</p>
+        </div>
+        <div class="faq-item">
+          <h4>Is there a limit on earnings?</h4>
+          <p>No limits. Some affiliates earn €100+/month. The more you promote, the more you earn.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="register-section" id="registerSection">
+      <div class="register-box">
+        <h2>Start Earning Today</h2>
+        <p class="sub">Fill in your details to get your unique referral link</p>
+        <div class="form-row">
+          <label>Discord ID</label>
+          <input type="text" id="regDiscordId" placeholder="Right-click your name in Discord → Copy User ID">
+          <div class="hint">Required to track your referrals</div>
+        </div>
+        <div class="form-row">
           <label>Display Name</label>
           <input type="text" id="regDisplayName" placeholder="Your name or brand">
         </div>
-        <div class="form-group">
+        <div class="form-row">
           <label>PayPal Email</label>
-          <input type="email" id="regPaypal" placeholder="your@email.com">
-          <div class="hint">We send payouts to this PayPal address</div>
+          <input type="email" id="regPaypal" placeholder="you@example.com">
+          <div class="hint">Where we send your commission payments</div>
         </div>
-        <button class="btn-affiliate" onclick="registerAffiliate()">Start Earning</button>
-        <p id="regError" style="color:#ff6b6b;margin-top:12px;font-size:0.9rem;display:none"></p>
+        <button class="btn-register" onclick="registerAffiliate()">Get My Referral Link</button>
+        <p class="reg-error" id="regError"></p>
       </div>
-    </div>
+    </section>
   </div>
 
-  <!-- Dashboard (shown after login as affiliate) -->
-  <div id="affiliateDashboard" class="dashboard">
-    <div class="affiliate-section">
-      <div class="dash-header">
-        <div>
-          <h1 style="font-size:1.8rem;font-weight:800">Affiliate Dashboard</h1>
-          <p style="color:var(--text-secondary)" id="dashWelcome">Welcome back!</p>
-        </div>
-        <div style="display:flex;gap:8px">
-          <button class="btn-secondary" onclick="requestPayout()">Request Payout</button>
-          <button class="btn-affiliate" onclick="generateLink()">+ New Link</button>
-        </div>
+  <!-- DASHBOARD (shown after register/login as affiliate) -->
+  <div id="dashPage" class="dash-section">
+    <div class="dash-head">
+      <div>
+        <h1>Affiliate Dashboard</h1>
+        <p id="dashWelcome">Welcome back</p>
       </div>
-
-      <div class="dash-grid">
-        <div class="dash-card green"><div class="num" id="statEarnings">€0.00</div><div class="lbl">Total Earned</div></div>
-        <div class="dash-card orange"><div class="num" id="statPending">€0.00</div><div class="lbl">Pending</div></div>
-        <div class="dash-card blue"><div class="num" id="statClicks">0</div><div class="lbl">Total Clicks</div></div>
-        <div class="dash-card"><div class="num" id="statConversions">0</div><div class="lbl">Conversions</div></div>
-      </div>
-
-      <div class="tab-nav">
-        <button class="tab-btn active" onclick="switchTab('links')">My Links</button>
-        <button class="tab-btn" onclick="switchTab('sales')">Recent Sales</button>
-        <button class="tab-btn" onclick="switchTab('payouts')">Payouts</button>
-      </div>
-
-      <div id="tab-links" class="tab-content active">
-        <div id="linksContainer"><p style="color:var(--text-secondary)">Loading links...</p></div>
-      </div>
-
-      <div id="tab-sales" class="tab-content">
-        <div style="overflow-x:auto">
-          <table class="sales-table" id="salesTable">
-            <thead><tr><th>Date</th><th>Product</th><th>Sale Amount</th><th>Commission</th><th>Status</th></tr></thead>
-            <tbody id="salesBody"><tr><td colspan="5" style="color:var(--text-secondary)">Loading...</td></tr></tbody>
-          </table>
-        </div>
-      </div>
-
-      <div id="tab-payouts" class="tab-content">
-        <div style="overflow-x:auto">
-          <table class="sales-table" id="payoutsTable">
-            <thead><tr><th>Date</th><th>Amount</th><th>PayPal</th><th>Status</th></tr></thead>
-            <tbody id="payoutsBody"><tr><td colspan="4" style="color:var(--text-secondary)">Loading...</td></tr></tbody>
-          </table>
-        </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn-payout" onclick="requestPayout()">Request Payout</button>
+        <button class="btn-newlink" onclick="generateLink()">+ New Link</button>
       </div>
     </div>
+
+    <div class="dash-stats">
+      <div class="dash-stat green"><div class="num" id="sEarned">€0.00</div><div class="lbl">Total Earned</div></div>
+      <div class="dash-stat orange"><div class="num" id="sPending">€0.00</div><div class="lbl">Pending Payout</div></div>
+      <div class="dash-stat blue"><div class="num" id="sClicks">0</div><div class="lbl">Total Clicks</div></div>
+      <div class="dash-stat"><div class="num" id="sConv">0</div><div class="lbl">Conversions</div></div>
+    </div>
+
+    <div class="tab-bar">
+      <button class="tab-btn active" onclick="switchTab(this,'links')">Referral Links</button>
+      <button class="tab-btn" onclick="switchTab(this,'sales')">Sales</button>
+      <button class="tab-btn" onclick="switchTab(this,'payouts')">Payouts</button>
+    </div>
+
+    <div id="panel-links" class="tab-panel active"></div>
+    <div id="panel-sales" class="tab-panel"></div>
+    <div id="panel-payouts" class="tab-panel"></div>
   </div>
+
+  <footer>
+    <div class="footer-links">
+      <a href="features.html">Features</a>
+      <a href="products.html">Products</a>
+      <a href="pricing.html">Pricing</a>
+      <a href="affiliate.html" style="color:#4ec95e">Affiliates</a>
+      <a href="https://discord.gg/AhEK85REhG" target="_blank">Discord</a>
+    </div>
+    <p>&copy; 2026 Choatix V2. Built by zylenofficial.</p>
+  </footer>
 
   <script src="app.js"></script>
   <script>
     const API = 'https://choatix-v2.onrender.com';
-    let currentUser = null;
-    let affiliateData = null;
+    let user = null, aff = null;
 
-    function getStoredUser() {
-      try {
-        const d = localStorage.getItem('discord_id');
-        const u = localStorage.getItem('username');
-        const a = localStorage.getItem('avatar');
-        if (d && u) return { discord_id: d, username: u, avatar: a };
-      } catch(e) {}
-      return null;
+    function getStored() {
+      try { const d=localStorage.getItem('discord_id'),u=localStorage.getItem('username'),a=localStorage.getItem('avatar'); if(d)return{discord_id:d,username:u,avatar:a}; } catch(e){} return null;
     }
+    function handleLogin(e){e.preventDefault();window.location.href=API+'/api/auth/discord';}
+    function toggleDropdown(e){e.preventDefault();document.querySelector('.user-dropdown')?.classList.toggle('show');}
 
-    function handleLogin(e) {
-      e.preventDefault();
-      window.location.href = API + '/api/auth/discord';
-    }
-
-    function toggleDropdown(e) {
-      e.preventDefault();
-      const dd = document.querySelector('.user-dropdown');
-      if (dd) dd.classList.toggle('show');
-    }
-
-    function checkAuth() {
-      const params = new URLSearchParams(window.location.search);
-      const discordId = params.get('discord_id');
-      const username = params.get('username');
-      const avatar = params.get('avatar');
-      if (discordId) {
-        localStorage.setItem('discord_id', discordId);
-        localStorage.setItem('username', username);
-        if (avatar) localStorage.setItem('avatar', avatar);
-        window.history.replaceState({}, '', window.location.pathname);
-      }
-      currentUser = getStoredUser();
-      if (currentUser) {
-        document.getElementById('loginBtn').style.display = 'none';
-        document.getElementById('userMenu').style.display = 'block';
-        document.getElementById('userName').textContent = currentUser.username;
-        if (currentUser.avatar) {
-          document.getElementById('userAvatar').src = 'https://cdn.discordapp.com/avatars/' + currentUser.discord_id + '/' + currentUser.avatar + '.png';
-        }
+    function checkAuth(){
+      const p=new URLSearchParams(location.search);
+      if(p.get('discord_id')){localStorage.setItem('discord_id',p.get('discord_id'));localStorage.setItem('username',p.get('username'));if(p.get('avatar'))localStorage.setItem('avatar',p.get('avatar'));history.replaceState({},'',location.pathname);}
+      user=getStored();
+      if(user){
+        document.getElementById('loginBtn').style.display='none';
+        document.getElementById('userMenu').style.display='block';
+        document.getElementById('userName').textContent=user.username;
+        if(user.avatar)document.getElementById('userAvatar').src='https://cdn.discordapp.com/avatars/'+user.discord_id+'/'+user.avatar+'.png';
         checkAffiliate();
       }
     }
 
-    async function checkAffiliate() {
-      if (!currentUser) return;
-      try {
-        const r = await fetch(API + '/api/affiliate/' + currentUser.discord_id);
-        const data = await r.json();
-        if (data.affiliate) {
-          affiliateData = data;
-          showDashboard();
-        }
-      } catch(e) {}
+    async function checkAffiliate(){
+      if(!user)return;
+      try{const r=await fetch(API+'/api/affiliate/'+user.discord_id);const d=await r.json();if(d.affiliate){aff=d;showDash();}}catch(e){}
     }
 
-    async function registerAffiliate() {
-      const discordId = document.getElementById('regDiscordId').value.trim();
-      const displayName = document.getElementById('regDisplayName').value.trim();
-      const paypal = document.getElementById('regPaypal').value.trim();
-      const errEl = document.getElementById('regError');
-      
-      if (!discordId || !displayName || !paypal) {
-        errEl.textContent = 'All fields are required';
-        errEl.style.display = 'block';
-        return;
-      }
-      
-      try {
-        const r = await fetch(API + '/api/affiliate/register', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ discordId, displayName, paypalEmail: paypal })
-        });
-        const data = await r.json();
-        if (data.success) {
-          alert('Welcome! Your affiliate code: ' + data.code);
-          currentUser = { discord_id: discordId, username: displayName };
-          checkAffiliate();
-        } else {
-          errEl.textContent = data.error || 'Registration failed';
-          errEl.style.display = 'block';
-        }
-      } catch(e) {
-        errEl.textContent = 'Network error';
-        errEl.style.display = 'block';
-      }
+    async function registerAffiliate(){
+      const di=document.getElementById('regDiscordId').value.trim();
+      const dn=document.getElementById('regDisplayName').value.trim();
+      const pp=document.getElementById('regPaypal').value.trim();
+      const err=document.getElementById('regError');
+      if(!di||!dn||!pp){err.textContent='All fields are required';err.style.display='block';return;}
+      try{
+        const r=await fetch(API+'/api/affiliate/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({discordId:di,displayName:dn,paypalEmail:pp})});
+        const d=await r.json();
+        if(d.success){user={discord_id:di,username:dn};checkAffiliate();}
+        else{err.textContent=d.error||'Failed';err.style.display='block';}
+      }catch(e){err.textContent='Network error';err.style.display='block';}
     }
 
-    function showDashboard() {
-      document.getElementById('affiliateHero').style.display = 'none';
-      document.getElementById('affiliateDashboard').style.display = 'block';
+    function showDash(){
+      document.getElementById('publicPage').style.display='none';
+      document.getElementById('dashPage').style.display='block';
+      document.getElementById('registerSection').style.display='none';
+      document.getElementById('dashWelcome').textContent='Welcome, '+(aff?.affiliate?.display_name||user.username);
       loadStats();
     }
 
-    async function loadStats() {
-      if (!currentUser) return;
-      try {
-        const r = await fetch(API + '/api/affiliate/' + currentUser.discord_id + '/stats');
-        const data = await r.json();
-        document.getElementById('dashWelcome').textContent = 'Welcome, ' + (affiliateData?.affiliate?.display_name || currentUser.username);
-        document.getElementById('statEarnings').textContent = '€' + (data.totalCommission || 0).toFixed(2);
-        document.getElementById('statPending').textContent = '€' + (data.pendingCommission || 0).toFixed(2);
-        document.getElementById('statClicks').textContent = data.clicks || 0;
-        document.getElementById('statConversions').textContent = data.conversions || 0;
-        
-        // Render links
-        const linksEl = document.getElementById('linksContainer');
-        if (affiliateData?.links?.length > 0) {
-          linksEl.innerHTML = affiliateData.links.map(l => `
-            <div class="link-box">
-              <div style="display:flex;justify-content:space-between;align-items:center">
-                <strong>${l.code}</strong>
-                <span style="color:var(--text-secondary);font-size:0.85rem">${l.clicks || 0} clicks · ${l.conversions || 0} sales</span>
-              </div>
-              <div class="link-url">
-                <input type="text" value="${API}/api/track/${l.code}" readonly id="link-${l.code}">
-                <button onclick="copyLink('${l.code}')">Copy</button>
-              </div>
-            </div>
-          `).join('');
-        } else {
-          linksEl.innerHTML = '<p style="color:var(--text-secondary)">No links yet. Click "+ New Link" to get started.</p>';
-        }
-        
-        // Render sales
-        const salesBody = document.getElementById('salesBody');
-        if (data.recentSales?.length > 0) {
-          salesBody.innerHTML = data.recentSales.map(s => `
-            <tr>
-              <td>${new Date(s.created_at).toLocaleDateString()}</td>
-              <td>${s.product_id}</td>
-              <td>€${parseFloat(s.sale_amount).toFixed(2)}</td>
-              <td style="color:var(--accent)">€${parseFloat(s.commission).toFixed(2)}</td>
-              <td><span class="status ${s.status}">${s.status}</span></td>
-            </tr>
-          `).join('');
-        } else {
-          salesBody.innerHTML = '<tr><td colspan="5" style="color:var(--text-secondary)">No sales yet</td></tr>';
-        }
-        
-        // Render payouts
-        const payoutsBody = document.getElementById('payoutsBody');
-        if (data.payouts?.length > 0) {
-          payoutsBody.innerHTML = data.payouts.map(p => `
-            <tr>
-              <td>${new Date(p.created_at).toLocaleDateString()}</td>
-              <td style="font-weight:700">€${parseFloat(p.amount).toFixed(2)}</td>
-              <td>${p.paypal_email}</td>
-              <td><span class="status ${p.status}">${p.status}</span></td>
-            </tr>
-          `).join('');
-        } else {
-          payoutsBody.innerHTML = '<tr><td colspan="4" style="color:var(--text-secondary)">No payouts yet</td></tr>';
-        }
-      } catch(e) {
-        console.error('Stats error:', e);
-      }
+    async function loadStats(){
+      if(!user)return;
+      try{
+        const r=await fetch(API+'/api/affiliate/'+user.discord_id+'/stats');
+        const d=await r.json();
+        document.getElementById('sEarned').textContent='€'+(d.totalCommission||0).toFixed(2);
+        document.getElementById('sPending').textContent='€'+(d.pendingCommission||0).toFixed(2);
+        document.getElementById('sClicks').textContent=d.clicks||0;
+        document.getElementById('sConv').textContent=d.conversions||0;
+
+        // Links
+        const lp=document.getElementById('panel-links');
+        if(aff?.links?.length>0){
+          lp.innerHTML=aff.links.map(l=>'<div class="link-card"><div class="link-card-head"><span class="link-card-code">'+l.code+'</span><span class="link-card-stats">'+(l.clicks||0)+' clicks · '+(l.conversions||0)+' sales</span></div><div class="link-card-url"><input type="text" value="'+API+'/api/track/'+l.code+'" readonly id="lk-'+l.code+'"><button onclick="copyLk(\''+l.code+'\')">Copy</button></div></div>').join('');
+        }else{lp.innerHTML='<div class="empty-state"><p>No links yet. Click "+ New Link" to get started.</p></div>';}
+
+        // Sales
+        const sp=document.getElementById('panel-sales');
+        if(d.recentSales?.length>0){
+          sp.innerHTML=d.recentSales.map(s=>'<div class="sale-row"><div class="sale-date">'+new Date(s.created_at).toLocaleDateString()+'</div><div class="sale-product">'+s.product_id+'</div><div class="sale-amount">€'+parseFloat(s.sale_amount).toFixed(2)+'</div><div class="sale-commission">€'+parseFloat(s.commission).toFixed(2)+'</div><div class="sale-status"><span class="status-badge status-'+s.status+'">'+s.status+'</span></div></div>').join('');
+        }else{sp.innerHTML='<div class="empty-state"><p>No sales yet. Share your link to start earning!</p></div>';}
+
+        // Payouts
+        const pp=document.getElementById('panel-payouts');
+        if(d.payouts?.length>0){
+          pp.innerHTML=d.payouts.map(p=>'<div class="sale-row"><div class="sale-date">'+new Date(p.created_at).toLocaleDateString()+'</div><div class="sale-product">PayPal: '+p.paypal_email+'</div><div class="sale-amount"></div><div class="sale-commission">€'+parseFloat(p.amount).toFixed(2)+'</div><div class="sale-status"><span class="status-badge status-'+p.status+'">'+p.status+'</span></div></div>').join('');
+        }else{pp.innerHTML='<div class="empty-state"><p>No payouts yet. Earn at least €5 to request one.</p></div>';}
+      }catch(e){}
     }
 
-    function copyLink(code) {
-      const el = document.getElementById('link-' + code);
-      if (el) {
-        navigator.clipboard.writeText(el.value);
-        const btn = el.nextElementSibling;
-        btn.textContent = 'Copied!';
-        setTimeout(() => btn.textContent = 'Copy', 2000);
-      }
+    function copyLk(code){const el=document.getElementById('lk-'+code);if(el){navigator.clipboard.writeText(el.value);const b=el.nextElementSibling;b.textContent='Copied!';setTimeout(()=>b.textContent='Copy',2000);}}
+
+    async function generateLink(){
+      if(!user)return;
+      try{await fetch(API+'/api/affiliate/'+user.discord_id+'/links',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({})});const r=await fetch(API+'/api/affiliate/'+user.discord_id);aff=await r.json();loadStats();}catch(e){}
     }
 
-    async function generateLink() {
-      if (!currentUser) return;
-      try {
-        const r = await fetch(API + '/api/affiliate/' + currentUser.discord_id + '/links', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({})
-        });
-        const data = await r.json();
-        if (data.success) {
-          // Refresh
-          const affR = await fetch(API + '/api/affiliate/' + currentUser.discord_id);
-          affiliateData = await affR.json();
-          loadStats();
-        }
-      } catch(e) {
-        alert('Failed to generate link');
-      }
+    async function requestPayout(){
+      if(!user)return;
+      try{const r=await fetch(API+'/api/affiliate/'+user.discord_id+'/payout',{method:'POST',headers:{'Content-Type':'application/json'}});const d=await r.json();if(d.success){alert('Payout of €'+d.amount.toFixed(2)+' requested! We will send it to your PayPal within 24-48 hours.');loadStats();}else{alert(d.error||'Failed');}}catch(e){alert('Network error');}
     }
 
-    async function requestPayout() {
-      if (!currentUser) return;
-      try {
-        const r = await fetch(API + '/api/affiliate/' + currentUser.discord_id + '/payout', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' }
-        });
-        const data = await r.json();
-        if (data.success) {
-          alert('Payout requested! €' + data.amount.toFixed(2) + ' will be sent to your PayPal.');
-          loadStats();
-        } else {
-          alert(data.error || 'Payout failed');
-        }
-      } catch(e) {
-        alert('Network error');
-      }
-    }
-
-    function switchTab(tab) {
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-      event.target.classList.add('active');
-      document.getElementById('tab-' + tab).classList.add('active');
+    function switchTab(btn,tab){
+      document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('panel-'+tab).classList.add('active');
     }
 
     checkAuth();
