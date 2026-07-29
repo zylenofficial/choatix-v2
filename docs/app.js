@@ -343,3 +343,17 @@ fetch('https://choatix-v2.onrender.com/api/ratings')
 // ── Escape key ──
 document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeModal(); closeCart(); } });
 function closeModal() { const m = document.getElementById('modal'); if (m) m.classList.remove('active'); document.body.style.overflow = ''; }
+
+// ── Add to Cart handlers ──
+document.addEventListener('click', e => {
+  const btn = e.target.closest('.add-to-cart');
+  if (!btn) return;
+  e.preventDefault();
+  const id = btn.dataset.id;
+  const name = btn.dataset.name;
+  const price = parseFloat(btn.dataset.price);
+  if (id && name && price) {
+    addToCart(id, name, price);
+    openCart();
+  }
+});
