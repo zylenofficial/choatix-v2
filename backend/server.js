@@ -8,6 +8,19 @@ const PORT = process.env.PORT || 3001;
 app.use(cors());
 app.use(express.json());
 
+// Simple cookie parser for affiliate tracking
+app.use((req, res, next) => {
+  req.cookies = {};
+  const cookieHeader = req.headers.cookie;
+  if (cookieHeader) {
+    cookieHeader.split(';').forEach(cookie => {
+      const [name, ...rest] = cookie.split('=');
+      req.cookies[name.trim()] = rest.join('=').trim();
+    });
+  }
+  next();
+});
+
 const DB_URL = process.env.DATABASE_URL;
 const SECRET = process.env.KEY_SECRET || 'choatix-secret-key-2024';
 let memKeys = {};
@@ -141,6 +154,56 @@ async function initDB() {
       review TEXT,
       created_at TIMESTAMP DEFAULT NOW(),
       UNIQUE(product_id, discord_id)
+    );
+    CREATE TABLE IF NOT EXISTS affiliates (
+      discord_id TEXT PRIMARY KEY,
+      display_name TEXT,
+      paypal_email TEXT,
+      commission_rate FLOAT DEFAULT 0.10,
+      total_earned FLOAT DEFAULT 0,
+      total_paid FLOAT DEFAULT 0,
+      status TEXT DEFAULT 'active',
+      created_at TEXT DEFAULT NOW()::TEXT
+    );
+    CREATE TABLE IF NOT EXISTS affiliate_links (
+      id SERIAL PRIMARY KEY,
+      affiliate_id TEXT NOT NULL,
+      code TEXT UNIQUE NOT NULL,
+      product_id TEXT,
+      clicks INTEGER DEFAULT 0,
+      conversions INTEGER DEFAULT 0,
+      created_at TEXT DEFAULT NOW()::TEXT
+    );
+    CREATE TABLE IF NOT EXISTS affiliate_clicks (
+      id SERIAL PRIMARY KEY,
+      link_id INTEGER,
+      affiliate_id TEXT NOT NULL,
+      ip_address TEXT,
+      user_agent TEXT,
+      referer TEXT,
+      created_at TEXT DEFAULT NOW()::TEXT
+    );
+    CREATE TABLE IF NOT EXISTS affiliate_sales (
+      id SERIAL PRIMARY KEY,
+      affiliate_id TEXT NOT NULL,
+      link_id INTEGER,
+      order_id TEXT,
+      product_id TEXT,
+      sale_amount FLOAT NOT NULL,
+      commission FLOAT NOT NULL,
+      status TEXT DEFAULT 'pending',
+      paid_at TEXT,
+      created_at TEXT DEFAULT NOW()::TEXT
+    );
+    CREATE TABLE IF NOT EXISTS affiliate_payouts (
+      id SERIAL PRIMARY KEY,
+      affiliate_id TEXT NOT NULL,
+      amount FLOAT NOT NULL,
+      paypal_email TEXT,
+      status TEXT DEFAULT 'pending',
+      notes TEXT,
+      created_at TEXT DEFAULT NOW()::TEXT,
+      paid_at TEXT
     );
   `);
   console.log('PostgreSQL connected');
@@ -566,6 +629,57 @@ app.get('/api/admin/users', async (req, res) => {
   }
 });
 
+// ── Admin: Affiliate Management ──
+app.get('/api/admin/affiliates', async (req, res) => {
+  const adminSecret = req.headers['x-admin-secret'];
+  if (adminSecret !== 'choatix-admin-2024') return res.status(403).json({ error: 'Unauthorized' });
+  const pool = app.locals.pool;
+  if (!pool) return res.status(500).json({ error: 'No database' });
+  try {
+    const affiliates = await pool.query('SELECT * FROM affiliates ORDER BY created_at DESC');
+    const sales = await pool.query('SELECT affiliate_id, COUNT(*) as sales, COALESCE(SUM(commission), 0) as commission FROM affiliate_sales GROUP BY affiliate_id');
+    const links = await pool.query('SELECT affiliate_id, COUNT(*) as links, COALESCE(SUM(clicks), 0) as clicks, COALESCE(SUM(conversions), 0) as conversions FROM affiliate_links GROUP BY affiliate_id');
+    res.json({ affiliates: affiliates.rows, sales: sales.rows, links: links.rows });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/admin/affiliate/payout', async (req, res) => {
+  const { affiliateId, amount, adminSecret } = req.body;
+  if (adminSecret !== 'choatix-admin-2024') return res.status(403).json({ error: 'Unauthorized' });
+  const pool = app.locals.pool;
+  if (!pool) return res.status(500).json({ error: 'No database' });
+  try {
+    const affiliate = await pool.query('SELECT * FROM affiliates WHERE discord_id = $1', [affiliateId]);
+    if (affiliate.rows.length === 0) return res.status(404).json({ error: 'Affiliate not found' });
+    const payoutAmount = amount || parseFloat((await pool.query("SELECT COALESCE(SUM(commission), 0) as total FROM affiliate_sales WHERE affiliate_id = $1 AND status = 'pending'", [affiliateId])).rows[0].total);
+    if (payoutAmount <= 0) return res.status(400).json({ error: 'No pending commission' });
+    await pool.query(
+      'INSERT INTO affiliate_payouts (affiliate_id, amount, paypal_email, status, paid_at) VALUES ($1, $2, $3, $4, NOW()::TEXT)',
+      [affiliateId, payoutAmount, affiliate.rows[0].paypal_email, 'paid']
+    );
+    await pool.query("UPDATE affiliate_sales SET status = 'paid', paid_at = NOW()::TEXT WHERE affiliate_id = $1 AND status = 'pending'", [affiliateId]);
+    await pool.query('UPDATE affiliates SET total_paid = total_paid + $1 WHERE discord_id = $2', [payoutAmount, affiliateId]);
+    res.json({ success: true, amount: payoutAmount });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/admin/affiliate/approve', async (req, res) => {
+  const { affiliateId, status, adminSecret } = req.body;
+  if (adminSecret !== 'choatix-admin-2024') return res.status(403).json({ error: 'Unauthorized' });
+  const pool = app.locals.pool;
+  if (!pool) return res.status(500).json({ error: 'No database' });
+  try {
+    await pool.query('UPDATE affiliates SET status = $1 WHERE discord_id = $2', [status || 'active', affiliateId]);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ── Leaderboard ──
 app.post('/api/benchmark/submit', async (req, res) => {
   const { discord_id, nickname, hardware_hash, cpu_model, gpu_model, ram_gb, cpu_score, ram_score, disk_score, gpu_score, overall_score } = req.body;
@@ -919,6 +1033,155 @@ app.post('/api/ratings', async (req, res) => {
   }
 });
 
+// ── Affiliate Program ──
+function generateAffiliateCode(discordId) {
+  const hash = hashCode(discordId + Date.now()).toString(36).toUpperCase();
+  return `CX-${hash.slice(0, 8)}`;
+}
+
+// Register as affiliate
+app.post('/api/affiliate/register', async (req, res) => {
+  const pool = app.locals.pool;
+  if (!pool) return res.status(500).json({ error: 'No database' });
+  const { discordId, displayName, paypalEmail } = req.body;
+  if (!discordId || !displayName || !paypalEmail) return res.status(400).json({ error: 'Missing fields' });
+  try {
+    const existing = await pool.query('SELECT * FROM affiliates WHERE discord_id = $1', [discordId]);
+    if (existing.rows.length > 0) return res.status(409).json({ error: 'Already registered' });
+    await pool.query(
+      'INSERT INTO affiliates (discord_id, display_name, paypal_email) VALUES ($1, $2, $3)',
+      [discordId, displayName, paypalEmail]
+    );
+    // Generate default link
+    const code = generateAffiliateCode(discordId);
+    await pool.query(
+      'INSERT INTO affiliate_links (affiliate_id, code) VALUES ($1, $2)',
+      [discordId, code]
+    );
+    res.json({ success: true, code });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Get affiliate info
+app.get('/api/affiliate/:discordId', async (req, res) => {
+  const pool = app.locals.pool;
+  if (!pool) return res.status(500).json({ error: 'No database' });
+  try {
+    const result = await pool.query('SELECT * FROM affiliates WHERE discord_id = $1', [req.params.discordId]);
+    if (result.rows.length === 0) return res.json({ affiliate: null });
+    const links = await pool.query('SELECT * FROM affiliate_links WHERE affiliate_id = $1 ORDER BY created_at DESC', [req.params.discordId]);
+    res.json({ affiliate: result.rows[0], links: links.rows });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Get affiliate stats
+app.get('/api/affiliate/:discordId/stats', async (req, res) => {
+  const pool = app.locals.pool;
+  if (!pool) return res.status(500).json({ error: 'No database' });
+  try {
+    const affiliate = await pool.query('SELECT * FROM affiliates WHERE discord_id = $1', [req.params.discordId]);
+    if (affiliate.rows.length === 0) return res.status(404).json({ error: 'Not an affiliate' });
+    const totalClicks = await pool.query('SELECT COALESCE(SUM(clicks), 0) as total FROM affiliate_links WHERE affiliate_id = $1', [req.params.discordId]);
+    const totalConversions = await pool.query('SELECT COALESCE(SUM(conversions), 0) as total FROM affiliate_links WHERE affiliate_id = $1', [req.params.discordId]);
+    const totalSales = await pool.query('SELECT COALESCE(SUM(sale_amount), 0) as total, COALESCE(SUM(commission), 0) as commission FROM affiliate_sales WHERE affiliate_id = $1', [req.params.discordId]);
+    const pendingCommission = await pool.query("SELECT COALESCE(SUM(commission), 0) as total FROM affiliate_sales WHERE affiliate_id = $1 AND status = 'pending'", [req.params.discordId]);
+    const recentSales = await pool.query('SELECT * FROM affiliate_sales WHERE affiliate_id = $1 ORDER BY created_at DESC LIMIT 10', [req.params.discordId]);
+    const payouts = await pool.query('SELECT * FROM affiliate_payouts WHERE affiliate_id = $1 ORDER BY created_at DESC LIMIT 10', [req.params.discordId]);
+    res.json({
+      affiliate: affiliate.rows[0],
+      clicks: parseInt(totalClicks.rows[0].total),
+      conversions: parseInt(totalConversions.rows[0].total),
+      totalSales: parseFloat(totalSales.rows[0].total),
+      totalCommission: parseFloat(totalSales.rows[0].commission),
+      pendingCommission: parseFloat(pendingCommission.rows[0].total),
+      recentSales: recentSales.rows,
+      payouts: payouts.rows
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Generate affiliate link
+app.post('/api/affiliate/:discordId/links', async (req, res) => {
+  const pool = app.locals.pool;
+  if (!pool) return res.status(500).json({ error: 'No database' });
+  const { productId } = req.body;
+  try {
+    const code = generateAffiliateCode(req.params.discordId) + (productId ? '-' + productId.toUpperCase() : '');
+    await pool.query(
+      'INSERT INTO affiliate_links (affiliate_id, code, product_id) VALUES ($1, $2, $3)',
+      [req.params.discordId, code, productId || null]
+    );
+    res.json({ success: true, code });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Track affiliate click + redirect
+app.get('/api/track/:code', async (req, res) => {
+  const pool = app.locals.pool;
+  if (!pool) return res.redirect('https://zylenofficial.github.io/choatix-v2/products.html');
+  try {
+    const link = await pool.query('SELECT * FROM affiliate_links WHERE code = $1', [req.params.code]);
+    if (link.rows.length === 0) return res.redirect('https://zylenofficial.github.io/choatix-v2/products.html');
+    const linkData = link.rows[0];
+    // Record click
+    await pool.query('UPDATE affiliate_links SET clicks = clicks + 1 WHERE id = $1', [linkData.id]);
+    await pool.query(
+      'INSERT INTO affiliate_clicks (link_id, affiliate_id, ip_address, user_agent, referer) VALUES ($1, $2, $3, $4, $5)',
+      [linkData.id, linkData.affiliate_id, req.ip, req.headers['user-agent'] || '', req.headers.referer || '']
+    );
+    // Set cookie for tracking (30 day expiry)
+    res.cookie('cx_aff', req.params.code, { maxAge: 30 * 24 * 60 * 60 * 1000, httpOnly: true });
+    // Redirect to product page
+    const baseUrl = 'https://zylenofficial.github.io/choatix-v2/products.html';
+    const redirect = linkData.product_id ? `${baseUrl}?ref=${req.params.code}&product=${linkData.product_id}` : `${baseUrl}?ref=${req.params.code}`;
+    res.redirect(redirect);
+  } catch (err) {
+    res.redirect('https://zylenofficial.github.io/choatix-v2/products.html');
+  }
+});
+
+// Get affiliate link by code (for tracking info)
+app.get('/api/affiliate-link/:code', async (req, res) => {
+  const pool = app.locals.pool;
+  if (!pool) return res.status(500).json({ error: 'No database' });
+  try {
+    const result = await pool.query('SELECT * FROM affiliate_links WHERE code = $1', [req.params.code]);
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Link not found' });
+    res.json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Request payout
+app.post('/api/affiliate/:discordId/payout', async (req, res) => {
+  const pool = app.locals.pool;
+  if (!pool) return res.status(500).json({ error: 'No database' });
+  try {
+    const affiliate = await pool.query('SELECT * FROM affiliates WHERE discord_id = $1', [req.params.discordId]);
+    if (affiliate.rows.length === 0) return res.status(404).json({ error: 'Not an affiliate' });
+    const pending = await pool.query("SELECT COALESCE(SUM(commission), 0) as total FROM affiliate_sales WHERE affiliate_id = $1 AND status = 'pending'", [req.params.discordId]);
+    const amount = parseFloat(pending.rows[0].total);
+    if (amount < 5) return res.status(400).json({ error: 'Minimum payout is €5.00' });
+    await pool.query(
+      'INSERT INTO affiliate_payouts (affiliate_id, amount, paypal_email) VALUES ($1, $2, $3)',
+      [req.params.discordId, amount, affiliate.rows[0].paypal_email]
+    );
+    await pool.query("UPDATE affiliate_sales SET status = 'paid', paid_at = NOW()::TEXT WHERE affiliate_id = $1 AND status = 'pending'", [req.params.discordId]);
+    res.json({ success: true, amount });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ── PayPal Checkout ──
 const PRODUCTS = {
   basic:     { name: 'Choatix Basic Tweaks',       price: '1.99',  tier: 'PRO' },
@@ -967,6 +1230,26 @@ app.post('/api/checkout', async (req, res) => {
   const successUrl = `${req.headers.origin || 'https://zylenofficial.github.io/choatix-v2'}/?checkout=success&user=${encodeURIComponent(discordUsername)}&token=${downloadToken}&products=${encodeURIComponent(productIds)}`;
   const note = encodeURIComponent(`Choatix - ${names} (${discordUsername})`);
   const paypalUrl = `https://paypal.me/${paypalEmail}/${totalStr}?currencyCode=EUR&note=${note}`;
+
+  // Record affiliate sale if tracking cookie exists
+  const affiliateCode = req.cookies?.cx_aff || req.body.affiliateCode || null;
+  if (affiliateCode && pool) {
+    try {
+      const link = await pool.query('SELECT * FROM affiliate_links WHERE code = $1', [affiliateCode]);
+      if (link.rows.length > 0) {
+        const linkData = link.rows[0];
+        const commission = total * 0.10; // 10% commission
+        await pool.query('UPDATE affiliate_links SET conversions = conversions + 1 WHERE id = $1', [linkData.id]);
+        await pool.query(
+          'INSERT INTO affiliate_sales (affiliate_id, link_id, order_id, product_id, sale_amount, commission) VALUES ($1, $2, $3, $4, $5, $6)',
+          [linkData.affiliate_id, linkData.id, `order_${discordUsername}_${Date.now()}`, productIds, total, commission]
+        );
+        await pool.query('UPDATE affiliates SET total_earned = total_earned + $1 WHERE discord_id = $2', [commission, linkData.affiliate_id]);
+      }
+    } catch (err) {
+      console.error('Affiliate tracking error:', err.message);
+    }
+  }
 
   const pool = app.locals.pool;
   if (pool) {
