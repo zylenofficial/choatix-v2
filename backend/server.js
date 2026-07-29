@@ -1058,6 +1058,19 @@ app.post('/api/affiliate/register', async (req, res) => {
       'INSERT INTO affiliate_links (affiliate_id, code) VALUES ($1, $2)',
       [discordId, code]
     );
+    // Notify admins via Discord
+    try {
+      const bot = require('./bot.js');
+      if (bot.notifyAdmins) {
+        await bot.notifyAdmins(
+          '🤝 New Affiliate Registered',
+          `**${displayName}** just joined the affiliate program!\n\n` +
+          `**Discord ID:** ${discordId}\n` +
+          `**PayPal:** ${paypalEmail}\n` +
+          `**Referral Code:** ${code}`
+        );
+      }
+    } catch (e) {}
     res.json({ success: true, code });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -1176,6 +1189,19 @@ app.post('/api/affiliate/:discordId/payout', async (req, res) => {
       [req.params.discordId, amount, affiliate.rows[0].paypal_email]
     );
     await pool.query("UPDATE affiliate_sales SET status = 'paid', paid_at = NOW()::TEXT WHERE affiliate_id = $1 AND status = 'pending'", [req.params.discordId]);
+    // Notify admins via Discord
+    try {
+      const bot = require('./bot.js');
+      if (bot.notifyAdmins) {
+        await bot.notifyAdmins(
+          '💰 Affiliate Payout Requested',
+          `**${affiliate.rows[0].display_name}** (ID: ${req.params.discordId}) requested a payout.\n\n` +
+          `**Amount:** €${amount.toFixed(2)}\n` +
+          `**PayPal:** ${affiliate.rows[0].paypal_email}\n\n` +
+          `Send payment within 24-48 hours.`
+        );
+      }
+    } catch (e) {}
     res.json({ success: true, amount });
   } catch (err) {
     res.status(500).json({ error: err.message });

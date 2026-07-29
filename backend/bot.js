@@ -1216,4 +1216,18 @@ startBot();
 module.exports = { start: (expressApp, dbPool) => {
   pool = dbPool;
   console.log('[BOT] Pool connected from server');
-}};
+}, notifyAdmins: async (title, message) => {
+  try {
+    for (const adminId of ADMIN_IDS) {
+      const user = await client.users.fetch(adminId).catch(() => null);
+      if (user) {
+        const embed = new EmbedBuilder()
+          .setTitle(title)
+          .setDescription(message)
+          .setColor(0x4ec95e)
+          .setTimestamp();
+        await user.send({ embeds: [embed] }).catch(() => {});
+      }
+    }
+  } catch (e) {}
+}, getClient: () => client };
