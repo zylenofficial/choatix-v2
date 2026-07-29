@@ -219,13 +219,14 @@ footer p{font-size:0.75rem;color:var(--text-dim)}
 .product-card::before{content:'';position:absolute;top:0;left:0;right:0;height:100%;background:radial-gradient(ellipse at top,rgba(255,255,255,0.04),transparent 70%);pointer-events:none}
 .product-card:hover{border-color:rgba(255,255,255,0.12);transform:translateY(-6px);box-shadow:0 20px 60px rgba(0,0,0,0.4),0 0 0 1px rgba(255,255,255,0.05)}
 .product-card.featured{border-color:rgba(0,230,118,0.4);background:linear-gradient(145deg,rgba(0,230,118,0.06),rgba(0,230,118,0.02))}
-.product-card.featured::after{content:'Best Seller';position:absolute;top:12px;left:50%;transform:translateX(-50%);background:var(--green);color:#000;font-size:0.55rem;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;padding:0.25rem 0.75rem;border-radius:20px;z-index:2}
-.product-card.badge-new::after{content:'New!';position:absolute;top:12px;left:50%;transform:translateX(-50%);background:#3b82f6;color:#fff;font-size:0.55rem;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;padding:0.25rem 0.75rem;border-radius:20px;z-index:2}
-.product-card.badge-aim::after{content:'Better Aim';position:absolute;top:12px;left:50%;transform:translateX(-50%);background:#a855f7;color:#fff;font-size:0.55rem;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;padding:0.25rem 0.75rem;border-radius:20px;z-index:2}
-.product-card.badge-save::after{content:'Save Bills';position:absolute;top:12px;left:50%;transform:translateX(-50%);background:#f59e0b;color:#000;font-size:0.55rem;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;padding:0.25rem 0.75rem;border-radius:20px;z-index:2}
+.product-card.featured .product-badge{background:var(--green);color:#000}
+.product-card.badge-new .product-badge{background:#3b82f6;color:#fff}
+.product-card.badge-aim .product-badge{background:#a855f7;color:#fff}
+.product-card.badge-save .product-badge{background:#f59e0b;color:#000}
+.product-badge{display:inline-block;font-size:0.55rem;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;padding:0.25rem 0.75rem;border-radius:20px;margin-bottom:0.75rem}
 .product-name{font-size:1.15rem;font-weight:700;color:#fff;margin-bottom:0.6rem;letter-spacing:-0.01em}
 .product-desc{font-size:0.8rem;color:var(--text-dim);margin-bottom:1.5rem;line-height:1.6;max-width:260px}
-.product-price{font-size:2rem;font-weight:900;color:var(--green);margin-bottom:0.75rem;letter-spacing:-0.03em;line-height:1}
+.product-price{font-size:2rem;font-weight:900;color:var(--green);margin-bottom:0.5rem;letter-spacing:-0.03em;line-height:1}
 .product-price .from{font-size:0.65rem;font-weight:500;color:var(--text-dim);display:block;margin-bottom:2px;letter-spacing:0.05em;text-transform:uppercase}
 .product-card.badge-aim .product-price{color:#a855f7}
 .product-link{display:inline-block;margin-top:auto;padding:0.7rem 1.5rem;border:1px solid var(--border2);border-radius:10px;color:var(--text-mid);font-size:0.8rem;font-weight:600;text-decoration:none;transition:all 0.25s cubic-bezier(0.16,1,0.3,1);background:rgba(255,255,255,0.02);width:100%;letter-spacing:0.02em}
