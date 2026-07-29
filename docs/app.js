@@ -126,27 +126,31 @@ function renderCart() {
   const el = document.getElementById('cartItems');
   const total = document.getElementById('cartTotal');
   const checkoutBtn = document.getElementById('cartCheckout');
+  const foot = document.querySelector('.cart-foot');
   if (!el) return;
   if (cart.length === 0) {
     el.innerHTML = '<div class="cart-empty"><div class="cart-empty-icon">&#128722;</div>Your cart is empty</div>';
     if (total) total.innerHTML = '\u20AC0.00';
     if (checkoutBtn) checkoutBtn.disabled = true;
-    appliedDiscount = null;
-    localStorage.removeItem(DISCOUNT_KEY);
-    return;
-  }
-  let html = cart.map(i => '<div class="cart-item"><div class="cart-item-icon">&#9733;</div><div class="cart-item-info"><div class="cart-item-name">' + i.name + '</div><div class="cart-item-price">&euro;' + i.price.toFixed(2) + '</div></div><div class="cart-item-qty"><button onclick="changeQty(\'' + i.id + '\',-1)">&#8722;</button><span>' + i.qty + '</span><button onclick="changeQty(\'' + i.id + '\',1)">+</button></div><button class="cart-item-remove" onclick="removeFromCart(\'' + i.id + '\')">&#10005;</button></div>').join('');
-
-  // Discount code section
-  html += '<div class="cart-discount">';
-  if (appliedDiscount) {
-    html += '<div class="cart-discount-applied"><span class="cart-discount-tag">&#10003; ' + appliedDiscount.code + ' (-' + appliedDiscount.percent + '%)</span><button class="cart-discount-remove" onclick="removeDiscount()">&#10005;</button></div>';
   } else {
-    html += '<div class="cart-discount-input"><input type="text" id="discountInput" placeholder="Discount code" maxlength="20"><button onclick="applyDiscount()">Apply</button></div>';
+    el.innerHTML = cart.map(i => '<div class="cart-item"><div class="cart-item-icon">&#9733;</div><div class="cart-item-info"><div class="cart-item-name">' + i.name + '</div><div class="cart-item-price">&euro;' + i.price.toFixed(2) + '</div></div><div class="cart-item-qty"><button onclick="changeQty(\'' + i.id + '\',-1)">&#8722;</button><span>' + i.qty + '</span><button onclick="changeQty(\'' + i.id + '\',1)">+</button></div><button class="cart-item-remove" onclick="removeFromCart(\'' + i.id + '\')">&#10005;</button></div>').join('');
+    if (checkoutBtn) checkoutBtn.disabled = false;
   }
-  html += '</div>';
 
-  el.innerHTML = html;
+  // Discount code in footer
+  if (foot && !foot.querySelector('.cart-discount')) {
+    const dc = document.createElement('div');
+    dc.className = 'cart-discount';
+    foot.insertBefore(dc, foot.querySelector('.cart-total'));
+  }
+  const dcEl = foot?.querySelector('.cart-discount');
+  if (dcEl) {
+    if (appliedDiscount) {
+      dcEl.innerHTML = '<div class="cart-discount-applied"><span class="cart-discount-tag">&#10003; ' + appliedDiscount.code + ' (-' + appliedDiscount.percent + '%)</span><button class="cart-discount-remove" onclick="removeDiscount()">&#10005;</button></div>';
+    } else {
+      dcEl.innerHTML = '<div class="cart-discount-input"><input type="text" id="discountInput" placeholder="Discount code" maxlength="20"><button onclick="applyDiscount()">Apply</button></div>';
+    }
+  }
 
   // Calculate totals
   const subtotal = getCartTotal();
@@ -160,10 +164,8 @@ function renderCart() {
       total.innerHTML = '\u20AC' + subtotal.toFixed(2);
     }
   }
-  if (checkoutBtn) checkoutBtn.disabled = false;
-  
+
   // Add no-refund notice
-  const foot = document.querySelector('.cart-foot');
   if (foot && !foot.querySelector('.no-refund')) {
     const notice = document.createElement('div');
     notice.className = 'no-refund';
