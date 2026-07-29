@@ -205,7 +205,26 @@ async function initDB() {
       created_at TEXT DEFAULT NOW()::TEXT,
       paid_at TEXT
     );
+    CREATE TABLE IF NOT EXISTS discount_codes (
+      id SERIAL PRIMARY KEY,
+      code TEXT UNIQUE NOT NULL,
+      discount_percent FLOAT NOT NULL DEFAULT 10,
+      max_uses INT DEFAULT 0,
+      times_used INT DEFAULT 0,
+      active BOOLEAN DEFAULT true,
+      created_at TEXT DEFAULT NOW()::TEXT
+    );
   `);
+
+  // Seed discount codes
+  const dcCount = await pool.query('SELECT COUNT(*) as c FROM discount_codes');
+  if (parseInt(dcCount.rows[0].c) === 0) {
+    await pool.query(
+      "INSERT INTO discount_codes (code, discount_percent, max_uses) VALUES ('CHOATIX10', 10, 0)"
+    );
+    console.log('Default discount codes seeded');
+  }
+
   console.log('PostgreSQL connected');
 
   // Seed daily quests if empty
@@ -1208,6 +1227,21 @@ app.post('/api/affiliate/:discordId/payout', async (req, res) => {
   }
 });
 
+// ── Discount Codes ──
+app.get('/api/discount/:code', async (req, res) => {
+  const pool = app.locals.pool;
+  if (!pool) return res.status(500).json({ error: 'No database' });
+  try {
+    const result = await pool.query('SELECT * FROM discount_codes WHERE code = $1 AND active = true', [req.params.code.toUpperCase()]);
+    if (result.rows.length === 0) return res.status(404).json({ valid: false, error: 'Invalid discount code' });
+    const dc = result.rows[0];
+    if (dc.max_uses > 0 && dc.times_used >= dc.max_uses) return res.status(400).json({ valid: false, error: 'Code expired' });
+    res.json({ valid: true, code: dc.code, discount: dc.discount_percent });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ── PayPal Checkout ──
 const PRODUCTS = {
   basic:     { name: 'Choatix Basic Tweaks',       price: '1.99',  tier: 'PRO' },
@@ -1219,10 +1253,11 @@ const PRODUCTS = {
 };
 
 app.post('/api/checkout', async (req, res) => {
-  const { productId, items: cartItems, discordUsername } = req.body;
+  const { productId, items: cartItems, discordUsername, discountCode } = req.body;
   if (!discordUsername) return res.status(400).json({ error: 'Discord username required' });
 
   const paypalEmail = process.env.PAYPAL_EMAIL || 'RememberSkill';
+  const pool = app.locals.pool;
 
   let orderItems = [];
   let total = 0;
@@ -1246,7 +1281,26 @@ app.post('/api/checkout', async (req, res) => {
 
   if (orderItems.length === 0) return res.status(400).json({ error: 'Invalid product' });
 
-  const totalStr = total.toFixed(2);
+  // Apply discount code
+  let discountPercent = 0;
+  let discountCodeStr = null;
+  if (discountCode && pool) {
+    try {
+      const dcResult = await pool.query('SELECT * FROM discount_codes WHERE code = $1 AND active = true', [discountCode.toUpperCase()]);
+      if (dcResult.rows.length > 0) {
+        const dc = dcResult.rows[0];
+        if (dc.max_uses === 0 || dc.times_used < dc.max_uses) {
+          discountPercent = dc.discount_percent;
+          discountCodeStr = dc.code;
+          await pool.query('UPDATE discount_codes SET times_used = times_used + 1 WHERE id = $1', [dc.id]);
+        }
+      }
+    } catch (e) {}
+  }
+
+  const discountAmount = total * (discountPercent / 100);
+  const finalTotal = total - discountAmount;
+  const totalStr = finalTotal.toFixed(2);
   const names = orderItems.map(i => i.name).join(', ');
 
   const crypto = require('crypto');
@@ -1254,7 +1308,7 @@ app.post('/api/checkout', async (req, res) => {
   const productIds = orderItems.map(i => i.id).join(',');
 
   const successUrl = `${req.headers.origin || 'https://zylenofficial.github.io/choatix-v2'}/?checkout=success&user=${encodeURIComponent(discordUsername)}&token=${downloadToken}&products=${encodeURIComponent(productIds)}`;
-  const note = encodeURIComponent(`Choatix - ${names} (${discordUsername})`);
+  const note = encodeURIComponent(`Choatix - ${names} (${discordUsername})${discountCodeStr ? ' [' + discountCodeStr + ' -' + discountPercent + '%]' : ''}`);
   const paypalUrl = `https://paypal.me/${paypalEmail}/${totalStr}?currencyCode=EUR&note=${note}`;
 
   // Record affiliate sale if tracking cookie exists
@@ -1277,7 +1331,6 @@ app.post('/api/checkout', async (req, res) => {
     }
   }
 
-  const pool = app.locals.pool;
   if (pool) {
     try {
       await pool.query(`
@@ -1305,7 +1358,14 @@ app.post('/api/checkout', async (req, res) => {
     }
   }
 
-  res.json({ url: paypalUrl, orderId: `order_${discordUsername}_${Date.now()}`, downloadToken });
+  res.json({
+    url: paypalUrl,
+    orderId: `order_${discordUsername}_${Date.now()}`,
+    downloadToken,
+    discount: discountPercent > 0 ? { code: discountCodeStr, percent: discountPercent, saved: discountAmount.toFixed(2) } : null,
+    originalTotal: total.toFixed(2),
+    finalTotal: totalStr
+  });
 });
 
 app.post('/api/verify-download', async (req, res) => {

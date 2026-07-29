@@ -82,6 +82,17 @@ footer p{font-size:0.75rem;color:var(--text-dim)}
 .cart-total-price{font-size:1.3rem;font-weight:800;color:var(--text)}
 .cart-checkout{width:100%;padding:0.75rem;border-radius:8px;border:none;background:var(--green);color:#000;font-size:0.85rem;font-weight:700;cursor:pointer;transition:all 0.2s;font-family:inherit}
 .cart-checkout:hover{background:#00c864;transform:translateY(-1px)}
+.cart-discount{padding:0.75rem 0;border-top:1px solid var(--border2);margin-top:0.5rem}
+.cart-discount-input{display:flex;gap:6px}
+.cart-discount-input input{flex:1;padding:6px 10px;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;color:var(--text);font-size:0.75rem;font-family:inherit;outline:none}
+.cart-discount-input input:focus{border-color:var(--green)}
+.cart-discount-input input::placeholder{color:var(--text-dim)}
+.cart-discount-input button{padding:6px 12px;background:var(--green);border:none;border-radius:6px;color:#000;font-size:0.72rem;font-weight:700;cursor:pointer;font-family:inherit;transition:all 0.15s}
+.cart-discount-input button:hover{background:#00c864}
+.cart-discount-applied{display:flex;justify-content:space-between;align-items:center}
+.cart-discount-tag{font-size:0.75rem;color:var(--green);font-weight:600}
+.cart-discount-remove{background:transparent;border:none;color:var(--text-dim);cursor:pointer;font-size:0.7rem;padding:2px 4px}
+.cart-discount-remove:hover{color:#ff5252}
 .cart-checkout:disabled{opacity:0.4;cursor:default;transform:none}
 
 .user-menu{position:relative}

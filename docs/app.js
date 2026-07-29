@@ -90,7 +90,9 @@ window.addEventListener('scroll', () => {
 
 // ── Shopping Cart ──
 const CART_KEY = 'choatix_cart';
+const DISCOUNT_KEY = 'choatix_discount';
 let cart = JSON.parse(localStorage.getItem(CART_KEY) || '[]');
+let appliedDiscount = JSON.parse(localStorage.getItem(DISCOUNT_KEY) || 'null');
 
 function saveCart() { localStorage.setItem(CART_KEY, JSON.stringify(cart)); updateCartBadge(); }
 
@@ -129,10 +131,35 @@ function renderCart() {
     el.innerHTML = '<div class="cart-empty"><div class="cart-empty-icon">&#128722;</div>Your cart is empty</div>';
     if (total) total.innerHTML = '\u20AC0.00';
     if (checkoutBtn) checkoutBtn.disabled = true;
+    appliedDiscount = null;
+    localStorage.removeItem(DISCOUNT_KEY);
     return;
   }
-  el.innerHTML = cart.map(i => '<div class="cart-item"><div class="cart-item-icon">&#9733;</div><div class="cart-item-info"><div class="cart-item-name">' + i.name + '</div><div class="cart-item-price">&euro;' + i.price.toFixed(2) + '</div></div><div class="cart-item-qty"><button onclick="changeQty(\'' + i.id + '\',-1)">&#8722;</button><span>' + i.qty + '</span><button onclick="changeQty(\'' + i.id + '\',1)">+</button></div><button class="cart-item-remove" onclick="removeFromCart(\'' + i.id + '\')">&#10005;</button></div>').join('');
-  if (total) total.innerHTML = '\u20AC' + getCartTotal().toFixed(2);
+  let html = cart.map(i => '<div class="cart-item"><div class="cart-item-icon">&#9733;</div><div class="cart-item-info"><div class="cart-item-name">' + i.name + '</div><div class="cart-item-price">&euro;' + i.price.toFixed(2) + '</div></div><div class="cart-item-qty"><button onclick="changeQty(\'' + i.id + '\',-1)">&#8722;</button><span>' + i.qty + '</span><button onclick="changeQty(\'' + i.id + '\',1)">+</button></div><button class="cart-item-remove" onclick="removeFromCart(\'' + i.id + '\')">&#10005;</button></div>').join('');
+
+  // Discount code section
+  html += '<div class="cart-discount">';
+  if (appliedDiscount) {
+    html += '<div class="cart-discount-applied"><span class="cart-discount-tag">&#10003; ' + appliedDiscount.code + ' (-' + appliedDiscount.percent + '%)</span><button class="cart-discount-remove" onclick="removeDiscount()">&#10005;</button></div>';
+  } else {
+    html += '<div class="cart-discount-input"><input type="text" id="discountInput" placeholder="Discount code" maxlength="20"><button onclick="applyDiscount()">Apply</button></div>';
+  }
+  html += '</div>';
+
+  el.innerHTML = html;
+
+  // Calculate totals
+  const subtotal = getCartTotal();
+  const discountAmt = appliedDiscount ? subtotal * (appliedDiscount.percent / 100) : 0;
+  const finalTotal = subtotal - discountAmt;
+
+  if (total) {
+    if (appliedDiscount) {
+      total.innerHTML = '<span style="text-decoration:line-through;opacity:0.5;margin-right:6px;font-size:0.8em">&euro;' + subtotal.toFixed(2) + '</span>&euro;' + finalTotal.toFixed(2);
+    } else {
+      total.innerHTML = '\u20AC' + subtotal.toFixed(2);
+    }
+  }
   if (checkoutBtn) checkoutBtn.disabled = false;
   
   // Add no-refund notice
@@ -143,6 +170,31 @@ function renderCart() {
     notice.innerHTML = '<span style="color:#ff5252;font-size:0.65rem;font-weight:700">&#9888; All sales final &mdash; no refunds. Digital products delivered instantly.</span>';
     foot.insertBefore(notice, checkoutBtn);
   }
+}
+
+async function applyDiscount() {
+  const input = document.getElementById('discountInput');
+  if (!input || !input.value.trim()) return;
+  const code = input.value.trim().toUpperCase();
+  try {
+    const r = await fetch('https://choatix-v2.onrender.com/api/discount/' + code);
+    const data = await r.json();
+    if (data.valid) {
+      appliedDiscount = { code: data.code, percent: data.discount };
+      localStorage.setItem(DISCOUNT_KEY, JSON.stringify(appliedDiscount));
+      renderCart();
+    } else {
+      alert(data.error || 'Invalid discount code');
+    }
+  } catch (e) {
+    alert('Failed to verify discount code');
+  }
+}
+
+function removeDiscount() {
+  appliedDiscount = null;
+  localStorage.removeItem(DISCOUNT_KEY);
+  renderCart();
 }
 
 function openCart() {
@@ -174,11 +226,13 @@ async function checkout() {
     const r = await fetch('https://choatix-v2.onrender.com/api/checkout', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ items, discordUsername: username })
+      body: JSON.stringify({ items, discordUsername: username, discountCode: appliedDiscount ? appliedDiscount.code : null })
     });
     const data = await r.json();
     if (data.url) {
       localStorage.removeItem(CART_KEY);
+      localStorage.removeItem(DISCOUNT_KEY);
+      appliedDiscount = null;
       if (data.downloadToken) localStorage.setItem('choatix_download_token', data.downloadToken);
       window.location.href = data.url;
       return;
