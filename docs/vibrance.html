@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Digital Vibrance Controller - Choatix V2</title>
+  <meta name="description" content="Choatix Digital Vibrance Controller — auto-detect games, per-game profiles, NVIDIA & AMD support.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .pd-hero{display:flex;align-items:center;gap:3rem;max-width:1000px;margin:0 auto;padding:8rem 2rem 4rem}
+    .pd-box{flex:0 0 280px;aspect-ratio:0.7;background:linear-gradient(160deg,#1a1a2a,#111120);border:1px solid rgba(255,255,255,0.08);border-radius:14px;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:2rem 1rem;position:relative;overflow:hidden;transform:perspective(600px) rotateY(-8deg) rotateX(2deg);box-shadow:12px 12px 32px rgba(0,0,0,0.6),-2px -2px 8px rgba(255,255,255,0.02)}
+    .pd-box::before{content:'';position:absolute;top:0;left:0;right:0;bottom:0;background:linear-gradient(135deg,rgba(255,255,255,0.06),transparent 50%);pointer-events:none}
+    .pd-box-brand{font-size:0.7rem;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:#7c4dff;margin-bottom:0.6rem}
+    .pd-box-name{font-size:1.6rem;font-weight:900;color:#fff;text-align:center;line-height:1.25}
+    .pd-box-sub{font-size:0.55rem;font-weight:600;letter-spacing:0.15em;text-transform:uppercase;color:var(--text-dim);margin-top:0.5rem}
+    .pd-info{flex:1}
+    .pd-info h1{font-size:2.2rem;font-weight:900;letter-spacing:-0.04em;margin-bottom:0.5rem}
+    .pd-info .pd-price{font-size:2rem;font-weight:900;color:#7c4dff;margin-bottom:1rem}
+    .pd-info p{color:var(--text-dim);font-size:0.95rem;line-height:1.7;margin-bottom:1.5rem}
+    .pd-actions{display:flex;gap:0.6rem}
+    .pd-actions .btn{padding:0.65rem 1.4rem;font-size:0.85rem}
+    .pd-section{max-width:1000px;margin:0 auto;padding:4rem 2rem}
+    .pd-section h2{font-size:1.6rem;font-weight:800;margin-bottom:2rem;letter-spacing:-0.03em}
+    .pd-features{display:grid;grid-template-columns:repeat(2,1fr);gap:1rem}
+    .pd-feature{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:1.5rem;transition:all 0.3s}
+    .pd-feature:hover{border-color:var(--border2);transform:translateY(-2px)}
+    .pd-feature-icon{font-size:1.4rem;margin-bottom:0.75rem}
+    .pd-feature h3{font-size:0.9rem;font-weight:700;margin-bottom:0.3rem}
+    .pd-feature p{font-size:0.8rem;color:var(--text-dim);line-height:1.5}
+    .pd-tweak-list{display:flex;flex-direction:column;gap:0.5rem}
+    .pd-tweak-group{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:1.25rem 1.5rem;display:flex;align-items:center;gap:1rem}
+    .pd-tweak-group:hover{border-color:var(--border2)}
+    .pd-tweak-icon{font-size:1.3rem;flex-shrink:0}
+    .pd-tweak-info{flex:1}
+    .pd-tweak-info h3{font-size:0.85rem;font-weight:700;margin-bottom:0.15rem}
+    .pd-tweak-info p{font-size:0.75rem;color:var(--text-dim)}
+    .pd-tweak-count{font-size:0.75rem;font-weight:700;color:#7c4dff;background:rgba(124,77,255,0.08);padding:0.25rem 0.6rem;border-radius:6px;flex-shrink:0}
+    .pd-cta{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:3rem;text-align:center;margin:2rem auto;max-width:600px}
+    .pd-cta h3{font-size:1.3rem;font-weight:800;margin-bottom:0.5rem}
+    .pd-cta p{color:var(--text-dim);font-size:0.9rem;margin-bottom:1.5rem}
+    @media(max-width:768px){.pd-hero{flex-direction:column;text-align:center;padding-top:7rem}.pd-box{flex:none;width:200px}.pd-info h1{font-size:1.6rem}.pd-features{grid-template-columns:1fr}.pd-actions{justify-content:center}}
+  </style>
+</head>
+<body>
+  <div class="scroll-bar" id="scrollBar"></div>
+  <canvas id="particles"></canvas>
+  <div class="noise"></div>
+
+  <nav id="nav">
+    <a href="index.html" class="nav-brand">choatix<span>.</span></a>
+    <button class="hamburger" onclick="document.querySelector('.nav-links').classList.toggle('open')">&#9776;</button>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="features.html">Features</a>
+      <a href="tweaks.html">Tweaks</a>
+      <a href="products.html" class="active">Products</a>
+      <a href="pricing.html">Pricing</a>
+      <a href="faq.html">FAQ</a>
+      <a href="refund-policy.html">Refund Policy</a>
+      <a href="affiliate.html" style="color:#4ec95e">Affiliates</a>
+      <a href="team.html">Team</a>
+      <a href="https://discord.gg/AhEK85REhG" target="_blank">Discord</a>
+      <button class="cart-btn" onclick="openCart()" id="cartBtn">&#128722;<span class="cart-badge" id="cartBadge">0</span></button>
+      <div class="user-menu" id="userMenu" style="display:none">
+        <a href="#" class="user-btn" onclick="toggleDropdown(event)">
+          <img class="user-avatar" id="userAvatar" src="" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+          <div class="user-avatar-fallback" id="userAvatarFallback" style="display:none"></div>
+          <span class="user-name" id="userName"></span>
+          <span class="user-tier free" id="userTier">FREE</span>
+        </a>
+        <div class="user-dropdown">
+          <a class="dropdown-item" href="https://github.com/zylenofficial/choatix-v2/releases/latest" target="_blank"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>Download App</a>
+          <a class="dropdown-item" href="https://discord.gg/AhEK85REhG" target="_blank"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Join Discord</a>
+          <div class="dropdown-divider"></div>
+          <a class="dropdown-item danger" href="#" onclick="handleLogout(event)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>Logout</a>
+        </div>
+      </div>
+      <a href="#" class="btn btn-secondary" id="loginBtn" onclick="handleLogin(event)">Login</a>
+    </div>
+  </nav>
+
+  <section class="pd-hero">
+    <div class="pd-box">
+      <div class="pd-box-brand">Choatix</div>
+      <div class="pd-box-name">Digital<br>Vibrance</div>
+      <div class="pd-box-sub">Display</div>
+    </div>
+    <div class="pd-info">
+      <span class="product-brand">Choatix</span>
+      <h1>Vibrance Controller</h1>
+      <div class="pd-price">&euro;2.99</div>
+      <p>Control your display's digital vibrance with per-game auto-detection. Supports both NVIDIA and AMD GPUs. Set a global vibrance level or create per-game profiles that automatically apply when you launch a game.</p>
+      <div class="pd-actions">
+        <button class="btn btn-green add-to-cart" data-id="vibrance" data-name="Vibrance Controller" data-price="2.99">Add to Cart</button>
+        <a href="products.html" class="btn btn-secondary">Back to Products</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="pd-section">
+    <h2>What's Included</h2>
+    <div class="pd-features">
+      <div class="pd-feature">
+        <div class="pd-feature-icon">&#127912;</div>
+        <h3>Global Vibrance Slider</h3>
+        <p>Set your preferred digital vibrance level from 0-100% with a single slider. Applies instantly across all displays.</p>
+      </div>
+      <div class="pd-feature">
+        <div class="pd-feature-icon">&#127918;</div>
+        <h3>Auto Game Detection</h3>
+        <p>Monitors running processes and automatically applies the correct vibrance profile when a game launches.</p>
+      </div>
+      <div class="pd-feature">
+        <div class="pd-feature-icon">&#128190;</div>
+        <h3>Per-Game Profiles</h3>
+        <p>Create and save custom vibrance settings for each game. Toggle profiles on/off individually.</p>
+      </div>
+      <div class="pd-feature">
+        <div class="pd-feature-icon">&#128225;</div>
+        <h3>NVIDIA & AMD</h3>
+        <p>Works with both NVIDIA (NVAPI) and AMD (ADLX) GPUs. Auto-detects your graphics card on startup.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="pd-section">
+    <h2>Features</h2>
+    <div class="pd-tweak-list">
+      <div class="pd-tweak-group">
+        <div class="pd-tweak-icon">&#127912;</div>
+        <div class="pd-tweak-info"><h3>Global Vibrance Control</h3><p>Slider from 0-100% with instant apply</p></div>
+        <div class="pd-tweak-count">Real-time</div>
+      </div>
+      <div class="pd-tweak-group">
+        <div class="pd-tweak-icon">&#127918;</div>
+        <div class="pd-tweak-info"><h3>Game Auto-Detection</h3><p>Monitors processes every 2 seconds for running games</p></div>
+        <div class="pd-tweak-count">Auto</div>
+      </div>
+      <div class="pd-tweak-group">
+        <div class="pd-tweak-icon">&#128190;</div>
+        <div class="pd-tweak-info"><h3>Profile Management</h3><p>Save unlimited per-game profiles with JSON storage</p></div>
+        <div class="pd-tweak-count">Unlimited</div>
+      </div>
+      <div class="pd-tweak-group">
+        <div class="pd-tweak-icon">&#128225;</div>
+        <div class="pd-tweak-info"><h3>Dual GPU Support</h3><p>NVIDIA via NVAPI, AMD via ADLX, with fallback methods</p></div>
+        <div class="pd-tweak-count">Both</div>
+      </div>
+      <div class="pd-tweak-group">
+        <div class="pd-tweak-icon">&#128187;</div>
+        <div class="pd-tweak-info"><h3>Lightweight C# App</h3><p>Native WPF application, minimal CPU and RAM usage</p></div>
+        <div class="pd-tweak-count">&lt;10MB</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="pd-cta">
+    <h3>Ready to enhance your visuals?</h3>
+    <p>Get Vibrance Controller for just &euro;2.99 and experience games the way they were meant to look.</p>
+    <button class="btn btn-green add-to-cart" data-id="vibrance" data-name="Vibrance Controller" data-price="2.99">Add to Cart &mdash; &euro;2.99</button>
+  </section>
+
+  <div class="cart-overlay" id="cartOverlay" onclick="closeCart()"></div>
+  <div class="cart-sidebar" id="cartSidebar">
+    <div class="cart-head"><h3>Shopping Cart</h3><button class="cart-close" onclick="closeCart()">&#10005;</button></div>
+    <div class="cart-items" id="cartItems"></div>
+    <div class="cart-foot"><div class="cart-total"><span class="cart-total-label">Total</span><span class="cart-total-price" id="cartTotal">&euro;0.00</span></div><button class="cart-checkout" id="cartCheckout" onclick="checkout()" disabled>Checkout via PayPal</button>
+      <div class="cart-discount" id="cartDiscountSection">
+        <div class="cart-discount-input" id="cartDiscountInput"><input type="text" id="discountInput" placeholder="Discount code"><button onclick="applyDiscount()">Apply</button></div>
+        <div class="cart-discount-applied" id="cartDiscountApplied" style="display:none"><span class="cart-discount-tag" id="discountTag"></span><button class="cart-discount-remove" onclick="removeDiscount()">&#10005;</button></div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <div class="footer-links">
+      <a href="features.html">Features</a>
+      <a href="tweaks.html">Tweaks</a>
+      <a href="products.html">Products</a>
+      <a href="pricing.html">Pricing</a>
+      <a href="faq.html">FAQ</a>
+      <a href="refund-policy.html">Refund Policy</a>
+      <a href="affiliate.html" style="color:#4ec95e">Affiliates</a>
+      <a href="team.html">Team</a>
+      <a href="https://discord.gg/AhEK85REhG" target="_blank">Discord</a>
+    </div>
+    <p>&copy; 2026 Choatix V2. Built by zylenofficial.</p>
+  </footer>
+  <script src="app.js"></script>
+</body>
+</html>
