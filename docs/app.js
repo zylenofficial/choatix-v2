@@ -200,14 +200,18 @@ function removeDiscount() {
 }
 
 function openCart() {
-  document.getElementById('cartOverlay').classList.add('open');
-  document.getElementById('cartSidebar').classList.add('open');
+  var o = document.getElementById('cartOverlay');
+  var s = document.getElementById('cartSidebar');
+  if (o) o.classList.add('open');
+  if (s) s.classList.add('open');
   document.body.style.overflow = 'hidden';
 }
 
 function closeCart() {
-  document.getElementById('cartOverlay').classList.remove('open');
-  document.getElementById('cartSidebar').classList.remove('open');
+  var o = document.getElementById('cartOverlay');
+  var s = document.getElementById('cartSidebar');
+  if (o) o.classList.remove('open');
+  if (s) s.classList.remove('open');
   document.body.style.overflow = '';
 }
 
@@ -220,9 +224,8 @@ async function checkout() {
     localStorage.setItem('username', username);
   }
   localStorage.setItem('choatix_pending_purchase', JSON.stringify(cart.map(i => ({ id: i.id, name: i.name }))));
-  const btn = document.getElementById('cartCheckout');
-  btn.textContent = 'Redirecting to PayPal...';
-  btn.disabled = true;
+  var btn = document.getElementById('cartCheckout');
+  if (btn) { btn.textContent = 'Redirecting to PayPal...'; btn.disabled = true; }
   try {
     const items = cart.map(i => ({ id: i.id, name: i.name, price: i.price, qty: i.qty }));
     const r = await fetch('https://choatix-v2.onrender.com/api/checkout', {
@@ -240,8 +243,7 @@ async function checkout() {
       return;
     }
   } catch (e) {}
-  btn.textContent = 'Checkout via PayPal';
-  btn.disabled = false;
+  if (btn) { btn.textContent = 'Checkout via PayPal'; btn.disabled = false; }
   alert('Checkout failed. Try again or contact support on Discord.');
 }
 
@@ -280,18 +282,21 @@ if (savedId && savedUser) {
   if (loginBtn) loginBtn.style.display = 'none';
   if (userMenu) {
     userMenu.style.display = 'block';
-    document.getElementById('userName').textContent = savedUser;
-    document.getElementById('userAvatarFallback').textContent = savedUser.charAt(0).toUpperCase();
+    var un = document.getElementById('userName');
+    if (un) un.textContent = savedUser;
+    var uaf = document.getElementById('userAvatarFallback');
+    if (uaf) uaf.textContent = savedUser.charAt(0).toUpperCase();
     if (savedAvatar) {
-      const img = document.getElementById('userAvatar');
-      img.src = savedAvatar;
-      img.onload = function() { img.style.display = 'block'; document.getElementById('userAvatarFallback').style.display = 'none'; };
+      var img = document.getElementById('userAvatar');
+      if (img) {
+        img.src = savedAvatar;
+        img.onload = function() { img.style.display = 'block'; var fb = document.getElementById('userAvatarFallback'); if (fb) fb.style.display = 'none'; };
+      }
     }
     fetch('https://choatix-v2.onrender.com/api/license/' + savedId).then(r => r.json()).then(d => {
       if (d.tier) {
-        const tierEl = document.getElementById('userTier');
-        tierEl.textContent = d.tier;
-        tierEl.className = 'user-tier ' + d.tier.toLowerCase();
+        var tierEl = document.getElementById('userTier');
+        if (tierEl) { tierEl.textContent = d.tier; tierEl.className = 'user-tier ' + d.tier.toLowerCase(); }
       }
     }).catch(() => {});
   }
@@ -302,7 +307,7 @@ if (savedId && savedUser) {
 
 function handleLogin(e) { e.preventDefault(); window.location.href = 'https://choatix-v2.onrender.com/api/auth/discord'; }
 function handleLogout(e) { e.preventDefault(); localStorage.clear(); window.location.reload(); }
-function toggleDropdown(e) { e.preventDefault(); document.getElementById('userMenu').classList.toggle('open'); }
+function toggleDropdown(e) { e.preventDefault(); var m = document.getElementById('userMenu'); if (m) m.classList.toggle('open'); }
 document.addEventListener('click', (e) => { if (!e.target.closest('.user-menu')) { const m = document.getElementById('userMenu'); if (m) m.classList.remove('open'); } });
 
 // ── Team avatars ──
