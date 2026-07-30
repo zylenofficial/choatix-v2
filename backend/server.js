@@ -957,7 +957,7 @@ app.get('/api/auth/callback', async (req, res) => {
       request.end();
     });
 
-    if (!tokenData.access_token) return res.status(400).json({ error: 'Failed to get token' });
+    if (!tokenData.access_token) return res.status(400).json({ error: 'Failed to get token', details: tokenData.error_description || tokenData.error || 'unknown' });
 
     const user = await new Promise((resolve, reject) => {
       https.get('https://discord.com/api/users/@me', {
