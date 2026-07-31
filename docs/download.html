@@ -59,7 +59,7 @@
           <span class="user-tier free" id="userTier">FREE</span>
         </a>
         <div class="user-dropdown">
-          <a class="dropdown-item" href="https://github.com/zylenofficial/choatix-v2/releases/latest" target="_blank"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>Download App</a>
+          <a class="dropdown-item" href="download.html" target="_blank"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>Download App</a>
           <a class="dropdown-item" href="https://discord.gg/AhEK85REhG" target="_blank"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Join Discord</a>
           <div class="dropdown-divider"></div>
           <a class="dropdown-item danger" href="#" onclick="handleLogout(event)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>Logout</a>
@@ -111,13 +111,11 @@
 
   <script src="app.js"></script>
   <script>
-    var RELEASE_BASE = 'https://github.com/zylenofficial/choatix-v2/releases/download/products-v1.1.0';
     var PRODUCTS = {
-      basic:     { name: 'Choatix Basic Tweaks',          file: 'Choatix.Basic.Tweaks.Setup.1.0.0.exe' },
-      pro:       { name: 'Choatix Pro Tweaks',            file: 'Choatix.Pro.Tweaks.Setup.1.0.0.exe' },
-      extreme:   { name: 'Choatix Extreme Tweaks',        file: 'Choatix.Extreme.Tweaks.Setup.1.0.0.exe' },
-      precision: { name: 'Choatix Precision Tweaks',      file: 'Choatix.Precision.Tweaks.Setup.1.0.0.exe' },
-      vibrance:  { name: 'Choatix Vibrance Controller',   file: 'Choatix.Vibrance.Setup.1.0.0.exe' }
+      basic:     { name: 'Choatix Basic Tweaks',          url: 'https://drive.google.com/uc?export=download&id=1nQQuwAsU7zN3NZjVbhAVnW25fHkEqH5D' },
+      pro:       { name: 'Choatix Pro Tweaks',            url: 'https://drive.google.com/uc?export=download&id=1mjhxk5tHmwcQbBzgJOczbMdO8mLa9UZ8' },
+      extreme:   { name: 'Choatix Extreme Tweaks',        url: 'https://drive.google.com/uc?export=download&id=17BQS4j3yaqaRWiRm_pNfj_coJRr9TdYo' },
+      precision: { name: 'Choatix Precision Tweaks',      url: 'https://drive.google.com/uc?export=download&id=1TqpIVFWW6WNRZUpDCG2kZiVsHCGG1FGf' }
     };
 
     var p = new URLSearchParams(window.location.search);
@@ -135,7 +133,7 @@
         if (!info) return;
         var d = document.createElement('div');
         d.className = 'dl-item';
-        d.innerHTML = '<div class="dl-item-info"><div class="dl-item-name">' + info.name + '</div><div class="dl-item-id">' + id + '</div></div><a href="' + RELEASE_BASE + '/' + info.file + '" download><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>Download</a>';
+        d.innerHTML = '<div class="dl-item-info"><div class="dl-item-name">' + info.name + '</div><div class="dl-item-id">' + id + '</div></div><a href="' + info.url + '" target="_blank"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>Download</a>';
         list.appendChild(d);
       });
       document.getElementById('dlPage').style.display = '';
