@@ -305,8 +305,9 @@ client.on('interactionCreate', async (interaction) => {
         } else {
           roleMsg = '\nRole: (DM — roles only work in servers)';
         }
+        const activated = result.activatedAt ? new Date(result.activatedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Unknown';
         await interaction.editReply({
-          content: `📋 **Your License**\n\nPlan: **${result.tier}**\nActivated: ${result.activatedAt}${roleMsg}`,
+          content: `📋 **Your License**\n\nPlan: **${result.tier}**\nActivated: ${activated}${roleMsg}`,
         });
       } else {
         await interaction.editReply({
