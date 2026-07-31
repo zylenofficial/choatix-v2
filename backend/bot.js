@@ -267,8 +267,13 @@ client.on('interactionCreate', async (interaction) => {
       const result = await apiRequest('POST', '/api/redeem', { key, discordId });
 
       if (result.success) {
-        const roleAssigned = await assignRole(interaction.member, result.tier);
-        const roleMsg = roleAssigned ? '\nRole assigned on this server!' : '\n(Could not assign role — check bot permissions)';
+        let roleMsg = '';
+        if (interaction.guild && interaction.member) {
+          const roleAssigned = await assignRole(interaction.member, result.tier);
+          roleMsg = roleAssigned ? '\nRole assigned on this server!' : '\n(Could not assign role — check bot permissions)';
+        } else {
+          roleMsg = '\n(DM — role will be assigned when you run /redeem in the server)';
+        }
 
         await interaction.editReply({
           content: `✅ **License Activated!**\n\nPlan: **${result.tier}**${roleMsg}\n\nYou can now use all ${result.tier} features in Choatix V2!`,
@@ -293,9 +298,15 @@ client.on('interactionCreate', async (interaction) => {
     try {
       const result = await apiRequest('GET', `/api/license/${discordId}`);
       if (result.tier) {
-        const hasRole = interaction.member.roles.cache.has(result.tier === 'PREMIUM' ? PREMIUM_ROLE_ID : PRO_ROLE_ID);
+        let roleMsg = '';
+        if (interaction.guild && interaction.member) {
+          const hasRole = interaction.member.roles.cache.has(result.tier === 'PREMIUM' ? PREMIUM_ROLE_ID : PRO_ROLE_ID);
+          roleMsg = `\nRole: ${hasRole ? '✅ Assigned' : '❌ Not assigned (run /redeem in this server)'}`;
+        } else {
+          roleMsg = '\nRole: (DM — roles only work in servers)';
+        }
         await interaction.editReply({
-          content: `📋 **Your License**\n\nPlan: **${result.tier}**\nActivated: ${result.activatedAt}\nRole: ${hasRole ? '✅ Assigned' : '❌ Not assigned (run /redeem in this server)'}`,
+          content: `📋 **Your License**\n\nPlan: **${result.tier}**\nActivated: ${result.activatedAt}${roleMsg}`,
         });
       } else {
         await interaction.editReply({
@@ -317,7 +328,9 @@ client.on('interactionCreate', async (interaction) => {
     try {
       const result = await apiRequest('POST', '/api/license/unlink', { discordId });
       if (result.success) {
-        await removeRole(interaction.member);
+        if (interaction.guild && interaction.member) {
+          await removeRole(interaction.member);
+        }
         await interaction.editReply({
           content: '✅ **License Unlinked**\n\nYour license has been removed. You can now give the key to someone else.',
         });
@@ -374,8 +387,13 @@ client.on('interactionCreate', async (interaction) => {
       const result = await apiRequest('POST', '/api/referral/redeem', { code, refereeId: discordId });
 
       if (result.success) {
-        const roleAssigned = await assignRole(interaction.member, result.refereeReward);
-        const roleMsg = roleAssigned ? '\nRole assigned on this server!' : '';
+        let roleMsg = '';
+        if (interaction.guild && interaction.member) {
+          const roleAssigned = await assignRole(interaction.member, result.refereeReward);
+          roleMsg = roleAssigned ? '\nRole assigned on this server!' : '';
+        } else {
+          roleMsg = '\n(DM — role will be assigned when you run /redeem in the server)';
+        }
 
         await interaction.editReply({
           content: `✅ **Referral Redeemed!**\n\nYou got: **${result.refereeReward}**${roleMsg}\nThe referrer got: **${result.referrerReward}**\n\nEnjoy Choatix V2!`,
