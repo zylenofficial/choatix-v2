@@ -358,26 +358,36 @@ function copyKey(btn, key) {
 
 function loadKeys() {
   api('GET', '/api/admin/keys').then(data => {
-    const keys = data.keys || [];
-    document.getElementById('keyCount').textContent = keys.length + ' keys';
-    if (!keys.length) { document.getElementById('keysEmpty').style.display = ''; return; }
+    const keys = (data.keys || []).map(k => ({ ...k, type: 'key' }));
+    const referrals = (data.referrals || []).map(r => ({
+      key: r.code || '',
+      tier: 'PRO',
+      redeemed: r.uses > 0,
+      discord_id: r.referrer_id || '',
+      expiry: '-',
+      type: 'referral'
+    }));
+    const allItems = [...keys, ...referrals];
+    document.getElementById('keyCount').textContent = allItems.length + ' items';
+    if (!allItems.length) { document.getElementById('keysEmpty').style.display = ''; return; }
     document.getElementById('keysEmpty').style.display = 'none';
-    document.getElementById('keysBody').innerHTML = keys.map(k => {
-      const key = k.key || '';
-      const tier = k.tier || 'PRO';
+    document.getElementById('keysBody').innerHTML = allItems.map(item => {
+      const key = item.key || '';
+      const tier = item.tier || 'PRO';
       const tierClass = tier === 'PRO' ? 'pro' : 'premium';
-      const isRedeemed = k.redeemed === true || k.redeemed === 'true';
+      const isRedeemed = item.redeemed === true || item.redeemed === 'true';
       const statusClass = isRedeemed ? 'redeemed' : 'active';
       const statusText = isRedeemed ? 'Redeemed' : 'Active';
-      const discordId = k.discord_id || k.discordId || '-';
-      const expiry = k.expiry || '-';
+      const discordId = item.discord_id || '-';
+      const expiry = item.expiry || '-';
+      const isReferral = item.type === 'referral';
       return `<tr>
-        <td><code>${key}</code></td>
+        <td><code>${key}</code>${isReferral ? '<br><span style="font-size:8px;color:var(--t3)">Referral</span>' : ''}</td>
         <td><span class="badge ${tierClass}">${tier}</span></td>
-        <td><span class="badge ${statusClass}">${statusText}</span></td>
+        <td><span class="badge ${statusClass}">${isRedeemed ? `${statusText} (${statusClass === 'redeemed' ? 'used' : 'active'})` : statusText}</span></td>
         <td>${discordId}</td>
         <td>${expiry}</td>
-        <td>${!isRedeemed ? `<button class="revoke-btn" onclick="revokeKey('${key}')">Revoke</button>` : ''}</td>
+        <td>${!isRedeemed && !isReferral ? `<button class="revoke-btn" onclick="revokeKey('${key}')">Revoke</button>` : isReferral ? '—' : ''}</td>
       </tr>`;
     }).join('');
   }).catch(() => {});
