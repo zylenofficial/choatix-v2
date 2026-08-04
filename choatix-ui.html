@@ -6,73 +6,79 @@
 <title>Choatix V2</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
-  * { margin: 0; padding: 0; box-sizing: border-box; border-color: rgba(255,255,255,0.06); }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
   :root {
     --bg: #000; --bg2: #080808; --bg3: #111; --bg4: #181818; --bg5: #1e1e1e; --bg6: #252525;
     --b1: rgba(255,255,255,0.06); --b2: rgba(255,255,255,0.10); --b3: rgba(255,255,255,0.18);
+    --b-green: rgba(0,230,118,0.15); --b-green-dim: rgba(0,230,118,0.08);
     --t1: #f5f5f5; --t2: rgba(255,255,255,0.55); --t3: rgba(255,255,255,0.32); --t4: rgba(255,255,255,0.18);
-    --accent: #fff; --accent-dim: rgba(255,255,255,0.07);
-    --success: #e0e0e0; --warning: rgba(255,255,255,0.60); --danger: rgba(255,255,255,0.42);
-    --r1: 8px; --r2: 12px; --r3: 16px; --r4: 20px;
+    --accent: #00e676; --accent-dim: rgba(0,230,118,0.07);
+    --green: #00e676; --green-dim: #00c864; --green-faint: rgba(0,230,118,0.04);
+    --success: #00e676; --warning: #ffc107; --danger: #ff5252;
+    --r1: 8px; --r2: 10px; --r3: 14px; --r4: 20px;
   }
-  body { font-family: 'Inter', -apple-system, sans-serif; background: #000; color: var(--t1); overflow: hidden; height: 100vh; -webkit-font-smoothing: antialiased; letter-spacing: -0.011em; }
-  ::-webkit-scrollbar { width: 5px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 4px; }
+  body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: var(--t1); overflow: hidden; height: 100vh; -webkit-font-smoothing: antialiased; letter-spacing: -0.011em; }
+  ::-webkit-scrollbar { width: 5px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.06); border-radius: 4px; }
 
   /* Layout */
   .app { display: flex; flex-direction: column; height: 100vh; }
-  .titlebar { height: 36px; display: flex; align-items: center; justify-content: space-between; padding: 0 12px; border-bottom: 1px solid var(--b1); -webkit-app-region: drag; flex-shrink: 0; }
-  .titlebar .brand { font-size: 10px; font-weight: 700; letter-spacing: 0.15em; color: var(--t4); }
+  .titlebar { height: 36px; display: flex; align-items: center; justify-content: space-between; padding: 0 12px; border-bottom: 1px solid var(--b1); -webkit-app-region: drag; flex-shrink: 0; background: rgba(0,0,0,0.3); }
+  .titlebar .brand { font-size: 10px; font-weight: 700; letter-spacing: 0.15em; color: var(--t3); }
   .titlebar .controls { display: flex; gap: 2px; -webkit-app-region: no-drag; }
-  .titlebar .controls button { width: 32px; height: 32px; border: none; background: transparent; color: var(--t4); border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; transition: 0.15s; }
-  .titlebar .controls button:hover { background: rgba(255,255,255,0.05); color: var(--t1); }
+  .titlebar .controls button { width: 32px; height: 32px; border: none; background: transparent; color: var(--t3); border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; transition: all 0.15s; }
+  .titlebar .controls button:hover { background: rgba(255,255,255,0.04); color: var(--t1); }
   .main { display: flex; flex: 1; overflow: hidden; }
 
   /* Sidebar */
-  .sidebar { width: 224px; background: rgba(6,6,6,0.92); backdrop-filter: blur(24px); border-right: 1px solid var(--b1); display: flex; flex-direction: column; flex-shrink: 0; position: relative; }
-  .sidebar .logo { height: 56px; display: flex; align-items: center; padding: 0 20px; }
-  .sidebar .logo span { font-size: 13px; font-weight: 900; letter-spacing: 0.2em; color: var(--t1); }
-  .sidebar .logo small { font-size: 8px; font-weight: 500; letter-spacing: 0.1em; color: var(--t4); margin-left: 8px; }
+  .sidebar { width: 224px; background: rgba(8,8,8,0.92); backdrop-filter: blur(20px); border-right: 1px solid var(--b1); display: flex; flex-direction: column; flex-shrink: 0; position: relative; }
+  .sidebar .logo { height: 56px; display: flex; align-items: center; padding: 0 20px; border-bottom: 1px solid var(--b1); }
+  .sidebar .logo span { font-size: 14px; font-weight: 900; letter-spacing: 0.2em; color: var(--t1); display: flex; align-items: center; gap: 6px; }
+  .sidebar .logo span .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); box-shadow: 0 0 8px rgba(0,230,118,0.4); }
+  .sidebar .logo small { font-size: 8px; font-weight: 500; letter-spacing: 0.1em; color: var(--t3); margin-left: 8px; }
   .sidebar .sep { height: 1px; margin: 0 16px; background: linear-gradient(90deg, transparent, var(--b1), transparent); }
-  .sidebar nav { flex: 1; padding: 12px; display: flex; flex-direction: column; gap: 2px; margin-top: 8px; }
-  .sidebar nav button { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border: none; background: transparent; color: var(--t2); font-size: 12px; font-weight: 500; border-radius: var(--r2); cursor: pointer; transition: all 0.2s cubic-bezier(0.4,0,0.2,1); position: relative; width: 100%; text-align: left; }
+  .sidebar nav { flex: 1; padding: 16px; display: flex; flex-direction: column; gap: 3px; }
+  .sidebar nav button { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: none; background: transparent; color: var(--t2); font-size: 11px; font-weight: 500; border-radius: 8px; cursor: pointer; transition: all 0.2s cubic-bezier(0.4,0,0.2,1); position: relative; width: 100%; text-align: left; }
   .sidebar nav button:hover { background: var(--bg5); color: var(--t1); transform: translateX(1px); }
-  .sidebar nav button.active { background: var(--accent-dim); color: var(--accent); box-shadow: inset 0 0 20px rgba(255,255,255,0.02); }
-  .sidebar nav button.active::before { content: ''; position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 2px; height: 20px; border-radius: 0 4px 4px 0; background: var(--accent); box-shadow: 0 0 8px rgba(255,255,255,0.2); }
+  .sidebar nav button.active { background: var(--green-faint); color: var(--green); box-shadow: 0 0 12px rgba(0,230,118,0.08); }
+  .sidebar nav button.active::before { content: ''; position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 2px; height: 18px; border-radius: 0 4px 4px 0; background: var(--green); box-shadow: 0 0 8px rgba(0,230,118,0.3); }
   .sidebar nav button svg { width: 15px; height: 15px; flex-shrink: 0; }
-  .sidebar .upgrade { padding: 12px; }
-  .sidebar .upgrade-card { padding: 16px; border-radius: var(--r3); background: linear-gradient(135deg, rgba(255,255,255,0.035), rgba(255,255,255,0.01)); border: 1px solid rgba(255,255,255,0.06); position: relative; overflow: hidden; }
-  .sidebar .upgrade-card .label { font-size: 9px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--t4); margin-bottom: 6px; }
-  .sidebar .upgrade-card .desc { font-size: 10px; color: var(--t3); margin-bottom: 12px; }
-  .sidebar .upgrade-card button { width: 100%; height: 32px; border: none; border-radius: var(--r2); background: var(--accent); color: #000; font-size: 10px; font-weight: 700; letter-spacing: 0.05em; cursor: pointer; transition: all 0.2s; }
-  .sidebar .upgrade-card button:hover { transform: translateY(-1px); box-shadow: 0 4px 20px rgba(255,255,255,0.1); }
+  .sidebar .upgrade { padding: 16px; border-top: 1px solid var(--b1); margin-top: auto; }
+  .sidebar .upgrade-card { padding: 14px; border-radius: var(--r3); background: linear-gradient(135deg, rgba(0,230,118,0.05), rgba(0,230,118,0.02)); border: 1px solid rgba(0,230,118,0.1); position: relative; overflow: hidden; }
+  .sidebar .upgrade-card .label { font-size: 8px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--t3); margin-bottom: 6px; display: flex; align-items: center; gap: 4px; }
+  .sidebar .upgrade-card .label::before { content: ''; width: 4px; height: 4px; border-radius: 50%; background: var(--green); }
+  .sidebar .upgrade-card .desc { font-size: 9px; color: var(--t2); margin-bottom: 10px; }
+  .sidebar .upgrade-card button { width: 100%; height: 28px; border: none; border-radius: 8px; background: var(--green); color: #000; font-size: 9px; font-weight: 700; letter-spacing: 0.05em; cursor: pointer; transition: all 0.2s; box-shadow: 0 2px 8px rgba(0,230,118,0.2); }
+  .sidebar .upgrade-card button:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(0,230,118,0.3); }
 
   /* Content */
   .content { flex: 1; overflow-y: auto; padding: 24px; }
 
   /* Cards */
-  .card { background: var(--bg2); border: 1px solid var(--b1); border-radius: var(--r3); transition: all 0.25s cubic-bezier(0.4,0,0.2,1); }
-  .card:hover { border-color: var(--b2); background: var(--bg3); box-shadow: 0 0 0 1px rgba(255,255,255,0.03), 0 4px 24px rgba(0,0,0,0.3); }
-  .card-glow { box-shadow: 0 0 30px rgba(255,255,255,0.02), inset 0 1px 0 rgba(255,255,255,0.04); }
+  .card { background: var(--bg2); border: 1px solid var(--b1); border-radius: var(--r3); transition: all 0.2s cubic-bezier(0.4,0,0.2,1); }
+  .card:hover { border-color: rgba(0,230,118,0.1); background: var(--bg3); box-shadow: 0 0 0 1px rgba(0,230,118,0.03), 0 4px 24px rgba(0,230,118,0.04); }
+  .card-glow { box-shadow: 0 0 20px rgba(0,230,118,0.01), inset 0 1px 0 rgba(255,255,255,0.02); }
 
   /* Page header */
-  .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
-  .page-header h1 { font-size: 17px; font-weight: 700; letter-spacing: -0.01em; }
-  .page-header p { font-size: 10px; color: var(--t4); margin-top: 2px; }
-  .live-dot { display: flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 999px; background: var(--bg3); border: 1px solid var(--b1); }
-  .live-dot::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--success); animation: pulse 2s infinite; }
+  .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+  .page-header h1 { font-size: 17px; font-weight: 700; letter-spacing: -0.01em; display: flex; align-items: center; gap: 8px; }
+  .page-header h1 .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); box-shadow: 0 0 6px rgba(0,230,118,0.4); }
+  .page-header p { font-size: 10px; color: var(--t3); margin-top: 2px; display: flex; align-items: center; gap: 6px; }
+  .page-header p .refresh-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--green); }
+  .live-dot { display: flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 999px; background: var(--bg3); border: 1px solid var(--b1); }
+  .live-dot::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; box-shadow: 0 0 8px rgba(0,230,118,0.4); }
 
   /* Gauge */
   .gauge { position: relative; display: inline-flex; align-items: center; justify-content: center; }
   .gauge svg { transform: rotate(-90deg); }
   .gauge .val { position: absolute; display: flex; flex-direction: column; align-items: center; justify-content: center; }
   .gauge .val .num { font-size: 18px; font-weight: 700; line-height: 1; }
-  .gauge .val .lbl { font-size: 8px; color: var(--t4); margin-top: 2px; }
+  .gauge .val .lbl { font-size: 8px; color: var(--t3); margin-top: 2px; }
 
   /* Stats row */
   .stat-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--b1); }
   .stat-row:last-child { border-bottom: none; }
   .stat-row .label { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--t3); }
-  .stat-row .label svg { width: 14px; height: 14px; }
+  .stat-row .label svg { width: 14px; height: 14px; flex-shrink: 0; }
   .stat-row .value { font-size: 11px; font-weight: 500; color: var(--t2); }
 
   /* Charts */
@@ -81,79 +87,84 @@
 
   /* Scan page */
   .scan-center { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; }
-  .scan-icon { width: 128px; height: 128px; border-radius: 24px; display: flex; align-items: center; justify-content: center; background: var(--bg3); border: 1px solid var(--b2); margin-bottom: 32px; position: relative; }
-  .scan-icon svg { width: 56px; height: 56px; color: var(--accent); }
-  .scan-icon .badge { position: absolute; bottom: -6px; right: -6px; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--bg2); border: 1px solid var(--b2); }
-  .scan-icon .badge svg { width: 14px; height: 14px; }
+  .scan-icon { width: 128px; height: 128px; border-radius: 24px; display: flex; align-items: center; justify-content: center; background: var(--bg3); border: 1px solid var(--b2); margin-bottom: 32px; position: relative; box-shadow: inset 0 1px 0 rgba(255,255,255,0.03); }
+  .scan-icon svg { width: 56px; height: 56px; color: var(--green); filter: drop-shadow(0 0 20px rgba(0,230,118,0.3)); }
+  .scan-icon .badge { position: absolute; bottom: -6px; right: -6px; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--bg2); border: 1px solid var(--b2); box-shadow: 0 0 12px rgba(0,230,118,0.2); }
+  .scan-icon .badge svg { width: 14px; height: 14px; stroke: var(--green); }
 
-  .btn-primary { background: var(--accent); color: #000; border: none; font-weight: 600; border-radius: var(--r2); cursor: pointer; transition: all 0.2s cubic-bezier(0.4,0,0.2,1); }
-  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 20px rgba(255,255,255,0.1); }
+  .btn-primary { background: var(--green); color: #000; border: none; font-weight: 600; border-radius: 8px; cursor: pointer; transition: all 0.2s cubic-bezier(0.4,0,0.2,1); box-shadow: 0 2px 12px rgba(0,230,118,0.2); }
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 20px rgba(0,230,118,0.3); }
   .btn-primary:active { transform: translateY(0); }
 
   /* Progress */
   .progress { height: 3px; border-radius: 2px; background: var(--bg6); overflow: hidden; position: relative; }
-  .progress .fill { height: 100%; border-radius: 2px; background: var(--accent); transition: width 0.6s cubic-bezier(0.4,0,0.2,1); position: relative; }
+  .progress .fill { height: 100%; border-radius: 2px; background: var(--green); transition: width 0.6s cubic-bezier(0.4,0,0.2,1); position: relative; box-shadow: 0 0 8px rgba(0,230,118,0.4); }
   .progress .fill::after { content: ''; position: absolute; top: 0; right: 0; width: 40px; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3)); border-radius: 2px; }
 
   /* Optimizer list */
-  .tweak-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; }
-  .tweak-item .dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+  .tweak-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: var(--r3); }
+  .tweak-item .dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; box-shadow: 0 0 4px var(--t4); }
   .tweak-item .info { flex: 1; min-width: 0; }
   .tweak-item .info .name { font-size: 12px; font-weight: 600; }
-  .tweak-item .info .desc { font-size: 10px; color: var(--t4); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .tweak-item .cat { font-size: 8px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; padding: 4px 8px; border-radius: 6px; background: var(--bg6); color: var(--t4); flex-shrink: 0; }
-  .tweak-item .apply-btn { height: 32px; padding: 0 12px; border: none; border-radius: var(--r2); background: var(--accent); color: #000; font-size: 10px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 4px; flex-shrink: 0; transition: all 0.2s; }
-  .tweak-item .apply-btn:hover { transform: translateY(-1px); box-shadow: 0 2px 12px rgba(255,255,255,0.1); }
+  .tweak-item .info .desc { font-size: 10px; color: var(--t3); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .tweak-item .cat { font-size: 7px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; padding: 3px 8px; border-radius: 4px; background: var(--bg6); color: var(--t4); flex-shrink: 0; }
+  .tweak-item .apply-btn { height: 28px; padding: 0 12px; border: none; border-radius: 8px; background: var(--green); color: #000; font-size: 9px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 4px; flex-shrink: 0; transition: all 0.2s; box-shadow: 0 2px 8px rgba(0,230,118,0.15); }
+  .tweak-item .apply-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(0,230,118,0.25); }
 
   /* Category grid */
   .cat-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 8px; margin-bottom: 20px; }
   .cat-pill { padding: 12px; border-radius: var(--r3); text-align: center; background: var(--bg2); border: 1px solid var(--b1); transition: all 0.25s; }
-  .cat-pill:hover { border-color: var(--b2); background: var(--bg3); }
-  .cat-pill .icon { width: 32px; height: 32px; border-radius: 12px; margin: 0 auto 8px; display: flex; align-items: center; justify-content: center; }
+  .cat-pill:hover { border-color: rgba(0,230,118,0.15); background: var(--bg3); transform: translateY(-2px); }
+  .cat-pill .icon { width: 32px; height: 32px; border-radius: 10px; margin: 0 auto 6px; display: flex; align-items: center; justify-content: center; }
   .cat-pill .icon .dot { width: 10px; height: 10px; border-radius: 50%; }
-  .cat-pill .name { font-size: 8px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--t4); margin-bottom: 2px; }
-  .cat-pill .count { font-size: 13px; font-weight: 700; }
+  .cat-pill .name { font-size: 7px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--t3); margin-bottom: 2px; }
+  .cat-pill .count { font-size: 13px; font-weight: 700; color: var(--t1); }
 
   /* Upgrade modal */
-  .modal-overlay { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; background: rgba(0,0,0,0.85); z-index: 100; }
+  .modal-overlay { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; background: rgba(0,0,0,0.85); z-index: 100; overflow: auto; padding: 20px; }
   .modal-overlay.show { display: flex; }
-  .modal { width: 100%; max-width: 560px; background: var(--bg2); border: 1px solid var(--b1); border-radius: var(--r4); overflow: hidden; }
+  .modal { width: 100%; max-width: 560px; background: var(--bg2); border: 1px solid var(--b1); border-radius: var(--r4); overflow: hidden; box-shadow: 0 24px 80px rgba(0,0,0,0.5); }
   .modal-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; border-bottom: 1px solid var(--b1); }
-  .modal-header h2 { font-size: 13px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; }
-  .modal-header p { font-size: 10px; color: var(--t3); margin-top: 2px; }
-  .modal-header button { width: 28px; height: 28px; border: none; background: transparent; color: var(--t4); border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.15s; }
-  .modal-header button:hover { background: rgba(255,255,255,0.05); color: var(--t1); }
-  .plan-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 16px; }
-  .plan-card { padding: 16px; border-radius: var(--r3); background: var(--bg); border: 1px solid var(--b1); position: relative; }
-  .plan-card.recommended { border: 2px solid var(--accent); background: linear-gradient(135deg, rgba(255,255,255,0.04), var(--bg)); }
-  .plan-card .badge { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); font-size: 8px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; padding: 2px 10px; border-radius: 999px; background: var(--accent); color: #000; white-space: nowrap; }
-  .plan-card .tier { font-size: 9px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--t4); margin-bottom: 6px; }
+  .modal-header h2 { font-size: 12px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--t3); }
+  .modal-header p { font-size: 10px; color: var(--t2); margin-top: 2px; }
+  .modal-header button { width: 28px; height: 28px; border: none; background: transparent; color: var(--t3); border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s; font-size: 14px; }
+  .modal-header button:hover { background: rgba(255,255,255,0.04); color: var(--t1); }
+  .plan-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 20px; }
+  .plan-card { padding: 16px; border-radius: var(--r3); background: var(--bg); border: 1px solid var(--b1); position: relative; transition: all 0.3s; cursor: pointer; }
+  .plan-card:hover { transform: translateY(-4px); border-color: rgba(0,230,118,0.15); }
+  .plan-card.recommended { border: 2px solid var(--green); background: linear-gradient(135deg, rgba(0,230,118,0.06), rgba(0,230,118,0.02)); box-shadow: 0 0 30px rgba(0,230,118,0.06); }
+  .plan-card.recommended:hover { box-shadow: 0 0 40px rgba(0,230,118,0.12); }
+  .plan-card .badge { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); font-size: 8px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; padding: 2px 10px; border-radius: 999px; background: var(--green); color: #000; white-space: nowrap; box-shadow: 0 0 10px rgba(0,230,118,0.3); }
+  .plan-card .tier { font-size: 9px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--t3); margin-bottom: 6px; }
+  .plan-card.recommended .tier { color: var(--green); }
   .plan-card .price { font-size: 20px; font-weight: 700; margin-bottom: 2px; }
-  .plan-card .sub { font-size: 10px; color: var(--t4); margin-bottom: 12px; }
+  .plan-card.recommended .price { color: var(--green); }
+  .plan-card .sub { font-size: 10px; color: var(--t3); margin-bottom: 12px; }
   .plan-card .features { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
-  .plan-card .features li { list-style: none; font-size: 10px; color: var(--t3); display: flex; align-items: flex-start; gap: 6px; line-height: 1.4; }
-  .plan-card .features li::before { content: ''; width: 12px; height: 12px; border-radius: 50%; background: rgba(255,255,255,0.06); border: 1px solid var(--b2); flex-shrink: 0; margin-top: 1px; display: flex; align-items: center; justify-content: center; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.25)' stroke-width='3'%3E%3Cpath d='M20 6L9 17l-5-5'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: center; }
-  .plan-card .features li.disabled { color: var(--t4); opacity: 0.4; }
-  .plan-card .features li.disabled::before { background-image: none; }
-  .plan-card .tweak-count { font-size: 9px; font-weight: 600; color: var(--t4); letter-spacing: 0.1em; padding: 4px 0; border-top: 1px solid var(--b1); margin-bottom: 10px; }
+  .plan-card .features li { list-style: none; font-size: 10px; color: var(--t2); display: flex; align-items: center; gap: 6px; line-height: 1.4; }
+  .plan-card .features li::before { content: ''; width: 12px; height: 12px; border-radius: 50%; background: rgba(0,230,118,0.1); border: 1px solid rgba(0,230,118,0.2); flex-shrink: 0; display: flex; align-items: center; justify-content: center; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 24 24' fill='none' stroke='rgba(0,230,118,0.6)' stroke-width='3'%3E%3Cpath d='M20 6L9 17l-5-5'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: center; }
+  .plan-card .features li.disabled { color: var(--t4); opacity: 0.5; }
+  .plan-card .features li.disabled::before { background-image: none; background: rgba(255,255,255,0.03); border-color: var(--b2); }
+  .plan-card .tweak-count { font-size: 9px; font-weight: 600; color: var(--t3); letter-spacing: 0.1em; padding: 6px 0; border-top: 1px solid var(--b1); margin-bottom: 10px; }
   .plan-card .tweak-count b { color: var(--t1); font-weight: 700; }
-  .plan-card button { width: 100%; height: 32px; border: none; border-radius: var(--r2); font-size: 10px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
-  .plan-card button.primary { background: var(--accent); color: #000; }
-  .plan-card button.primary:hover { transform: translateY(-1px); box-shadow: 0 4px 20px rgba(255,255,255,0.1); }
+  .plan-card button { width: 100%; height: 30px; border: none; border-radius: 8px; font-size: 9px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+  .plan-card button.primary { background: var(--green); color: #000; box-shadow: 0 2px 12px rgba(0,230,118,0.2); }
+  .plan-card button.primary:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(0,230,118,0.3); }
   .plan-card button.secondary { background: var(--bg3); color: var(--t2); border: 1px solid var(--b2); }
-  .modal-footer { padding: 12px 20px 16px; text-align: center; font-size: 10px; color: var(--t4); }
+  .modal-footer { padding: 12px 20px 16px; text-align: center; font-size: 10px; color: var(--t3); }
   .modal-footer b { color: var(--t2); font-weight: 500; }
 
   /* Health score */
-  .health-card { padding: 24px; display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 190px; position: relative; overflow: hidden; }
-  .health-card .glow { position: absolute; inset: 0; pointer-events: none; border-radius: inherit; }
+  .health-card { padding: 24px; display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 170px; }
+  .health-card .gauge svg circle { stroke: rgba(0,230,118,0.1); }
+  .health-card .gauge svg circle:last-child { filter: drop-shadow(0 0 8px rgba(0,230,118,0.3)); }
 
   /* Animations */
   @keyframes pulse { 0%,100% { opacity: 0.4; transform: scale(1); } 50% { opacity: 1; transform: scale(1.05); } }
   @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
   @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
   @keyframes slideDown { from { transform: translateY(0); } to { transform: translateY(100%); } }
-  @keyframes btnPulse { 0% { box-shadow: 0 0 0 0 rgba(255,255,255,0.35); } 70% { box-shadow: 0 0 0 14px rgba(255,255,255,0); } 100% { box-shadow: 0 0 0 0 rgba(255,255,255,0); } }
+  @keyframes btnPulse { 0% { box-shadow: 0 0 0 0 rgba(0,230,118,0.4); } 70% { box-shadow: 0 0 0 10px rgba(0,230,118,0); } 100% { box-shadow: 0 0 0 0 rgba(0,230,118,0); } }
   @keyframes optSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
   @keyframes checkPop { 0% { transform: scale(0); opacity: 0; } 60% { transform: scale(1.2); } 100% { transform: scale(1); opacity: 1; } }
   .fade-in { animation: fadeIn 0.4s cubic-bezier(0.4,0,0.2,1) forwards; opacity: 0; }
@@ -170,84 +181,85 @@
 
   /* ── Game Library ── */
   .game-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 14px; }
-  .game-card { position: relative; border-radius: var(--r3); overflow: hidden; background: var(--bg2); border: 1px solid var(--b1); cursor: default; transition: all 0.3s cubic-bezier(0.4,0,0.2,1); aspect-ratio: 0.72; display: flex; flex-direction: column; }
-  .game-card:hover { border-color: var(--b2); transform: translateY(-3px); box-shadow: 0 8px 32px rgba(0,0,0,0.5); }
+  .game-card { position: relative; border-radius: var(--r3); overflow: hidden; background: var(--bg2); border: 1px solid var(--b1); cursor: default; transition: all 0.2s cubic-bezier(0.4,0,0.2,1); aspect-ratio: 0.72; display: flex; flex-direction: column; }
+  .game-card:hover { border-color: rgba(0,230,118,0.1); transform: translateY(-3px); box-shadow: 0 8px 32px rgba(0,0,0,0.5), 0 0 20px rgba(0,230,118,0.04); }
   .game-card-img { flex: 1; position: relative; overflow: hidden; background: var(--bg3); }
-  .game-card-img img { width: 100%; height: 100%; object-fit: cover; display: block; filter: grayscale(0.15); transition: filter 0.3s, transform 0.4s; }
-  .game-card:hover .game-card-img img { filter: grayscale(0); transform: scale(1.04); }
-  .game-card-img .tag { position: absolute; top: 10px; left: 10px; font-size: 7px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; padding: 3px 8px; border-radius: 4px; background: rgba(0,0,0,0.65); backdrop-filter: blur(8px); color: var(--t2); border: 1px solid rgba(255,255,255,0.08); }
-  .game-card-img .tag.competitive { color: #fff; background: rgba(255,255,255,0.15); }
-  .game-card-img .tag.story { color: #ccc; }
-  .game-card-img .tag.multiplayer { color: #aaa; }
+  .game-card-img img { width: 100%; height: 100%; object-fit: cover; display: block; filter: grayscale(0.2); opacity: 0.85; transition: filter 0.3s, transform 0.4s, opacity 0.3s; }
+  .game-card:hover .game-card-img img { filter: grayscale(0); opacity: 1; transform: scale(1.04); }
+  .game-card-img .tag { position: absolute; top: 8px; left: 8px; font-size: 6px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; padding: 2px 6px; border-radius: 3px; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); color: var(--t3); border: 1px solid rgba(255,255,255,0.06); }
+  .game-card-img .tag.competitive { color: #fff; background: rgba(0,230,118,0.15); border-color: rgba(0,230,118,0.2); }
+  .game-card-img .tag.story { color: #ccc; background: rgba(124,77,255,0.15); border-color: rgba(124,77,255,0.2); }
+  .game-card-img .tag.multiplayer { color: #aaa; background: rgba(41,121,255,0.15); border-color: rgba(41,121,255,0.2); }
 
   /* Lightning button */
-  .opt-btn { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 52px; height: 52px; border-radius: 50%; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.7); backdrop-filter: blur(12px); border: 1.5px solid rgba(255,255,255,0.15); z-index: 5; transition: all 0.3s cubic-bezier(0.4,0,0.2,1); box-shadow: 0 0 20px rgba(255,255,255,0.06), 0 0 40px rgba(255,255,255,0.03); }
-  .opt-btn svg { width: 20px; height: 20px; fill: none; stroke: #fff; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; transition: all 0.3s; filter: drop-shadow(0 0 4px rgba(255,255,255,0.3)); }
-  .game-card:hover .opt-btn { background: rgba(0,0,0,0.85); border-color: rgba(255,255,255,0.25); box-shadow: 0 0 28px rgba(255,255,255,0.1), 0 0 56px rgba(255,255,255,0.04); transform: translate(-50%, -50%) scale(1.06); }
-  .game-card:hover .opt-btn svg { filter: drop-shadow(0 0 8px rgba(255,255,255,0.5)); }
+  .opt-btn { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 48px; height: 48px; border-radius: 50%; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.6); backdrop-filter: blur(12px); border: 1.5px solid rgba(255,255,255,0.12); z-index: 5; transition: all 0.2s cubic-bezier(0.4,0,0.2,1); box-shadow: 0 0 16px rgba(0,0,0,0.2); }
+  .opt-btn svg { width: 18px; height: 18px; fill: none; stroke: #fff; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; transition: all 0.3s; filter: drop-shadow(0 0 3px rgba(255,255,255,0.4)); }
+  .game-card:hover .opt-btn { background: rgba(0,230,118,0.1); border-color: rgba(0,230,118,0.3); box-shadow: 0 0 16px rgba(0,230,118,0.12), 0 0 32px rgba(0,230,118,0.06); transform: translate(-50%, -50%) scale(1.06); }
+  .game-card:hover .opt-btn svg { filter: drop-shadow(0 0 8px rgba(255,255,255,0.6)); }
   .opt-btn:active { transform: translate(-50%, -50%) scale(0.92); }
   .opt-btn.clicked { animation: btnPulse 0.5s ease-out; }
   .opt-btn.optimizing { pointer-events: none; }
-  .opt-btn.optimizing svg { animation: optSpin 1s linear infinite; stroke: var(--accent); }
+  .opt-btn.optimizing svg { animation: optSpin 1s linear infinite; stroke: var(--green); filter: drop-shadow(0 0 6px rgba(0,230,118,0.5)); }
 
   /* Game card info */
-  .game-card-info { padding: 10px 12px; background: var(--bg2); border-top: 1px solid var(--b1); }
+  .game-card-info { padding: 10px 12px; }
   .game-card-info .title { font-size: 11px; font-weight: 700; color: var(--t1); margin-bottom: 2px; }
-  .game-card-info .sub { font-size: 9px; color: var(--t4); }
+  .game-card-info .sub { font-size: 9px; color: var(--t3); }
 
   /* Optimized badge */
-  .game-card .optimized-badge { position: absolute; top: 10px; right: 10px; width: 22px; height: 22px; border-radius: 50%; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; z-index: 6; animation: checkPop 0.4s cubic-bezier(0.4,0,0.2,1); }
-  .game-card .optimized-badge svg { width: 12px; height: 12px; stroke: #fff; fill: none; stroke-width: 2.5; }
+  .game-card .optimized-badge { position: absolute; top: 8px; right: 8px; width: 22px; height: 22px; border-radius: 50%; background: rgba(0,230,118,0.1); border: 1px solid rgba(0,230,118,0.3); display: flex; align-items: center; justify-content: center; z-index: 6; animation: checkPop 0.4s cubic-bezier(0.4,0,0.2,1); box-shadow: 0 0 10px rgba(0,230,118,0.3); }
+  .game-card .optimized-badge svg { width: 12px; height: 12px; stroke: var(--green); fill: none; stroke-width: 2.5; }
 
   /* Bottom Sheet */
-  .sheet-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 200; display: none; opacity: 0; transition: opacity 0.3s; }
-  .sheet-overlay.show { display: block; opacity: 1; }
-  .bottom-sheet { position: fixed; bottom: 0; left: 0; right: 0; z-index: 201; background: var(--bg2); border-top: 1px solid var(--b1); border-radius: var(--r4) var(--r4) 0 0; padding: 0; transform: translateY(100%); transition: transform 0.35s cubic-bezier(0.4,0,0.2,1); max-height: 70vh; }
+  .sheet-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 200; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+  .sheet-overlay.show { opacity: 1; pointer-events: all; }
+  .bottom-sheet { position: fixed; bottom: 0; left: 0; right: 0; z-index: 201; background: var(--bg2); border-top: 1px solid var(--b1); border-radius: var(--r4) var(--r4) 0 0; padding: 0; transform: translateY(100%); transition: transform 0.35s cubic-bezier(0.4,0,0.2,1); max-height: 70vh; box-shadow: 0 -24px 80px rgba(0,0,0,0.5); }
   .bottom-sheet.show { transform: translateY(0); }
   .sheet-handle { width: 36px; height: 4px; border-radius: 2px; background: var(--bg6); margin: 12px auto 0; }
   .sheet-header { padding: 16px 24px 0; display: flex; align-items: center; justify-content: space-between; }
-  .sheet-header h3 { font-size: 14px; font-weight: 700; }
-  .sheet-header .close-sheet { width: 28px; height: 28px; border-radius: 8px; border: none; background: var(--bg4); color: var(--t3); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; transition: 0.15s; }
+  .sheet-header h3 { font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
+  .sheet-header h3 .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); box-shadow: 0 0 6px rgba(0,230,118,0.4); }
+  .sheet-header .close-sheet { width: 28px; height: 28px; border-radius: 8px; border: none; background: var(--bg4); color: var(--t3); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; transition: all 0.15s; }
   .sheet-header .close-sheet:hover { background: var(--bg5); color: var(--t1); }
   .sheet-game { padding: 12px 24px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--b1); }
   .sheet-game-img { width: 48px; height: 48px; border-radius: 8px; overflow: hidden; background: var(--bg3); flex-shrink: 0; }
   .sheet-game-img img { width: 100%; height: 100%; object-fit: cover; }
   .sheet-game-info .name { font-size: 13px; font-weight: 700; }
-  .sheet-game-info .cat { font-size: 9px; color: var(--t4); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.1em; }
+  .sheet-game-info .cat { font-size: 9px; color: var(--t3); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.1em; }
   .sheet-plans { padding: 16px 24px 24px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
   .sheet-plan { padding: 16px; border-radius: var(--r3); background: var(--bg); border: 1px solid var(--b1); cursor: pointer; transition: all 0.25s cubic-bezier(0.4,0,0.2,1); text-align: center; position: relative; }
-  .sheet-plan:hover { border-color: var(--b3); background: var(--bg3); transform: translateY(-2px); }
-  .sheet-plan.selected { border-color: var(--accent); background: rgba(255,255,255,0.04); }
-  .sheet-plan .plan-label { font-size: 8px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--t4); margin-bottom: 6px; }
+  .sheet-plan:hover { border-color: rgba(0,230,118,0.15); background: var(--bg3); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
+  .sheet-plan.selected { border-color: var(--green); background: rgba(0,230,118,0.03); box-shadow: 0 0 20px rgba(0,230,118,0.06); }
+  .sheet-plan .plan-label { font-size: 8px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--t3); margin-bottom: 6px; }
   .sheet-plan .plan-tweaks { font-size: 22px; font-weight: 800; color: var(--t1); line-height: 1; margin-bottom: 4px; }
-  .sheet-plan .plan-sub { font-size: 9px; color: var(--t4); }
+  .sheet-plan .plan-sub { font-size: 9px; color: var(--t3); }
   .sheet-plan .plan-icon { width: 28px; height: 28px; border-radius: 8px; background: var(--bg3); border: 1px solid var(--b1); display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; }
   .sheet-plan .plan-icon svg { width: 14px; height: 14px; stroke: var(--t2); fill: none; stroke-width: 1.5; }
-  .sheet-plan.recommended .plan-label { color: var(--accent); }
-  .sheet-plan.recommended::after { content: 'BEST'; position: absolute; top: -8px; right: -4px; font-size: 6px; font-weight: 800; letter-spacing: 0.12em; padding: 2px 6px; border-radius: 4px; background: var(--accent); color: #000; }
+  .sheet-plan.recommended .plan-label { color: var(--green); }
+  .sheet-plan.recommended::after { content: 'BEST'; position: absolute; top: -8px; right: -4px; font-size: 6px; font-weight: 800; letter-spacing: 0.12em; padding: 2px 6px; border-radius: 4px; background: var(--green); color: #000; box-shadow: 0 0 6px rgba(0,230,118,0.3); }
 
   /* Optimization progress */
   .opt-progress { padding: 0 24px 24px; display: none; }
   .opt-progress.active { display: block; }
   .opt-progress-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
-  .opt-progress-header .label { font-size: 11px; font-weight: 600; }
-  .opt-progress-header .pct { font-size: 11px; font-weight: 700; color: var(--accent); }
-  .opt-progress-bar { height: 4px; border-radius: 2px; background: var(--bg5); overflow: hidden; margin-bottom: 8px; }
-  .opt-progress-fill { height: 100%; border-radius: 2px; background: var(--accent); width: 0%; transition: width 0.4s cubic-bezier(0.4,0,0.2,1); position: relative; }
-  .opt-progress-fill::after { content: ''; position: absolute; top: 0; right: 0; width: 30px; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4)); }
+  .opt-progress-header .label { font-size: 11px; font-weight: 600; color: var(--t2); }
+  .opt-progress-header .pct { font-size: 11px; font-weight: 700; color: var(--green); }
+  .opt-progress-bar { height: 4px; border-radius: 2px; background: var(--bg5); overflow: hidden; margin-bottom: 8px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.03); }
+  .opt-progress-fill { height: 100%; border-radius: 2px; background: var(--green); width: 0%; transition: width 0.4s cubic-bezier(0.4,0,0.2,1); position: relative; box-shadow: 0 0 8px var(--green); }
+  .opt-progress-fill::after { content: ''; position: absolute; top: 0; right: 0; width: 30px; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3)); }
   .opt-steps { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
-  .opt-step { display: flex; align-items: center; gap: 8px; font-size: 10px; color: var(--t4); }
+  .opt-step { display: flex; align-items: center; gap: 8px; font-size: 10px; color: var(--t3); }
   .opt-step.done { color: var(--t2); }
-  .opt-step.active { color: var(--accent); }
+  .opt-step.active { color: var(--green); }
   .opt-step .dot { width: 5px; height: 5px; border-radius: 50%; background: var(--bg6); flex-shrink: 0; }
-  .opt-step.done .dot { background: var(--accent); }
-  .opt-step.active .dot { background: var(--accent); animation: pulse 1s infinite; }
+  .opt-step.done .dot { background: var(--green); box-shadow: 0 0 4px rgba(0,230,118,0.3); }
+  .opt-step.active .dot { background: var(--green); animation: pulse 1s infinite; box-shadow: 0 0 6px rgba(0,230,118,0.4); }
   .opt-complete { text-align: center; padding: 20px 24px 28px; display: none; }
   .opt-complete.active { display: block; }
-  .opt-complete .check { width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; animation: checkPop 0.5s cubic-bezier(0.4,0,0.2,1); }
-  .opt-complete .check svg { width: 20px; height: 20px; stroke: var(--accent); fill: none; stroke-width: 2.5; }
+  .opt-complete .check { width: 48px; height: 48px; border-radius: 50%; background: rgba(0,230,118,0.08); border: 1px solid rgba(0,230,118,0.2); display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; animation: checkPop 0.5s cubic-bezier(0.4,0,0.2,1); box-shadow: 0 0 20px rgba(0,230,118,0.15); }
+  .opt-complete .check svg { width: 22px; height: 22px; stroke: var(--green); fill: none; stroke-width: 3; }
   .opt-complete h4 { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
-  .opt-complete p { font-size: 10px; color: var(--t4); }
+  .opt-complete p { font-size: 10px; color: var(--t3); }
 </style>
 </head>
 <body>
@@ -265,7 +277,7 @@
   <div class="main">
     <!-- Sidebar -->
     <aside class="sidebar">
-      <div class="logo"><span>CHAOTIX</span><small>v2.0</small></div>
+      <div class="logo"><span>CHOATIX<span class="dot"></span></span><small>v2.3</small></div>
       <div class="sep"></div>
       <nav id="nav">
         <button class="active" data-page="dashboard">
@@ -289,7 +301,7 @@
           Performance
         </button>
         <button data-page="rollback">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 12a9 9 0 1 1 18 0 9 9 0 0 1-18 0"/><path d="M3 12l5 5m7-5l5-5"/></svg>
           Rollback
         </button>
       </nav>
@@ -297,7 +309,7 @@
       <div class="upgrade">
         <div class="upgrade-card">
           <div class="label">Free Plan</div>
-          <div class="desc">Unlock all optimizations</div>
+          <div class="desc">Unlock all 460+ optimizations</div>
           <button onclick="openModal()">Upgrade</button>
         </div>
       </div>
@@ -307,34 +319,33 @@
     <div class="content" id="page-dashboard">
       <div class="page-header">
         <div>
-          <h1>Dashboard</h1>
-          <p>Last updated: just now · Auto-refreshing</p>
+          <h1><span class="dot"></span> Dashboard</h1>
+          <p><span class="refresh-dot"></span> Auto-refreshing</p>
         </div>
-        <div class="live-dot"><span style="font-size:9px;font-weight:600;letter-spacing:0.1em;color:var(--success)">LIVE</span></div>
+        <div class="live-dot">LIVE</div>
       </div>
 
       <!-- Health + Gauges -->
-      <div style="display:flex;gap:16px;margin-bottom:20px">
+      <div style="display:flex;gap:16px;margin-bottom:20px;flex-wrap:wrap">
         <div class="card card-glow health-card" style="flex-shrink:0">
-          <div class="glow" id="healthGlow"></div>
           <div class="gauge" style="width:130px;height:130px">
             <svg width="130" height="130">
               <circle cx="65" cy="65" r="56" fill="none" stroke="var(--bg6)" stroke-width="7"/>
-              <circle cx="65" cy="65" r="56" fill="none" stroke="var(--success)" stroke-width="7" stroke-linecap="round"
+              <circle cx="65" cy="65" r="56" fill="none" stroke="var(--green)" stroke-width="7" stroke-linecap="round"
                 stroke-dasharray="351.86" stroke-dashoffset="35.19" id="healthRing"
-                style="transition:stroke-dashoffset 0.8s cubic-bezier(0.4,0,0.2,1);filter:drop-shadow(0 0 10px rgba(224,224,224,0.2))"/>
+                style="transition:stroke-dashoffset 0.8s cubic-bezier(0.4,0,0.2,1);filter:drop-shadow(0 0 8px rgba(0,230,118,0.3))"/>
             </svg>
-            <div class="val"><span class="num" id="healthScore" style="color:var(--success)">90</span><span class="lbl">/ 100</span></div>
+            <div class="val"><span class="num" id="healthScore" style="color:var(--green)">90</span><span class="lbl">/ 100</span></div>
           </div>
           <div style="font-size:12px;font-weight:600;margin-top:12px">System Health</div>
-          <div style="font-size:10px;color:var(--success)">Excellent</div>
+          <div style="font-size:10px;color:var(--green)">Excellent</div>
         </div>
 
-        <div style="flex:1;display:grid;grid-template-columns:repeat(4,1fr);gap:12px" class="stagger">
+        <div style="flex:1;display:grid;grid-template-columns:repeat(4,1fr);gap:12px;flex-wrap:wrap" class="stagger">
           <div class="card card-glow" style="padding:16px;display:flex;flex-direction:column;align-items:center">
             <div class="gauge" style="width:80px;height:80px">
-              <svg width="80" height="80"><circle cx="40" cy="40" r="34" fill="none" stroke="var(--bg6)" stroke-width="5"/><circle cx="40" cy="40" r="34" fill="none" stroke="var(--success)" stroke-width="5" stroke-linecap="round" stroke-dasharray="213.63" stroke-dashoffset="42.73" style="filter:drop-shadow(0 0 6px rgba(224,224,224,0.15))"/></svg>
-              <div class="val"><span class="num" style="font-size:16px;color:var(--success)">32%</span><span class="lbl">CPU</span></div>
+              <svg width="80" height="80"><circle cx="40" cy="40" r="34" fill="none" stroke="var(--bg6)" stroke-width="5"/><circle cx="40" cy="40" r="34" fill="none" stroke="var(--green)" stroke-width="5" stroke-linecap="round" stroke-dasharray="213.63" stroke-dashoffset="42.73" style="filter:drop-shadow(0 0 6px rgba(0,230,118,0.3))"/></svg>
+              <div class="val"><span class="num" style="font-size:16px;color:var(--green)">32%</span><span class="lbl">CPU</span></div>
             </div>
             <div style="margin-top:12px;width:100%;display:flex;flex-direction:column;gap:6px">
               <div class="stat-row"><span class="label">Temp</span><span class="value">58°C</span></div>
@@ -345,8 +356,8 @@
 
           <div class="card card-glow" style="padding:16px;display:flex;flex-direction:column;align-items:center">
             <div class="gauge" style="width:80px;height:80px">
-              <svg width="80" height="80"><circle cx="40" cy="40" r="34" fill="none" stroke="var(--bg6)" stroke-width="5"/><circle cx="40" cy="40" r="34" fill="none" stroke="var(--success)" stroke-width="5" stroke-linecap="round" stroke-dasharray="213.63" stroke-dashoffset="85.45" style="filter:drop-shadow(0 0 6px rgba(224,224,224,0.15))"/></svg>
-              <div class="val"><span class="num" style="font-size:16px;color:var(--success)">60%</span><span class="lbl">RAM</span></div>
+              <svg width="80" height="80"><circle cx="40" cy="40" r="34" fill="none" stroke="var(--bg6)" stroke-width="5"/><circle cx="40" cy="40" r="34" fill="none" stroke="var(--green)" stroke-width="5" stroke-linecap="round" stroke-dasharray="213.63" stroke-dashoffset="85.45" style="filter:drop-shadow(0 0 6px rgba(0,230,118,0.3))"/></svg>
+              <div class="val"><span class="num" style="font-size:16px;color:var(--green)">60%</span><span class="lbl">RAM</span></div>
             </div>
             <div style="margin-top:12px;width:100%;display:flex;flex-direction:column;gap:6px">
               <div class="stat-row"><span class="label">Used</span><span class="value">9.6 GB</span></div>
@@ -357,7 +368,7 @@
 
           <div class="card card-glow" style="padding:16px;display:flex;flex-direction:column;align-items:center">
             <div class="gauge" style="width:80px;height:80px">
-              <svg width="80" height="80"><circle cx="40" cy="40" r="34" fill="none" stroke="var(--bg6)" stroke-width="5"/><circle cx="40" cy="40" r="34" fill="none" stroke="var(--warning)" stroke-width="5" stroke-linecap="round" stroke-dasharray="213.63" stroke-dashoffset="42.73" style="filter:drop-shadow(0 0 6px rgba(224,224,224,0.15))"/></svg>
+              <svg width="80" height="80"><circle cx="40" cy="40" r="34" fill="none" stroke="var(--bg6)" stroke-width="5"/><circle cx="40" cy="40" r="34" fill="none" stroke="var(--warning)" stroke-width="5" stroke-linecap="round" stroke-dasharray="213.63" stroke-dashoffset="42.73" style="filter:drop-shadow(0 0 6px rgba(255,193,7,0.3))"/></svg>
               <div class="val"><span class="num" style="font-size:16px;color:var(--warning)">65%</span><span class="lbl">GPU</span></div>
             </div>
             <div style="margin-top:12px;width:100%;display:flex;flex-direction:column;gap:6px">
@@ -369,8 +380,8 @@
 
           <div class="card card-glow" style="padding:16px;display:flex;flex-direction:column;align-items:center">
             <div class="gauge" style="width:80px;height:80px">
-              <svg width="80" height="80"><circle cx="40" cy="40" r="34" fill="none" stroke="var(--bg6)" stroke-width="5"/><circle cx="40" cy="40" r="34" fill="none" stroke="var(--success)" stroke-width="5" stroke-linecap="round" stroke-dasharray="213.63" stroke-dashoffset="64.09" style="filter:drop-shadow(0 0 6px rgba(224,224,224,0.15))"/></svg>
-              <div class="val"><span class="num" style="font-size:16px;color:var(--success)">45%</span><span class="lbl">C:</span></div>
+              <svg width="80" height="80"><circle cx="40" cy="40" r="34" fill="none" stroke="var(--bg6)" stroke-width="5"/><circle cx="40" cy="40" r="34" fill="none" stroke="var(--green)" stroke-width="5" stroke-linecap="round" stroke-dasharray="213.63" stroke-dashoffset="64.09" style="filter:drop-shadow(0 0 6px rgba(0,230,118,0.3))"/></svg>
+              <div class="val"><span class="num" style="font-size:16px;color:var(--green)">45%</span><span class="lbl">C:</span></div>
             </div>
             <div style="margin-top:12px;width:100%;display:flex;flex-direction:column;gap:6px">
               <div class="stat-row"><span class="label">Used</span><span class="value">225 GB</span></div>
@@ -385,22 +396,22 @@
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px">
         <div class="card card-glow" style="padding:16px">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="1.5"><path d="M12 20V4M4 12h16"/></svg>
-            <span style="font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--t4)">CPU Usage</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="1.5"><path d="M12 20V4M4 12h16"/></svg>
+            <span style="font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--t3)">CPU Usage</span>
           </div>
           <div class="chart-area"><canvas id="cpuChart"></canvas></div>
         </div>
         <div class="card card-glow" style="padding:16px">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
-            <span style="font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--t4)">RAM Usage</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="1.5"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
+            <span style="font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--t3)">RAM Usage</span>
           </div>
           <div class="chart-area"><canvas id="ramChart"></canvas></div>
         </div>
         <div class="card card-glow" style="padding:16px">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
-            <span style="font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--t4)">GPU Usage</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+            <span style="font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--t3)">GPU Usage</span>
           </div>
           <div class="chart-area"><canvas id="gpuChart"></canvas></div>
         </div>
@@ -410,41 +421,41 @@
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
         <div class="card card-glow" style="padding:16px">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-            <span style="font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--t4)">System Info</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+            <span style="font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--t3)">System Info</span>
           </div>
           <div class="stat-row"><span class="label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg> Power Plan</span><span class="value">High Performance</span></div>
-          <div class="stat-row"><span class="label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 12h3l3-9 4 18 3-9h3"/></svg> Game Mode</span><span class="value" style="color:var(--success)">Enabled</span></div>
+          <div class="stat-row"><span class="label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 12h3l3-9 4 18 3-9h3"/></svg> Game Mode</span><span class="value" style="color:var(--green)">Enabled</span></div>
           <div class="stat-row"><span class="label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg> OS</span><span class="value">Windows 11 Pro</span></div>
           <div class="stat-row"><span class="label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg> Uptime</span><span class="value">3d 14h 22m</span></div>
         </div>
 
         <div class="card card-glow" style="padding:16px">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--t2)" stroke-width="1.5"><path d="M5 12.55a11 11 0 0 1 14.08 0M1.42 9a16 16 0 0 1 21.16 0M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01"/></svg>
-            <span style="font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--t4)">Network</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="1.5"><path d="M5 12.55a11 11 0 0 1 14.08 0c.55-.3 1.1-.67 1.6-1.12a15.5 15.5 0 0 0-20.76 0c.5 1.86 1.43 3.56 2.68 4.95"/><line x1="12" y1="19" x2="12" y2="19"/><line x1="12" y1="12" x2="12" y2="19"/>"></circle></svg>
+            <span style="font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--t3)">Network</span>
           </div>
-          <div class="stat-row"><span class="label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 5v14M5 12l7 7 7-7"/></svg> Download</span><span class="value" style="color:var(--success)">24.5 MB/s</span></div>
-          <div class="stat-row"><span class="label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 19V5M5 12l7-7 7 7"/></svg> Upload</span><span class="value">8.2 MB/s</span></div>
-          <div class="stat-row"><span class="label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 12.55a11 11 0 0 1 14.08 0"/></svg> Adapter</span><span class="value">Wi-Fi 6</span></div>
+          <div class="stat-row"><span class="label">Download</span><span class="value" style="color:var(--green)">24.5 MB/s</span></div>
+          <div class="stat-row"><span class="label">Upload</span><span class="value">8.2 MB/s</span></div>
+          <div class="stat-row"><span class="label">Adapter</span><span class="value">Wi-Fi 6</span></div>
         </div>
 
         <div class="card card-glow" style="padding:16px">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--warning)" stroke-width="1.5"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-            <span style="font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--t4)">Quick Actions</span>
+            <span style="font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--t3)">Quick Actions</span>
           </div>
-          <button class="card" style="width:100%;display:flex;align-items:center;gap:12px;padding:14px;border:1px solid var(--b1);cursor:pointer;margin-bottom:8px;transition:all 0.2s" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 30px rgba(0,0,0,0.3)'" onmouseout="this.style.transform='';this.style.boxShadow=''">
-            <div style="width:36px;height:36px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.05);flex-shrink:0"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
-            <div style="text-align:left"><div style="font-size:11px;font-weight:600">Scan System</div><div style="font-size:9px;color:var(--t4)">Detect performance issues</div></div>
+          <button class="card" style="width:100%;display:flex;align-items:center;gap:12px;padding:14px;border:1px solid var(--b1);cursor:pointer;margin-bottom:8px;transition:all 0.2s" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 24px rgba(0,0,0,0.3)'" onmouseout="this.style.transform='';this.style.boxShadow=''">
+            <div style="width:36px;height:36px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:rgba(0,230,118,0.08);border:1px solid rgba(0,230,118,0.2);flex-shrink:0"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div>
+            <div style="text-align:left"><div style="font-size:11px;font-weight:600">Scan System</div><div style="font-size:9px;color:var(--t3)">Detect performance issues</div></div>
           </button>
-          <button class="card" style="width:100%;display:flex;align-items:center;gap:12px;padding:14px;border:1px solid var(--b1);cursor:pointer;margin-bottom:8px;transition:all 0.2s" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">
-            <div style="width:36px;height:36px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.05);flex-shrink:0"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="1.5"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg></div>
-            <div style="text-align:left"><div style="font-size:11px;font-weight:600">Optimize All</div><div style="font-size:9px;color:var(--t4)">Apply recommended fixes</div></div>
+          <button class="card" style="width:100%;display:flex;align-items:center;gap:12px;padding:14px;border:1px solid var(--b1);cursor:pointer;margin-bottom:8px;transition:all 0.2s" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 24px rgba(0,0,0,0.3)'" onmouseout="this.style.transform='';this.style.boxShadow=''">
+            <div style="width:36px;height:36px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:rgba(0,230,118,0.08);border:1px solid rgba(0,230,118,0.2);flex-shrink:0"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="1.5"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg></div>
+            <div style="text-align:left"><div style="font-size:11px;font-weight:600">Optimize All</div><div style="font-size:9px;color:var(--t3)">Apply recommended fixes</div></div>
           </button>
-          <button class="card" style="width:100%;display:flex;align-items:center;gap:12px;padding:14px;border:1px solid var(--b1);cursor:pointer;transition:all 0.2s" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">
-            <div style="width:36px;height:36px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.05);flex-shrink:0"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--warning)" stroke-width="1.5"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></div>
-            <div style="text-align:left"><div style="font-size:11px;font-weight:600">Clear Cache</div><div style="font-size:9px;color:var(--t4)">Remove temporary files</div></div>
+          <button class="card" style="width:100%;display:flex;align-items:center;gap:12px;padding:14px;border:1px solid var(--b1);cursor:pointer;transition:all 0.2s" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 24px rgba(0,0,0,0.3)'" onmouseout="this.style.transform='';this.style.boxShadow=''">
+            <div style="width:36px;height:36px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:rgba(255,193,7,0.08);border:1px solid rgba(255,193,7,0.2);flex-shrink:0"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--warning)" stroke-width="1.5"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></div>
+            <div style="text-align:left"><div style="font-size:11px;font-weight:600">Clear Cache</div><div style="font-size:9px;color:var(--t3)">Remove temporary files</div></div>
           </button>
         </div>
       </div>
@@ -453,20 +464,21 @@
     <!-- Scan Page -->
     <div class="content" id="page-scan" style="display:none">
       <div class="scan-center">
-        <div class="scan-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-          <div class="badge"><svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg></div>
+        <div class="scan-icon" style="animation:pulse 2s infinite">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:56px;height:56px">
+            <circle cx="11" cy="11" r="8"/>
+            <path d="m21 21-4.35-4.35"/>
+          </svg>
+          <div class="badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg></div>
         </div>
-        <h2 style="font-size:20px;font-weight:700;margin-bottom:6px">Scan Your PC</h2>
-        <p style="font-size:12px;max-width:380px;margin-bottom:32px;color:var(--t3);line-height:1.5">Detect gaming performance bottlenecks. Get personalized, safe optimization recommendations.</p>
-        <button class="btn-primary" style="height:48px;padding:0 40px;font-size:12px;font-weight:700;letter-spacing:0.05em" onclick="startScan()">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:8px;vertical-align:middle"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-          Start System Scan
-        </button>
-        <div style="display:flex;gap:24px;margin-top:32px">
-          <div style="display:flex;align-items:center;gap:6px;font-size:10px;color:var(--t4)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Safe & reversible</div>
-          <div style="display:flex;align-items:center;gap:6px;font-size:10px;color:var(--t4)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 12h3l3-9 4 18 3-9h3"/></svg>Gaming-focused</div>
-          <div style="display:flex;align-items:center;gap:6px;font-size:10px;color:var(--t4)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>No fake fixes</div>
+        <h2 style="font-size:20px;font-weight:700;margin-bottom:6px">Analyzing Your System</h2>
+        <p style="font-size:12px;color:var(--t2);margin-bottom:32px;line-height:1.5" id="scanLabel">Scanning CPU and memory...</p>
+        <div style="width:320px" class="progress"><div class="fill" id="scanBar" style="width:0%"></div></div>
+        <div style="display:flex;gap:12px;margin-top:24px">
+          <div style="display:flex;align-items:center;gap:4px;font-size:9px;color:var(--t3)"><div style="width:4px;height:4px;border-radius:50%;background:var(--green)"></div>CPU</div>
+          <div style="display:flex;align-items:center;gap:4px;font-size:9px;color:var(--t3)"><div style="width:4px;height:4px;border-radius:50%;background:var(--green)"></div>RAM</div>
+          <div style="display:flex;align-items:center;gap:4px;font-size:9px;color:var(--t3)"><div style="width:4px;height:4px;border-radius:50%;background:var(--green)"></div>GPU</div>
+          <div style="display:flex;align-items:center;gap:4px;font-size:9px;color:var(--t3)"><div style="width:4px;height:4px;border-radius:50%;background:var(--green)"></div>Disk</div>
         </div>
       </div>
     </div>
@@ -475,16 +487,16 @@
     <div class="content" id="page-optimizer" style="display:none">
       <div class="page-header">
         <div>
-          <h1>Optimizer</h1>
+          <h1><span class="dot"></span> Optimizer</h1>
           <p>82 optimizations available</p>
         </div>
-        <button class="btn-primary" style="height:36px;padding:0 20px;font-size:11px;font-weight:700;display:flex;align-items:center;gap:6px">
+        <button class="btn-primary" style="height:32px;padding:0 16px;font-size:10px;font-weight:700;display:flex;align-items:center;gap:6px">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
           Optimize All
         </button>
       </div>
       <div class="cat-grid stagger" id="catGrid"></div>
-      <div style="font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--t4);margin-bottom:12px">All Optimizations</div>
+      <div style="font-size:9px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--t3);margin-bottom:12px">All Optimizations</div>
       <div id="tweakList" style="display:flex;flex-direction:column;gap:6px"></div>
     </div>
 
@@ -492,11 +504,11 @@
     <div class="content" id="page-autopilot" style="display:none">
       <div class="page-header">
         <div>
-          <h1>Game Library</h1>
+          <h1><span class="dot"></span> Game Library</h1>
           <p>Select a game to optimize</p>
         </div>
         <div style="display:flex;gap:8px">
-          <button class="btn-primary" style="height:32px;padding:0 16px;font-size:10px;font-weight:600;display:flex;align-items:center;gap:6px;background:var(--bg3);color:var(--t2);border:1px solid var(--b2)" onclick="refreshGames()">
+          <button class="btn-primary" style="height:32px;padding:0 16px;font-size:10px;font-weight:600;display:flex;align-items:center;gap:6px" onclick="refreshGames()">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
             Refresh
           </button>
@@ -504,7 +516,9 @@
       </div>
       <div class="game-grid stagger" id="gameGrid"></div>
     </div>
+
     <div class="content" id="page-performance" style="display:none"><div class="scan-center"><h2 style="font-size:17px;font-weight:700">Performance</h2><p style="font-size:12px;color:var(--t3);margin-top:8px">Real-time system monitoring</p></div></div>
+
     <div class="content" id="page-rollback" style="display:none"><div class="scan-center"><h2 style="font-size:17px;font-weight:700">Rollback</h2><p style="font-size:12px;color:var(--t3);margin-top:8px">Undo applied optimizations</p></div></div>
   </div>
 </div>
@@ -517,7 +531,7 @@
       <button onclick="closeModal()">&#10005;</button>
     </div>
     <div class="plan-grid">
-      <div class="plan-card">
+      <div class="plan-card" onclick="window.location.href='https://discord.gg/AhEK85REhG'">
         <div class="tier">Free</div>
         <div class="price">€0</div>
         <div class="sub">Get started</div>
@@ -529,9 +543,11 @@
           <li class="disabled">No game profiles</li>
           <li class="disabled">No priority support</li>
         </ul>
-        <button class="secondary">Current</button>
+        <div class="tweak-count"><b>69</b> optimizations</div>
+        <button class="secondary">Current Plan</button>
       </div>
-      <div class="plan-card">
+      <div class="plan-card recommended" onclick="window.location.href='https://discord.gg/AhEK85REhG'">
+        <div class="badge">Recommended</div>
         <div class="tier">Pro</div>
         <div class="price">€12.99</div>
         <div class="sub">Advanced optimizations</div>
@@ -543,10 +559,10 @@
           <li>Deep cleanup</li>
           <li class="disabled">No hardware tuning</li>
         </ul>
+        <div class="tweak-count"><b>120+</b> optimizations</div>
         <button class="primary">Get PRO</button>
       </div>
-      <div class="plan-card recommended">
-        <div class="badge">Recommended</div>
+      <div class="plan-card" onclick="window.location.href='https://discord.gg/AhEK85REhG'">
         <div class="tier">Premium</div>
         <div class="price">€24.99</div>
         <div class="sub">Complete power</div>
@@ -557,10 +573,11 @@
           <li>Malware removal</li>
           <li>Priority support</li>
         </ul>
+        <div class="tweak-count"><b>461</b> optimizations</div>
         <button class="primary">Get PREMIUM</button>
       </div>
     </div>
-    <div class="modal-footer">Join the <b>CHAOTIX</b> Discord to purchase</div>
+    <div class="modal-footer">Join the <b>CHOATIX</b> Discord to purchase</div>
   </div>
 </div>
 
@@ -569,7 +586,7 @@
 <div class="bottom-sheet" id="bottomSheet">
   <div class="sheet-handle"></div>
   <div class="sheet-header">
-    <h3 id="sheetTitle">Optimize Game</h3>
+    <h3><span class="dot"></span> Optimize Game</h3>
     <button class="close-sheet" onclick="closeSheet()">&#10005;</button>
   </div>
   <div class="sheet-game" id="sheetGame">
@@ -586,13 +603,18 @@
       <div class="plan-tweaks">17</div>
       <div class="plan-sub">tweaks</div>
     </div>
-    <div class="sheet-plan" data-tier="pro" onclick="selectPlan(this)">
-      <div class="plan-icon"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+    <div class="sheet-plan recommended" data-tier="pro" onclick="selectPlan(this)">
+      <div class="plan-icon"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div>
       <div class="plan-label">Pro</div>
       <div class="plan-tweaks">26</div>
       <div class="plan-sub">tweaks</div>
+      <ul class="features" style="display:none">
+        <li>BCD boot tweaks</li>
+        <li>RAM optimization</li>
+        <li>USB tuning</li>
+      </ul>
     </div>
-    <div class="sheet-plan recommended" data-tier="premium" onclick="selectPlan(this)">
+    <div class="sheet-plan" data-tier="premium" onclick="selectPlan(this)">
       <div class="plan-icon"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div>
       <div class="plan-label">Premium</div>
       <div class="plan-tweaks">42</div>
@@ -623,7 +645,7 @@ const games = [
   { name: 'Apex Legends', cat: 'Battle Royale', tag: 'multiplayer', img: 'https://media.contentapi.ea.com/content/dam/apex-legends/common/apex-lp-new-base-tiles.jpg' },
   { name: 'Warzone', cat: 'Battle Royale', tag: 'competitive', img: 'https://www.callofduty.com/content/dam/atvi/callofduty/cod-keyart/thumbnails/WZ2-KEYART_TOUT.jpg' },
   { name: 'Minecraft', cat: 'Sandbox', tag: 'story', img: 'https://www.minecraft.net/content/dam/games/minecraft/key-art/Games_Subnav_702x400.jpg' },
-  { name: 'GTA V', cat: 'Open World', tag: 'story', img: 'https://media Rockstargames.com/rockstargames-newsite/uploads/gtav/downloads/images/GTAV_702x400.jpg' },
+  { name: 'GTA V', cat: 'Open World', tag: 'story', img: 'https://media.rockstargames.com/rockstargames-newsite/uploads/gtav/downloads/images/GTAV_702x400.jpg' },
   { name: 'League of Legends', cat: 'MOBA', tag: 'competitive', img: 'https://ddragon.leagueoflegends.com/cdn/img/champion-splash/Ahri_0.jpg' },
   { name: 'Overwatch 2', cat: 'Hero Shooter', tag: 'competitive', img: 'https://bnetcmsus-a.akamaihd.net/cms/blog_header/cn/CN5BHJHVP0WY1616647507407.jpg' },
   { name: 'PUBG', cat: 'Battle Royale', tag: 'multiplayer', img: 'https://cdn.akamai.steamstatic.com/steam/apps/578080/header.jpg' },
@@ -641,7 +663,7 @@ function renderGames() {
     const card = document.createElement('div');
     card.className = 'game-card';
     card.innerHTML = `
-      <div class="game-card-img">
+      <div class="game-card-img" style="background:linear-gradient(135deg,${g.tag==='competitive'?'rgba(0,230,118,0.15)':'g.tag==='story'?'rgba(124,77,255,0.15)':'rgba(41,121,255,0.15)'},transparent)">
         <img src="${g.img}" alt="${g.name}" loading="lazy" onerror="this.style.display='none'">
         <span class="tag ${g.tag}">${g.tag}</span>
         <button class="opt-btn" onclick="event.stopPropagation();openSheet(${i})" title="Optimize ${g.name}">
@@ -681,7 +703,7 @@ function openSheet(idx) {
 
 function closeSheet() {
   document.getElementById('bottomSheet').classList.remove('show');
-  setTimeout(() => document.getElementById('sheetOverlay').classList.remove('show'), 350);
+  document.getElementById('sheetOverlay').classList.remove('show');
 }
 
 function selectPlan(el) {
@@ -694,8 +716,8 @@ function selectPlan(el) {
 // ── Optimization Flow ──
 const tweakSteps = {
   free: ['Disabling unnecessary services','Optimizing power plan','Clearing shader cache','Enabling Game Mode','Optimizing network stack','Applying registry tweaks','Finalizing...'],
-  pro: ['Disabling unnecessary services','Optimizing power plan','Clearing shader cache','Enabling Game Mode','Optimizing network stack','Tuning GPU settings','Disabling fullscreen optimizations','Configuring memory management','Optimizing disk I/O','Tweaking TCP/IP stack','Disabling telemetry','Applying registry tweaks','Finalizing...'],
-  premium: ['Disabling unnecessary services','Optimizing power plan','Clearing shader cache','Enabling Game Mode','Optimizing network stack','Tuning GPU settings','Disabling fullscreen optimizations','Configuring memory management','Optimizing disk I/O','Tweaking TCP/IP stack','Disabling telemetry','Disabling mouse acceleration','Optimizing CPU priority','Configuring interrupt affinity','Disabling HPET','Optimizing storage TRIM','Tweaking NVIDIA settings','Applying registry tweaks','Creating restore point','Finalizing...']
+  pro: ['Disabling unnecessary services','Optimizing power plan','Clearing shader cache','Enabling Game Mode','Optimizing network stack','Tuning GPU settings','Disabling fullscreen optimizations','Configuring memory management','Optimizing disk I/O','Tuning TCP/IP stack','Disabling telemetry','Applying registry tweaks','Finalizing...'],
+  premium: ['Disabling unnecessary services','Optimizing power plan','Clearing shader cache','Enabling Game Mode','Optimizing network stack','Tuning GPU settings','Disabling fullscreen optimizations','Configuring memory management','Optimizing disk I/O','Tuning TCP/IP stack','Disabling telemetry','Disabling mouse acceleration','Optimizing CPU priority','Configuring interrupt affinity','Disabling HPET','Optimizing storage TRIM','Tuning NVIDIA settings','Applying registry tweaks','Creating restore point','Finalizing...']
 };
 
 function startOptimization() {
@@ -748,10 +770,8 @@ function startOptimization() {
     }
   }, 350);
 }
-</script>
 
-<script>
-// Navigation
+// ── Navigation ──
 const pages = document.querySelectorAll('[data-page]');
 pages.forEach(btn => {
   btn.addEventListener('click', () => {
@@ -763,30 +783,42 @@ pages.forEach(btn => {
   });
 });
 
-// Upgrade modal
+// ── Modal ──
 function openModal() { document.getElementById('upgradeModal').classList.add('show'); }
 function closeModal() { document.getElementById('upgradeModal').classList.remove('show'); }
 
-// Scan
+// ── Scan ──
 function startScan() {
   const scan = document.getElementById('page-scan');
   scan.innerHTML = `<div class="scan-center">
-    <div class="scan-icon" style="animation:pulse 2s infinite"><svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5" style="width:56px;height:56px"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></div>
+    <div class="scan-icon" style="animation:pulse 2s infinite"><svg viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="1.5" style="width:56px;height:56px"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></div>
     <h2 style="font-size:18px;font-weight:700;margin-bottom:4px">Analyzing System</h2>
-    <p style="font-size:12px;color:var(--accent);margin-bottom:32px" id="scanLabel">CPU analysis...</p>
+    <p style="font-size:12px;color:var(--green);margin-bottom:32px" id="scanLabel">CPU analysis...</p>
     <div style="width:320px" class="progress"><div class="fill" id="scanBar" style="width:0%"></div></div>
+    <div style="display:flex;gap:16px;margin-top:24px">
+      <div style="display:flex;align-items:center;gap:4px;font-size:9px;color:var(--t3)"><div style="width:4px;height:4px;border-radius:50%;background:var(--green)"></div>CPU</div>
+      <div style="display:flex;align-items:center;gap:4px;font-size:9px;color:var(--t3)"><div style="width:4px;height:4px;border-radius:50%;background:var(--green)"></div>RAM</div>
+      <div style="display:flex;align-items:center;gap:4px;font-size:9px;color:var(--t3)"><div style="width:4px;height:4px;border-radius:50%;background:var(--green)"></div>GPU</div>
+      <div style="display:flex;align-items:center;gap:4px;font-size:9px;color:var(--t3)"><div style="width:4px;height:4px;border-radius:50%;background:var(--green)"></div>Disk</div>
+    </div>
   </div>`;
   const steps = ['CPU analysis','Memory scan','Disk check','GPU detection','Network test','Power plan review'];
   let i = 0;
   const iv = setInterval(() => {
-    if (i >= steps.length) { clearInterval(iv); setTimeout(() => { scan.innerHTML = `<div class="scan-center"><div style="width:48px;height:48px;margin-bottom:16px"><svg viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2" style="width:48px;height:48px"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4 12 14.01l-3-3"/></svg></div><h2 style="font-size:18px;font-weight:700;margin-bottom:4px">Scan Complete</h2><p style="font-size:12px;color:var(--t3)">Score: 85/100 · 3 issues found</p></div>`; }, 500); return; }
+    if (i >= steps.length) {
+      clearInterval(iv);
+      setTimeout(() => {
+        scan.innerHTML = `<div class="scan-center"><div style="width:48px;height:48px;margin-bottom:16px"><svg viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" style="width:48px;height:48px"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4 12 14.01l-3-3"/></svg></div><h2 style="font-size:18px;font-weight:700;margin-bottom:4px">Scan Complete</h2><p style="font-size:12px;color:var(--t3)">Score: 85/100 · 3 issues found</p></div>`;
+      }, 500);
+      return;
+    }
     document.getElementById('scanLabel').textContent = steps[i];
     document.getElementById('scanBar').style.width = ((i+1)/steps.length*100)+'%';
     i++;
   }, 400);
 }
 
-// Charts (simple canvas)
+// Charts
 function drawChart(canvasId, color, data) {
   const c = document.getElementById(canvasId);
   if (!c) return;
@@ -800,7 +832,7 @@ function drawChart(canvasId, color, data) {
   data.forEach((v,i) => { ctx.lineTo(i*(w/(data.length-1)), h - (v/max)*h); });
   ctx.lineTo(w, h);
   const grad = ctx.createLinearGradient(0,0,0,h);
-  grad.addColorStop(0, color.replace(')',',0.12)').replace('rgb','rgba'));
+  grad.addColorStop(0, color.replace(')',',0.15)').replace('rgb','rgba'));
   grad.addColorStop(1, color.replace(')',',0)').replace('rgb','rgba'));
   ctx.fillStyle = grad;
   ctx.fill();
@@ -811,18 +843,22 @@ function drawChart(canvasId, color, data) {
 const cpuData = [32,28,45,52,38,25,42,55,48,35,28,40,52,60,45,32,28,35,42,48];
 const ramData = [58,60,62,61,59,63,65,64,62,60,58,56,58,60,62,64,63,61,59,60];
 const gpuData = [45,52,65,72,58,42,55,68,75,60,48,52,58,62,65,60,55,50,48,45];
-setTimeout(() => { drawChart('cpuChart','rgb(255,255,255)',cpuData); drawChart('ramChart','rgb(200,200,200)',ramData); drawChart('gpuChart','rgb(150,150,150)',gpuData); }, 100);
+setTimeout(() => {
+  drawChart('cpuChart','rgb(0,230,118)',cpuData);
+  drawChart('ramChart','rgb(0,200,100)',ramData);
+  drawChart('gpuChart','rgb(255,193,7)',gpuData);
+}, 100);
 
 // Categories & Tweaks
 const cats = [
-  {id:'system',label:'System',color:'var(--accent)',count:6},
-  {id:'nvidia',label:'NVIDIA',color:'rgba(255,255,255,0.7)',count:6},
-  {id:'network',label:'Network',color:'rgba(255,255,255,0.5)',count:5},
-  {id:'debloat',label:'Debloat',color:'rgba(255,255,255,0.4)',count:6},
-  {id:'mouse',label:'Mouse',color:'rgba(255,255,255,0.35)',count:4},
-  {id:'keyboard',label:'Keyboard',color:'rgba(255,255,255,0.3)',count:5},
-  {id:'cpu',label:'CPU',color:'rgba(255,255,255,0.55)',count:6},
-  {id:'memory',label:'Memory',color:'rgba(255,255,255,0.4)',count:6},
+  {id:'system',label:'System',color:'var(--green)',count:6},
+  {id:'nvidia',label:'NVIDIA',color:'#00e676',count:6},
+  {id:'network',label:'Network',color:#2979ff',count:5},
+  {id:'debloat',label:'Debloat',color:'#00e676',count:6},
+  {id:'mouse',label:'Mouse',color:'#00e676',count:4},
+  {id:'keyboard',label:'Keyboard',color:'#00e676',count:5},
+  {id:'cpu',label:'CPU',color:'#00e676',count:6},
+  {id:'memory',label:'Memory',color:'#00e676',count:6},
 ];
 const catGrid = document.getElementById('catGrid');
 cats.forEach(c => {
@@ -845,11 +881,12 @@ const tweaks = [
 ];
 const tweakList = document.getElementById('tweakList');
 tweaks.forEach(t => {
+  const catColor = cats.find(c=>c.id===t.cat)?.color || 'var(--t4)';
   tweakList.innerHTML += `<div class="card card-glow tweak-item">
-    <div class="dot" style="background:${cats.find(c=>c.id===t.cat)?.color||'var(--t4)'}"></div>
-    <div class="info"><div class="name" style="color:var(--t1)">${t.name}</div><div class="desc">${t.desc}</div></div>
+    <div class="dot" style="background:${catColor}"></div>
+    <div class="info"><div class="name">${t.name}</div><div class="desc">${t.desc}</div></div>
     <div class="cat">${cats.find(c=>c.id===t.cat)?.label||t.cat}</div>
-    <button class="apply-btn" onclick="this.innerHTML='✓ Applied';this.style.background='var(--bg6)';this.style.color='var(--success)';this.disabled=true">Apply</button>
+    <button class="apply-btn" onclick="this.innerHTML='✓ Applied';this.style.background='var(--bg6)';this.style.color='var(--green)';this.style.boxShadow='none';this.disabled=true">Apply</button>
   </div>`;
 });
 </script>
