@@ -117,7 +117,7 @@
   /* Upgrade modal */
   .modal-overlay { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; background: rgba(0,0,0,0.85); z-index: 100; }
   .modal-overlay.show { display: flex; }
-  .modal { width: 100%; max-width: 480px; background: var(--bg2); border: 1px solid var(--b1); border-radius: var(--r4); overflow: hidden; }
+  .modal { width: 100%; max-width: 560px; background: var(--bg2); border: 1px solid var(--b1); border-radius: var(--r4); overflow: hidden; }
   .modal-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; border-bottom: 1px solid var(--b1); }
   .modal-header h2 { font-size: 13px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; }
   .modal-header p { font-size: 10px; color: var(--t3); margin-top: 2px; }
@@ -130,6 +130,13 @@
   .plan-card .tier { font-size: 9px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--t4); margin-bottom: 6px; }
   .plan-card .price { font-size: 20px; font-weight: 700; margin-bottom: 2px; }
   .plan-card .sub { font-size: 10px; color: var(--t4); margin-bottom: 12px; }
+  .plan-card .features { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+  .plan-card .features li { list-style: none; font-size: 10px; color: var(--t3); display: flex; align-items: flex-start; gap: 6px; line-height: 1.4; }
+  .plan-card .features li::before { content: ''; width: 12px; height: 12px; border-radius: 50%; background: rgba(255,255,255,0.06); border: 1px solid var(--b2); flex-shrink: 0; margin-top: 1px; display: flex; align-items: center; justify-content: center; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.25)' stroke-width='3'%3E%3Cpath d='M20 6L9 17l-5-5'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: center; }
+  .plan-card .features li.disabled { color: var(--t4); opacity: 0.4; }
+  .plan-card .features li.disabled::before { background-image: none; }
+  .plan-card .tweak-count { font-size: 9px; font-weight: 600; color: var(--t4); letter-spacing: 0.1em; padding: 4px 0; border-top: 1px solid var(--b1); margin-bottom: 10px; }
+  .plan-card .tweak-count b { color: var(--t1); font-weight: 700; }
   .plan-card button { width: 100%; height: 32px; border: none; border-radius: var(--r2); font-size: 10px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
   .plan-card button.primary { background: var(--accent); color: #000; }
   .plan-card button.primary:hover { transform: translateY(-1px); box-shadow: 0 4px 20px rgba(255,255,255,0.1); }
@@ -144,6 +151,11 @@
   /* Animations */
   @keyframes pulse { 0%,100% { opacity: 0.4; transform: scale(1); } 50% { opacity: 1; transform: scale(1.05); } }
   @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  @keyframes slideDown { from { transform: translateY(0); } to { transform: translateY(100%); } }
+  @keyframes btnPulse { 0% { box-shadow: 0 0 0 0 rgba(255,255,255,0.35); } 70% { box-shadow: 0 0 0 14px rgba(255,255,255,0); } 100% { box-shadow: 0 0 0 0 rgba(255,255,255,0); } }
+  @keyframes optSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+  @keyframes checkPop { 0% { transform: scale(0); opacity: 0; } 60% { transform: scale(1.2); } 100% { transform: scale(1); opacity: 1; } }
   .fade-in { animation: fadeIn 0.4s cubic-bezier(0.4,0,0.2,1) forwards; opacity: 0; }
   .stagger > * { opacity: 0; animation: fadeIn 0.35s cubic-bezier(0.4,0,0.2,1) forwards; }
   .stagger > *:nth-child(1) { animation-delay: 0ms; }
@@ -155,6 +167,87 @@
   .stagger > *:nth-child(7) { animation-delay: 210ms; }
   .stagger > *:nth-child(8) { animation-delay: 245ms; }
   .stagger > *:nth-child(n+9) { animation-delay: 280ms; }
+
+  /* ── Game Library ── */
+  .game-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 14px; }
+  .game-card { position: relative; border-radius: var(--r3); overflow: hidden; background: var(--bg2); border: 1px solid var(--b1); cursor: default; transition: all 0.3s cubic-bezier(0.4,0,0.2,1); aspect-ratio: 0.72; display: flex; flex-direction: column; }
+  .game-card:hover { border-color: var(--b2); transform: translateY(-3px); box-shadow: 0 8px 32px rgba(0,0,0,0.5); }
+  .game-card-img { flex: 1; position: relative; overflow: hidden; background: var(--bg3); }
+  .game-card-img img { width: 100%; height: 100%; object-fit: cover; display: block; filter: grayscale(0.15); transition: filter 0.3s, transform 0.4s; }
+  .game-card:hover .game-card-img img { filter: grayscale(0); transform: scale(1.04); }
+  .game-card-img .tag { position: absolute; top: 10px; left: 10px; font-size: 7px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; padding: 3px 8px; border-radius: 4px; background: rgba(0,0,0,0.65); backdrop-filter: blur(8px); color: var(--t2); border: 1px solid rgba(255,255,255,0.08); }
+  .game-card-img .tag.competitive { color: #fff; background: rgba(255,255,255,0.15); }
+  .game-card-img .tag.story { color: #ccc; }
+  .game-card-img .tag.multiplayer { color: #aaa; }
+
+  /* Lightning button */
+  .opt-btn { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 52px; height: 52px; border-radius: 50%; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.7); backdrop-filter: blur(12px); border: 1.5px solid rgba(255,255,255,0.15); z-index: 5; transition: all 0.3s cubic-bezier(0.4,0,0.2,1); box-shadow: 0 0 20px rgba(255,255,255,0.06), 0 0 40px rgba(255,255,255,0.03); }
+  .opt-btn svg { width: 20px; height: 20px; fill: none; stroke: #fff; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; transition: all 0.3s; filter: drop-shadow(0 0 4px rgba(255,255,255,0.3)); }
+  .game-card:hover .opt-btn { background: rgba(0,0,0,0.85); border-color: rgba(255,255,255,0.25); box-shadow: 0 0 28px rgba(255,255,255,0.1), 0 0 56px rgba(255,255,255,0.04); transform: translate(-50%, -50%) scale(1.06); }
+  .game-card:hover .opt-btn svg { filter: drop-shadow(0 0 8px rgba(255,255,255,0.5)); }
+  .opt-btn:active { transform: translate(-50%, -50%) scale(0.92); }
+  .opt-btn.clicked { animation: btnPulse 0.5s ease-out; }
+  .opt-btn.optimizing { pointer-events: none; }
+  .opt-btn.optimizing svg { animation: optSpin 1s linear infinite; stroke: var(--accent); }
+
+  /* Game card info */
+  .game-card-info { padding: 10px 12px; background: var(--bg2); border-top: 1px solid var(--b1); }
+  .game-card-info .title { font-size: 11px; font-weight: 700; color: var(--t1); margin-bottom: 2px; }
+  .game-card-info .sub { font-size: 9px; color: var(--t4); }
+
+  /* Optimized badge */
+  .game-card .optimized-badge { position: absolute; top: 10px; right: 10px; width: 22px; height: 22px; border-radius: 50%; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; z-index: 6; animation: checkPop 0.4s cubic-bezier(0.4,0,0.2,1); }
+  .game-card .optimized-badge svg { width: 12px; height: 12px; stroke: #fff; fill: none; stroke-width: 2.5; }
+
+  /* Bottom Sheet */
+  .sheet-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 200; display: none; opacity: 0; transition: opacity 0.3s; }
+  .sheet-overlay.show { display: block; opacity: 1; }
+  .bottom-sheet { position: fixed; bottom: 0; left: 0; right: 0; z-index: 201; background: var(--bg2); border-top: 1px solid var(--b1); border-radius: var(--r4) var(--r4) 0 0; padding: 0; transform: translateY(100%); transition: transform 0.35s cubic-bezier(0.4,0,0.2,1); max-height: 70vh; }
+  .bottom-sheet.show { transform: translateY(0); }
+  .sheet-handle { width: 36px; height: 4px; border-radius: 2px; background: var(--bg6); margin: 12px auto 0; }
+  .sheet-header { padding: 16px 24px 0; display: flex; align-items: center; justify-content: space-between; }
+  .sheet-header h3 { font-size: 14px; font-weight: 700; }
+  .sheet-header .close-sheet { width: 28px; height: 28px; border-radius: 8px; border: none; background: var(--bg4); color: var(--t3); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; transition: 0.15s; }
+  .sheet-header .close-sheet:hover { background: var(--bg5); color: var(--t1); }
+  .sheet-game { padding: 12px 24px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--b1); }
+  .sheet-game-img { width: 48px; height: 48px; border-radius: 8px; overflow: hidden; background: var(--bg3); flex-shrink: 0; }
+  .sheet-game-img img { width: 100%; height: 100%; object-fit: cover; }
+  .sheet-game-info .name { font-size: 13px; font-weight: 700; }
+  .sheet-game-info .cat { font-size: 9px; color: var(--t4); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.1em; }
+  .sheet-plans { padding: 16px 24px 24px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .sheet-plan { padding: 16px; border-radius: var(--r3); background: var(--bg); border: 1px solid var(--b1); cursor: pointer; transition: all 0.25s cubic-bezier(0.4,0,0.2,1); text-align: center; position: relative; }
+  .sheet-plan:hover { border-color: var(--b3); background: var(--bg3); transform: translateY(-2px); }
+  .sheet-plan.selected { border-color: var(--accent); background: rgba(255,255,255,0.04); }
+  .sheet-plan .plan-label { font-size: 8px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--t4); margin-bottom: 6px; }
+  .sheet-plan .plan-tweaks { font-size: 22px; font-weight: 800; color: var(--t1); line-height: 1; margin-bottom: 4px; }
+  .sheet-plan .plan-sub { font-size: 9px; color: var(--t4); }
+  .sheet-plan .plan-icon { width: 28px; height: 28px; border-radius: 8px; background: var(--bg3); border: 1px solid var(--b1); display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; }
+  .sheet-plan .plan-icon svg { width: 14px; height: 14px; stroke: var(--t2); fill: none; stroke-width: 1.5; }
+  .sheet-plan.recommended .plan-label { color: var(--accent); }
+  .sheet-plan.recommended::after { content: 'BEST'; position: absolute; top: -8px; right: -4px; font-size: 6px; font-weight: 800; letter-spacing: 0.12em; padding: 2px 6px; border-radius: 4px; background: var(--accent); color: #000; }
+
+  /* Optimization progress */
+  .opt-progress { padding: 0 24px 24px; display: none; }
+  .opt-progress.active { display: block; }
+  .opt-progress-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .opt-progress-header .label { font-size: 11px; font-weight: 600; }
+  .opt-progress-header .pct { font-size: 11px; font-weight: 700; color: var(--accent); }
+  .opt-progress-bar { height: 4px; border-radius: 2px; background: var(--bg5); overflow: hidden; margin-bottom: 8px; }
+  .opt-progress-fill { height: 100%; border-radius: 2px; background: var(--accent); width: 0%; transition: width 0.4s cubic-bezier(0.4,0,0.2,1); position: relative; }
+  .opt-progress-fill::after { content: ''; position: absolute; top: 0; right: 0; width: 30px; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4)); }
+  .opt-steps { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
+  .opt-step { display: flex; align-items: center; gap: 8px; font-size: 10px; color: var(--t4); }
+  .opt-step.done { color: var(--t2); }
+  .opt-step.active { color: var(--accent); }
+  .opt-step .dot { width: 5px; height: 5px; border-radius: 50%; background: var(--bg6); flex-shrink: 0; }
+  .opt-step.done .dot { background: var(--accent); }
+  .opt-step.active .dot { background: var(--accent); animation: pulse 1s infinite; }
+  .opt-complete { text-align: center; padding: 20px 24px 28px; display: none; }
+  .opt-complete.active { display: block; }
+  .opt-complete .check { width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; animation: checkPop 0.5s cubic-bezier(0.4,0,0.2,1); }
+  .opt-complete .check svg { width: 20px; height: 20px; stroke: var(--accent); fill: none; stroke-width: 2.5; }
+  .opt-complete h4 { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+  .opt-complete p { font-size: 10px; color: var(--t4); }
 </style>
 </head>
 <body>
@@ -395,8 +488,22 @@
       <div id="tweakList" style="display:flex;flex-direction:column;gap:6px"></div>
     </div>
 
-    <!-- Other pages placeholder -->
-    <div class="content" id="page-autopilot" style="display:none"><div class="scan-center"><h2 style="font-size:17px;font-weight:700">AutoPilot</h2><p style="font-size:12px;color:var(--t3);margin-top:8px">Game profiles, auto-optimization & scheduled scans</p></div></div>
+    <!-- AutoPilot / Game Library Page -->
+    <div class="content" id="page-autopilot" style="display:none">
+      <div class="page-header">
+        <div>
+          <h1>Game Library</h1>
+          <p>Select a game to optimize</p>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn-primary" style="height:32px;padding:0 16px;font-size:10px;font-weight:600;display:flex;align-items:center;gap:6px;background:var(--bg3);color:var(--t2);border:1px solid var(--b2)" onclick="refreshGames()">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+            Refresh
+          </button>
+        </div>
+      </div>
+      <div class="game-grid stagger" id="gameGrid"></div>
+    </div>
     <div class="content" id="page-performance" style="display:none"><div class="scan-center"><h2 style="font-size:17px;font-weight:700">Performance</h2><p style="font-size:12px;color:var(--t3);margin-top:8px">Real-time system monitoring</p></div></div>
     <div class="content" id="page-rollback" style="display:none"><div class="scan-center"><h2 style="font-size:17px;font-weight:700">Rollback</h2><p style="font-size:12px;color:var(--t3);margin-top:8px">Undo applied optimizations</p></div></div>
   </div>
@@ -414,12 +521,28 @@
         <div class="tier">Free</div>
         <div class="price">€0</div>
         <div class="sub">Get started</div>
+        <ul class="features">
+          <li>69 system tweaks</li>
+          <li>Windows debloat</li>
+          <li>GPU & network basics</li>
+          <li>Power plan optimization</li>
+          <li class="disabled">No game profiles</li>
+          <li class="disabled">No priority support</li>
+        </ul>
         <button class="secondary">Current</button>
       </div>
       <div class="plan-card">
         <div class="tier">Pro</div>
         <div class="price">€12.99</div>
         <div class="sub">Advanced optimizations</div>
+        <ul class="features">
+          <li>120+ system tweaks</li>
+          <li>Everything in Free</li>
+          <li>BCD boot tweaks</li>
+          <li>RAM & USB optimization</li>
+          <li>Deep cleanup</li>
+          <li class="disabled">No hardware tuning</li>
+        </ul>
         <button class="primary">Get PRO</button>
       </div>
       <div class="plan-card recommended">
@@ -427,12 +550,205 @@
         <div class="tier">Premium</div>
         <div class="price">€24.99</div>
         <div class="sub">Complete power</div>
+        <ul class="features">
+          <li>461 system tweaks</li>
+          <li>Everything in Pro</li>
+          <li>GPU overclocking</li>
+          <li>Malware removal</li>
+          <li>Priority support</li>
+        </ul>
         <button class="primary">Get PREMIUM</button>
       </div>
     </div>
     <div class="modal-footer">Join the <b>CHAOTIX</b> Discord to purchase</div>
   </div>
 </div>
+
+<!-- Bottom Sheet -->
+<div class="sheet-overlay" id="sheetOverlay" onclick="closeSheet()"></div>
+<div class="bottom-sheet" id="bottomSheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-header">
+    <h3 id="sheetTitle">Optimize Game</h3>
+    <button class="close-sheet" onclick="closeSheet()">&#10005;</button>
+  </div>
+  <div class="sheet-game" id="sheetGame">
+    <div class="sheet-game-img"><img id="sheetGameImg" src="" alt=""></div>
+    <div class="sheet-game-info">
+      <div class="name" id="sheetGameName"></div>
+      <div class="cat" id="sheetGameCat"></div>
+    </div>
+  </div>
+  <div class="sheet-plans" id="sheetPlans">
+    <div class="sheet-plan" data-tier="free" onclick="selectPlan(this)">
+      <div class="plan-icon"><svg viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg></div>
+      <div class="plan-label">Free</div>
+      <div class="plan-tweaks">17</div>
+      <div class="plan-sub">tweaks</div>
+    </div>
+    <div class="sheet-plan" data-tier="pro" onclick="selectPlan(this)">
+      <div class="plan-icon"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+      <div class="plan-label">Pro</div>
+      <div class="plan-tweaks">26</div>
+      <div class="plan-sub">tweaks</div>
+    </div>
+    <div class="sheet-plan recommended" data-tier="premium" onclick="selectPlan(this)">
+      <div class="plan-icon"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div>
+      <div class="plan-label">Premium</div>
+      <div class="plan-tweaks">42</div>
+      <div class="plan-sub">tweaks</div>
+    </div>
+  </div>
+  <div class="opt-progress" id="optProgress">
+    <div class="opt-progress-header">
+      <span class="label" id="optLabel">Optimizing...</span>
+      <span class="pct" id="optPct">0%</span>
+    </div>
+    <div class="opt-progress-bar"><div class="opt-progress-fill" id="optFill"></div></div>
+    <div class="opt-steps" id="optSteps"></div>
+  </div>
+  <div class="opt-complete" id="optComplete">
+    <div class="check"><svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4 12 14.01l-3-3"/></svg></div>
+    <h4 id="optCompleteTitle">Optimization Complete</h4>
+    <p id="optCompleteSub">Your game is ready</p>
+  </div>
+</div>
+
+<script>
+// ── Game Library ──
+const games = [
+  { name: 'Fortnite', cat: 'Battle Royale', tag: 'competitive', img: 'https://cdn2.unrealengine.com/Fortnite+KeyArt+1920x1080-6e23e3b76494.jpg' },
+  { name: 'Valorant', cat: 'Tactical Shooter', tag: 'competitive', img: 'https://images.contentstack.io/v3/assets/bltb38ef9d644277dc7/blt4b1a59e08b09abc6/5f423b3a1e1a3f73d8c6b0a8/valorant-calibrating-sensitivity.jpg' },
+  { name: 'CS2', cat: 'FPS', tag: 'competitive', img: 'https://cdn.akamai.steamstatic.com/apps/csgo/images/csgo_react/social/share.jpg' },
+  { name: 'Apex Legends', cat: 'Battle Royale', tag: 'multiplayer', img: 'https://media.contentapi.ea.com/content/dam/apex-legends/common/apex-lp-new-base-tiles.jpg' },
+  { name: 'Warzone', cat: 'Battle Royale', tag: 'competitive', img: 'https://www.callofduty.com/content/dam/atvi/callofduty/cod-keyart/thumbnails/WZ2-KEYART_TOUT.jpg' },
+  { name: 'Minecraft', cat: 'Sandbox', tag: 'story', img: 'https://www.minecraft.net/content/dam/games/minecraft/key-art/Games_Subnav_702x400.jpg' },
+  { name: 'GTA V', cat: 'Open World', tag: 'story', img: 'https://media Rockstargames.com/rockstargames-newsite/uploads/gtav/downloads/images/GTAV_702x400.jpg' },
+  { name: 'League of Legends', cat: 'MOBA', tag: 'competitive', img: 'https://ddragon.leagueoflegends.com/cdn/img/champion-splash/Ahri_0.jpg' },
+  { name: 'Overwatch 2', cat: 'Hero Shooter', tag: 'competitive', img: 'https://bnetcmsus-a.akamaihd.net/cms/blog_header/cn/CN5BHJHVP0WY1616647507407.jpg' },
+  { name: 'PUBG', cat: 'Battle Royale', tag: 'multiplayer', img: 'https://cdn.akamai.steamstatic.com/steam/apps/578080/header.jpg' },
+  { name: 'Rust', cat: 'Survival', tag: 'multiplayer', img: 'https://cdn.akamai.steamstatic.com/steam/apps/252490/header.jpg' },
+  { name: 'Rocket League', cat: 'Sports', tag: 'competitive', img: 'https://cdn.akamai.steamstatic.com/steam/apps/252950/header.jpg' },
+];
+
+const gameGrid = document.getElementById('gameGrid');
+let currentGame = null;
+let selectedTier = null;
+
+function renderGames() {
+  gameGrid.innerHTML = '';
+  games.forEach((g, i) => {
+    const card = document.createElement('div');
+    card.className = 'game-card';
+    card.innerHTML = `
+      <div class="game-card-img">
+        <img src="${g.img}" alt="${g.name}" loading="lazy" onerror="this.style.display='none'">
+        <span class="tag ${g.tag}">${g.tag}</span>
+        <button class="opt-btn" onclick="event.stopPropagation();openSheet(${i})" title="Optimize ${g.name}">
+          <svg viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+        </button>
+      </div>
+      <div class="game-card-info">
+        <div class="title">${g.name}</div>
+        <div class="sub">${g.cat}</div>
+      </div>
+    `;
+    gameGrid.appendChild(card);
+  });
+}
+renderGames();
+
+function refreshGames() {
+  gameGrid.innerHTML = '';
+  setTimeout(renderGames, 300);
+}
+
+// ── Bottom Sheet ──
+function openSheet(idx) {
+  currentGame = games[idx];
+  selectedTier = null;
+  document.getElementById('sheetTitle').textContent = 'Optimize Game';
+  document.getElementById('sheetGameImg').src = currentGame.img;
+  document.getElementById('sheetGameName').textContent = currentGame.name;
+  document.getElementById('sheetGameCat').textContent = currentGame.cat;
+  document.querySelectorAll('.sheet-plan').forEach(p => p.classList.remove('selected'));
+  document.getElementById('sheetPlans').style.display = '';
+  document.getElementById('optProgress').classList.remove('active');
+  document.getElementById('optComplete').classList.remove('active');
+  document.getElementById('sheetOverlay').classList.add('show');
+  document.getElementById('bottomSheet').classList.add('show');
+}
+
+function closeSheet() {
+  document.getElementById('bottomSheet').classList.remove('show');
+  setTimeout(() => document.getElementById('sheetOverlay').classList.remove('show'), 350);
+}
+
+function selectPlan(el) {
+  document.querySelectorAll('.sheet-plan').forEach(p => p.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedTier = el.dataset.tier;
+  setTimeout(() => startOptimization(), 400);
+}
+
+// ── Optimization Flow ──
+const tweakSteps = {
+  free: ['Disabling unnecessary services','Optimizing power plan','Clearing shader cache','Enabling Game Mode','Optimizing network stack','Applying registry tweaks','Finalizing...'],
+  pro: ['Disabling unnecessary services','Optimizing power plan','Clearing shader cache','Enabling Game Mode','Optimizing network stack','Tuning GPU settings','Disabling fullscreen optimizations','Configuring memory management','Optimizing disk I/O','Tweaking TCP/IP stack','Disabling telemetry','Applying registry tweaks','Finalizing...'],
+  premium: ['Disabling unnecessary services','Optimizing power plan','Clearing shader cache','Enabling Game Mode','Optimizing network stack','Tuning GPU settings','Disabling fullscreen optimizations','Configuring memory management','Optimizing disk I/O','Tweaking TCP/IP stack','Disabling telemetry','Disabling mouse acceleration','Optimizing CPU priority','Configuring interrupt affinity','Disabling HPET','Optimizing storage TRIM','Tweaking NVIDIA settings','Applying registry tweaks','Creating restore point','Finalizing...']
+};
+
+function startOptimization() {
+  if (!selectedTier) return;
+  const steps = tweakSteps[selectedTier];
+  document.getElementById('sheetPlans').style.display = 'none';
+  document.getElementById('optProgress').classList.add('active');
+  document.getElementById('optLabel').textContent = 'Optimizing...';
+  document.getElementById('optPct').textContent = '0%';
+  document.getElementById('optFill').style.width = '0%';
+
+  const stepsEl = document.getElementById('optSteps');
+  stepsEl.innerHTML = steps.map((s, i) => `<div class="opt-step" id="optStep${i}"><div class="dot"></div>${s}</div>`).join('');
+
+  let i = 0;
+  const iv = setInterval(() => {
+    if (i > 0) {
+      document.getElementById('optStep' + (i - 1)).classList.remove('active');
+      document.getElementById('optStep' + (i - 1)).classList.add('done');
+    }
+    if (i < steps.length) {
+      document.getElementById('optStep' + i).classList.add('active');
+      const pct = Math.round(((i + 1) / steps.length) * 100);
+      document.getElementById('optPct').textContent = pct + '%';
+      document.getElementById('optFill').style.width = pct + '%';
+      document.getElementById('optLabel').textContent = steps[i];
+      i++;
+    } else {
+      clearInterval(iv);
+      document.getElementById('optLabel').textContent = 'Complete';
+      document.getElementById('optPct').textContent = '100%';
+      document.getElementById('optFill').style.width = '100%';
+      setTimeout(() => {
+        document.getElementById('optProgress').classList.remove('active');
+        document.getElementById('optComplete').classList.add('active');
+        document.getElementById('optCompleteTitle').textContent = currentGame.name + ' Optimized';
+        const tierLabel = selectedTier.charAt(0).toUpperCase() + selectedTier.slice(1);
+        const tweakCount = { free: 17, pro: 26, premium: 42 }[selectedTier];
+        document.getElementById('optCompleteSub').textContent = tierLabel + ' · ' + tweakCount + ' tweaks applied';
+        // Add optimized badge to game card
+        const cardIndex = games.findIndex(g => g.name === currentGame.name);
+        const cards = document.querySelectorAll('.game-card');
+        if (cards[cardIndex]) {
+          const badge = document.createElement('div');
+          badge.className = 'optimized-badge';
+          badge.innerHTML = '<svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4 12 14.01l-3-3"/></svg>';
+          cards[cardIndex].appendChild(badge);
+        }
+      }, 600);
+    }
+  }, 350);
+}
+</script>
 
 <script>
 // Navigation

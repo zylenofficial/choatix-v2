@@ -28,7 +28,7 @@ function generateKeyLocal(tier) {
   const expiry = new Date(Date.now() + 365 * 86400000).toISOString().split('T')[0];
   const SECRET = 'choatix-secret-key-2024';
   const hash = hashCode(`${tier}:${expiry}:${nonce}:${SECRET}`);
-  const checksum = hash.toString(36).toUpperCase().padStart(4, '0').substring(0, 4);
+  const checksum = hash.toString(36).toUpperCase().padStart(4, '0');
   return `CHTX-${tier.substring(0, 4)}-${nonce}-${checksum}`;
 }
 
@@ -220,6 +220,43 @@ async function registerCommands() {
       .setName('affiliate-stats')
       .setDescription('View affiliate earnings (admin only)')
       .addUserOption(opt => opt.setName('affiliate').setDescription('Check specific affiliate').setRequired(false)),
+    new SlashCommandBuilder()
+      .setName('benchmark')
+      .setDescription('Submit a hardware benchmark score')
+      .addIntegerOption(opt => opt.setName('score').setDescription('Your benchmark score').setRequired(true))
+      .addStringOption(opt => opt.setName('gpu').setDescription('Your GPU model').setRequired(false))
+      .addStringOption(opt => opt.setName('cpu').setDescription('Your CPU model').setRequired(false)),
+    new SlashCommandBuilder()
+      .setName('leaderboard')
+      .setDescription('View the hardware benchmark leaderboard'),
+    new SlashCommandBuilder()
+      .setName('ratings')
+      .setDescription('View product ratings and reviews')
+      .addStringOption(opt => opt.setName('product').setDescription('Product to view').setRequired(false)
+        .addChoices(
+          { name: 'Basic Tweaks', value: 'basic' },
+          { name: 'Pro Tweaks', value: 'pro' },
+          { name: 'Extreme Tweaks', value: 'extreme' },
+          { name: 'Precision Tweaks', value: 'precision' },
+          { name: 'Premium Power Plan', value: 'power' },
+          { name: 'Full Optimization', value: 'full' }
+        )
+      ),
+    new SlashCommandBuilder()
+      .setName('affiliate-register')
+      .setDescription('Register as a Choatix affiliate'),
+    new SlashCommandBuilder()
+      .setName('affiliate')
+      .setDescription('View your affiliate dashboard'),
+    new SlashCommandBuilder()
+      .setName('partner-add')
+      .setDescription('Add a partner (admin only)')
+      .addUserOption(opt => opt.setName('user').setDescription('Partner user').setRequired(true))
+      .addStringOption(opt => opt.setName('name').setDescription('Partner display name').setRequired(true)),
+    new SlashCommandBuilder()
+      .setName('partner-remove')
+      .setDescription('Remove a partner (admin only)')
+      .addUserOption(opt => opt.setName('user').setDescription('Partner to remove').setRequired(true)),
   ];
 
   const rest = new REST({ version: '10' }).setToken(BOT_TOKEN);
@@ -361,7 +398,8 @@ client.on('interactionCreate', async (interaction) => {
       if (result.success || result.code) {
         const uses = result.uses || 0;
         const maxUses = result.maxUses || 10;
-        const bar = '█'.repeat(Math.floor(uses / maxUses * 10)) + '░'.repeat(10 - Math.floor(uses / maxUses * 10));
+        const barLen = Math.min(10, Math.floor(uses / maxUses * 10));
+        const bar = '█'.repeat(barLen) + '░'.repeat(10 - barLen);
 
         await interaction.editReply({
           content: `🔗 **Your Referral Code**\n\n\`${result.code}\`\n\nShare this code. When someone uses it:\n→ They get **PRO** for free\n→ You get **PREMIUM** upgrade\n\nUses: ${uses}/${maxUses}\n\`${bar}\``,
@@ -473,11 +511,11 @@ client.on('interactionCreate', async (interaction) => {
 
       const winDesc = wonKey
         ? `**Winner: <@${winnerId}>**\n\nYour key: \`${wonKey}\`\n\nRun \`/redeem key:${wonKey}\` to activate!`
-        : `**Winner: <@${winnerId}>**\n\nA ${tier} key was generated. Run \`/redeem\` to check your status.`;
+        : `**Winner: <@${winnerId}>**\n\n⚠️ Key generation failed. Please contact an admin.`;
 
       const winEmbed = EmbedBuilder.from(embed)
         .setDescription(winDesc)
-        .setColor(0xffffff);
+        .setColor(wonKey ? 0xffffff : 0xef4444);
 
       await interaction.channel.messages.edit(msg.id, { embeds: [winEmbed], components: [] }).catch(() => {});
 
@@ -486,7 +524,7 @@ client.on('interactionCreate', async (interaction) => {
         if (winner) {
           const dmText = wonKey
             ? `🎉 You won a **${tier}** Choatix license key!\n\nYour key: \`${wonKey}\`\n\nRun \`/redeem key:${wonKey}\` in the server to activate!`
-            : `🎉 You won a **${tier}** Choatix license key!\n\nRun \`/redeem\` in the server to activate!`;
+            : `🎉 You won a **${tier}** Choatix license key!\n\n⚠️ Key generation failed. Please contact an admin.`;
           await winner.send(dmText);
         }
       } catch {}
@@ -499,7 +537,7 @@ client.on('interactionCreate', async (interaction) => {
     const msgId = interaction.message.id;
     const giveaway = activeGiveaways.get(msgId);
 
-    if (!giveaway) {
+    if (!giveaway || Date.now() >= giveaway.endTime) {
       return interaction.reply({ content: 'This giveaway has ended.', ephemeral: true });
     }
 
@@ -551,10 +589,12 @@ client.on('interactionCreate', async (interaction) => {
         { name: '🔑 License', value: '`/redeem` — Redeem a license key\n`/status` — Check your license\n`/unlink` — Unlink your license', inline: false },
         { name: '🔗 Referrals', value: '`/refer` — Get your referral code\n`/redeem-referral` — Redeem a referral code', inline: false },
         { name: '💰 Coins & Quests', value: '`/daily` — View daily quests\n`/balance` — Check coin balance\n`/buy-pro` — Spend coins for Pro access\n`/coins-leaderboard` — Top coin earners', inline: false },
-        { name: '🛒 Purchase', value: '`/claim` — Claim your key after website purchase', inline: false },
+        { name: '📈 Benchmarks', value: '`/benchmark` — Submit a benchmark score\n`/leaderboard` — View hardware rankings', inline: false },
+        { name: '⭐ Ratings', value: '`/rate` — Rate a product\n`/ratings` — View product ratings', inline: false },
+        { name: '🤝 Affiliate', value: '`/affiliate-register` — Become an affiliate\n`/affiliate` — View your dashboard\n`/claim` — Claim your key after website purchase', inline: false },
         { name: '🎉 Fun', value: '`/giveaway` — Start a giveaway (admin)\n`/profile` — View your profile', inline: false },
         { name: 'ℹ️ Info', value: '`/help` — This message\n`/ping` — Bot latency\n`/invite` — Server invite\n`/download` — Download Choatix V2\n`/changelog` — Latest updates', inline: false },
-        { name: '🛠️ Admin', value: '`/generate-key` — Generate keys\n`/deliver` — Deliver key after PayPal payment\n`/revoke` — Revoke a key\n`/announce` — Send announcement\n`/stats` — Server statistics\n`/broadcast` — DM all users', inline: false },
+        { name: '🛠️ Admin', value: '`/generate-key` — Generate keys\n`/deliver` — Deliver key after PayPal payment\n`/revoke` — Revoke a key\n`/announce` — Send announcement\n`/stats` — Server statistics\n`/broadcast` — DM all users\n`/partner-add` — Add a partner\n`/partner-remove` — Remove a partner', inline: false },
       )
       .setColor(0xffffff)
       .setFooter({ text: 'Choatix V2 — Gaming Optimization' });
@@ -964,6 +1004,7 @@ client.on('interactionCreate', async (interaction) => {
         'SELECT COALESCE(AVG(rating), 0) as avg, COUNT(*) as count FROM product_ratings WHERE product_id = $1',
         [product]
       );
+      if (!avgResult.rows[0]) return interaction.editReply({ content: '❌ Could not load rating stats.' });
       const avg = parseFloat(avgResult.rows[0].avg).toFixed(1);
       const count = parseInt(avgResult.rows[0].count);
 
@@ -993,7 +1034,6 @@ client.on('interactionCreate', async (interaction) => {
   }
 
   if (interaction.isChatInputCommand() && interaction.commandName === 'deliver') {
-    const ADMIN_IDS = ['1014494449809772544', '1520176133461512324', '1322475983386837006'];
     if (!ADMIN_IDS.includes(interaction.user.id)) {
       return interaction.reply({ content: '❌ Admin only.', ephemeral: true });
     }
@@ -1139,6 +1179,200 @@ client.on('interactionCreate', async (interaction) => {
     } catch (err) {
       console.error('[AFFILIATE-STATS ERROR]', err.message);
       await interaction.editReply({ content: '❌ Error fetching affiliate stats.' });
+    }
+  }
+
+  // ─── /benchmark ───────────────────────────────────────────
+  if (interaction.isChatInputCommand() && interaction.commandName === 'benchmark') {
+    await interaction.deferReply();
+    const score = interaction.options.getInteger('score');
+    const gpu = interaction.options.getString('gpu') || 'Unknown';
+    const cpu = interaction.options.getString('cpu') || 'Unknown';
+    const hardwareHash = hashCode(`${gpu}:${cpu}`).toString(36);
+
+    try {
+      await dbQuery(
+        'INSERT INTO benchmarks (discord_id, overall_score, gpu_model, cpu_model, hardware_hash) VALUES ($1, $2, $3, $4, $5)',
+        [interaction.user.id, score, gpu, cpu, hardwareHash]
+      );
+      const rank = await dbQuery('SELECT COUNT(*) + 1 as rank FROM benchmarks WHERE overall_score > $1', [score]);
+      const embed = new EmbedBuilder()
+        .setTitle('🏆 Benchmark Submitted')
+        .setColor(0x4ec95e)
+        .addFields(
+          { name: 'Score', value: `${score}`, inline: true },
+          { name: 'GPU', value: gpu, inline: true },
+          { name: 'CPU', value: cpu, inline: true },
+          { name: 'Rank', value: `#${rank.rows[0]?.rank || '?'}`, inline: true }
+        )
+        .setFooter({ text: 'Use /leaderboard to see the full ranking' });
+      await interaction.editReply({ embeds: [embed] });
+    } catch (err) {
+      console.error('[BENCHMARK ERROR]', err.message);
+      await interaction.editReply({ content: '❌ Failed to submit benchmark.' });
+    }
+  }
+
+  // ─── /leaderboard ─────────────────────────────────────────
+  if (interaction.isChatInputCommand() && interaction.commandName === 'leaderboard') {
+    await interaction.deferReply();
+    try {
+      const top = await dbQuery('SELECT * FROM benchmarks ORDER BY overall_score DESC LIMIT 10');
+      if (top.rows.length === 0) {
+        return interaction.editReply({ content: 'No benchmarks submitted yet. Be the first with `/benchmark`!' });
+      }
+      const medals = ['🥇', '🥈', '🥉'];
+      const lines = top.rows.map((b, i) => {
+        const medal = medals[i] || `#${i + 1}`;
+        return `${medal} **${b.overall_score}** — ${b.gpu_model} | ${b.cpu_model} (<@${b.discord_id}>)`;
+      });
+      const embed = new EmbedBuilder()
+        .setTitle('🏆 Hardware Benchmark Leaderboard')
+        .setDescription(lines.join('\n'))
+        .setColor(0xfacc15)
+        .setTimestamp();
+      await interaction.editReply({ embeds: [embed] });
+    } catch (err) {
+      console.error('[LEADERBOARD ERROR]', err.message);
+      await interaction.editReply({ content: '❌ Failed to load leaderboard.' });
+    }
+  }
+
+  // ─── /ratings ─────────────────────────────────────────────
+  if (interaction.isChatInputCommand() && interaction.commandName === 'ratings') {
+    await interaction.deferReply();
+    const product = interaction.options.getString('product');
+
+    try {
+      if (product) {
+        const productNames = { basic: 'Basic Tweaks', pro: 'Pro Tweaks', extreme: 'Extreme Tweaks', precision: 'Precision Tweaks', power: 'Premium Power Plan', full: 'Full Optimization' };
+        const result = await dbQuery('SELECT AVG(rating) as avg, COUNT(*) as count FROM product_ratings WHERE product_id = $1', [product]);
+        const avg = parseFloat(result.rows[0]?.avg || 0).toFixed(1);
+        const count = parseInt(result.rows[0]?.count || 0);
+        const stars = '⭐'.repeat(Math.round(avg)) + '☆'.repeat(5 - Math.round(avg));
+        const embed = new EmbedBuilder()
+          .setTitle(`⭐ ${productNames[product]} Ratings`)
+          .setDescription(`${stars} **${avg}**/5 (${count} reviews)`)
+          .setColor(0xfacc15);
+        await interaction.editReply({ embeds: [embed] });
+      } else {
+        const products = ['basic', 'pro', 'extreme', 'precision', 'power', 'full'];
+        const names = { basic: 'Basic', pro: 'Pro', extreme: 'Extreme', precision: 'Precision', power: 'Power Plan', full: 'Full' };
+        const lines = [];
+        for (const p of products) {
+          const r = await dbQuery('SELECT AVG(rating) as avg, COUNT(*) as count FROM product_ratings WHERE product_id = $1', [p]);
+          const avg = parseFloat(r.rows[0]?.avg || 0).toFixed(1);
+          const count = parseInt(r.rows[0]?.count || 0);
+          const bar = '⭐'.repeat(Math.round(avg)) + '☆'.repeat(5 - Math.round(avg));
+          lines.push(`**${names[p]}**: ${bar} ${avg}/5 (${count})`);
+        }
+        const embed = new EmbedBuilder()
+          .setTitle('⭐ All Product Ratings')
+          .setDescription(lines.join('\n'))
+          .setColor(0xfacc15)
+          .setTimestamp();
+        await interaction.editReply({ embeds: [embed] });
+      }
+    } catch (err) {
+      console.error('[RATINGS ERROR]', err.message);
+      await interaction.editReply({ content: '❌ Failed to load ratings.' });
+    }
+  }
+
+  // ─── /affiliate-register ──────────────────────────────────
+  if (interaction.isChatInputCommand() && interaction.commandName === 'affiliate-register') {
+    await interaction.deferReply();
+    try {
+      const existing = await dbQuery('SELECT * FROM affiliates WHERE discord_id = $1', [interaction.user.id]);
+      if (existing.rows.length > 0) {
+        return interaction.editReply({ content: '❌ You are already registered as an affiliate.' });
+      }
+      await dbQuery(
+        'INSERT INTO affiliates (discord_id, display_name, paypal_email, total_earned, created_at) VALUES ($1, $2, $3, 0, NOW())',
+        [interaction.user.id, interaction.user.username, 'pending']
+      );
+      const embed = new EmbedBuilder()
+        .setTitle('🤝 Affiliate Registration')
+        .setDescription('You are now a Choatix affiliate!\n\nUse `/affiliate` to view your dashboard and generate tracking links.')
+        .setColor(0x4ec95e);
+      await interaction.editReply({ embeds: [embed] });
+    } catch (err) {
+      console.error('[AFFILIATE-REGISTER ERROR]', err.message);
+      await interaction.editReply({ content: '❌ Failed to register as affiliate.' });
+    }
+  }
+
+  // ─── /affiliate ───────────────────────────────────────────
+  if (interaction.isChatInputCommand() && interaction.commandName === 'affiliate') {
+    await interaction.deferReply();
+    try {
+      const aff = await dbQuery('SELECT * FROM affiliates WHERE discord_id = $1', [interaction.user.id]);
+      if (aff.rows.length === 0) {
+        return interaction.editReply({ content: '❌ You are not an affiliate. Use `/affiliate-register` first.' });
+      }
+      const clicks = await dbQuery('SELECT COALESCE(SUM(clicks), 0) as t FROM affiliate_links WHERE affiliate_id = $1', [interaction.user.id]);
+      const conv = await dbQuery('SELECT COALESCE(SUM(conversions), 0) as t FROM affiliate_links WHERE affiliate_id = $1', [interaction.user.id]);
+      const pending = await dbQuery("SELECT COALESCE(SUM(commission), 0) as t FROM affiliate_sales WHERE affiliate_id = $1 AND status = 'pending'", [interaction.user.id]);
+      const total = await dbQuery('SELECT COALESCE(SUM(commission), 0) as t FROM affiliate_sales WHERE affiliate_id = $1', [interaction.user.id]);
+
+      const embed = new EmbedBuilder()
+        .setTitle('🤝 Your Affiliate Dashboard')
+        .setColor(0x4ec95e)
+        .addFields(
+          { name: 'Total Earnings', value: `**€${parseFloat(total.rows[0]?.t || 0).toFixed(2)}**`, inline: true },
+          { name: 'Pending', value: `**€${parseFloat(pending.rows[0]?.t || 0).toFixed(2)}**`, inline: true },
+          { name: 'Clicks', value: `${clicks.rows[0]?.t || 0}`, inline: true },
+          { name: 'Conversions', value: `${conv.rows[0]?.t || 0}`, inline: true }
+        )
+        .setFooter({ text: 'Use /affiliate-link to generate a tracking link' });
+      await interaction.editReply({ embeds: [embed] });
+    } catch (err) {
+      console.error('[AFFILIATE ERROR]', err.message);
+      await interaction.editReply({ content: '❌ Failed to load affiliate dashboard.' });
+    }
+  }
+
+  // ─── /partner-add (admin) ────────────────────────────────
+  if (interaction.isChatInputCommand() && interaction.commandName === 'partner-add') {
+    if (!ADMIN_IDS.includes(interaction.user.id)) {
+      return interaction.reply({ content: '❌ Admin only.', ephemeral: true });
+    }
+    await interaction.deferReply();
+    const user = interaction.options.getUser('user');
+    const name = interaction.options.getString('name');
+    try {
+      const existing = await dbQuery('SELECT * FROM partners_table WHERE discord_id = $1', [user.id]);
+      if (existing.rows.length > 0) {
+        return interaction.editReply({ content: '❌ User is already a partner.' });
+      }
+      await dbQuery(
+        'INSERT INTO partners_table (discord_id, name, tier) VALUES ($1, $2, $3)',
+        [user.id, name, 'PRO']
+      );
+      const embed = new EmbedBuilder()
+        .setTitle('🤝 Partner Added')
+        .setDescription(`**${name}** is now a partner!`)
+        .setColor(0x4ec95e);
+      await interaction.editReply({ embeds: [embed] });
+    } catch (err) {
+      console.error('[PARTNER-ADD ERROR]', err.message);
+      await interaction.editReply({ content: '❌ Failed to add partner.' });
+    }
+  }
+
+  // ─── /partner-remove (admin) ─────────────────────────────
+  if (interaction.isChatInputCommand() && interaction.commandName === 'partner-remove') {
+    if (!ADMIN_IDS.includes(interaction.user.id)) {
+      return interaction.reply({ content: '❌ Admin only.', ephemeral: true });
+    }
+    await interaction.deferReply();
+    const user = interaction.options.getUser('user');
+    try {
+      await dbQuery('DELETE FROM partners_table WHERE discord_id = $1', [user.id]);
+      await interaction.editReply({ content: `✅ Partner <@${user.id}> removed.` });
+    } catch (err) {
+      console.error('[PARTNER-REMOVE ERROR]', err.message);
+      await interaction.editReply({ content: '❌ Failed to remove partner.' });
     }
   }
 });

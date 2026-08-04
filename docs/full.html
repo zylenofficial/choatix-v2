@@ -3,21 +3,22 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Digital Vibrance Controller - Choatix V2</title>
-  <meta name="description" content="Choatix Digital Vibrance Controller — auto-detect games, per-game profiles, NVIDIA & AMD support.">
+  <title>Full Optimization - Choatix V2</title>
+  <meta name="description" content="Choatix Full Optimization — 165+ high-impact tweaks, 20 game presets, auto restore points, TrustedInstaller elevation. Everything you need for maximum FPS.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
   <style>
     .pd-hero{display:flex;align-items:center;gap:3rem;max-width:1000px;margin:0 auto;padding:8rem 2rem 4rem}
-    .pd-box{flex:0 0 280px;aspect-ratio:0.7;background:linear-gradient(160deg,#1a1a2a,#111120);border:1px solid rgba(255,255,255,0.08);border-radius:14px;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:2rem 1rem;position:relative;overflow:hidden;transform:perspective(600px) rotateY(-8deg) rotateX(2deg);box-shadow:12px 12px 32px rgba(0,0,0,0.6),-2px -2px 8px rgba(255,255,255,0.02)}
+    .pd-box{flex:0 0 280px;aspect-ratio:0.7;background:linear-gradient(160deg,#1a2a2a,#111a1a);border:1px solid rgba(255,255,255,0.08);border-radius:14px;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:2rem 1rem;position:relative;overflow:hidden;transform:perspective(600px) rotateY(-8deg) rotateX(2deg);box-shadow:12px 12px 32px rgba(0,0,0,0.6),-2px -2px 8px rgba(255,255,255,0.02)}
     .pd-box::before{content:'';position:absolute;top:0;left:0;right:0;bottom:0;background:linear-gradient(135deg,rgba(255,255,255,0.06),transparent 50%);pointer-events:none}
-    .pd-box-brand{font-size:0.7rem;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:#7c4dff;margin-bottom:0.6rem}
+    .pd-box-brand{font-size:0.7rem;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:var(--green);margin-bottom:0.6rem}
     .pd-box-name{font-size:1.6rem;font-weight:900;color:#fff;text-align:center;line-height:1.25}
     .pd-box-sub{font-size:0.55rem;font-weight:600;letter-spacing:0.15em;text-transform:uppercase;color:var(--text-dim);margin-top:0.5rem}
     .pd-info{flex:1}
+    .pd-info .product-badge{margin-bottom:1rem}
     .pd-info h1{font-size:2.2rem;font-weight:900;letter-spacing:-0.04em;margin-bottom:0.5rem}
-    .pd-info .pd-price{font-size:2rem;font-weight:900;color:#7c4dff;margin-bottom:1rem}
+    .pd-info .pd-price{font-size:2rem;font-weight:900;color:var(--green);margin-bottom:1rem}
     .pd-info p{color:var(--text-dim);font-size:0.95rem;line-height:1.7;margin-bottom:1.5rem}
     .pd-actions{display:flex;gap:0.6rem}
     .pd-actions .btn{padding:0.65rem 1.4rem;font-size:0.85rem}
@@ -36,7 +37,7 @@
     .pd-tweak-info{flex:1}
     .pd-tweak-info h3{font-size:0.85rem;font-weight:700;margin-bottom:0.15rem}
     .pd-tweak-info p{font-size:0.75rem;color:var(--text-dim)}
-    .pd-tweak-count{font-size:0.75rem;font-weight:700;color:#7c4dff;background:rgba(124,77,255,0.08);padding:0.25rem 0.6rem;border-radius:6px;flex-shrink:0}
+    .pd-tweak-count{font-size:0.75rem;font-weight:700;color:var(--green);background:rgba(0,230,118,0.08);padding:0.25rem 0.6rem;border-radius:6px;flex-shrink:0}
     .pd-cta{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:3rem;text-align:center;margin:2rem auto;max-width:600px}
     .pd-cta h3{font-size:1.3rem;font-weight:800;margin-bottom:0.5rem}
     .pd-cta p{color:var(--text-dim);font-size:0.9rem;margin-bottom:1.5rem}
@@ -50,7 +51,7 @@
 
   <nav id="nav">
     <a href="index.html" class="nav-brand">choatix<span>.</span></a>
-    <button class="hamburger" onclick="document.querySelector('.nav-links').classList.toggle('open')">&#9776;</button>
+      <button class="hamburger" onclick="document.querySelector('.nav-links').classList.toggle('open')">&#9776;</button>
     <div class="nav-links">
       <a href="index.html">Home</a>
       <a href="features.html">Features</a>
@@ -82,18 +83,18 @@
   </nav>
 
   <section class="pd-hero">
-    <div class="pd-box">
+    <div class="pd-box" style="border-color:rgba(0,230,118,0.3);box-shadow:0 0 20px rgba(0,230,118,0.1)">
       <div class="pd-box-brand">Choatix</div>
-      <div class="pd-box-name">Digital<br>Vibrance</div>
-      <div class="pd-box-sub">Display</div>
+      <div class="pd-box-name">Full<br>Optimization</div>
+      <div class="pd-box-sub">Everything</div>
     </div>
     <div class="pd-info">
-      <span class="product-brand">Choatix</span>
-      <h1>Vibrance Controller</h1>
-      <div class="pd-price" style="color:#00ff88;">Free</div>
-      <p>Control your display's digital vibrance with per-game auto-detection. Supports both NVIDIA and AMD GPUs. Set a global vibrance level or create per-game profiles that automatically apply when you launch a game.</p>
+      <span class="product-badge" style="background:rgba(0,230,118,0.15);color:#00e676">Main Product</span>
+      <h1>Full Optimization</h1>
+      <div class="pd-price">&euro;9.99</div>
+      <p>The complete Choatix experience. 165+ high-impact system tweaks across 7 categories, 20 game presets with 80+ tweaks each, auto restore points before every optimization, and TrustedInstaller elevation for commands that need it. Everything competitors offer, in one app.</p>
       <div class="pd-actions">
-        <a href="https://discord.gg/AhEK85REhG" target="_blank" class="btn btn-green">Get Free Access</a>
+        <button class="btn btn-green add-to-cart" data-id="full" data-name="Full Optimization" data-price="9.99">Add to Cart</button>
         <a href="products.html" class="btn btn-secondary">Back to Products</a>
       </div>
     </div>
@@ -103,63 +104,124 @@
     <h2>What's Included</h2>
     <div class="pd-features">
       <div class="pd-feature">
-        <div class="pd-feature-icon">&#127912;</div>
-        <h3>Global Vibrance Slider</h3>
-        <p>Set your preferred digital vibrance level from 0-100% with a single slider. Applies instantly across all displays.</p>
+        <div class="pd-feature-icon">&#127968;</div>
+        <h3>Windows (25 tweaks)</h3>
+        <p>Explorer customization, performance optimizations, animations off, visual effects, prefetch/superfetch, startup delay, and more.</p>
+      </div>
+      <div class="pd-feature">
+        <div class="pd-feature-icon">&#127760;</div>
+        <h3>Network (18 tweaks)</h3>
+        <p>Nagle algorithm off, TCP auto-tuning, DNS optimization, network throttling, MTU, and advanced TCP registry tweaks.</p>
+      </div>
+      <div class="pd-feature">
+        <div class="pd-feature-icon">&#129529;</div>
+        <h3>Debloat (24 services)</h3>
+        <p>Disable 24 unnecessary Windows services including Xbox, Maps, NVIDIA Telemetry, Bluetooth, Parental Controls, and more.</p>
       </div>
       <div class="pd-feature">
         <div class="pd-feature-icon">&#127918;</div>
-        <h3>Auto Game Detection</h3>
-        <p>Monitors running processes and automatically applies the correct vibrance profile when a game launches.</p>
+        <h3>GPU (6 tweaks)</h3>
+        <p>Hardware-accelerated GPU scheduling, MPO fix, GPU priority, Write Combining off, NVIDIA Telemetry disable.</p>
       </div>
       <div class="pd-feature">
-        <div class="pd-feature-icon">&#128190;</div>
-        <h3>Per-Game Profiles</h3>
-        <p>Create and save custom vibrance settings for each game. Toggle profiles on/off individually.</p>
+        <div class="pd-feature-icon">&#9889;</div>
+        <h3>Power (12 tweaks)</h3>
+        <p>Ultimate Performance plan, C-States off, core parking disabled, processor boost policy, platform clock, TSC sync.</p>
       </div>
       <div class="pd-feature">
-        <div class="pd-feature-icon">&#128225;</div>
-        <h3>NVIDIA & AMD</h3>
-        <p>Works with both NVIDIA (NVAPI) and AMD (ADLX) GPUs. Auto-detects your graphics card on startup.</p>
+        <div class="pd-feature-icon">&#10024;</div>
+        <h3>Extra (12 tweaks)</h3>
+        <p>Disable notifications, Cortana, Action Center, telemetry, activity history, lock screen, and more.</p>
+      </div>
+      <div class="pd-feature">
+        <div class="pd-feature-icon">&#128293;</div>
+        <h3>Security & Virtualization</h3>
+        <p>VBS disable (5-15% FPS gain), Memory Integrity/HVCI off, Credential Guard off, Hyper-V off, debug mode off.</p>
+      </div>
+      <div class="pd-feature">
+        <div class="pd-feature-icon">&#127918;</div>
+        <h3>20 Game Presets</h3>
+        <p>Valorant, Fortnite, CS2, Apex Legends, Warzone, Minecraft, and 14 more games with 80+ tweaks each.</p>
       </div>
     </div>
   </section>
 
   <section class="pd-section">
-    <h2>Features</h2>
+    <h2>Advanced Features</h2>
+    <div class="pd-features">
+      <div class="pd-feature">
+        <div class="pd-feature-icon">&#128737;</div>
+        <h3>Auto Restore Points</h3>
+        <p>Creates a system restore point before Apply All and game optimization. Roll back anytime.</p>
+      </div>
+      <div class="pd-feature">
+        <div class="pd-feature-icon">&#128272;</div>
+        <h3>TrustedInstaller Elevation</h3>
+        <p>Commands that fail with "Access is denied" auto-retry with TrustedInstaller elevation for maximum compatibility.</p>
+      </div>
+      <div class="pd-feature">
+        <div class="pd-feature-icon">&#128260;</div>
+        <h3>Drive Optimization</h3>
+        <p>Auto-detects SSDs and HDDs. Runs TRIM on SSDs and defrag on HDDs for maximum storage throughput.</p>
+      </div>
+      <div class="pd-feature">
+        <div class="pd-feature-icon">&#128296;</div>
+        <h3>Game Library</h3>
+        <p>Real-time running process detection. Cover art from Steam CDN. One-click optimization with the green lightning button.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="pd-section">
+    <h2>Tweak Categories</h2>
     <div class="pd-tweak-list">
       <div class="pd-tweak-group">
+        <div class="pd-tweak-icon">&#127968;</div>
+        <div class="pd-tweak-info"><h3>Windows Settings</h3><p>Dark mode, file extensions, classic context menu, visual effects, prefetch, superfetch</p></div>
+        <div class="pd-tweak-count">25 tweaks</div>
+      </div>
+      <div class="pd-tweak-group">
+        <div class="pd-tweak-icon">&#127760;</div>
+        <div class="pd-tweak-info"><h3>Network</h3><p>Nagle off, TCP auto-tuning, DNS optimization, throttling, MTU, ICMP, NetBIOS, SMB Signing</p></div>
+        <div class="pd-tweak-count">18 tweaks</div>
+      </div>
+      <div class="pd-tweak-group">
+        <div class="pd-tweak-icon">&#129529;</div>
+        <div class="pd-tweak-info"><h3>Debloat</h3><p>24 unnecessary services disabled including Xbox, Maps, NVIDIA Telemetry, Bluetooth, Retail Demo</p></div>
+        <div class="pd-tweak-count">24 services</div>
+      </div>
+      <div class="pd-tweak-group">
         <div class="pd-tweak-icon">&#127912;</div>
-        <div class="pd-tweak-info"><h3>Global Vibrance Control</h3><p>Slider from 0-100% with instant apply</p></div>
-        <div class="pd-tweak-count">Real-time</div>
+        <div class="pd-tweak-info"><h3>GPU</h3><p>HAGS, MPO fix, GPU priority, Write Combining, NVIDIA Telemetry</p></div>
+        <div class="pd-tweak-count">6 tweaks</div>
       </div>
       <div class="pd-tweak-group">
-        <div class="pd-tweak-icon">&#127918;</div>
-        <div class="pd-tweak-info"><h3>Game Auto-Detection</h3><p>Monitors processes every 2 seconds for running games</p></div>
-        <div class="pd-tweak-count">Auto</div>
+        <div class="pd-tweak-icon">&#9889;</div>
+        <div class="pd-tweak-info"><h3>Power</h3><p>Ultimate Performance plan, C-States off, core parking, boost policy, TSC Sync, platform clock</p></div>
+        <div class="pd-tweak-count">12 tweaks</div>
       </div>
       <div class="pd-tweak-group">
-        <div class="pd-tweak-icon">&#128190;</div>
-        <div class="pd-tweak-info"><h3>Profile Management</h3><p>Save unlimited per-game profiles with JSON storage</p></div>
-        <div class="pd-tweak-count">Unlimited</div>
+        <div class="pd-tweak-icon">&#128274;</div>
+        <div class="pd-tweak-info"><h3>Security & Virtualization</h3><p>VBS off (5-15% FPS), HVCI off, Credential Guard, Hyper-V off, APIC off</p></div>
+        <div class="pd-tweak-count">8 tweaks</div>
       </div>
       <div class="pd-tweak-group">
-        <div class="pd-tweak-icon">&#128225;</div>
-        <div class="pd-tweak-info"><h3>Dual GPU Support</h3><p>NVIDIA via NVAPI, AMD via ADLX, with fallback methods</p></div>
-        <div class="pd-tweak-count">Both</div>
+        <div class="pd-tweak-icon">&#128296;</div>
+        <div class="pd-tweak-info"><h3>Storage</h3><p>8.3 Naming off, Last Access Time off, NTFS Memory Usage, IRP Stack Size, Drive Optimization</p></div>
+        <div class="pd-tweak-count">5 tweaks</div>
       </div>
       <div class="pd-tweak-group">
-        <div class="pd-tweak-icon">&#128187;</div>
-        <div class="pd-tweak-info"><h3>Lightweight C# App</h3><p>Native WPF application, minimal CPU and RAM usage</p></div>
-        <div class="pd-tweak-count">&lt;10MB</div>
+        <div class="pd-tweak-icon">&#10024;</div>
+        <div class="pd-tweak-info"><h3>Extra</h3><p>Notifications, Cortana, Action Center, telemetry, activity history, debug mode</p></div>
+        <div class="pd-tweak-count">12 tweaks</div>
       </div>
     </div>
   </section>
 
   <section class="pd-cta">
-    <h3>Ready to enhance your visuals?</h3>
-    <p>Get Vibrance Controller for free and experience games the way they were meant to look.</p>
-    <a href="https://discord.gg/AhEK85REhG" target="_blank" class="btn btn-green">Join Discord to Get Free Access</a>
+    <h3>Ready to maximize your FPS?</h3>
+    <p>Get Full Optimization for just &euro;9.99 — one-time payment, lifetime access.</p>
+    <button class="btn btn-green add-to-cart" data-id="full" data-name="Full Optimization" data-price="9.99">Add to Cart &mdash; &euro;9.99</button>
   </section>
 
   <div class="cart-overlay" id="cartOverlay" onclick="closeCart()"></div>

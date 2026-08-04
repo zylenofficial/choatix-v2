@@ -1374,7 +1374,6 @@ const TWEAK_COMMANDS = {
 
   // ── CPU POWER ──
   'cpu-disable-idle-states': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Processor\" /v DisableIdleState /t REG_DWORD /d 1 /f; reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Power\" /v CsEnabled /t REG_DWORD /d 0 /f'",
-  'cpu-max-performance-bios': "echo \"BIOS: Disable C-States, SpeedStep, Turbo Boost, HyperThreading (for competitive gaming). Set Power Plan to Performance. Enable XMP/DOCP.\"",
 
   // ── GPU POWER ──
   'gpu-disable-ulps': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\0000\" /v EnableUlps /t REG_DWORD /d 0 /f -ErrorAction SilentlyContinue; reg add \"HKLM\\SOFTWARE\\AMD\\DPP\" /v DisableULPS /t REG_DWORD /d 1 /f -ErrorAction SilentlyContinue'",
@@ -2308,7 +2307,6 @@ ipcMain.handle("restore-category", async (_event, category) => {
       'net-block-edge-firewall': 'network',
       // ── CPU POWER ──
       'cpu-disable-idle-states': 'system',
-      'cpu-max-performance-bios': 'system',
       // ── GPU POWER ──
       'gpu-disable-ulps': 'gpu',
       'gpu-set-power-limit-max': 'gpu',

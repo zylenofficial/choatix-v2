@@ -373,8 +373,9 @@ app.post('/api/generate', async (req, res) => {
 
   const keys = [];
   for (let i = 0; i < count; i++) {
+    const expiry = new Date(Date.now() + 365 * 86400000).toISOString().split('T')[0];
     const key = generateKey(tier);
-    await saveKey(key, { tier, expiry: null, redeemed: false, discordId: null, createdAt: new Date().toISOString() });
+    await saveKey(key, { tier, expiry, redeemed: false, discordId: null, createdAt: new Date().toISOString() });
     keys.push(key);
   }
   res.json({ success: true, keys });
@@ -391,8 +392,9 @@ app.post('/api/partner/generate', async (req, res) => {
 
   const keys = [];
   for (let i = 0; i < count; i++) {
+    const expiry = new Date(Date.now() + 365 * 86400000).toISOString().split('T')[0];
     const key = generateKey(tier);
-    await saveKey(key, { tier, expiry: null, redeemed: false, discordId: null, createdAt: new Date().toISOString() });
+    await saveKey(key, { tier, expiry, redeemed: false, discordId: null, createdAt: new Date().toISOString() });
     keys.push(key);
   }
   res.json({ success: true, keys, partner: partner.name });
@@ -452,12 +454,14 @@ app.post('/api/referral/redeem', async (req, res) => {
 
   await useReferral(code.toUpperCase(), refereeId);
 
+  const expiry = new Date(Date.now() + 365 * 86400000).toISOString().split('T')[0];
+
   const key = generateKey('PRO');
-  await saveKey(key, { tier: 'PRO', expiry: null, redeemed: true, discordId: refereeId, createdAt: new Date().toISOString() });
+  await saveKey(key, { tier: 'PRO', expiry, redeemed: true, discordId: refereeId, createdAt: new Date().toISOString() });
   await saveUser(refereeId, { tier: 'PRO', key, activatedAt: new Date().toISOString() });
 
   const referrerKey = generateKey('PREMIUM');
-  await saveKey(referrerKey, { tier: 'PREMIUM', expiry: null, redeemed: true, discordId: referral.referrer_id, createdAt: new Date().toISOString() });
+  await saveKey(referrerKey, { tier: 'PREMIUM', expiry, redeemed: true, discordId: referral.referrer_id, createdAt: new Date().toISOString() });
   await saveUser(referral.referrer_id, { tier: 'PREMIUM', key: referrerKey, activatedAt: new Date().toISOString() });
 
   res.json({
@@ -554,7 +558,7 @@ app.post('/api/license/unlink', async (req, res) => {
   if (user.key) {
     const keyData = await getKey(user.key);
     if (keyData) {
-      await saveKey(user.key, { ...keyData, redeemed: false, discord_id: null });
+      await saveKey(user.key, { ...keyData, redeemed: false, discordId: null });
     }
   }
 
@@ -592,7 +596,7 @@ app.post('/api/admin/revoke', async (req, res) => {
   if (keyData.discord_id) {
     await deleteUser(keyData.discord_id);
   }
-  await saveKey(cleaned, { ...keyData, redeemed: false, discord_id: null });
+  await saveKey(cleaned, { ...keyData, redeemed: false, discordId: null });
   res.json({ success: true, message: `Key ${cleaned} revoked` });
 });
 
@@ -803,19 +807,18 @@ app.post('/api/quests/progress', async (req, res) => {
       ON CONFLICT (discord_id, quest_id, date) DO NOTHING
     `, [discordId, quest.id, today]);
 
-    if (!uq.rows[0].completed) { // only increment if not completed
-      const uq = await app.locals.pool.query(
-        'SELECT * FROM user_quests WHERE discord_id = $1 AND quest_id = $2 AND date = $3 AND completed = false',
-        [discordId, quest.id, today]
+    const uq = await app.locals.pool.query(
+      'SELECT * FROM user_quests WHERE discord_id = $1 AND quest_id = $2 AND date = $3 AND completed = false',
+      [discordId, quest.id, today]
+    );
+
+    if (uq.rows.length > 0 && !uq.rows[0].completed) {
+      const newProgress = uq.rows[0].progress + amount;
+      const completed = newProgress >= quest.target;
+      await app.locals.pool.query(
+        'UPDATE user_quests SET progress = $1, completed = $2 WHERE id = $3',
+        [newProgress, completed, uq.rows[0].id]
       );
-      if (uq.rows.length > 0) {
-        const newProgress = uq.rows[0].progress + amount;
-        const completed = newProgress >= quest.target;
-        await app.locals.pool.query(
-          'UPDATE user_quests SET progress = $1, completed = $2 WHERE id = $3',
-          [newProgress, completed, uq.rows[0].id]
-        );
-      }
     }
   }
 
