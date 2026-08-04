@@ -432,6 +432,14 @@ client.on('interactionCreate', async (interaction) => {
     const discordId = interaction.user.id;
     await interaction.deferReply();
 
+    // Check if user accidentally used a license key instead of referral code
+    if (code.startsWith('CHTX-')) {
+      await interaction.editReply({
+        content: `❌ **That's a license key, not a referral code.**\n\nUse \`/redeem\` to activate a license key.\nUse \`/redeem-referral\` with a referral code (starts with \`CHOA-\`).`,
+      });
+      return;
+    }
+
     try {
       const result = await apiRequest('POST', '/api/referral/redeem', { code, refereeId: discordId, username: interaction.user.username });
 
