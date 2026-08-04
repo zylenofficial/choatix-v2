@@ -123,7 +123,7 @@ footer p{font-size:0.75rem;color:var(--text-dim)}
 .dropdown-item.danger:hover{background:rgba(255,82,82,0.08)}
 
 .hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:8rem 2rem 4rem;position:relative;overflow:hidden}
-.hero::after{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:800px;height:400px;background:radial-gradient(ellipse,rgba(0,230,118,0.06) 0%,transparent 60%);pointer-events:none;animation:glowPulse 4s ease-in-out infinite}
+.hero::after{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:800px;height:400px;background:radial-gradient(ellipse,rgba(0,230,118,0.06) 0%,transparent 60%);pointer-events:none}
 .hero-mesh{position:absolute;inset:0;overflow:hidden}
 .mesh-blob{position:absolute;border-radius:50%;filter:blur(100px);opacity:0.5}
 .mesh-blob-1{width:600px;height:600px;background:radial-gradient(circle,rgba(0,230,118,0.12) 0%,transparent 70%);top:-10%;left:50%;animation:meshMove1 20s ease-in-out infinite}
