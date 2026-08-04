@@ -117,7 +117,7 @@
       pro:       { name: 'Choatix Pro Tweaks',            url: 'https://drive.google.com/uc?export=download&id=1mjhxk5tHmwcQbBzgJOczbMdO8mLa9UZ8' },
       extreme:   { name: 'Choatix Extreme Tweaks',        url: 'https://drive.google.com/uc?export=download&id=17BQS4j3yaqaRWiRm_pNfj_coJRr9TdYo' },
       precision: { name: 'Choatix Precision Tweaks',      url: 'https://drive.google.com/uc?export=download&id=1TqpIVFWW6WNRZUpDCG2kZiVsHCGG1FGf' },
-      vibrance:  { name: 'Choatix Vibrance Controller',   url: 'https://discord.gg/AhEK85REhG' }
+      vibrance:  { name: 'Choatix Vibrance Controller',   url: null, comingSoon: true }
     };
 
     var p = new URLSearchParams(window.location.search);
@@ -135,7 +135,11 @@
         if (!info) return;
         var d = document.createElement('div');
         d.className = 'dl-item';
-        d.innerHTML = '<div class="dl-item-info"><div class="dl-item-name">' + info.name + '</div><div class="dl-item-id">' + id + '</div></div><a href="' + info.url + '" target="_blank"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>Download</a>';
+        if (info.comingSoon) {
+          d.innerHTML = '<div class="dl-item-info"><div class="dl-item-name">' + info.name + '</div><div class="dl-item-id">' + id + '</div></div><span style="color:#ffaa00;font-size:0.8rem;font-weight:600;">Coming Soon</span>';
+        } else {
+          d.innerHTML = '<div class="dl-item-info"><div class="dl-item-name">' + info.name + '</div><div class="dl-item-id">' + id + '</div></div><a href="' + info.url + '" target="_blank"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>Download</a>';
+        }
         list.appendChild(d);
       });
       document.getElementById('dlPage').style.display = '';

@@ -80,7 +80,8 @@ async function initDB() {
       discord_id TEXT PRIMARY KEY,
       tier TEXT NOT NULL,
       key TEXT,
-      activated_at TEXT
+      activated_at TEXT,
+      username TEXT
     );
     CREATE TABLE IF NOT EXISTS partners_table (
       discord_id TEXT PRIMARY KEY,
@@ -239,6 +240,11 @@ async function initDB() {
     `);
     console.log('Default quests seeded');
   }
+
+  // Migration: add username column to users_table if missing
+  try {
+    await pool.query('ALTER TABLE users_table ADD COLUMN IF NOT EXISTS username TEXT');
+  } catch (e) {}
 }
 
 async function getKey(key) {
@@ -271,8 +277,8 @@ async function getUser(discordId) {
 async function saveUser(discordId, data) {
   if (app.locals.pool) {
     await app.locals.pool.query(
-      'INSERT INTO users_table (discord_id, tier, key, activated_at) VALUES ($1,$2,$3,$4) ON CONFLICT (discord_id) DO UPDATE SET tier=$2, key=$3, activated_at=$4',
-      [discordId, data.tier, data.key, data.activatedAt]
+      'INSERT INTO users_table (discord_id, tier, key, activated_at, username) VALUES ($1,$2,$3,$4,$5) ON CONFLICT (discord_id) DO UPDATE SET tier=$2, key=$3, activated_at=$4, username=COALESCE($5, users_table.username)',
+      [discordId, data.tier, data.key, data.activatedAt, data.username || null]
     );
   } else {
     memUsers[discordId] = data;
@@ -426,13 +432,23 @@ app.get('/api/partner/:discordId', async (req, res) => {
 
 // ─── Referral system ──────────────────────────────────────────
 app.post('/api/referral/create', async (req, res) => {
-  const { discordId } = req.body;
+  const { discordId, customCode } = req.body;
   if (!discordId) return res.status(400).json({ error: 'Discord ID required' });
 
   const existing = await getUserReferral(discordId);
-  if (existing) return res.json({ success: true, code: existing.code, uses: existing.uses, maxUses: existing.max_uses });
+  if (existing && !customCode) return res.json({ success: true, code: existing.code, uses: existing.uses, maxUses: existing.max_uses });
 
-  const code = generateReferralCode(discordId);
+  let code;
+  if (customCode) {
+    const clean = customCode.trim().toUpperCase().replace(/[^A-Z0-9_-]/g, '');
+    if (clean.length < 3 || clean.length > 20) return res.status(400).json({ error: 'Code must be 3-20 characters (letters, numbers, _ -)' });
+    const taken = await getReferral(clean);
+    if (taken) return res.status(409).json({ error: 'That code is already taken' });
+    code = clean;
+  } else {
+    code = generateReferralCode(discordId);
+  }
+
   await saveReferral(code, { referrerId: discordId, uses: 0, maxUses: 10, createdAt: new Date().toISOString() });
   res.json({ success: true, code, uses: 0, maxUses: 10 });
 });
@@ -444,7 +460,7 @@ app.get('/api/referral/:code', async (req, res) => {
 });
 
 app.post('/api/referral/redeem', async (req, res) => {
-  const { code, refereeId } = req.body;
+  const { code, refereeId, username } = req.body;
   if (!code || !refereeId) return res.status(400).json({ error: 'Code and referee ID required' });
 
   const referral = await getReferral(code.toUpperCase());
@@ -487,7 +503,7 @@ app.get('/api/license/:discordId', async (req, res) => {
 
 // ─── Key / Redeem (legacy) ──────────────────────────────────
 app.post('/api/license/verify-key', async (req, res) => {
-  const { key, discordId } = req.body;
+  const { key, discordId, username } = req.body;
   if (!key) return res.status(400).json({ valid: false, message: 'Key required' });
 
   const validated = validateKeyFormat(key);
@@ -512,6 +528,7 @@ app.post('/api/license/verify-key', async (req, res) => {
       tier: stored.tier,
       key: key.trim().toUpperCase(),
       activatedAt: new Date().toISOString(),
+      username: username || null,
     });
   }
 
@@ -519,7 +536,7 @@ app.post('/api/license/verify-key', async (req, res) => {
 });
 
 app.post('/api/redeem', async (req, res) => {
-  const { key, discordId } = req.body;
+  const { key, discordId, username } = req.body;
   if (!key || !discordId) {
     return res.status(400).json({ success: false, message: 'Key and Discord ID required' });
   }
@@ -543,6 +560,7 @@ app.post('/api/redeem', async (req, res) => {
     tier: stored.tier,
     key: key.trim().toUpperCase(),
     activatedAt: new Date().toISOString(),
+    username: username || null,
   });
 
   res.json({ success: true, tier: stored.tier, message: `Activated ${stored.tier} plan!` });
@@ -644,7 +662,7 @@ app.get('/api/admin/users', async (req, res) => {
   if (adminSecret !== 'choatix-admin-2024') return res.status(403).json({ error: 'Unauthorized' });
 
   if (app.locals.pool) {
-    const r = await app.locals.pool.query('SELECT discord_id, tier, activated_at FROM users_table');
+    const r = await app.locals.pool.query('SELECT discord_id, tier, activated_at, username FROM users_table');
     res.json({ users: r.rows });
   } else {
     const users = Object.entries(memUsers).map(([id, d]) => ({ discord_id: id, tier: d.tier, activated_at: d.activatedAt }));
@@ -1065,7 +1083,7 @@ function generateAffiliateCode(discordId) {
 app.post('/api/affiliate/register', async (req, res) => {
   const pool = app.locals.pool;
   if (!pool) return res.status(500).json({ error: 'No database' });
-  const { discordId, displayName, paypalEmail } = req.body;
+  const { discordId, displayName, paypalEmail, customCode } = req.body;
   if (!discordId || !displayName || !paypalEmail) return res.status(400).json({ error: 'Missing fields' });
   try {
     const existing = await pool.query('SELECT * FROM affiliates WHERE discord_id = $1', [discordId]);
@@ -1074,8 +1092,17 @@ app.post('/api/affiliate/register', async (req, res) => {
       'INSERT INTO affiliates (discord_id, display_name, paypal_email) VALUES ($1, $2, $3)',
       [discordId, displayName, paypalEmail]
     );
-    // Generate default link
-    const code = generateAffiliateCode(discordId);
+    // Generate default link (or use custom code)
+    let code;
+    if (customCode && customCode.trim()) {
+      const clean = customCode.trim().toUpperCase().replace(/[^A-Z0-9_-]/g, '');
+      if (clean.length < 3 || clean.length > 20) return res.status(400).json({ error: 'Custom code must be 3-20 characters' });
+      const taken = await pool.query('SELECT * FROM affiliate_links WHERE code = $1', [clean]);
+      if (taken.rows.length > 0) return res.status(409).json({ error: 'That code is already taken' });
+      code = clean;
+    } else {
+      code = generateAffiliateCode(discordId);
+    }
     await pool.query(
       'INSERT INTO affiliate_links (affiliate_id, code) VALUES ($1, $2)',
       [discordId, code]
@@ -1245,6 +1272,48 @@ app.get('/api/discount/:code', async (req, res) => {
   }
 });
 
+// ── Admin: Create Discount Code ──
+app.post('/api/admin/discount/create', async (req, res) => {
+  const pool = app.locals.pool;
+  if (!pool) return res.status(500).json({ error: 'No database' });
+  const { code, discount_percent, max_uses, customCode } = req.body;
+  const finalCode = (customCode || code || '').trim().toUpperCase().replace(/[^A-Z0-9_-]/g, '');
+  if (!finalCode || finalCode.length < 3 || finalCode.length > 20) return res.status(400).json({ error: 'Code must be 3-20 characters' });
+  if (!discount_percent || discount_percent < 1 || discount_percent > 90) return res.status(400).json({ error: 'Discount must be 1-90%' });
+  try {
+    const existing = await pool.query('SELECT * FROM discount_codes WHERE code = $1', [finalCode]);
+    if (existing.rows.length > 0) return res.status(409).json({ error: 'Code already exists' });
+    await pool.query('INSERT INTO discount_codes (code, discount_percent, max_uses) VALUES ($1,$2,$3)', [finalCode, discount_percent, max_uses || 0]);
+    res.json({ success: true, code: finalCode, discount_percent, max_uses: max_uses || 0 });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── Admin: Get All Discount Codes ──
+app.get('/api/admin/discounts', async (req, res) => {
+  const pool = app.locals.pool;
+  if (!pool) return res.json({ discounts: [] });
+  try {
+    const result = await pool.query('SELECT * FROM discount_codes ORDER BY id DESC');
+    res.json({ discounts: result.rows });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── Admin: Delete Discount Code ──
+app.delete('/api/admin/discount/:code', async (req, res) => {
+  const pool = app.locals.pool;
+  if (!pool) return res.status(500).json({ error: 'No database' });
+  try {
+    await pool.query('DELETE FROM discount_codes WHERE code = $1', [req.params.code.toUpperCase()]);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ── PayPal Checkout ──
 const PRODUCTS = {
   basic:     { name: 'Choatix Basic Tweaks',       price: '1.99',  tier: 'PRO' },
@@ -1296,8 +1365,13 @@ app.post('/api/checkout', async (req, res) => {
           discountPercent = dc.discount_percent;
           discountCodeStr = dc.code;
           await pool.query('UPDATE discount_codes SET times_used = times_used + 1 WHERE id = $1', [dc.id]);
-        }
-      }
+  }
+
+  // Migration: add username column to users_table if missing
+  try {
+    await pool.query('ALTER TABLE users_table ADD COLUMN IF NOT EXISTS username TEXT');
+  } catch (e) {}
+}
     } catch (e) {}
   }
 

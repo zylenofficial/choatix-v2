@@ -82,7 +82,10 @@ async function registerCommands() {
       .setDescription('Unlink your Choatix license'),
     new SlashCommandBuilder()
       .setName('refer')
-      .setDescription('Get your referral code or redeem one'),
+      .setDescription('Get your referral code or create a custom one')
+      .addStringOption(option =>
+        option.setName('custom_code').setDescription('Custom code (3-20 chars, optional)').setRequired(false)
+      ),
     new SlashCommandBuilder()
       .setName('redeem-referral')
       .setDescription('Redeem a referral code for free PRO')
@@ -301,7 +304,7 @@ client.on('interactionCreate', async (interaction) => {
     await interaction.deferReply();
 
     try {
-      const result = await apiRequest('POST', '/api/redeem', { key, discordId });
+      const result = await apiRequest('POST', '/api/redeem', { key, discordId, username: interaction.user.username });
 
       if (result.success) {
         let roleMsg = '';
@@ -387,12 +390,18 @@ client.on('interactionCreate', async (interaction) => {
   // ─── /refer ───────────────────────────────────────────────
   if (interaction.isChatInputCommand() && interaction.commandName === 'refer') {
     const discordId = interaction.user.id;
+    const customCode = interaction.options.getString('custom_code');
     await interaction.deferReply();
 
     try {
       let result = await apiRequest('GET', `/api/referral/user/${discordId}`);
-      if (!result.code) {
-        result = await apiRequest('POST', '/api/referral/create', { discordId });
+      if (!result.code || customCode) {
+        result = await apiRequest('POST', '/api/referral/create', { discordId, customCode: customCode || undefined });
+      }
+
+      if (result.error) {
+        await interaction.editReply({ content: '❌ **' + result.error + '**' });
+        return;
       }
 
       if (result.success || result.code) {
@@ -401,8 +410,9 @@ client.on('interactionCreate', async (interaction) => {
         const barLen = Math.min(10, Math.floor(uses / maxUses * 10));
         const bar = '█'.repeat(barLen) + '░'.repeat(10 - barLen);
 
+        const customNote = customCode ? '\n✅ Custom code set!' : '';
         await interaction.editReply({
-          content: `🔗 **Your Referral Code**\n\n\`${result.code}\`\n\nShare this code. When someone uses it:\n→ They get **PRO** for free\n→ You get **PREMIUM** upgrade\n\nUses: ${uses}/${maxUses}\n\`${bar}\``,
+          content: `🔗 **Your Referral Code**${customNote}\n\n\`${result.code}\`\n\nShare this code. When someone uses it:\n→ They get **PRO** for free\n→ You get **PREMIUM** upgrade\n\nUses: ${uses}/${maxUses}\n\`${bar}\`\n\n> Tip: Use \`/refer custom_code:MYCODE\` to set a custom code`,
         });
       } else {
         await interaction.editReply({
@@ -423,7 +433,7 @@ client.on('interactionCreate', async (interaction) => {
     await interaction.deferReply();
 
     try {
-      const result = await apiRequest('POST', '/api/referral/redeem', { code, refereeId: discordId });
+      const result = await apiRequest('POST', '/api/referral/redeem', { code, refereeId: discordId, username: interaction.user.username });
 
       if (result.success) {
         let roleMsg = '';

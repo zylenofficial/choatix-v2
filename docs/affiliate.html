@@ -209,7 +209,7 @@
           <tr><td>Pro Tweaks</td><td class="price">€3.99</td><td class="commission">€0.40</td><td><span class="tier-badge tier-pro">PRO</span></td></tr>
           <tr><td>Precision Tweaks</td><td class="price">€2.99</td><td class="commission">€0.30</td><td><span class="tier-badge tier-pro">PRO</span></td></tr>
           <tr><td>Extreme Tweaks</td><td class="price">€5.99</td><td class="commission">€0.60</td><td><span class="tier-badge tier-premium">PREMIUM</span></td></tr>
-          <tr><td>Vibrance Controller</td><td class="price">Free</td><td class="commission">&mdash;</td><td><span class="tier-badge" style="background:rgba(0,255,136,0.15);color:#00ff88;">Free Download</span></td></tr>
+          <tr><td>Vibrance Controller</td><td class="price">Coming Soon</td><td class="commission">&mdash;</td><td><span class="tier-badge" style="background:rgba(255,170,0,0.15);color:#ffaa00;">Coming Soon</span></td></tr>
         </tbody>
       </table>
     </section>
@@ -231,6 +231,11 @@
           <label>PayPal Email</label>
           <input type="email" id="regPaypal" placeholder="you@example.com">
           <div class="hint">Where we send your commission payments</div>
+        </div>
+        <div class="form-row">
+          <label>Custom Referral Code <span style="color:var(--text-muted);font-weight:400;font-size:0.8rem">(optional)</span></label>
+          <input type="text" id="regCustomCode" placeholder="e.g. MYBRAND" maxlength="20" style="text-transform:uppercase">
+          <div class="hint">Letters, numbers, _ or -. 3-20 characters. Leave blank for auto-generated.</div>
         </div>
         <button class="btn-register" onclick="registerAffiliate()">Get My Referral Link</button>
         <p class="reg-error" id="regError"></p>
@@ -324,10 +329,13 @@
       const di=document.getElementById('regDiscordId').value.trim();
       const dn=document.getElementById('regDisplayName').value.trim();
       const pp=document.getElementById('regPaypal').value.trim();
+      const cc=document.getElementById('regCustomCode').value.trim();
       const err=document.getElementById('regError');
       if(!di||!dn||!pp){err.textContent='All fields are required';err.style.display='block';return;}
       try{
-        const r=await fetch(API+'/api/affiliate/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({discordId:di,displayName:dn,paypalEmail:pp})});
+        const body={discordId:di,displayName:dn,paypalEmail:pp};
+        if(cc) body.customCode=cc;
+        const r=await fetch(API+'/api/affiliate/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
         const d=await r.json();
         if(d.success){user={discord_id:di,username:dn};checkAffiliate();}
         else{err.textContent=d.error||'Failed';err.style.display='block';}

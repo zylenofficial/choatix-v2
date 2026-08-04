@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Choatix Admin</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#000;--bg2:#080808;--bg3:#111;--bg4:#181818;--bg5:#1e1e1e;--bg6:#252525;--b1:rgba(255,255,255,0.06);--b2:rgba(255,255,255,0.10);--b3:rgba(255,255,255,0.18);--t1:#f5f5f5;--t2:rgba(255,255,255,0.55);--t3:rgba(255,255,255,0.32);--t4:rgba(255,255,255,0.18);--accent:#fff;--green:#00e676;--red:#ff5252;--r1:8px;--r2:12px;--r3:16px;--r4:20px}
+body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var(--t1);min-height:100vh;-webkit-font-smoothing:antialiased}
+
+/* Login */
+.login{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:2rem}
+.login-box{width:100%;max-width:360px;text-align:center}
+.login-box h1{font-size:1.4rem;font-weight:900;letter-spacing:-0.03em;margin-bottom:0.25rem}
+.login-box p{font-size:0.8rem;color:var(--t4);margin-bottom:2rem}
+.login-box input{width:100%;padding:0.75rem 1rem;background:var(--bg3);border:1px solid var(--b2);border-radius:var(--r2);color:var(--t1);font-size:0.85rem;font-family:inherit;outline:none;margin-bottom:0.75rem;transition:border-color 0.2s}
+.login-box input:focus{border-color:rgba(255,255,255,0.25)}
+.login-box input::placeholder{color:var(--t4)}
+.login-box button{width:100%;padding:0.75rem;border:none;border-radius:var(--r2);background:var(--accent);color:#000;font-size:0.85rem;font-weight:700;cursor:pointer;font-family:inherit;transition:all 0.2s}
+.login-box button:hover{transform:translateY(-1px);box-shadow:0 4px 20px rgba(255,255,255,0.1)}
+.login-err{font-size:0.75rem;color:var(--red);margin-top:0.5rem;display:none}
+
+/* App */
+.app{display:none;min-height:100vh}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:1rem 2rem;border-bottom:1px solid var(--b1);background:rgba(0,0,0,0.8);backdrop-filter:blur(20px);position:sticky;top:0;z-index:10}
+.topbar h1{font-size:0.85rem;font-weight:800;letter-spacing:0.1em}
+.topbar .server{display:flex;align-items:center;gap:6px;font-size:0.7rem;color:var(--t4)}
+.topbar .server .dot{width:6px;height:6px;border-radius:50%;background:var(--red)}
+.topbar .server .dot.ok{background:var(--green)}
+.topbar button{padding:0.4rem 0.8rem;border:1px solid var(--b2);border-radius:var(--r1);background:transparent;color:var(--t3);font-size:0.7rem;font-weight:600;cursor:pointer;font-family:inherit;transition:0.2s}
+.topbar button:hover{border-color:var(--b3);color:var(--t1)}
+
+.layout{display:flex;min-height:calc(100vh - 53px)}
+.sidebar{width:200px;border-right:1px solid var(--b1);padding:1rem;flex-shrink:0}
+.sidebar button{width:100%;display:flex;align-items:center;gap:8px;padding:0.6rem 0.75rem;border:none;background:transparent;color:var(--t3);font-size:0.75rem;font-weight:500;border-radius:var(--r1);cursor:pointer;transition:0.2s;text-align:left;font-family:inherit}
+.sidebar button:hover{background:var(--bg4);color:var(--t2)}
+.sidebar button.active{background:rgba(255,255,255,0.05);color:var(--t1)}
+.sidebar button svg{width:14px;height:14px;flex-shrink:0}
+
+.content{flex:1;padding:2rem;overflow-y:auto;max-height:calc(100vh - 53px)}
+.page{display:none}
+.page.active{display:block}
+.page h2{font-size:1.1rem;font-weight:700;margin-bottom:0.25rem}
+.page .sub{font-size:0.75rem;color:var(--t4);margin-bottom:1.5rem}
+
+/* Stats */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:2rem}
+.stat{background:var(--bg2);border:1px solid var(--b1);border-radius:var(--r2);padding:1.25rem}
+.stat .label{font-size:0.65rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--t4);margin-bottom:0.5rem}
+.stat .val{font-size:1.8rem;font-weight:800;letter-spacing:-0.03em}
+.stat .sub{font-size:0.7rem;color:var(--t4);margin-top:0.25rem}
+
+/* Generate */
+.gen-card{background:var(--bg2);border:1px solid var(--b1);border-radius:var(--r3);padding:2rem;max-width:480px}
+.gen-card h3{font-size:0.95rem;font-weight:700;margin-bottom:0.25rem}
+.gen-card .desc{font-size:0.75rem;color:var(--t4);margin-bottom:1.5rem}
+.gen-row{display:flex;gap:10px;margin-bottom:1rem}
+.gen-row select,.gen-row input{flex:1;padding:0.65rem 0.85rem;background:var(--bg3);border:1px solid var(--b2);border-radius:var(--r1);color:var(--t1);font-size:0.8rem;font-family:inherit;outline:none}
+.gen-row select:focus,.gen-row input:focus{border-color:rgba(255,255,255,0.2)}
+.gen-row select option{background:var(--bg3);color:var(--t1)}
+.gen-btn{width:100%;padding:0.7rem;border:none;border-radius:var(--r2);background:var(--accent);color:#000;font-size:0.8rem;font-weight:700;cursor:pointer;font-family:inherit;transition:all 0.2s}
+.gen-btn:hover{transform:translateY(-1px);box-shadow:0 4px 20px rgba(255,255,255,0.1)}
+.gen-btn:disabled{opacity:0.4;cursor:default;transform:none}
+
+.gen-result{margin-top:1.5rem;display:none}
+.gen-result.show{display:block}
+.gen-result h4{font-size:0.8rem;font-weight:600;color:var(--green);margin-bottom:0.75rem}
+.key-list{display:flex;flex-direction:column;gap:6px}
+.key-item{display:flex;align-items:center;gap:8px;padding:0.6rem 0.85rem;background:var(--bg);border:1px solid var(--b1);border-radius:var(--r1)}
+.key-item code{flex:1;font-size:0.78rem;font-family:'SF Mono',Consolas,monospace;color:var(--t1);word-break:break-all}
+.key-item .copy{padding:0.3rem 0.6rem;border:1px solid var(--b2);border-radius:6px;background:transparent;color:var(--t3);font-size:0.65rem;font-weight:600;cursor:pointer;font-family:inherit;transition:0.15s;flex-shrink:0}
+.key-item .copy:hover{border-color:var(--b3);color:var(--t1)}
+.key-item .copy.copied{border-color:var(--green);color:var(--green)}
+
+/* Keys table */
+.table-wrap{background:var(--bg2);border:1px solid var(--b1);border-radius:var(--r3);overflow:hidden}
+.table-header{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.25rem;border-bottom:1px solid var(--b1)}
+.table-header h3{font-size:0.85rem;font-weight:700}
+.table-header .count{font-size:0.7rem;color:var(--t4)}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;padding:0.7rem 1rem;font-size:0.65rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--t4);border-bottom:1px solid var(--b1);background:var(--bg3)}
+td{padding:0.65rem 1rem;font-size:0.75rem;border-bottom:1px solid var(--b1);color:var(--t2)}
+tr:hover td{background:rgba(255,255,255,0.015)}
+td code{font-family:'SF Mono',Consolas,monospace;font-size:0.72rem;color:var(--t1)}
+.badge{display:inline-block;padding:0.15rem 0.45rem;border-radius:4px;font-size:0.6rem;font-weight:700;letter-spacing:0.05em}
+.badge.pro{background:rgba(0,230,118,0.1);color:var(--green)}
+.badge.premium{background:rgba(124,77,255,0.1);color:#a78bfa}
+.badge.redeemed{background:rgba(255,82,82,0.1);color:var(--red)}
+.badge.active{background:rgba(0,230,118,0.1);color:var(--green)}
+.revoke-btn{padding:0.25rem 0.5rem;border:1px solid rgba(255,82,82,0.2);border-radius:4px;background:transparent;color:var(--red);font-size:0.6rem;font-weight:600;cursor:pointer;font-family:inherit;transition:0.15s}
+.revoke-btn:hover{background:rgba(255,82,82,0.1)}
+
+.table-scroll{max-height:500px;overflow-y:auto}
+.table-scroll::-webkit-scrollbar{width:4px}
+.table-scroll::-webkit-scrollbar-track{background:transparent}
+.table-scroll::-webkit-scrollbar-thumb{background:var(--b2);border-radius:2px}
+
+.empty{text-align:center;padding:3rem;color:var(--t4);font-size:0.8rem}
+
+/* Users */
+.user-row{display:flex;align-items:center;gap:12px;padding:0.75rem 1rem;border-bottom:1px solid var(--b1)}
+.user-row:hover{background:rgba(255,255,255,0.015)}
+.user-avatar{width:32px;height:32px;border-radius:50%;background:var(--bg4);display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;color:var(--t3);flex-shrink:0}
+.user-info{flex:1}
+.user-info .name{font-size:0.8rem;font-weight:600}
+.user-info .id{font-size:0.65rem;color:var(--t4);font-family:monospace}
+</style>
+</head>
+<body>
+
+<!-- Login -->
+<div class="login" id="loginPage">
+  <div class="login-box">
+    <h1>CHOATIX</h1>
+    <p>Admin Dashboard</p>
+    <input type="password" id="secretInput" placeholder="Enter admin secret" onkeydown="if(event.key==='Enter')login()">
+    <button onclick="login()">Login</button>
+    <div class="login-err" id="loginErr">Invalid secret</div>
+  </div>
+</div>
+
+<!-- App -->
+<div class="app" id="appPage">
+  <div class="topbar">
+    <h1>CHOATIX ADMIN</h1>
+    <div style="display:flex;align-items:center;gap:16px">
+      <div class="server"><div class="dot" id="serverDot"></div><span id="serverStatus">Checking...</span></div>
+      <button onclick="logout()">Logout</button>
+    </div>
+  </div>
+  <div class="layout">
+    <div class="sidebar">
+      <button class="active" data-page="dashboard" onclick="showPage('dashboard')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        Dashboard
+      </button>
+      <button data-page="generate" onclick="showPage('generate')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 5v14M5 12h14"/></svg>
+        Generate Keys
+      </button>
+      <button data-page="keys" onclick="showPage('keys')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+        All Keys
+      </button>
+      <button data-page="users" onclick="showPage('users')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Users
+      </button>
+      <button data-page="affiliates" onclick="showPage('affiliates')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+        Affiliates
+      </button>
+      <button data-page="discounts" onclick="showPage('discounts')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+        Discounts
+      </button>
+    </div>
+    <div class="content">
+
+      <!-- Dashboard -->
+      <div class="page active" id="page-dashboard">
+        <h2>Dashboard</h2>
+        <div class="sub">System overview</div>
+        <div class="stats" id="dashStats">
+          <div class="stat"><div class="label">Total Keys</div><div class="val" id="sTotalKeys">-</div></div>
+          <div class="stat"><div class="label">Redeemed</div><div class="val" id="sRedeemed">-</div></div>
+          <div class="stat"><div class="label">Active Users</div><div class="val" id="sUsers">-</div></div>
+          <div class="stat"><div class="label">Affiliates</div><div class="val" id="sAffiliates">-</div></div>
+        </div>
+      </div>
+
+      <!-- Generate -->
+      <div class="page" id="page-generate">
+        <h2>Generate Keys</h2>
+        <div class="sub">Create new license keys</div>
+        <div class="gen-card">
+          <h3>New Key</h3>
+          <div class="desc">Select tier and quantity</div>
+          <div class="gen-row">
+            <select id="genTier">
+              <option value="PRO">PRO</option>
+              <option value="PREMIUM">PREMIUM</option>
+            </select>
+            <input type="number" id="genCount" value="1" min="1" max="50" placeholder="Count">
+          </div>
+          <button class="gen-btn" id="genBtn" onclick="generateKeys()">Generate</button>
+          <div class="gen-result" id="genResult">
+            <h4>Keys Generated</h4>
+            <div class="key-list" id="genKeyList"></div>
+          </div>
+        </div>
+        <div class="gen-card" style="margin-top:16px">
+          <h3>Custom Discount Code</h3>
+          <div class="desc">Create a branded discount code for customers</div>
+          <div class="gen-row">
+            <input type="text" id="dcCode" placeholder="e.g. SUMMER20" maxlength="20" style="text-transform:uppercase">
+            <input type="number" id="dcPercent" value="10" min="1" max="90" placeholder="%">
+          </div>
+          <div class="gen-row">
+            <input type="number" id="dcMaxUses" value="0" min="0" placeholder="Max uses (0=unlimited)">
+          </div>
+          <button class="gen-btn" onclick="createDiscountCode()">Create Discount Code</button>
+          <div class="gen-result" id="dcResult"></div>
+        </div>
+      </div>
+
+      <!-- All Keys -->
+      <div class="page" id="page-keys">
+        <h2>All Keys</h2>
+        <div class="sub">View and manage license keys</div>
+        <div class="table-wrap">
+          <div class="table-header">
+            <h3>Keys</h3>
+            <span class="count" id="keyCount"></span>
+          </div>
+          <div class="table-scroll">
+            <table>
+              <thead><tr><th>Key</th><th>Tier</th><th>Status</th><th>Discord</th><th>Expiry</th><th></th></tr></thead>
+              <tbody id="keysBody"></tbody>
+            </table>
+          </div>
+          <div class="empty" id="keysEmpty" style="display:none">No keys found</div>
+        </div>
+      </div>
+
+      <!-- Users -->
+      <div class="page" id="page-users">
+        <h2>Users</h2>
+        <div class="sub">All registered users</div>
+        <div class="table-wrap">
+          <div class="table-header">
+            <h3>Users</h3>
+            <span class="count" id="userCount"></span>
+          </div>
+          <div class="table-scroll" id="usersList"></div>
+          <div class="empty" id="usersEmpty" style="display:none">No users found</div>
+        </div>
+      </div>
+
+      <!-- Affiliates -->
+      <div class="page" id="page-affiliates">
+        <h2>Affiliates</h2>
+        <div class="sub">Affiliate partners and earnings</div>
+        <div class="table-wrap">
+          <div class="table-header">
+            <h3>Affiliates</h3>
+            <span class="count" id="affCount"></span>
+          </div>
+          <div class="table-scroll" id="affList"></div>
+          <div class="empty" id="affEmpty" style="display:none">No affiliates found</div>
+        </div>
+      </div>
+
+      <!-- Discount Codes -->
+      <div class="page" id="page-discounts">
+        <h2>Discount Codes</h2>
+        <div class="sub">Manage customer discount codes</div>
+        <div class="table-wrap">
+          <div class="table-header">
+            <h3>Active Codes</h3>
+            <span class="count" id="dcCount"></span>
+          </div>
+          <div class="table-scroll">
+            <table>
+              <thead><tr><th>Code</th><th>Discount</th><th>Used</th><th>Max Uses</th><th>Status</th><th></th></tr></thead>
+              <tbody id="dcBody"></tbody>
+            </table>
+          </div>
+          <div class="empty" id="dcEmpty" style="display:none">No discount codes found</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+const API = 'https://choatix-v2.onrender.com';
+let ADMIN_SECRET = '';
+
+function login() {
+  const input = document.getElementById('secretInput');
+  ADMIN_SECRET = input.value.trim();
+  if (!ADMIN_SECRET) return;
+  document.getElementById('loginErr').style.display = 'none';
+  fetch(API + '/api/admin/stats', { headers: { 'x-admin-secret': ADMIN_SECRET } })
+    .then(r => { if (!r.ok) throw new Error(); return r.json(); })
+    .then(() => {
+      document.getElementById('loginPage').style.display = 'none';
+      document.getElementById('appPage').style.display = 'block';
+      document.getElementById('serverDot').classList.add('ok');
+      document.getElementById('serverStatus').textContent = 'Connected';
+      loadStats();
+    })
+    .catch(() => {
+      document.getElementById('loginErr').style.display = 'block';
+    });
+}
+
+function logout() {
+  ADMIN_SECRET = '';
+  document.getElementById('appPage').style.display = 'none';
+  document.getElementById('loginPage').style.display = 'flex';
+  document.getElementById('secretInput').value = '';
+}
+
+function api(method, path, body) {
+  const opts = { method, headers: { 'Content-Type': 'application/json', 'x-admin-secret': ADMIN_SECRET } };
+  if (body) opts.body = JSON.stringify(body);
+  return fetch(API + path, opts).then(r => r.json());
+}
+
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.sidebar button').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  document.querySelector(`[data-page="${name}"]`).classList.add('active');
+  if (name === 'keys') loadKeys();
+  if (name === 'users') loadUsers();
+  if (name === 'affiliates') loadAffiliates();
+  if (name === 'discounts') loadDiscounts();
+}
+
+function loadStats() {
+  api('GET', '/api/admin/stats').then(data => {
+    document.getElementById('sTotalKeys').textContent = data.totalKeys || 0;
+    document.getElementById('sRedeemed').textContent = data.redeemedKeys || 0;
+    document.getElementById('sUsers').textContent = (data.proUsers || 0) + (data.premiumUsers || 0);
+    document.getElementById('sAffiliates').textContent = data.totalReferrals || 0;
+  }).catch(() => {});
+}
+
+function generateKeys() {
+  const tier = document.getElementById('genTier').value;
+  const count = parseInt(document.getElementById('genCount').value) || 1;
+  const btn = document.getElementById('genBtn');
+  btn.disabled = true;
+  btn.textContent = 'Generating...';
+  api('POST', '/api/generate', { tier, count, adminSecret: ADMIN_SECRET }).then(data => {
+    btn.disabled = false;
+    btn.textContent = 'Generate';
+    if (data.keys) {
+      const list = document.getElementById('genKeyList');
+      list.innerHTML = data.keys.map(k => `<div class="key-item"><code>${k}</code><button class="copy" onclick="copyKey(this,'${k}')">Copy</button></div>`).join('');
+      document.getElementById('genResult').classList.add('show');
+    }
+  }).catch(() => { btn.disabled = false; btn.textContent = 'Generate'; });
+}
+
+function copyKey(btn, key) {
+  navigator.clipboard.writeText(key);
+  btn.textContent = 'Copied';
+  btn.classList.add('copied');
+  setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 1500);
+}
+
+function loadKeys() {
+  api('GET', '/api/admin/keys').then(data => {
+    const keys = data.keys || [];
+    document.getElementById('keyCount').textContent = keys.length + ' keys';
+    if (!keys.length) { document.getElementById('keysEmpty').style.display = ''; return; }
+    document.getElementById('keysEmpty').style.display = 'none';
+    document.getElementById('keysBody').innerHTML = keys.map(k => {
+      const key = k.key || '';
+      const tier = k.tier || 'PRO';
+      const tierClass = tier === 'PRO' ? 'pro' : 'premium';
+      const isRedeemed = k.redeemed === true || k.redeemed === 'true';
+      const statusClass = isRedeemed ? 'redeemed' : 'active';
+      const statusText = isRedeemed ? 'Redeemed' : 'Active';
+      const discordId = k.discord_id || k.discordId || '-';
+      const expiry = k.expiry || '-';
+      return `<tr>
+        <td><code>${key}</code></td>
+        <td><span class="badge ${tierClass}">${tier}</span></td>
+        <td><span class="badge ${statusClass}">${statusText}</span></td>
+        <td>${discordId}</td>
+        <td>${expiry}</td>
+        <td>${!isRedeemed ? `<button class="revoke-btn" onclick="revokeKey('${key}')">Revoke</button>` : ''}</td>
+      </tr>`;
+    }).join('');
+  }).catch(() => {});
+}
+
+function revokeKey(key) {
+  if (!confirm('Revoke this key?')) return;
+  api('POST', '/api/admin/revoke', { key, adminSecret: ADMIN_SECRET }).then(() => loadKeys());
+}
+
+function loadUsers() {
+  api('GET', '/api/admin/users').then(data => {
+    const users = data.users || [];
+    document.getElementById('userCount').textContent = users.length + ' users';
+    if (!users.length) { document.getElementById('usersEmpty').style.display = ''; return; }
+    document.getElementById('usersEmpty').style.display = 'none';
+    document.getElementById('usersList').innerHTML = users.map(u => {
+      const id = u.discord_id || u.discordId || '';
+      const tier = u.tier || 'FREE';
+      const username = u.username || null;
+      const displayName = username || 'User ' + id.slice(-4);
+      const initials = username ? username.slice(0, 2).toUpperCase() : id ? id.slice(-2) : '??';
+      return `<div class="user-row">
+        <div class="user-avatar">${initials}</div>
+        <div class="user-info">
+          <div class="name">${displayName}</div>
+          <div class="id">ID: ${id || 'N/A'}${u.activated_at ? ' · ' + new Date(u.activated_at).toLocaleDateString() : ''}</div>
+        </div>
+        <span class="badge ${tier === 'PRO' ? 'pro' : tier === 'PREMIUM' ? 'premium' : 'pro'}">${tier}</span>
+      </div>`;
+    }).join('');
+  }).catch(() => {});
+}
+
+function loadAffiliates() {
+  api('GET', '/api/admin/affiliates').then(data => {
+    const affs = data.affiliates || [];
+    document.getElementById('affCount').textContent = affs.length + ' affiliates';
+    if (!affs.length) { document.getElementById('affEmpty').style.display = ''; return; }
+    document.getElementById('affEmpty').style.display = 'none';
+    const salesMap = {};
+    (data.sales || []).forEach(s => { salesMap[s.affiliate_id] = { sales: s.sales, commission: s.commission }; });
+    const linksMap = {};
+    (data.links || []).forEach(l => { linksMap[l.affiliate_id] = { links: l.links, clicks: l.clicks, conversions: l.conversions }; });
+    document.getElementById('affList').innerHTML = affs.map(a => {
+      const id = a.discord_id || a.discordId || '';
+      const name = a.name || id;
+      const initials = name.slice(0, 2).toUpperCase();
+      const s = salesMap[id] || {};
+      const l = linksMap[id] || {};
+      return `<div class="user-row">
+        <div class="user-avatar">${initials}</div>
+        <div class="user-info">
+          <div class="name">${name}</div>
+          <div class="id">ID: ${id} &middot; ${s.sales || 0} sales &middot; ${(l.clicks || 0)} clicks</div>
+        </div>
+        <span class="badge pro">€${s.commission || 0}</span>
+      </div>`;
+    }).join('');
+  }).catch(() => {});
+}
+
+function createDiscountCode() {
+  const code = document.getElementById('dcCode').value.trim();
+  const percent = parseInt(document.getElementById('dcPercent').value);
+  const maxUses = parseInt(document.getElementById('dcMaxUses').value) || 0;
+  if (!code || code.length < 3) { document.getElementById('dcResult').innerHTML = '<span style="color:#f44">Code must be at least 3 characters</span>'; return; }
+  if (!percent || percent < 1 || percent > 90) { document.getElementById('dcResult').innerHTML = '<span style="color:#f44">Discount must be 1-90%</span>'; return; }
+  api('POST', '/api/admin/discount/create', { customCode: code, discount_percent: percent, max_uses: maxUses }).then(data => {
+    if (data.error) { document.getElementById('dcResult').innerHTML = '<span style="color:#f44">' + data.error + '</span>'; return; }
+    document.getElementById('dcResult').innerHTML = '<span style="color:#4ec95e">Created: ' + data.code + ' (' + data.discount_percent + '% off)</span>';
+    document.getElementById('dcCode').value = '';
+    loadDiscounts();
+  }).catch(() => { document.getElementById('dcResult').innerHTML = '<span style="color:#f44">Failed to create</span>'; });
+}
+
+function loadDiscounts() {
+  api('GET', '/api/admin/discounts').then(data => {
+    const discounts = data.discounts || [];
+    document.getElementById('dcCount').textContent = discounts.length + ' codes';
+    if (!discounts.length) { document.getElementById('dcEmpty').style.display = ''; return; }
+    document.getElementById('dcEmpty').style.display = 'none';
+    document.getElementById('dcBody').innerHTML = discounts.map(d => {
+      const isUnlimited = d.max_uses === 0;
+      const isExhausted = !isUnlimited && d.times_used >= d.max_uses;
+      const statusClass = d.active && !isExhausted ? 'active' : 'redeemed';
+      const statusText = !d.active ? 'Disabled' : isExhausted ? 'Exhausted' : 'Active';
+      return `<tr>
+        <td><code>${d.code}</code></td>
+        <td>${d.discount_percent}%</td>
+        <td>${d.times_used}</td>
+        <td>${isUnlimited ? 'Unlimited' : d.max_uses}</td>
+        <td><span class="badge ${statusClass}">${statusText}</span></td>
+        <td><button class="revoke-btn" onclick="deleteDiscount('${d.code}')">Delete</button></td>
+      </tr>`;
+    }).join('');
+  }).catch(() => {});
+}
+
+function deleteDiscount(code) {
+  if (!confirm('Delete discount code ' + code + '?')) return;
+  api('DELETE', '/api/admin/discount/' + code).then(() => loadDiscounts()).catch(() => {});
+}
+
+document.getElementById('secretInput').focus();
+</script>
+</body>
+</html>
