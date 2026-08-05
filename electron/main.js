@@ -91,7 +91,7 @@ function createWindow(port) {
   // Create splash screen
   splashWindow = new BrowserWindow({
     width: 540, height: 420,
-    frame: false, transparent: true, resizable: false, center: true,
+    frame: false, transparent: false, resizable: false, center: true,
     backgroundColor: "#000000",
     icon: path.join(__dirname, "..", "assets", "icon.ico"),
     webPreferences: { nodeIntegration: false, contextIsolation: true },
@@ -127,7 +127,7 @@ function createWindow(port) {
         mainWindow.show();
         mainWindow.focus();
       }
-    }, 2500);
+    }, 1200);
   });
 
   mainWindow.on("closed", () => { mainWindow = null; });
@@ -642,21 +642,12 @@ function clearCache() {
 
 // ── IPC Handlers ──
 ipcMain.handle("scan-system", async () => {
-  const cpu = getCPU();
-  const gpu = getGPU();
-  const ram = getRAM();
-  const disk = getDisk();
-  const os = getOS();
+  const [cpu, gpu, ram, disk, os, uptime, powerPlan, gameMode, network, startup, processes, mouse] = await Promise.all([
+    getCPU(), getGPU(), getRAM(), getDisk(), getOS(), getUptime(), getPowerPlan(), getGameMode(), getNetwork(), getStartup(), getProcesses(), getMouse()
+  ]);
   return {
     systemInfo: {
-      cpu, gpu, ram, disk, os,
-      uptime: getUptime(),
-      powerPlan: getPowerPlan(),
-      gameMode: getGameMode(),
-      network: getNetwork(),
-      startup: getStartup(),
-      processes: getProcesses(),
-      mouse: getMouse(),
+      cpu, gpu, ram, disk, os, uptime, powerPlan, gameMode, network, startup, processes, mouse,
     },
   };
 });
@@ -829,14 +820,19 @@ ipcMain.handle("detect-games", async (_event, executables) => {
 });
 
 ipcMain.handle("apply-game-tweaks", async (_event, tweakIds) => {
-  let applied = 0;
+  const results = [];
   for (const tweakId of tweakIds) {
     const cmd = TWEAK_COMMANDS[tweakId];
     if (cmd) {
-      try { await execAsync(cmd, { timeout: 15000, windowsHide: true }); applied++; } catch {}
+      const result = await runTweakCommand(cmd, 15000);
+      results.push({ id: tweakId, ...result });
+    } else {
+      results.push({ id: tweakId, success: false, error: 'Unknown tweak command' });
     }
   }
-  return { success: true, applied };
+  const applied = results.filter(r => r.success).length;
+  const failed = results.filter(r => !r.success);
+  return { success: true, applied, total: tweakIds.length, results, failed };
 });
 
 ipcMain.handle("restore-game-tweaks", async (_event, tweakIds) => {
@@ -1038,7 +1034,7 @@ const TWEAK_COMMANDS = {
   'nv-texture-filtering': 'reg add "HKCU\\Software\\NVIDIA Corporation\\Global\\NVTweak" /v TextureFilteringQuality /t REG_DWORD /d 1 /f',
 
   // NETWORK
-  'net-optimize-dns': 'netsh int ip set dnsservers "Ethernet" static 1.1.1.1 primary',
+  'net-optimize-dns': "powershell -NoProfile -Command '$adapter = Get-NetAdapter | Where-Object {$_.Status -eq \"Up\"} | Select-Object -First 1; if($adapter){ $name = $adapter.Name; netsh int ip set dnsservers \"$name\" static 1.1.1.1 primary; netsh int ip set dnsservers \"$name\" static 1.0.0.1 secondary } else { netsh int ip set dnsservers \"Ethernet\" static 1.1.1.1 primary }'",
   'net-reduce-congestion': 'powershell -Command "Set-NetTCPSetting -SettingName Internet -CongestionProvider CTCP -EA SilentlyContinue"',
 
   // MOUSE
@@ -1064,13 +1060,13 @@ const TWEAK_COMMANDS = {
   'keyboard-disable-filter': 'powershell -Command "$p=\'HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e96b-e325-11ce-bfc1-08002be10318}\';$v=(Get-ItemProperty -Path $p -Name UpperFilters -EA 0).UpperFilters; if($v){$n=$v | Where-Object {$_ -ne \'kbdhid\'}; if($n){Set-ItemProperty -Path $p -Name UpperFilters -Value $n -Type MultiString}else{Remove-ItemProperty -Path $p -Name UpperFilters -Force}}"',
   'keyboard-usb-power-mgmt': 'powershell -Command "Get-ChildItem \'HKLM:\\SYSTEM\\CurrentControlSet\\Enum\\USB\\*\*\\Device Parameters\\WDF\' -EA 0 | ForEach-Object{Set-ItemProperty -Path $_.PSPath -Name IdleTimeout -Value 0 -Type DWord -EA 0}; Get-ChildItem \'HKLM:\\SYSTEM\\CurrentControlSet\\Enum\\HID\\*\*\\Device Parameters\\WDF\' -EA 0 | ForEach-Object{Set-ItemProperty -Path $_.PSPath -Name IdleTimeout -Value 0 -Type DWord -EA 0}}"',
 
-  'sys-disable-gamebar': "powershell -NoProfile -Command 'Set-ItemProperty -Path \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\GameDVR\" -Name \"AppCaptureEnabled\" -Value 0 -Force; Set-ItemProperty -Path \"HKCU\\System\\GameConfigStore\" -Name \"GameDVR_Enabled\" -Value 0 -Force'",
-  'sys-disable-vbs': "powershell -NoProfile -Command 'bcdedit /set hypervisorlaunchtype off; reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\DeviceGuard\" /v EnableVirtualizationBasedSecurity /t REG_DWORD /d 0 /f'",
+  'sys-disable-gamebar': "powershell -NoProfile -Command 'Set-ItemProperty -Path \"HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\GameDVR\" -Name \"AppCaptureEnabled\" -Value 0 -Force; Set-ItemProperty -Path \"HKCU:\\System\\GameConfigStore\" -Name \"GameDVR_Enabled\" -Value 0 -Force'",
+  'sys-disable-vbs': "powershell -NoProfile -Command 'bcdedit /set hypervisorlaunchtype off 2>&1 | Out-Null; reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\DeviceGuard\" /v EnableVirtualizationBasedSecurity /t REG_DWORD /d 0 /f'",
   'sys-disable-xbox': "powershell -NoProfile -Command 'Get-AppxPackage Microsoft.XboxGamingOverlay | Remove-AppxPackage -ErrorAction SilentlyContinue; Set-ItemProperty -Path \"HKCU\\Software\\Microsoft\\GameBar\" -Name \"AutoGameModeEnabled\" -Value 0 -Force -ErrorAction SilentlyContinue; Stop-Service -Name XblAuthManager -Force -ErrorAction SilentlyContinue; Stop-Service -Name XblGameSave -Force -ErrorAction SilentlyContinue; Stop-Service -Name XboxGipSvc -Force -ErrorAction SilentlyContinue; Stop-Service -Name XboxNetApiSvc -Force -ErrorAction SilentlyContinue'",
   'sys-disable-mitigations': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management\" /v FeatureSettingsOverride /t REG_DWORD /d 3 /f; reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management\" /v FeatureSettingsOverrideMask /t REG_DWORD /d 3 /f'",
   'sys-optimize-fps': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\PriorityControl\" /v Win32PrioritySeparation /t REG_DWORD /d 38 /f; reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management\" /v LargeSystemCache /t REG_DWORD /d 0 /f; reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\kernel\" /v GlobalTimerResolutionRequests /t REG_DWORD /d 1 /f'",
   'sys-optimize-device-affinities': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\kernel\" /v GlobalTimerResolutionRequests /t REG_DWORD /d 1 /f'",
-  'sys-optimize-msi': "powershell -NoProfile -Command 'Get-NetAdapter | ForEach-Object { $name = $_.Name; reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\${name}\\Parameters\\Interrupt Management\" /v MessageNumberLimit /t REG_DWORD /d 256 /f -ErrorAction SilentlyContinue }'",
+  'sys-optimize-msi': "powershell -NoProfile -Command 'Get-NetAdapter | ForEach-Object { $name = $_.Name; reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\${name}\\Parameters\\Interrupt Management\" /v MessageNumberLimit /t REG_DWORD /d 256 /f }'",
   'sys-reduce-background': "powershell -NoProfile -Command 'Get-Service -Name DiagTrack, dmwappushservice, WMPNetworkSvc, Fax -ErrorAction SilentlyContinue | Stop-Service -Force -ErrorAction SilentlyContinue; Get-ScheduledTask -TaskName Microsoft\\Windows\\Application Experience\\* -ErrorAction SilentlyContinue | Disable-ScheduledTask -ErrorAction SilentlyContinue; Get-ScheduledTask -TaskName Microsoft\\Windows\\Customer Experience Improvement Program\\* -ErrorAction SilentlyContinue | Disable-ScheduledTask -ErrorAction SilentlyContinue'",
   'sys-disable-hibernation': 'powershell -NoProfile -Command "powercfg /hibernate off"',
   'sys-enable-modern-memory': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management\" /v DisableHeapTermination /t REG_DWORD /d 0 /f; reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management\" /v HeapSegmentReserve /t REG_DWORD /d 0 /f'",
@@ -1079,27 +1075,27 @@ const TWEAK_COMMANDS = {
   'sys-reduce-boot-timeout': 'powershell -NoProfile -Command "bcdedit /timeout 2"',
   'sys-optimize-explorer': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced\" /v LaunchTo /t REG_DWORD /d 1 /f; reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced\" /v ShowTaskViewButton /t REG_DWORD /d 0 /f; reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced\" /v ShowCortanaButton /t REG_DWORD /d 0 /f'",
   'sys-disable-boot-interface': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System\" /v NoBootLogo /t REG_DWORD /d 1 /f'",
-  'sys-optimize-browser-bg': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Google\\Chrome\\Extensions\\SettingsOverrides\\MetricsReportingEnabled\" /v MetricsReportingEnabled /t REG_SZ /d false /f -ErrorAction SilentlyContinue; reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Edge\" /v BackgroundModeEnabled /t REG_DWORD /d 0 /f -ErrorAction SilentlyContinue'",
-  'nv-disable-telemetry': "powershell -NoProfile -Command 'Stop-Service -Name NvTelemetryContainer -Force -ErrorAction SilentlyContinue; Set-Service -Name NvTelemetryContainer -StartupType Disabled -ErrorAction SilentlyContinue; reg add \"HKLM\\SOFTWARE\\NVIDIA Corporation\\NvControlPanel2\\Client\" /v OptInOrOutPreference /t REG_DWORD /d 0 /f -ErrorAction SilentlyContinue'",
-  'nv-optimize-performance': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\NVIDIA Corporation\\Global\\NVTweak\" /v DisablePStateSorting /t REG_DWORD /d 0 /f -ErrorAction SilentlyContinue; reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\0000\" /v RMHwGpuPstateControlEnabled /t REG_DWORD /d 0 /f -ErrorAction SilentlyContinue'",
-  'nv-enhance-privacy': "powershell -NoProfile -Command 'Stop-Service -Name NvTelemetryContainer -Force -ErrorAction SilentlyContinue; Set-Service -Name NvTelemetryContainer -StartupType Disabled -ErrorAction SilentlyContinue; reg delete \"HKLM\\SOFTWARE\\NVIDIA Corporation\\NvControlPanel2\\Client\" /v OptInOrOutPreference /f -ErrorAction SilentlyContinue'",
-  'nv-enable-dlss-indicator': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\NVIDIA Corporation\\DLSS\" /v ShowDlssIndicator /t REG_DWORD /d 1 /f -ErrorAction SilentlyContinue'",
+  'sys-optimize-browser-bg': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Google\\Chrome\\Extensions\\SettingsOverrides\\MetricsReportingEnabled\" /v MetricsReportingEnabled /t REG_SZ /d false /f; reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Edge\" /v BackgroundModeEnabled /t REG_DWORD /d 0 /f'",
+  'nv-disable-telemetry': "powershell -NoProfile -Command 'Stop-Service -Name NvTelemetryContainer -Force -ErrorAction SilentlyContinue; Set-Service -Name NvTelemetryContainer -StartupType Disabled -ErrorAction SilentlyContinue; reg add \"HKLM\\SOFTWARE\\NVIDIA Corporation\\NvControlPanel2\\Client\" /v OptInOrOutPreference /t REG_DWORD /d 0 /f'",
+  'nv-optimize-performance': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\NVIDIA Corporation\\Global\\NVTweak\" /v DisablePStateSorting /t REG_DWORD /d 0 /f; reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\0000\" /v RMHwGpuPstateControlEnabled /t REG_DWORD /d 0 /f'",
+  'nv-enhance-privacy': "powershell -NoProfile -Command 'Stop-Service -Name NvTelemetryContainer -Force -ErrorAction SilentlyContinue; Set-Service -Name NvTelemetryContainer -StartupType Disabled -ErrorAction SilentlyContinue; reg delete \"HKLM\\SOFTWARE\\NVIDIA Corporation\\NvControlPanel2\\Client\" /v OptInOrOutPreference /f'",
+  'nv-enable-dlss-indicator': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\NVIDIA Corporation\\DLSS\" /v ShowDlssIndicator /t REG_DWORD /d 1 /f'",
   'privacy-reduce-ads': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager\" /v SystemPaneSuggestionsEnabled /t REG_DWORD /d 0 /f; reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager\" /v SubscribedContent-338389Enabled /t REG_DWORD /d 0 /f; reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager\" /v SubscribedContent-310093Enabled /t REG_DWORD /d 0 /f; reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager\" /v SoftLandingEnabled /t REG_DWORD /d 0 /f'",
   'privacy-optimize-smb': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\LanmanServer\\Parameters\" /v SMB1 /t REG_DWORD /d 0 /f; reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\LanmanServer\\Parameters\" /v EnableSMB2Protocol /t REG_DWORD /d 1 /f'",
   'privacy-disable-security-questions': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\System\" /v NoLocalPasswordResetQuestions /t REG_DWORD /d 1 /f'",
   'privacy-harden-security': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\LanmanServer\\Parameters\" /v RestrictNullSessAccess /t REG_DWORD /d 1 /f; reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Lsa\" /v restrictanonymous /t REG_DWORD /d 1 /f; reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Lsa\" /v restrictanonymoussam /t REG_DWORD /d 1 /f'",
   'privacy-disable-vpn': 'powershell -NoProfile -Command "Stop-Service -Name RasMan -Force -ErrorAction SilentlyContinue; Set-Service -Name RasMan -StartupType Disabled -ErrorAction SilentlyContinue"',
-  'privacy-disable-ucpd': "powershell -NoProfile -Command 'Stop-Service -Name ucpd -Force -ErrorAction SilentlyContinue; Set-Service -Name ucpd -StartupType Disabled -ErrorAction SilentlyContinue; reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\UCPD\" /f -ErrorAction SilentlyContinue'",
+  'privacy-disable-ucpd': "powershell -NoProfile -Command 'Stop-Service -Name ucpd -Force -ErrorAction SilentlyContinue; Set-Service -Name ucpd -StartupType Disabled -ErrorAction SilentlyContinue; reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\UCPD\" /f'",
   'privacy-unlock-eu-privacy': "powershell -NoProfile -Command 'reg add \"HKCU\\Control Panel\\International\\Geo\" /v Nation /t REG_SZ /d 276 /f; reg add \"HKCU\\Control Panel\\International\\Geo\" /v Name /t REG_SZ /d DE /f'",
   'privacy-redirect-web-searches': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Search\" /v BingSearchEnabled /t REG_DWORD /d 0 /f; reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Search\" /v CortanaConsent /t REG_DWORD /d 0 /f'",
   'privacy-disable-driver-updates': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate\" /v ExcludeWUDriversInQualityUpdate /t REG_DWORD /d 1 /f; reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate\\AU\" /v AUOptions /t REG_DWORD /d 2 /f'",
-  'net-optimize-performance': 'powershell -NoProfile -Command "netsh int tcp set global chimney=enabled; netsh int tcp set global dca=enabled; netsh int tcp set global netdma=enabled; netsh int tcp set global ecncapability=disabled; netsh int tcp set global timestamps=disabled; netsh int tcp set global rss=enabled; netsh int tcp set global autotuninglevel=normal"',
+  'net-optimize-performance': 'powershell -NoProfile -Command "netsh int tcp set global ecncapability=disabled; netsh int tcp set global timestamps=disabled; netsh int tcp set global rss=enabled; netsh int tcp set global autotuninglevel=normal; netsh int tcp set global dca=enabled"',
   'net-disable-lso': "powershell -NoProfile -Command 'Get-NetAdapter | ForEach-Object { $name = $_.Name; Set-NetAdapterAdvancedProperty -Name $name -DisplayName \"Large Send Offload (IPv4)\" -DisplayValue \"Disabled\" -ErrorAction SilentlyContinue; Set-NetAdapterAdvancedProperty -Name $name -DisplayName \"Large Send Offload (IPv6)\" -DisplayValue \"Disabled\" -ErrorAction SilentlyContinue }'",
   'qol-clean-taskbar': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Search\" /v SearchBoxTaskbarMode /t REG_DWORD /d 1 /f; reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced\" /v ShowTaskViewButton /t REG_DWORD /d 0 /f; reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced\" /v TaskbarMn /t REG_DWORD /d 0 /f'",
-  'qol-classic-photo-viewer': "powershell -NoProfile -Command 'reg add \"HKCR\\SystemFileAssociations\\.jpg\\Shell\\open\\command\" /ve /t REG_SZ /d \"\\\"%SystemRoot%\\System32\\rundll32.exe\\\" \\\"\\\"%ProgramFiles%\\Windows Photo Viewer\\PhotoViewer.dll\\\", ImageView_Fullscreen %1\\\"\" /f -ErrorAction SilentlyContinue'",
+  'qol-classic-photo-viewer': "powershell -NoProfile -Command 'reg add \"HKCR\\SystemFileAssociations\\.jpg\\Shell\\open\\command\" /ve /t REG_SZ /d \"\\\"%SystemRoot%\\System32\\rundll32.exe\\\" \\\"\\\"%ProgramFiles%\\Windows Photo Viewer\\PhotoViewer.dll\\\", ImageView_Fullscreen %1\\\"\" /f'",
   'qol-bypass-win11': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\Setup\\LabConfig\" /v BypassTPMCheck /t REG_DWORD /d 1 /f; reg add \"HKLM\\SYSTEM\\Setup\\LabConfig\" /v BypassSecureBootCheck /t REG_DWORD /d 1 /f; reg add \"HKLM\\SYSTEM\\Setup\\LabConfig\" /v BypassRAMCheck /t REG_DWORD /d 1 /f; reg add \"HKLM\\SYSTEM\\Setup\\LabConfig\" /v BypassStorageCheck /t REG_DWORD /d 1 /f; reg add \"HKLM\\SYSTEM\\Setup\\LabConfig\" /v BypassCPUCheck /t REG_DWORD /d 1 /f'",
   'qol-disable-disk-quotas': 'powershell -NoProfile -Command "fsutil quota disable C:"',
-  'qol-disable-browser-hw-accel': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced\" /v DisableHWAcceleration /t REG_DWORD /d 1 /f -ErrorAction SilentlyContinue; reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Edge\" /v HardwareAccelerationModeEnabled /t REG_DWORD /d 0 /f -ErrorAction SilentlyContinue'",
+  'qol-disable-browser-hw-accel': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced\" /v DisableHWAcceleration /t REG_DWORD /d 1 /f; reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Edge\" /v HardwareAccelerationModeEnabled /t REG_DWORD /d 0 /f'",
 
   // NEW FREE TWEAKS
   'sys-disable-tips': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager\" /v SoftLandingEnabled /t REG_DWORD /d 0 /f; reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager\" /v SubscribedContent-338388Enabled /t REG_DWORD /d 0 /f'",
@@ -1121,7 +1117,7 @@ const TWEAK_COMMANDS = {
   'sys-disable-lockscreen-notifications': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Notifications\\Settings\\Windows.SystemToast.Suggested\" /v Enabled /t REG_DWORD /d 0 /f; reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager\" /v RotatingLockScreenEnabled /t REG_DWORD /d 0 /f'",
   'sys-disable-action-center': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Policies\\Microsoft\\Windows\\Explorer\" /v DisableNotificationCenter /t REG_DWORD /d 1 /f; reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Notifications\\Settings\" /v NOC_GLOBAL_SETTING_TOASTS_ENABLED /t REG_DWORD /d 0 /f'",
   'sys-disable-scheduled-defrag': 'powershell -NoProfile -Command "Disable-ScheduledTask -TaskName \\Microsoft\\Windows\\Defrag\\ScheduledDefrag -ErrorAction SilentlyContinue"',
-  'qol-optimize-browsing': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Google\\Chrome\\Extensions\\SettingsOverrides\\MetricsReportingEnabled\" /v MetricsReportingEnabled /t REG_SZ /d false /f -ErrorAction SilentlyContinue; reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Edge\" /v BackgroundModeEnabled /t REG_DWORD /d 0 /f -ErrorAction SilentlyContinue'",
+  'qol-optimize-browsing': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Google\\Chrome\\Extensions\\SettingsOverrides\\MetricsReportingEnabled\" /v MetricsReportingEnabled /t REG_SZ /d false /f; reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Edge\" /v BackgroundModeEnabled /t REG_DWORD /d 0 /f'",
   'privacy-disable-vm-support': 'powershell -NoProfile -Command "Stop-Service -Name vmcompute -Force -ErrorAction SilentlyContinue; Set-Service -Name vmcompute -StartupType Disabled -ErrorAction SilentlyContinue; Stop-Service -Name vmms -Force -ErrorAction SilentlyContinue; Set-Service -Name vmms -StartupType Disabled -ErrorAction SilentlyContinue"',
   // ── NEW TWEAKS ──
   'net-disable-nagle': "powershell -NoProfile -Command 'Get-NetAdapter | Where-Object {$_.Status -eq \"Up\"} | ForEach-Object { $adapter = $_.InterfaceDescription; New-ItemProperty -Path \"HKLM:\\SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces\\$($_.InterfaceGuid)\" -Name TcpAckFrequency -Value 1 -PropertyType DWord -Force -ErrorAction SilentlyContinue; New-ItemProperty -Path \"HKLM:\\SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces\\$($_.InterfaceGuid)\" -Name TCPNoDelay -Value 1 -PropertyType DWord -Force -ErrorAction SilentlyContinue; New-ItemProperty -Path \"HKLM:\\SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces\\$($_.InterfaceGuid)\" -Name TcpDelAckTicks -Value 0 -PropertyType DWord -Force -ErrorAction SilentlyContinue }'",
@@ -1151,18 +1147,18 @@ const TWEAK_COMMANDS = {
   'debloat-disable-telemetry': "powershell -NoProfile -Command 'Stop-Service -Name DiagTrack -Force -ErrorAction SilentlyContinue; Set-Service -Name DiagTrack -StartupType Disabled -ErrorAction SilentlyContinue; Stop-Service -Name dmwappushservice -Force -ErrorAction SilentlyContinue; Set-Service -Name dmwappushservice -StartupType Disabled -ErrorAction SilentlyContinue; reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\DataCollection\" /v AllowTelemetry /t REG_DWORD /d 0 /f'",
   'debloat-remove-news-widget': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Feeds\" /v ShellFeedsEnabled /t REG_DWORD /d 0 /f; reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Feeds\" /v ShellFeedsShowFeeds /t REG_DWORD /d 0 /f; reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\Windows Feeds\" /v EnableFeeds /t REG_DWORD /d 0 /f'",
   'debloat-disable-web-experience': "powershell -NoProfile -Command 'Get-AppxPackage Microsoft.Windows.WebExperience | Remove-AppxPackage -ErrorAction SilentlyContinue; reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\Windows Feeds\" /v EnableFeeds /t REG_DWORD /d 0 /f'",
-  'debloat-disable-background-access': "powershell -NoProfile -Command 'Get-AppxPackage | ForEach-Object { $pkg = $_.PackageFullName; reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\BackgroundAccessApplications\\$pkg\" /v Disabled /t REG_DWORD /d 1 /f -ErrorAction SilentlyContinue }'",
+  'debloat-disable-background-access': "powershell -NoProfile -Command 'Get-AppxPackage | ForEach-Object { $pkg = $_.PackageFullName; reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\BackgroundAccessApplications\\$pkg\" /v Disabled /t REG_DWORD /d 1 /f }'",
   'debloat-disable-store-updates': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\WindowsStore\" /v AutoDownload /t REG_DWORD /d 2 /f; reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\WindowsStore\" /v DisableStoreApps /t REG_DWORD /d 0 /f'",
   'debloat-remove-xbox-packages': "powershell -NoProfile -Command 'Get-AppxPackage -AllUsers | Where-Object {$_.Name -match \"Microsoft.Xbox|Microsoft.GamingApp\"} | Remove-AppxPackage -ErrorAction SilentlyContinue; Stop-Service -Name XblAuthManager,XblGameSave,XboxGipSvc,XboxNetApiSvc -Force -ErrorAction SilentlyContinue; Set-Service -Name XblAuthManager,XblGameSave,XboxGipSvc,XboxNetApiSvc -StartupType Disabled -ErrorAction SilentlyContinue'",
 
   // ── GPU ──
   'gpu-max-performance-mode': "powershell -NoProfile -Command 'Get-ItemProperty -Path \"HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Power\" -Name PowerThrottlingOff -ErrorAction SilentlyContinue | Out-Null; reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Power\" /v PowerThrottlingOff /t REG_DWORD /d 1 /f; reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Power\" /v CsEnabled /t REG_DWORD /d 0 /f'",
   'gpu-disable-power-gating': "powershell -NoProfile -Command 'Get-NetAdapter | Where-Object {$_.Status -eq \"Up\"} | ForEach-Object { $desc = $_.InterfaceDescription; Get-WmiObject MSPower_DeviceEnable -Namespace root\\wmi -EA 0 | Where-Object { $_.InstanceName -match $desc } | ForEach-Object { $_.Enable = $false; $_.Put() } }'",
-  'gpu-optimize-shader-cache': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\NVIDIA Corporation\\Global\\NVTweak\" /v ShaderCacheSize /t REG_DWORD /d 1024 /f -ErrorAction SilentlyContinue; reg add \"HKLM\\SOFTWARE\\Microsoft\\DirectX\" /v ShaderCacheEnabled /t REG_DWORD /d 1 /f -ErrorAction SilentlyContinue'",
-  'gpu-disable-var-shading': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Microsoft\\DirectX\" /v VariableShadingRate /t REG_DWORD /d 0 /f -ErrorAction SilentlyContinue'",
-  'gpu-set-preferred-mode': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Microsoft\\DirectX UserGpuPreferences\" /v DirectXUserGlobalSettings /t REG_SZ /d \"SwapEffectUpgradeEnable=1;GpuPreference=2;\" /f -ErrorAction SilentlyContinue'",
+  'gpu-optimize-shader-cache': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\NVIDIA Corporation\\Global\\NVTweak\" /v ShaderCacheSize /t REG_DWORD /d 1024 /f; reg add \"HKLM\\SOFTWARE\\Microsoft\\DirectX\" /v ShaderCacheEnabled /t REG_DWORD /d 1 /f'",
+  'gpu-disable-var-shading': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Microsoft\\DirectX\" /v VariableShadingRate /t REG_DWORD /d 0 /f'",
+  'gpu-set-preferred-mode': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Microsoft\\DirectX UserGpuPreferences\" /v DirectXUserGlobalSettings /t REG_SZ /d \"SwapEffectUpgradeEnable=1;GpuPreference=2;\" /f'",
   'gpu-optimize-render-schedule': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\GraphicsDrivers\" /v TdrDelay /t REG_DWORD /d 8 /f; reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\GraphicsDrivers\" /v TdrDdiDelay /t REG_DWORD /d 8 /f'",
-  'gpu-disable-frame-pacing': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\NVIDIA Corporation\\Global\\NVTweak\" /v DisableFramePacing /t REG_DWORD /d 1 /f -ErrorAction SilentlyContinue'",
+  'gpu-disable-frame-pacing': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\NVIDIA Corporation\\Global\\NVTweak\" /v DisableFramePacing /t REG_DWORD /d 1 /f'",
 
   // ── GAMING ──
   'game-optimize-priority': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\" /v SystemResponsiveness /t REG_DWORD /d 0 /f; reg add \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\\Tasks\\Games\" /v \"GPU Priority\" /t REG_DWORD /d 8 /f; reg add \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\\Tasks\\Games\" /v Priority /t REG_DWORD /d 6 /f; reg add \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\\Tasks\\Games\" /v \"Scheduling Category\" /t REG_SZ /d High /f'",
@@ -1177,21 +1173,21 @@ const TWEAK_COMMANDS = {
   // ── NETWORK ──
   'net-optimize-mtu': "powershell -NoProfile -Command '$adapter = Get-NetAdapter | Where-Object {$_.Status -eq \"Up\"} | Select-Object -First 1; if($adapter){ netsh interface ipv4 set subinterface $($adapter.InterfaceIndex) mtu=1400 store=persistent }'",
   'net-disable-network-throttling': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\" /v NetworkThrottlingIndex /t REG_DWORD /d 4294967295 /f'",
-  'net-optimize-tcp-window': "powershell -NoProfile -Command 'netsh int tcp set global autotuninglevel=normal; netsh int tcp set global chimney=enabled'",
+  'net-optimize-tcp-window': "powershell -NoProfile -Command 'netsh int tcp set global autotuninglevel=normal; netsh int tcp set global rss=enabled'",
   'net-disable-flow-control': "powershell -NoProfile -Command 'Get-NetAdapter | ForEach-Object { $name = $_.Name; Set-NetAdapterAdvancedProperty -Name $name -DisplayName \"Flow Control\" -DisplayValue \"Disabled\" -ErrorAction SilentlyContinue }'",
   'net-optimize-connection-limits': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\" /v TcpNumConnections /t REG_DWORD /d 16777214 /f'",
-  'net-disable-netbios': "powershell -NoProfile -Command 'Get-NetAdapter | Where-Object {$_.Status -eq \"Up\"} | ForEach-Object { $name = $_.Name; reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\NetBT\\Parameters\\Interfaces\\Tcpip_$name\" /v NetbiosOptions /t REG_DWORD /d 2 /f -ErrorAction SilentlyContinue }'",
+  'net-disable-netbios': "powershell -NoProfile -Command 'Get-NetAdapter | Where-Object {$_.Status -eq \"Up\"} | ForEach-Object { $name = $_.Name; reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\NetBT\\Parameters\\Interfaces\\Tcpip_$name\" /v NetbiosOptions /t REG_DWORD /d 2 /f }'",
 
   // ── AUDIO ──
   'audio-optimize-buffer-size': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Microsoft\\MMSys\\Default\\AudioEffects\" /v AcousticEchoCancellation /t REG_DWORD /d 0 /f; reg add \"HKCU\\Software\\Microsoft\\Audio\\Settings\" /v SampleRate /t REG_DWORD /d 48000 /f'",
   'audio-disable-spatial-sound': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Audio\" /v DisableSpatialSound /t REG_DWORD /d 1 /f; reg add \"HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Audio\" /v DisableSpatialSound /t REG_DWORD /d 1 /f'",
-  'audio-set-exclusive-mode': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Microsoft\\MMSys\\Default\\DevicePeriod\" /v Period /t REG_DWORD /d 1 /f -ErrorAction SilentlyContinue'",
-  'audio-disable-midi-synth': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Drivers32\" /v midi /t REG_SZ /d \"midimap.drv\" /f -ErrorAction SilentlyContinue'",
+  'audio-set-exclusive-mode': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Microsoft\\MMSys\\Default\\DevicePeriod\" /v Period /t REG_DWORD /d 1 /f'",
+  'audio-disable-midi-synth': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Drivers32\" /v midi /t REG_SZ /d \"midimap.drv\" /f'",
 
   // ── SYSTEM ──
   'sys-set-timer-resolution': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\kernel\" /v GlobalTimerResolutionRequests /t REG_DWORD /d 1 /f'",
   'sys-disable-power-throttling': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Power\" /v PowerThrottlingOff /t REG_DWORD /d 1 /f'",
-  'sys-optimize-interrupts': "powershell -NoProfile -Command 'Get-NetAdapter | Where-Object {$_.Status -eq \"Up\"} | ForEach-Object { $name = $_.Name; reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\${name}\\Parameters\\Interrupt Management\" /v MessageNumberLimit /t REG_DWORD /d 256 /f -ErrorAction SilentlyContinue }'",
+  'sys-optimize-interrupts': "powershell -NoProfile -Command 'Get-NetAdapter | Where-Object {$_.Status -eq \"Up\"} | ForEach-Object { $name = $_.Name; reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\${name}\\Parameters\\Interrupt Management\" /v MessageNumberLimit /t REG_DWORD /d 256 /f }'",
   'sys-disable-spectre-mitigations': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management\" /v FeatureSettingsOverride /t REG_DWORD /d 3 /f; reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management\" /v FeatureSettingsOverrideMask /t REG_DWORD /d 3 /f'",
   'sys-use-platform-clock': "powershell -NoProfile -Command 'bcdedit /useplatformclock true'",
   'sys-disable-dynamic-tick': "powershell -NoProfile -Command 'bcdedit /set disabledynamictick yes'",
@@ -1202,7 +1198,7 @@ const TWEAK_COMMANDS = {
   'game-disable-game-bar-complete': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Microsoft\\GameBar\" /v AutoGameModeEnabled /t REG_DWORD /d 0 /f; reg add \"HKCU\\Software\\Microsoft\\GameBar\" /v AllowAutoGameMode /t REG_DWORD /d 0 /f; reg add \"HKCU\\Software\\Microsoft\\GameBar\" /v ShowStartupPanel /t REG_DWORD /d 0 /f; reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\GameDVR\" /v AppCaptureEnabled /t REG_DWORD /d 0 /f; reg add \"HKCU\\System\\GameConfigStore\" /v GameDVR_Enabled /t REG_DWORD /d 0 /f'",
   'game-optimize-directx': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Microsoft\\DirectX\" /v DisableMaximizedWindowedMode /t REG_DWORD /d 1 /f; reg add \"HKLM\\SOFTWARE\\Microsoft\\DirectX\" /v EnableDebugMode /t REG_DWORD /d 0 /f; reg add \"HKLM\\SOFTWARE\\Microsoft\\DirectX\" /v ShaderCacheEnabled /t REG_DWORD /d 1 /f'",
   'game-optimize-foreground-timer': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\kernel\" /v GlobalTimerResolutionRequests /t REG_DWORD /d 1 /f; reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\kernel\" /v QuantumReset /t REG_DWORD /d 1 /f'",
-  'game-disable-steam-overlay': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Valve\\Steam\" /v DisableOverlay /t REG_DWORD /d 1 /f; reg add \"HKCU\\Software\\Valve\\Steam\\Apps\\*\" /v OverlayEnabled /t REG_DWORD /d 0 /f -ErrorAction SilentlyContinue'",
+  'game-disable-steam-overlay': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Valve\\Steam\" /v DisableOverlay /t REG_DWORD /d 1 /f; reg add \"HKCU\\Software\\Valve\\Steam\\Apps\\*\" /v OverlayEnabled /t REG_DWORD /d 0 /f'",
   'game-optimize-cpu-affinity': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\PriorityControl\" /v Win32PrioritySeparation /t REG_DWORD /d 38 /f; reg add \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\" /v SystemResponsiveness /t REG_DWORD /d 0 /f'",
   'game-disable-nagles-algorithm': "powershell -NoProfile -Command 'Get-NetAdapter | Where-Object {$_.Status -eq \"Up\"} | ForEach-Object { New-ItemProperty -Path \"HKLM:\\SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces\\$($_.InterfaceGuid)\" -Name TcpAckFrequency -Value 1 -PropertyType DWord -Force -EA 0; New-ItemProperty -Path \"HKLM:\\SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces\\$($_.InterfaceGuid)\" -Name TCPNoDelay -Value 1 -PropertyType DWord -Force -EA 0; New-ItemProperty -Path \"HKLM:\\SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces\\$($_.InterfaceGuid)\" -Name TcpDelAckTicks -Value 0 -PropertyType DWord -Force -EA 0 }'",
   'game-optimize-udp-buffer': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\" /v UdpMax /t REG_DWORD /d 65534 /f; reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\" /v MaxUserPort /t REG_DWORD /d 65534 /f; reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\" /v TcpTimedWaitDelay /t REG_DWORD /d 30 /f'",
@@ -1211,7 +1207,7 @@ const TWEAK_COMMANDS = {
   'game-disable-powersaving-gpu': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Power\" /v PowerThrottlingOff /t REG_DWORD /d 1 /f; reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Power\" /v CsEnabled /t REG_DWORD /d 0 /f'",
 
   // ── ADDITIONAL TWEAKS ──
-  'storage-optimize-defrag': 'powershell -NoProfile -Command "Get-Volume | Where-Object {$_.DriveType -eq \'Fixed\' -and $_.FileSystem -eq \'NTFS\'} | ForEach-Object { $letter = $_.DriveLetter; if($letter){ defrag $letter`: /O /H /U -ErrorAction SilentlyContinue } }"',
+  'storage-optimize-defrag': 'powershell -NoProfile -Command "Get-Volume | Where-Object {$_.DriveType -eq \'Fixed\' -and $_.FileSystem -eq \'NTFS\'} | ForEach-Object { $letter = $_.DriveLetter; if($letter){ defrag $letter`: /O /H /U } }"',
   'storage-set-io-priority': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\PriorityControl\" /v IoPageLockLimit /t REG_DWORD /d 0 /f'",
   'storage-disable-indexing': 'powershell -NoProfile -Command "Stop-Service -Name WSearch -Force -ErrorAction SilentlyContinue; Set-Service -Name WSearch -StartupType Disabled -ErrorAction SilentlyContinue"',
   'net-optimize-dns-cache': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\Dnscache\\Parameters\" /v MaxCacheEntryTtlLimit /t REG_DWORD /d 86400 /f; reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\Dnscache\\Parameters\" /v MaxSOACacheEntryTtlLimit /t REG_DWORD /d 120 /f'",
@@ -1221,11 +1217,11 @@ const TWEAK_COMMANDS = {
   'sys-disable-prefetch': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management\\PrefetchParameters\" /v EnablePrefetcher /t REG_DWORD /d 0 /f; reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management\\PrefetchParameters\" /v EnableSuperfetch /t REG_DWORD /d 0 /f'",
   'sys-optimize-context-menu': "powershell -NoProfile -Command 'reg add \"HKCU\\Control Panel\\Desktop\" /v MenuShowDelay /t REG_SZ /d \"50\" /f'",
   'sys-clear-system-cache': "powershell -NoProfile -Command '[System.GC]::Collect(); [System.GC]::WaitForPendingFinalizers()'",
-  'sys-optimize-dpc-latency': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\0000\" /v RMHwGpuPstateControlEnabled /t REG_DWORD /d 0 /f -ErrorAction SilentlyContinue'",
-  'mouse-optimize-polling': "powershell -NoProfile -Command 'reg add \"HKCU\\Control Panel\\Mouse\" /v MouseSamplingRate /t REG_DWORD /d 1 /f -ErrorAction SilentlyContinue'",
+  'sys-optimize-dpc-latency': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\0000\" /v RMHwGpuPstateControlEnabled /t REG_DWORD /d 0 /f'",
+  'mouse-optimize-polling': "powershell -NoProfile -Command 'reg add \"HKCU\\Control Panel\\Mouse\" /v MouseSamplingRate /t REG_DWORD /d 1 /f'",
   'keyboard-optimize-repeat': "powershell -NoProfile -Command 'reg add \"HKCU\\Control Panel\\Keyboard\" /v KeyboardDelay /t REG_SZ /d \"0\" /f; reg add \"HKCU\\Control Panel\\Keyboard\" /v KeyboardSpeed /t REG_SZ /d \"31\" /f'",
   'input-gaming-mode': "powershell -NoProfile -Command 'reg add \"HKCU\\Control Panel\\Keyboard\" /v KeyboardDelay /t REG_SZ /d \"0\" /f; reg add \"HKCU\\Control Panel\\Keyboard\" /v KeyboardSpeed /t REG_SZ /d \"31\" /f; reg add \"HKCU\\Control Panel\\Mouse\" /v MouseSpeed /t REG_SZ /d \"0\" /f; reg add \"HKCU\\Control Panel\\Mouse\" /v MouseThreshold1 /t REG_SZ /d \"0\" /f; reg add \"HKCU\\Control Panel\\Mouse\" /v MouseThreshold2 /t REG_SZ /d \"0\" /f; reg add \"HKCU\\Control Panel\\Mouse\" /v MouseTrails /t REG_SZ /d \"0\" /f; reg add \"HKCU\\Control Panel\\Mouse\" /v MouseSensitivity /t REG_SZ /d \"10\" /f; reg add \"HKCU\\Accessibility\\StickyKeys\" /v Flags /t REG_SZ /d \"506\" /f; reg add \"HKCU\\Accessibility\\ToggleKeys\" /v Flags /t REG_SZ /d \"58\" /f; reg add \"HKCU\\Accessibility\\Keyboard Response\" /v Flags /t REG_SZ /d \"122\" /f'",
-  'audio-disable-low-latency': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Audio\" /v DisableLowLatencySupport /t REG_DWORD /d 1 /f -ErrorAction SilentlyContinue'",
+  'audio-disable-low-latency': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Audio\" /v DisableLowLatencySupport /t REG_DWORD /d 1 /f'",
   'audio-optimize-sample-rate': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Microsoft\\Audio\\Settings\" /v SampleRate /t REG_DWORD /d 48000 /f'",
   'privacy-disable-ad-id': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\AdvertisingInfo\" /v Enabled /t REG_DWORD /d 0 /f'",
   'privacy-disable-app-launch': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced\" /v Start_TrackProgs /t REG_DWORD /d 0 /f'",
@@ -1238,7 +1234,7 @@ const TWEAK_COMMANDS = {
   'wu-disable-restart-reminder': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate\\AU\" /v AlwaysAutoRestart /t REG_DWORD /d 0 /f'",
   'wu-pause-updates-30days': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate\" /v PauseUpdates /t REG_DWORD /d 1 /f'",
   'wu-disable-drivers-update': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate\" /v ExcludeWUDriversInQualityUpdate /t REG_DWORD /d 1 /f'",
-  'wu-disable-office-updates': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Office\\16.0\\Common\\OfficeUpdate\" /v PreventAutomaticUpdates /t REG_DWORD /d 1 /f -ErrorAction SilentlyContinue'",
+  'wu-disable-office-updates': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Office\\16.0\\Common\\OfficeUpdate\" /v PreventAutomaticUpdates /t REG_DWORD /d 1 /f'",
 
   // ── EDGE / BROWSER ──
   'edge-disable-startup-boost': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Edge\" /v StartupBoostEnabled /t REG_DWORD /d 0 /f'",
@@ -1270,7 +1266,7 @@ const TWEAK_COMMANDS = {
 
   // ── GPU POWER ──
   'gpu-enable-hw-scheduler': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\GraphicsDrivers\" /v HwSchMode /t REG_DWORD /d 2 /f'",
-  'gpu-disable-preemption': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\0000\" /v RMDisablePreemption /t REG_DWORD /d 1 /f -ErrorAction SilentlyContinue'",
+  'gpu-disable-preemption': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\0000\" /v RMDisablePreemption /t REG_DWORD /d 1 /f'",
   'gpu-disable-mpo': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Microsoft\\Windows\\Dwm\" /v OverlayTestMode /t REG_DWORD /d 5 /f'",
 
   // ── REGISTRY DEEP ──
@@ -1284,8 +1280,8 @@ const TWEAK_COMMANDS = {
   'reg-io-page-lockdown': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management\" /v DisablePagingExecutive /t REG_DWORD /d 1 /f'",
 
   // ── BLUETOOTH ──
-  'bt-disable-pairing-reminder': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Bluetooth\" /v NotifyWhenUnpairedDeviceFound /t REG_DWORD /d 0 /f -ErrorAction SilentlyContinue'",
-  'bt-disable-auto-reconnect': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Bluetooth\\AutoReconnect\" /v Enable /t REG_DWORD /d 0 /f -ErrorAction SilentlyContinue'",
+  'bt-disable-pairing-reminder': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Bluetooth\" /v NotifyWhenUnpairedDeviceFound /t REG_DWORD /d 0 /f'",
+  'bt-disable-auto-reconnect': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Bluetooth\\AutoReconnect\" /v Enable /t REG_DWORD /d 0 /f'",
 
   // ── WINDOWS VISUAL ──
   'vis-disable-transparency': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize\" /v EnableTransparency /t REG_DWORD /d 0 /f'",
@@ -1302,14 +1298,14 @@ const TWEAK_COMMANDS = {
   'sec-disable-realtime-protection': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows Defender\\Real-Time Protection\" /v DisableRealtimeMonitoring /t REG_DWORD /d 1 /f'",
   'sec-disable-defender-scheduled': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows Defender\\Scan\" /v DisableScanOnRealtimeEnable /t REG_DWORD /d 1 /f'",
   'sec-disable-sample-submission': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows Defender\\Spynet\" /v SubmitSamplesConsent /t REG_DWORD /d 2 /f'",
-  'sec-disable-network-protection': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows Defender\\Network Protection\" /v AllowNetworkProtectionOnWinServer /t REG_DWORD /d 0 /f -ErrorAction SilentlyContinue'",
+  'sec-disable-network-protection': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows Defender\\Network Protection\" /v AllowNetworkProtectionOnWinServer /t REG_DWORD /d 0 /f'",
 
   // ── NETWORK ADVANCED ──
   'net-disable-rsc': "powershell -NoProfile -Command 'netsh int tcp set global rsc=disabled'",
   'net-disable-ecnc': "powershell -NoProfile -Command 'netsh int tcp set global ecncapability=disabled'",
   'net-disable-task-offload': "powershell -NoProfile -Command 'netsh int ip set global taskoffload=disabled'",
   'net-disable-llmnr': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows NT\\DNSClient\" /v EnableMulticast /t REG_DWORD /d 0 /f'",
-  'net-disable-wsd': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\NetCache\" /v Enabled /t REG_DWORD /d 0 /f -ErrorAction SilentlyContinue'",
+  'net-disable-wsd': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\NetCache\" /v Enabled /t REG_DWORD /d 0 /f'",
   'net-optimize-adapter': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\" /v DefaultTTL /t REG_DWORD /d 64 /f; reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\" /v Tcp1323Opts /t REG_DWORD /d 3 /f'",
 
   // ── GAMING DEEP ──
@@ -1324,26 +1320,26 @@ const TWEAK_COMMANDS = {
 
   // ── STARTUP ──
   'startup-disable-cortana': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\Windows Search\" /v AllowCortana /t REG_DWORD /d 0 /f'",
-  'startup-disable-onedrive': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run\" /v OneDrive /f -ErrorAction SilentlyContinue'",
-  'startup-disable-teams': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run\" /v com.squirrel.Teams /f -ErrorAction SilentlyContinue'",
+  'startup-disable-onedrive': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run\" /v OneDrive /f'",
+  'startup-disable-teams': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run\" /v com.squirrel.Teams /f'",
   'startup-disable-edge-updater': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\EdgeUpdate\" /v UpdateDefault /t REG_DWORD /d 0 /f'",
-  'startup-disable-adobe-updater': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Policies\\Adobe\\Adobe ARM\\1.0\" /v DisableAutomaticAppUpdate /t REG_DWORD /d 1 /f -ErrorAction SilentlyContinue'",
-  'startup-disable-discord-startup': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run\" /v Discord /f -ErrorAction SilentlyContinue'",
-  'startup-disable-epic-games': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run\" /v EpicGamesLauncher /f -ErrorAction SilentlyContinue'",
-  'startup-disable-steam': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run\" /v Steam /f -ErrorAction SilentlyContinue'",
-  'startup-disable-spotify': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run\" /v Spotify /f -ErrorAction SilentlyContinue'",
+  'startup-disable-adobe-updater': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Policies\\Adobe\\Adobe ARM\\1.0\" /v DisableAutomaticAppUpdate /t REG_DWORD /d 1 /f'",
+  'startup-disable-discord-startup': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run\" /v Discord /f'",
+  'startup-disable-epic-games': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run\" /v EpicGamesLauncher /f'",
+  'startup-disable-steam': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run\" /v Steam /f'",
+  'startup-disable-spotify': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run\" /v Spotify /f'",
   'startup-disable-widgets': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Dsh\" /v AllowNewsAndInterests /t REG_DWORD /d 0 /f'",
 
   // ── MEMORY ──
   'mem-optimize-pagefile': "powershell -NoProfile -Command 'wmic computersystem set AutomaticManagedPagefile=False; wmic pagefileset set InitialSize=8192; wmic pagefileset set MaximumSize=16384'",
   'mem-large-system-cache': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management\" /v LargeSystemCache /t REG_DWORD /d 1 /f'",
   'mem-flush-timer': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management\" /v DisablePagingExecutive /t REG_DWORD /d 1 /f'",
-  'mem-deoptimize-standby': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management\" /v StandbyMemoryInActiveMemoryList /t REG_DWORD /d 1 /f -ErrorAction SilentlyContinue'",
+  'mem-deoptimize-standby': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management\" /v StandbyMemoryInActiveMemoryList /t REG_DWORD /d 1 /f'",
   'mem-disable-superfetch': "powershell -NoProfile -Command 'Stop-Service -Name SysMain -Force -ErrorAction SilentlyContinue; Set-Service -Name SysMain -StartupType Disabled -ErrorAction SilentlyContinue'",
   'mem-clean-standby': "powershell -NoProfile -Command '[System.GC]::Collect(); [System.GC]::WaitForPendingFinalizers()'",
 
   // ── DEEP DEBLOAT ──
-  'debloat-remove-edge': "powershell -NoProfile -Command 'Get-AppxPackage -AllUsers *MicrosoftEdge* | Remove-AppxPackage -ErrorAction SilentlyContinue; reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Edge\" /v AllowMicrosoftEdgeUpdate /t REG_DWORD /d 0 /f -ErrorAction SilentlyContinue'",
+  'debloat-remove-edge': "powershell -NoProfile -Command 'Get-AppxPackage -AllUsers *MicrosoftEdge* | Remove-AppxPackage -ErrorAction SilentlyContinue; reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Edge\" /v AllowMicrosoftEdgeUpdate /t REG_DWORD /d 0 /f'",
   'debloat-remove-teams': "powershell -NoProfile -Command 'Get-AppxPackage -AllUsers *Teams* | Remove-AppxPackage -ErrorAction SilentlyContinue; Stop-Service -Name TeamsMachineInstaller -Force -ErrorAction SilentlyContinue; Set-Service -Name TeamsMachineInstaller -StartupType Disabled -ErrorAction SilentlyContinue'",
   'debloat-disable-copilot': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced\" /v ShowCopilotButton /t REG_DWORD /d 0 /f; reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\Windows Copilot\" /v TurnOffWindowsCopilot /t REG_DWORD /d 1 /f'",
   'debloat-remove-widgets-deep': "powershell -NoProfile -Command 'Get-AppxPackage -AllUsers *Windows.WebExperience* | Remove-AppxPackage -ErrorAction SilentlyContinue; reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Feeds\" /v ShellFeedsEnabled /t REG_DWORD /d 0 /f; reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\Windows Feeds\" /v EnableFeeds /t REG_DWORD /d 0 /f'",
@@ -1376,8 +1372,8 @@ const TWEAK_COMMANDS = {
   'cpu-disable-idle-states': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Processor\" /v DisableIdleState /t REG_DWORD /d 1 /f; reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Power\" /v CsEnabled /t REG_DWORD /d 0 /f'",
 
   // ── GPU POWER ──
-  'gpu-disable-ulps': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\0000\" /v EnableUlps /t REG_DWORD /d 0 /f -ErrorAction SilentlyContinue; reg add \"HKLM\\SOFTWARE\\AMD\\DPP\" /v DisableULPS /t REG_DWORD /d 1 /f -ErrorAction SilentlyContinue'",
-  'gpu-set-power-limit-max': "powershell -NoProfile -Command 'nvidia-smi -pl 100 -ErrorAction SilentlyContinue; reg add \"HKLM\\SOFTWARE\\NVIDIA Corporation\\Global\\NVTweak\" /v PowerMizerEnable /t REG_DWORD /d 1 /f -ErrorAction SilentlyContinue'",
+  'gpu-disable-ulps': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\0000\" /v EnableUlps /t REG_DWORD /d 0 /f; reg add \"HKLM\\SOFTWARE\\AMD\\DPP\" /v DisableULPS /t REG_DWORD /d 1 /f'",
+  'gpu-set-power-limit-max': "powershell -NoProfile -Command 'nvidia-smi -pl 100; reg add \"HKLM\\SOFTWARE\\NVIDIA Corporation\\Global\\NVTweak\" /v PowerMizerEnable /t REG_DWORD /d 1 /f'",
 
   // ── PROCESS PRIORITY ──
   'sys-realtime-priority-games': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\\Tasks\\Games\" /v Priority /t REG_DWORD /d 31 /f; reg add \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\\Tasks\\Games\" /v \"GPU Priority\" /t REG_DWORD /d 31 /f'",
@@ -1400,21 +1396,21 @@ const TWEAK_COMMANDS = {
   'snd-disable-audio-gpu-sync': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Audio\" /v DisableGPUSync /t REG_DWORD /d 1 /f'",
 
   // ── BCDEdit Tweaks ──
-  'bcd-timer-resolution': "bcdedit /set useplatformclock true",
-  'bcd-disable-dynamic-tick': "bcdedit /set disabledynamictick yes",
-  'bcd-use-platform-clock': "bcdedit /set useplatformtick yes",
+  'bcd-timer-resolution': "powershell -NoProfile -Command 'bcdedit /set useplatformclock true 2>&1 | Out-Null'",
+  'bcd-disable-dynamic-tick': "powershell -NoProfile -Command 'bcdedit /set disabledynamictick yes 2>&1 | Out-Null'",
+  'bcd-use-platform-clock': "powershell -NoProfile -Command 'bcdedit /set useplatformtick yes 2>&1 | Out-Null'",
   'bcd-increase-usnjrnl': "powershell -NoProfile -Command 'fsutil usn createjournal m=1073741824 a=1073741824 C:'",
-  'bcd-optimize-boot': "bcdedit /set bootmenupolicy standard",
-  'bcd-disable-quiet-boot': "bcdedit /set quietboot off",
-  'bcd-increase-stack': "bcdedit /set stacksize 4096",
-  'bcd-optimize-test-signing': "bcdedit /set testsigning off",
+  'bcd-optimize-boot': "powershell -NoProfile -Command 'bcdedit /set bootmenupolicy standard 2>&1 | Out-Null'",
+  'bcd-disable-quiet-boot': "powershell -NoProfile -Command 'bcdedit /set quietboot off 2>&1 | Out-Null'",
+  'bcd-increase-stack': "powershell -NoProfile -Command 'bcdedit /set stacksize 4096 2>&1 | Out-Null'",
+  'bcd-optimize-test-signing': "powershell -NoProfile -Command 'bcdedit /set testsigning off 2>&1 | Out-Null'",
 
   // ── NVIDIA GPU Tweaks ──
   'nv-max-power-management': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\0000\" /v PowerMizerEnable /t REG_DWORD /d 1 /f; reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\0000\" /v PowerMizerLevel /t REG_DWORD /d 1 /f'",
   'nv-disable-thermal-throttle': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\0000\" /v ThermalThrottleLimit /t REG_DWORD /d 95 /f'",
   'nv-optimize-pcie': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\0000\" /v PCIeLinkSpeed /t REG_DWORD /d 3 /f'",
   'nv-disable-gpu-preemption': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\GraphicsDrivers\" /v DisablePreemption /t REG_DWORD /d 1 /f'",
-  'nv-max-frames-ahead': "reg add \"HKCU\\Software\\NVIDIA Corporation\\Global\\NVTweak\" /v PreRenderLimit /t REG_DWORD /d 1 /f",
+  'nv-max-frames-ahead': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\NVIDIA Corporation\\Global\\NVTweak\" /v PreRenderLimit /t REG_DWORD /d 1 /f'",
   'nv-disable-mpo': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Microsoft\\Windows\\Dwm\" /v EnableTearing /t REG_DWORD /d 0 /f'",
   'nv-shader-cache-size': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\NVIDIA Corporation\\Global\\NVTweak\" /v ShaderCacheSizeMB /t REG_DWORD /d 1024 /f'",
   'nv-optimization-level': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\0000\" /v PerfLevelSrc /t REG_DWORD /d 8738 /f'",
@@ -1444,13 +1440,13 @@ const TWEAK_COMMANDS = {
   'dx-optimize-present-params': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Microsoft\\DirectX\\UserGpuPreferences\" /v LowLatencyPresent /t REG_DWORD /d 1 /f'",
 
   // ── LATENCY Timing ──
-  'lat-hpet-enable': "bcdedit /set useplatformclock true",
+  'lat-hpet-enable': "powershell -NoProfile -Command 'bcdedit /set useplatformclock true 2>&1 | Out-Null'",
   'lat-timer-resolution': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\kernel\" /v GlobalTimerResolutionRequests /t REG_DWORD /d 1 /f'",
   'lat-tsc-invariant': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\kernel\" /v UseTscInvariant /t REG_DWORD /d 1 /f'",
   'lat-disable-synthetic': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\kernel\" /v DisableSyntheticTimers /t REG_DWORD /d 1 /f'",
   'lat-optimize-interrupts': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\PriorityControl\" /v InterruptSteeringDisabled /t REG_DWORD /d 0 /f'",
-  'lat-force-tsc': "bcdedit /set useplatformtick yes",
-  'lat-disable-acpi-pm': "bcdedit /set useplatformclock true",
+  'lat-force-tsc': "powershell -NoProfile -Command 'bcdedit /set useplatformtick yes 2>&1 | Out-Null'",
+  'lat-disable-acpi-pm': "powershell -NoProfile -Command 'bcdedit /set useplatformclock true 2>&1 | Out-Null'",
   'lat-optimize-dpc': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\0000\" /v DPCPriority /t REG_DWORD /d 31 /f'",
 
   // ── ALT-TAB Optimization ──
@@ -1498,25 +1494,25 @@ const TWEAK_COMMANDS = {
   'explorer-disable-gadgets': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced\" /v ShowGadgets /t REG_DWORD /d 0 /f'",
 
   // ── INTEL GPU ──
-  'intel-disable-c-states-gpu': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\0000\" /v PerfLevelSrc /t REG_DWORD /d 8738 /f -ErrorAction SilentlyContinue; reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\0001\" /v PerfLevelSrc /t REG_DWORD /d 8738 /f -ErrorAction SilentlyContinue'",
-  'intel-max-gpu-frequency': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\0000\" /v MaxPerformanceClock /t REG_DWORD /d 1 /f -ErrorAction SilentlyContinue; reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\0001\" /v MaxPerformanceClock /t REG_DWORD /d 1 /f -ErrorAction SilentlyContinue'",
-  'intel-disable-frame-scheduling': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Intel\\Gfx\" /v DisableFrameScheduling /t REG_DWORD /d 1 /f -ErrorAction SilentlyContinue'",
-  'intel-disable-panel-self-refresh': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Intel\\Gfx\" /v DisablePanelSelfRefresh /t REG_DWORD /d 1 /f -ErrorAction SilentlyContinue'",
+  'intel-disable-c-states-gpu': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\0000\" /v PerfLevelSrc /t REG_DWORD /d 8738 /f; reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\0001\" /v PerfLevelSrc /t REG_DWORD /d 8738 /f'",
+  'intel-max-gpu-frequency': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\0000\" /v MaxPerformanceClock /t REG_DWORD /d 1 /f; reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\0001\" /v MaxPerformanceClock /t REG_DWORD /d 1 /f'",
+  'intel-disable-frame-scheduling': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Intel\\Gfx\" /v DisableFrameScheduling /t REG_DWORD /d 1 /f'",
+  'intel-disable-panel-self-refresh': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Intel\\Gfx\" /v DisablePanelSelfRefresh /t REG_DWORD /d 1 /f'",
 
   // ── MONITOR / DISPLAY ──
-  'monitor-max-refresh-rate': "powershell -NoProfile -Command '$monitors = Get-CimInstance Win32_VideoController; foreach($m in $monitors){$name=$m.DeviceID; reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\0000\" /v MaxResolution /t REG_SZ /d 0 /f -ErrorAction SilentlyContinue}'",
-  'monitor-disable-vrr-flicker': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\0000\" /v VRRFlickerMitigation /t REG_DWORD /d 0 /f -ErrorAction SilentlyContinue'",
-  'monitor-optimize-color-accuracy': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Microsoft\\Windows\\DWM\" /v DisableHWComposition /t REG_DWORD /d 1 /f -ErrorAction SilentlyContinue'",
+  'monitor-max-refresh-rate': "powershell -NoProfile -Command '$monitors = Get-CimInstance Win32_VideoController; foreach($m in $monitors){$name=$m.DeviceID; reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\0000\" /v MaxResolution /t REG_SZ /d 0 /f}'",
+  'monitor-disable-vrr-flicker': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\0000\" /v VRRFlickerMitigation /t REG_DWORD /d 0 /f'",
+  'monitor-optimize-color-accuracy': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Microsoft\\Windows\\DWM\" /v DisableHWComposition /t REG_DWORD /d 1 /f'",
 
   // ── STREAMING / OBS ──
   'obs-optimize-process-priority': "powershell -NoProfile -Command 'Get-Process obs64 -ErrorAction SilentlyContinue | ForEach-Object { $_.PriorityClass = [System.Diagnostics.ProcessPriorityClass]::High }'",
-  'obs-optimize-encoder': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\OBS Studio\\Output\" /v Encoder /t REG_SZ /d x264 /f -ErrorAction SilentlyContinue; reg add \"HKCU\\Software\\OBS Studio\\Output\" /v RateControl /t REG_SZ /d CRF /f -ErrorAction SilentlyContinue'",
-  'obs-disable-preview': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\OBS Studio\\Basic\" /v PreviewEnabled /t REG_DWORD /d 0 /f -ErrorAction SilentlyContinue'",
+  'obs-optimize-encoder': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\OBS Studio\\Output\" /v Encoder /t REG_SZ /d x264 /f; reg add \"HKCU\\Software\\OBS Studio\\Output\" /v RateControl /t REG_SZ /d CRF /f'",
+  'obs-disable-preview': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\OBS Studio\\Basic\" /v PreviewEnabled /t REG_DWORD /d 0 /f'",
 
   // ── VR ──
-  'vr-optimize-timing': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\kernel\" /v GlobalTimerResolutionRequests /t REG_DWORD /d 1 /f; reg add \"HKCU\\Software\\OpenVR\\OpenVR\" /v EnableTimingOptimization /t REG_DWORD /d 1 /f -ErrorAction SilentlyContinue'",
-  'vr-optimize-render-pipeline': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\OpenVR\\OpenVR\" /v AsyncReprojectionEnabled /t REG_DWORD /d 1 /f -ErrorAction SilentlyContinue; reg add \"HKCU\\Software\\OpenVR\\OpenVR\" /v AllowAsyncReprojection /t REG_DWORD /d 1 /f -ErrorAction SilentlyContinue'",
-  'vr-disable-async-reprojection': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\OpenVR\\OpenVR\" /v AsyncReprojectionEnabled /t REG_DWORD /d 0 /f -ErrorAction SilentlyContinue'",
+  'vr-optimize-timing': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\kernel\" /v GlobalTimerResolutionRequests /t REG_DWORD /d 1 /f; reg add \"HKCU\\Software\\OpenVR\\OpenVR\" /v EnableTimingOptimization /t REG_DWORD /d 1 /f'",
+  'vr-optimize-render-pipeline': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\OpenVR\\OpenVR\" /v AsyncReprojectionEnabled /t REG_DWORD /d 1 /f; reg add \"HKCU\\Software\\OpenVR\\OpenVR\" /v AllowAsyncReprojection /t REG_DWORD /d 1 /f'",
+  'vr-disable-async-reprojection': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\OpenVR\\OpenVR\" /v AsyncReprojectionEnabled /t REG_DWORD /d 0 /f'",
 
   // ── MOUSE (more) ──
   'mouse-disable-angle-snapping': "powershell -NoProfile -Command 'reg add \"HKCU\\Control Panel\\Mouse\" /v MouseSpeed /t REG_SZ /d 0 /f; reg add \"HKCU\\Control Panel\\Mouse\" /v MouseThreshold1 /t REG_SZ /d 0 /f; reg add \"HKCU\\Control Panel\\Mouse\" /v MouseThreshold2 /t REG_SZ /d 0 /f'",
@@ -1527,35 +1523,35 @@ const TWEAK_COMMANDS = {
   // ── KEYBOARD (more) ──
   'keyboard-optimize-repeat-rate': "reg add \"HKCU\\Control Panel\\Keyboard\" /v KeyboardSpeed /t REG_SZ /d 31 /f",
   'keyboard-optimize-repeat-delay': "reg add \"HKCU\\Control Panel\\Keyboard\" /v KeyboardDelay /t REG_SZ /d 0 /f",
-  'keyboard-disable-ghosting': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\i8042prt\\Parameters\" /v MaximumPerformance /t REG_DWORD /d 1 /f -ErrorAction SilentlyContinue'",
+  'keyboard-disable-ghosting': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\i8042prt\\Parameters\" /v MaximumPerformance /t REG_DWORD /d 1 /f'",
   'keyboard-optimize-battery': "powershell -NoProfile -Command 'Get-ChildItem \"HKLM:\\SYSTEM\\CurrentControlSet\\Enum\\HID\\*\\*\\Device Parameters\" -EA 0 | ForEach-Object{ Set-ItemProperty -Path $_.PSPath -Name KeyboardDelay -Value 0 -Type String -EA 0 }'",
 
   // ── USB (more) ──
   'usb-disable-hub-power': "powershell -NoProfile -Command 'Get-ChildItem \"HKLM:\\SYSTEM\\CurrentControlSet\\Enum\\USB\\*\\Device Parameters\\WDF\" -EA 0 | ForEach-Object{ Set-ItemProperty -Path $_.PSPath -Name IdleTimeout -Value 0 -Type DWord -EA 0 }; Get-ChildItem \"HKLM:\\SYSTEM\\CurrentControlSet\\Enum\\HID\\*\\Device Parameters\\WDF\" -EA 0 | ForEach-Object{ Set-ItemProperty -Path $_.PSPath -Name IdleTimeout -Value 0 -Type DWord -EA 0 }'",
   'usb-optimize-transfer-rate': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\USB\" /v DisableSelectiveSuspend /t REG_DWORD /d 1 /f; reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\USBSTOR\" /v Start /t REG_DWORD /d 1 /f'",
-  'usb-disable-compliance': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Usb\" /v UsbExcludeDisabledSilentReset /t REG_DWORD /d 1 /f -ErrorAction SilentlyContinue'",
+  'usb-disable-compliance': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Usb\" /v UsbExcludeDisabledSilentReset /t REG_DWORD /d 1 /f'",
 
   // ── INPUT (gamepad, touchscreen) ──
-  'input-optimize-gamepad-latency': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\mouhid\\Parameters\" /v MouseDataQueueSize /t REG_DWORD /d 16 /f -ErrorAction SilentlyContinue; reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\kbdhid\\Parameters\" /v KeyboardDataQueueSize /t REG_DWORD /d 16 /f -ErrorAction SilentlyContinue'",
+  'input-optimize-gamepad-latency': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\mouhid\\Parameters\" /v MouseDataQueueSize /t REG_DWORD /d 16 /f; reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\kbdhid\\Parameters\" /v KeyboardDataQueueSize /t REG_DWORD /d 16 /f'",
   'input-disable-touchscreen': "powershell -NoProfile -Command 'Get-PnpDevice -Class HIDClass -Status OK -EA 0 | Where-Object{$_.FriendlyName -like '*touch*'} | Disable-PnpDevice -Confirm:$false -EA 0'",
-  'input-optimize-tablet-pen': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\mshidumdf\" /v Start /t REG_DWORD /d 3 /f -ErrorAction SilentlyContinue'",
+  'input-optimize-tablet-pen': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\mshidumdf\" /v Start /t REG_DWORD /d 3 /f'",
 
   // ── STORAGE (more) ──
   'storage-disable-write-caching': "powershell -NoProfile -Command 'Get-Disk | Where-Object{$_.BusType -eq \"NVMe\"} | Set-Disk -IsWriteCacheEnabled $true -ErrorAction SilentlyContinue'",
-  'storage-optimize-io-priority': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\partmgr\\Parameters\" /v VirtualDiskSchedulerHint /t REG_DWORD /d 1 /f -ErrorAction SilentlyContinue'",
+  'storage-optimize-io-priority': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\partmgr\\Parameters\" /v VirtualDiskSchedulerHint /t REG_DWORD /d 1 /f'",
   'storage-disable-indexing-service': "powershell -NoProfile -Command 'Stop-Service -Name WSearch -Force -EA SilentlyContinue; Set-Service -Name WSearch -StartupType Disabled -EA SilentlyContinue'",
-  'storage-nvme-latency-optimization': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\stornvme\\Parameters\\Device\" /v NVMeInterruptCoalescingTimeout /t REG_DWORD /d 0 /f -ErrorAction SilentlyContinue; reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\stornvme\\Parameters\\Device\" /v NVMeNumberOfQueues /t REG_DWORD /d 4 /f -ErrorAction SilentlyContinue'",
+  'storage-nvme-latency-optimization': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\stornvme\\Parameters\\Device\" /v NVMeInterruptCoalescingTimeout /t REG_DWORD /d 0 /f; reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\stornvme\\Parameters\\Device\" /v NVMeNumberOfQueues /t REG_DWORD /d 4 /f'",
 
   // ── GPU (more) ──
-  'gpu-disable-render-completion-sync': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Schedule\\TaskCache\\Tree\\Microsoft\\Windows\\Defrag\" /v DisableRenderCompletionSync /t REG_DWORD /d 1 /f -ErrorAction SilentlyContinue'",
-  'gpu-optimize-surface-prefetch': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Microsoft\\DirectX\" /v DisableSurfacePrefetch /t REG_DWORD /d 0 /f -ErrorAction SilentlyContinue'",
-  'gpu-disable-frame-rate-limiter': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Microsoft\\DirectX\" /v DisableFrameRateLimiter /t REG_DWORD /d 1 /f -ErrorAction SilentlyContinue'",
-  'gpu-optimize-vram-allocation': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Microsoft\\DirectX\\GraphicsKernel\" /v VRAMOptimization /t REG_DWORD /d 1 /f -ErrorAction SilentlyContinue'",
+  'gpu-disable-render-completion-sync': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Schedule\\TaskCache\\Tree\\Microsoft\\Windows\\Defrag\" /v DisableRenderCompletionSync /t REG_DWORD /d 1 /f'",
+  'gpu-optimize-surface-prefetch': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Microsoft\\DirectX\" /v DisableSurfacePrefetch /t REG_DWORD /d 0 /f'",
+  'gpu-disable-frame-rate-limiter': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Microsoft\\DirectX\" /v DisableFrameRateLimiter /t REG_DWORD /d 1 /f'",
+  'gpu-optimize-vram-allocation': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Microsoft\\DirectX\\GraphicsKernel\" /v VRAMOptimization /t REG_DWORD /d 1 /f'",
 
   // ── NVIDIA (more) ──
-  'nv-disable-ansel': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\NVIDIA Corporation\\Ansel\" /v EnableAFlagsForAnsel /t REG_DWORD /d 0 /f -ErrorAction SilentlyContinue; reg add \"HKLM\\SOFTWARE\\NVIDIA Corporation\\AnselTools\" /v AllowAnsel /t REG_DWORD /d 0 /f -ErrorAction SilentlyContinue'",
-  'nv-disable-shadowplay': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\NVIDIA Corporation\\Global\\ShadowPlay\\NVSPCAPS\" /v Enable /t REG_DWORD /d 0 /f -ErrorAction SilentlyContinue'",
-  'nv-optimize-driver-scheduler': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\0000\" /v RMHwGpuPstateControlEnabled /t REG_DWORD /d 0 /f -ErrorAction SilentlyContinue; reg add \"HKLM\\SOFTWARE\\NVIDIA Corporation\\Global\\NVTweak\" /v DisableP4BC /t REG_DWORD /d 1 /f -ErrorAction SilentlyContinue'",
+  'nv-disable-ansel': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\NVIDIA Corporation\\Ansel\" /v EnableAFlagsForAnsel /t REG_DWORD /d 0 /f; reg add \"HKLM\\SOFTWARE\\NVIDIA Corporation\\AnselTools\" /v AllowAnsel /t REG_DWORD /d 0 /f'",
+  'nv-disable-shadowplay': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\NVIDIA Corporation\\Global\\ShadowPlay\\NVSPCAPS\" /v Enable /t REG_DWORD /d 0 /f'",
+  'nv-optimize-driver-scheduler': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\0000\" /v RMHwGpuPstateControlEnabled /t REG_DWORD /d 0 /f; reg add \"HKLM\\SOFTWARE\\NVIDIA Corporation\\Global\\NVTweak\" /v DisableP4BC /t REG_DWORD /d 1 /f'",
 
   // ── DEEP CLEAN ──
   'clean-dns-cache': 'ipconfig /flushdns',
@@ -1579,7 +1575,7 @@ const TWEAK_COMMANDS = {
   'net-increase-transmit-buffers': "powershell -NoProfile -Command 'Get-NetAdapter | Where-Object {$_.Status -eq \"Up\"} | ForEach-Object { Set-NetAdapterAdvancedProperty -Name $_.Name -DisplayName \"Transmit Buffers\" -DisplayValue 1024 -ErrorAction SilentlyContinue }'",
   'net-disable-gro-segmentation': "powershell -NoProfile -Command 'Get-NetAdapter | Where-Object {$_.Status -eq \"Up\"} | ForEach-Object { Set-NetAdapterAdvancedProperty -Name $_.Name -DisplayName \"Generic Receive Offload\" -DisplayValue \"Disabled\" -ErrorAction SilentlyContinue; Set-NetAdapterAdvancedProperty -Name $_.Name -DisplayName \"IPv4 Checksum Offload\" -DisplayValue \"Disabled\" -ErrorAction SilentlyContinue }'",
   'net-optimize-tcp-nodelay': "powershell -NoProfile -Command 'Get-NetAdapter | Where-Object {$_.Status -eq \"Up\"} | ForEach-Object { New-ItemProperty -Path \"HKLM:\\SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces\\$($_.InterfaceGuid)\" -Name TcpNoDelay -Value 1 -PropertyType DWord -Force -EA 0 }'",
-  'net-disable-arbitration': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\NDIS\\Parameters\" /v ArbitrationDisabled /t REG_DWORD /d 1 /f -ErrorAction SilentlyContinue'",
+  'net-disable-arbitration': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\NDIS\\Parameters\" /v ArbitrationDisabled /t REG_DWORD /d 1 /f'",
 
   // ── POWER ADVANCED ──
   'power-disable-dynamic-boost': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Processor\\Power\\Settings\\Default\\54533251-82be-4824-96c1-47b60b740d00\\be122a26-9098-42d4-84f5-61e75fa58134\" /v Attributes /t REG_DWORD /d 2 /f; powercfg /setacvalueindex SCHEME_CURRENT SUB_PROCESSOR CPMINCORES 100'",
@@ -1591,11 +1587,11 @@ const TWEAK_COMMANDS = {
   'chrome-deep-debloat': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Policies\\Google\\Chrome\" /v SafeBrowsingProtectionLevel /t REG_DWORD /d 0 /f; reg add \"HKLM\\SOFTWARE\\Policies\\Google\\Chrome\" /v SpellcheckEnabled /t REG_DWORD /d 0 /f; reg add \"HKLM\\SOFTWARE\\Policies\\Google\\Chrome\" /v TranslateEnabled /t REG_DWORD /d 0 /f; reg add \"HKLM\\SOFTWARE\\Policies\\Google\\Chrome\" /v BackgroundModeEnabled /t REG_DWORD /d 0 /f; reg add \"HKLM\\SOFTWARE\\Policies\\Google\\Chrome\" /v SyncDisabled /t REG_DWORD /d 1 /f'",
   'edge-deep-debloat': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Edge\" /v HubsSidebarEnabled /t REG_DWORD /d 0 /f; reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Edge\" /v CollectionsEnabled /t REG_DWORD /d 0 /f; reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Edge\" /v SmartCopyEnabled /t REG_DWORD /d 0 /f; reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Edge\" /v SleepingTabsEnabled /t REG_DWORD /d 1 /f; reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Edge\" /v AutoImportAtFirstRun /t REG_DWORD /d 0 /f'",
   'discord-deep-debloat': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Discord\\CEFI\" /v GamesDetectionDisabled /t REG_DWORD /d 1 /f; reg add \"HKCU\\Software\\Discord\\CEFI\" /v RichPresenceDisabled /t REG_DWORD /d 1 /f; reg add \"HKCU\\Software\\Discord\\CEFI\" /v HardwareAcceleration /t REG_DWORD /d 0 /f; reg add \"HKCU\\Software\\Discord\\CEFI\" /v OverlayEnabled /t REG_DWORD /d 0 /f'",
-  'firefox-deep-debloat': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Mozilla\\Firefox\" /v DisableTelemetry /t REG_DWORD /d 1 /f -ErrorAction SilentlyContinue; reg add \"HKLM\\SOFTWARE\\Policies\\Mozilla\\Firefox\" /v DisablePocket /t REG_DWORD /d 1 /f -ErrorAction SilentlyContinue; reg add \"HKLM\\SOFTWARE\\Policies\\Mozilla\\Firefox\" /v DisableDefaultBrowserAgent /t REG_DWORD /d 1 /f -ErrorAction SilentlyContinue'",
+  'firefox-deep-debloat': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Mozilla\\Firefox\" /v DisableTelemetry /t REG_DWORD /d 1 /f; reg add \"HKLM\\SOFTWARE\\Policies\\Mozilla\\Firefox\" /v DisablePocket /t REG_DWORD /d 1 /f; reg add \"HKLM\\SOFTWARE\\Policies\\Mozilla\\Firefox\" /v DisableDefaultBrowserAgent /t REG_DWORD /d 1 /f'",
 
   // ── GPU ADVANCED ──
   'gpu-force-max-clocks': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\0000\" /v PerfLevelSrc /t REG_DWORD /d 8738 /f; reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\0000\" /v PowerMizerLevel /t REG_DWORD /d 1 /f'",
-  'gpu-disable-gpu-preemption-deep': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\GraphicsDrivers\" /v DisablePreemption /t REG_DWORD /d 1 /f; reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\0000\" /v RMDisablePreemption /t REG_DWORD /d 1 /f -ErrorAction SilentlyContinue'",
+  'gpu-disable-gpu-preemption-deep': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\GraphicsDrivers\" /v DisablePreemption /t REG_DWORD /d 1 /f; reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\0000\" /v RMDisablePreemption /t REG_DWORD /d 1 /f'",
   'gpu-disable-tdr': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\GraphicsDrivers\" /v TdrLevel /t REG_DWORD /d 0 /f; reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\GraphicsDrivers\" /v TdrDelay /t REG_DWORD /d 60 /f'",
 
   // ── TIMER & LATENCY DEEP ──
@@ -1613,7 +1609,7 @@ const TWEAK_COMMANDS = {
   'privacy-disable-tracking': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\System\" /v EnableActivityFeed /t REG_DWORD /d 0 /f; reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\System\" /v PublishUserActivities /t REG_DWORD /d 0 /f; reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\System\" /v UploadUserActivities /t REG_DWORD /d 0 /f; reg add \"HKCU\\Software\\Microsoft\\InputPersonalization\" /v RestrictImplicitInkCollection /t REG_DWORD /d 1 /f; reg add \"HKCU\\Software\\Microsoft\\InputPersonalization\" /v RestrictImplicitTextCollection /t REG_DWORD /d 1 /f'",
 
   // ── AUDIO DEEP ──
-  'audio-optimize-latency': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Audio\" /v DisableAudioEnhancements /t REG_DWORD /d 1 /f; reg add \"HKCU\\Software\\Microsoft\\Audio\\Settings\" /v SampleRate /t REG_DWORD /d 48000 /f; reg add \"HKCU\\Software\\Microsoft\\MMSys\\Default\\DevicePeriod\" /v Period /t REG_DWORD /d 1 /f -EA 0'",
+  'audio-optimize-latency': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Audio\" /v DisableAudioEnhancements /t REG_DWORD /d 1 /f; reg add \"HKCU\\Software\\Microsoft\\Audio\\Settings\" /v SampleRate /t REG_DWORD /d 48000 /f; reg add \"HKCU\\Software\\Microsoft\\MMSys\\Default\\DevicePeriod\" /v Period /t REG_DWORD /d 1 /f'",
   'audio-disable-all-enhancements': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Microsoft\\MMSys\\Default\\AudioEffects\\AudioEnhancementSceneGraph\" /v Enabled /t REG_DWORD /d 0 /f; reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Audio\" /v DisableSpatialSound /t REG_DWORD /d 1 /f; reg add \"HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Audio\" /v DisableAudioEnhancements /t REG_DWORD /d 1 /f'",
 
   // ── WINDOWS ADVANCED ──
@@ -1623,7 +1619,7 @@ const TWEAK_COMMANDS = {
 
   // ── GAMING DEEP ──
   'game-optimize-all': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\PriorityControl\" /v Win32PrioritySeparation /t REG_DWORD /d 38 /f; reg add \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\" /v SystemResponsiveness /t REG_DWORD /d 0 /f; reg add \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\" /v NetworkThrottlingIndex /t REG_DWORD /d 4294967295 /f; reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\kernel\" /v GlobalTimerResolutionRequests /t REG_DWORD /d 1 /f; reg add \"HKCU\\System\\GameConfigStore\" /v GameDVR_Enabled /t REG_DWORD /d 0 /f; reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\GameDVR\" /v AppCaptureEnabled /t REG_DWORD /d 0 /f'",
-  'game-disable-all-overlays': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Microsoft\\GameBar\" /v ShowStartupPanel /t REG_DWORD /d 0 /f; reg add \"HKCU\\System\\GameConfigStore\" /v GameDVR_Enabled /t REG_DWORD /d 0 /f; reg add \"HKCU\\Software\\NVIDIA Corporation\\Global\\ShadowPlay\\NVSPCAPS\" /v Enable /t REG_DWORD /d 0 -EA 0; reg add \"HKCU\\Software\\Discord\\CEFI\" /v OverlayEnabled /t REG_DWORD /d 0 -EA 0; reg add \"HKCU\\Software\\Valve\\Steam\" /v DisableOverlay /t REG_DWORD /d 1 -EA 0'",
+  'game-disable-all-overlays': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Microsoft\\GameBar\" /v ShowStartupPanel /t REG_DWORD /d 0 /f; reg add \"HKCU\\System\\GameConfigStore\" /v GameDVR_Enabled /t REG_DWORD /d 0 /f; reg add \"HKCU\\Software\\NVIDIA Corporation\\Global\\ShadowPlay\\NVSPCAPS\" /v Enable /t REG_DWORD /d 0 /f; reg add \"HKCU\\Software\\Discord\\CEFI\" /v OverlayEnabled /t REG_DWORD /d 0 /f; reg add \"HKCU\\Software\\Valve\\Steam\" /v DisableOverlay /t REG_DWORD /d 1 /f'",
   'game-optimize-memory-deep': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management\" /v LargeSystemCache /t REG_DWORD /d 0 /f; reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management\" /v DisablePagingExecutive /t REG_DWORD /d 1 /f; reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management\" /v ClearPageFileAtShutdown /t REG_DWORD /d 0 /f; Stop-Service -Name SysMain -Force -EA SilentlyContinue; Set-Service -Name SysMain -StartupType Disabled -EA SilentlyContinue; [System.GC]::Collect(); [System.GC]::WaitForPendingFinalizers()'",
 };
 
@@ -1674,63 +1670,63 @@ const TWEAK_RESTORE_COMMANDS = {
   'keyboard-usb-power-mgmt': 'powershell -Command "Get-ChildItem \'HKLM:\\SYSTEM\\CurrentControlSet\\Enum\\USB\\*\*\\Device Parameters\\WDF\' -EA 0 | ForEach-Object{Remove-ItemProperty -Path $_.PSPath -Name IdleTimeout -EA 0}; Get-ChildItem \'HKLM:\\SYSTEM\\CurrentControlSet\\Enum\\HID\\*\*\\Device Parameters\\WDF\' -EA 0 | ForEach-Object{Remove-ItemProperty -Path $_.PSPath -Name IdleTimeout -EA 0}}"',
 
   'sys-disable-gamebar': "powershell -NoProfile -Command 'Remove-ItemProperty -Path \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\GameDVR\" -Name \"AppCaptureEnabled\" -Force -ErrorAction SilentlyContinue; Remove-ItemProperty -Path \"HKCU\\System\\GameConfigStore\" -Name \"GameDVR_Enabled\" -Force -ErrorAction SilentlyContinue'",
-  'sys-disable-vbs': "powershell -NoProfile -Command 'bcdedit /set hypervisorlaunchtype auto; reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\DeviceGuard\" /v EnableVirtualizationBasedSecurity /f -ErrorAction SilentlyContinue'",
+  'sys-disable-vbs': "powershell -NoProfile -Command 'bcdedit /set hypervisorlaunchtype auto; reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\DeviceGuard\" /v EnableVirtualizationBasedSecurity /f'",
   'sys-disable-xbox': 'powershell -NoProfile -Command "Set-Service -Name XblAuthManager -StartupType Manual -ErrorAction SilentlyContinue; Set-Service -Name XblGameSave -StartupType Manual -ErrorAction SilentlyContinue; Set-Service -Name XboxGipSvc -StartupType Manual -ErrorAction SilentlyContinue; Set-Service -Name XboxNetApiSvc -StartupType Manual -ErrorAction SilentlyContinue"',
-  'sys-disable-mitigations': "powershell -NoProfile -Command 'reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management\" /v FeatureSettingsOverride /f -ErrorAction SilentlyContinue; reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management\" /v FeatureSettingsOverrideMask /f -ErrorAction SilentlyContinue'",
-  'sys-optimize-fps': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\PriorityControl\" /v Win32PrioritySeparation /t REG_DWORD /d 2 /f; reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management\" /v LargeSystemCache /f -ErrorAction SilentlyContinue; reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\kernel\" /v GlobalTimerResolutionRequests /f -ErrorAction SilentlyContinue'",
-  'sys-optimize-device-affinities': "powershell -NoProfile -Command 'reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\kernel\" /v GlobalTimerResolutionRequests /f -ErrorAction SilentlyContinue'",
-  'sys-optimize-msi': "powershell -NoProfile -Command 'Get-NetAdapter | ForEach-Object { $name = $_.Name; reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\${name}\\Parameters\\Interrupt Management\" /v MessageNumberLimit /f -ErrorAction SilentlyContinue }'",
+  'sys-disable-mitigations': "powershell -NoProfile -Command 'reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management\" /v FeatureSettingsOverride /f; reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management\" /v FeatureSettingsOverrideMask /f'",
+  'sys-optimize-fps': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\PriorityControl\" /v Win32PrioritySeparation /t REG_DWORD /d 2 /f; reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management\" /v LargeSystemCache /f; reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\kernel\" /v GlobalTimerResolutionRequests /f'",
+  'sys-optimize-device-affinities': "powershell -NoProfile -Command 'reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\kernel\" /v GlobalTimerResolutionRequests /f'",
+  'sys-optimize-msi': "powershell -NoProfile -Command 'Get-NetAdapter | ForEach-Object { $name = $_.Name; reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\${name}\\Parameters\\Interrupt Management\" /v MessageNumberLimit /f }'",
   'sys-reduce-background': 'powershell -NoProfile -Command "Set-Service -Name DiagTrack -StartupType Manual -ErrorAction SilentlyContinue; Set-Service -Name dmwappushservice -StartupType Manual -ErrorAction SilentlyContinue"',
   'sys-disable-hibernation': 'powershell -NoProfile -Command "powercfg /hibernate on"',
-  'sys-enable-modern-memory': "powershell -NoProfile -Command 'reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management\" /v DisableHeapTermination /f -ErrorAction SilentlyContinue; reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management\" /v HeapSegmentReserve /f -ErrorAction SilentlyContinue'",
+  'sys-enable-modern-memory': "powershell -NoProfile -Command 'reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management\" /v DisableHeapTermination /f; reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management\" /v HeapSegmentReserve /f'",
   'sys-disable-services': 'powershell -NoProfile -Command "Set-Service -Name WSearch -StartupType Automatic -ErrorAction SilentlyContinue; Set-Service -Name SysMain -StartupType Automatic -ErrorAction SilentlyContinue"',
   'sys-optimize-storage': 'powershell -NoProfile -Command "fsutil behavior set DisableLastAccess 0"',
   'sys-reduce-boot-timeout': 'powershell -NoProfile -Command "bcdedit /timeout 30"',
-  'sys-optimize-explorer': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced\" /v LaunchTo /t REG_DWORD /d 2 /f; reg delete \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced\" /v ShowTaskViewButton /f -ErrorAction SilentlyContinue; reg delete \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced\" /v ShowCortanaButton /f -ErrorAction SilentlyContinue'",
-  'sys-disable-boot-interface': "powershell -NoProfile -Command 'reg delete \"HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System\" /v NoBootLogo /f -ErrorAction SilentlyContinue'",
-  'sys-optimize-browser-bg': "powershell -NoProfile -Command 'reg delete \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Edge\" /v BackgroundModeEnabled /f -ErrorAction SilentlyContinue'",
+  'sys-optimize-explorer': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced\" /v LaunchTo /t REG_DWORD /d 2 /f; reg delete \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced\" /v ShowTaskViewButton /f; reg delete \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced\" /v ShowCortanaButton /f'",
+  'sys-disable-boot-interface': "powershell -NoProfile -Command 'reg delete \"HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System\" /v NoBootLogo /f'",
+  'sys-optimize-browser-bg': "powershell -NoProfile -Command 'reg delete \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Edge\" /v BackgroundModeEnabled /f'",
   'nv-disable-telemetry': 'powershell -NoProfile -Command "Set-Service -Name NvTelemetryContainer -StartupType Automatic -ErrorAction SilentlyContinue; Start-Service -Name NvTelemetryContainer -ErrorAction SilentlyContinue"',
-  'nv-optimize-performance': "powershell -NoProfile -Command 'reg delete \"HKLM\\SOFTWARE\\NVIDIA Corporation\\Global\\NVTweak\" /v DisablePStateSorting /f -ErrorAction SilentlyContinue'",
+  'nv-optimize-performance': "powershell -NoProfile -Command 'reg delete \"HKLM\\SOFTWARE\\NVIDIA Corporation\\Global\\NVTweak\" /v DisablePStateSorting /f'",
   'nv-enhance-privacy': 'powershell -NoProfile -Command "Set-Service -Name NvTelemetryContainer -StartupType Automatic -ErrorAction SilentlyContinue; Start-Service -Name NvTelemetryContainer -ErrorAction SilentlyContinue"',
-  'nv-enable-dlss-indicator': "powershell -NoProfile -Command 'reg delete \"HKLM\\SOFTWARE\\NVIDIA Corporation\\DLSS\" /v ShowDlssIndicator /f -ErrorAction SilentlyContinue'",
-  'privacy-reduce-ads': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager\" /v SystemPaneSuggestionsEnabled /f -ErrorAction SilentlyContinue; reg delete \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager\" /v SubscribedContent-338389Enabled /f -ErrorAction SilentlyContinue; reg delete \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager\" /v SubscribedContent-310093Enabled /f -ErrorAction SilentlyContinue; reg delete \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager\" /v SoftLandingEnabled /f -ErrorAction SilentlyContinue'",
+  'nv-enable-dlss-indicator': "powershell -NoProfile -Command 'reg delete \"HKLM\\SOFTWARE\\NVIDIA Corporation\\DLSS\" /v ShowDlssIndicator /f'",
+  'privacy-reduce-ads': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager\" /v SystemPaneSuggestionsEnabled /f; reg delete \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager\" /v SubscribedContent-338389Enabled /f; reg delete \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager\" /v SubscribedContent-310093Enabled /f; reg delete \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager\" /v SoftLandingEnabled /f'",
   'privacy-optimize-smb': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\LanmanServer\\Parameters\" /v SMB1 /t REG_DWORD /d 1 /f'",
-  'privacy-disable-security-questions': "powershell -NoProfile -Command 'reg delete \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\System\" /v NoLocalPasswordResetQuestions /f -ErrorAction SilentlyContinue'",
-  'privacy-harden-security': "powershell -NoProfile -Command 'reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Lsa\" /v restrictanonymous /f -ErrorAction SilentlyContinue; reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Lsa\" /v restrictanonymoussam /f -ErrorAction SilentlyContinue'",
+  'privacy-disable-security-questions': "powershell -NoProfile -Command 'reg delete \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\System\" /v NoLocalPasswordResetQuestions /f'",
+  'privacy-harden-security': "powershell -NoProfile -Command 'reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Lsa\" /v restrictanonymous /f; reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Lsa\" /v restrictanonymoussam /f'",
   'privacy-disable-vpn': 'powershell -NoProfile -Command "Set-Service -Name RasMan -StartupType Manual -ErrorAction SilentlyContinue"',
   'privacy-disable-ucpd': 'powershell -NoProfile -Command "Set-Service -Name ucpd -StartupType Automatic -ErrorAction SilentlyContinue; Start-Service -Name ucpd -ErrorAction SilentlyContinue"',
   'privacy-unlock-eu-privacy': "powershell -NoProfile -Command 'reg add \"HKCU\\Control Panel\\International\\Geo\" /v Nation /t REG_SZ /d 244 /f; reg add \"HKCU\\Control Panel\\International\\Geo\" /v Name /t REG_SZ /d US /f'",
-  'privacy-redirect-web-searches': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Search\" /v BingSearchEnabled /f -ErrorAction SilentlyContinue; reg delete \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Search\" /v CortanaConsent /f -ErrorAction SilentlyContinue'",
-  'privacy-disable-driver-updates': "powershell -NoProfile -Command 'reg delete \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate\" /v ExcludeWUDriversInQualityUpdate /f -ErrorAction SilentlyContinue'",
+  'privacy-redirect-web-searches': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Search\" /v BingSearchEnabled /f; reg delete \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Search\" /v CortanaConsent /f'",
+  'privacy-disable-driver-updates': "powershell -NoProfile -Command 'reg delete \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate\" /v ExcludeWUDriversInQualityUpdate /f'",
   'net-optimize-performance': 'powershell -NoProfile -Command "netsh int tcp set global chimney=default; netsh int tcp set global dca=disabled; netsh int tcp set global netdma=disabled; netsh int tcp set global ecncapability=default; netsh int tcp set global timestamps=default; netsh int tcp set global autotuninglevel=normal"',
   'net-disable-lso': "powershell -NoProfile -Command 'Get-NetAdapter | ForEach-Object { $name = $_.Name; Set-NetAdapterAdvancedProperty -Name $name -DisplayName \"Large Send Offload (IPv4)\" -DisplayValue \"Enabled\" -ErrorAction SilentlyContinue; Set-NetAdapterAdvancedProperty -Name $name -DisplayName \"Large Send Offload (IPv6)\" -DisplayValue \"Enabled\" -ErrorAction SilentlyContinue }'",
-  'qol-clean-taskbar': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Search\" /v SearchBoxTaskbarMode /f -ErrorAction SilentlyContinue; reg delete \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced\" /v ShowTaskViewButton /f -ErrorAction SilentlyContinue; reg delete \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced\" /v TaskbarMn /f -ErrorAction SilentlyContinue'",
-  'qol-classic-photo-viewer': "powershell -NoProfile -Command 'reg delete \"HKCR\\SystemFileAssociations\\.jpg\\Shell\\open\\command\" /f -ErrorAction SilentlyContinue'",
-  'qol-bypass-win11': "powershell -NoProfile -Command 'reg delete \"HKLM\\SYSTEM\\Setup\\LabConfig\" /v BypassTPMCheck /f -ErrorAction SilentlyContinue; reg delete \"HKLM\\SYSTEM\\Setup\\LabConfig\" /v BypassSecureBootCheck /f -ErrorAction SilentlyContinue; reg delete \"HKLM\\SYSTEM\\Setup\\LabConfig\" /v BypassRAMCheck /f -ErrorAction SilentlyContinue; reg delete \"HKLM\\SYSTEM\\Setup\\LabConfig\" /v BypassStorageCheck /f -ErrorAction SilentlyContinue; reg delete \"HKLM\\SYSTEM\\Setup\\LabConfig\" /v BypassCPUCheck /f -ErrorAction SilentlyContinue'",
+  'qol-clean-taskbar': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Search\" /v SearchBoxTaskbarMode /f; reg delete \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced\" /v ShowTaskViewButton /f; reg delete \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced\" /v TaskbarMn /f'",
+  'qol-classic-photo-viewer': "powershell -NoProfile -Command 'reg delete \"HKCR\\SystemFileAssociations\\.jpg\\Shell\\open\\command\" /f'",
+  'qol-bypass-win11': "powershell -NoProfile -Command 'reg delete \"HKLM\\SYSTEM\\Setup\\LabConfig\" /v BypassTPMCheck /f; reg delete \"HKLM\\SYSTEM\\Setup\\LabConfig\" /v BypassSecureBootCheck /f; reg delete \"HKLM\\SYSTEM\\Setup\\LabConfig\" /v BypassRAMCheck /f; reg delete \"HKLM\\SYSTEM\\Setup\\LabConfig\" /v BypassStorageCheck /f; reg delete \"HKLM\\SYSTEM\\Setup\\LabConfig\" /v BypassCPUCheck /f'",
   'qol-disable-disk-quotas': 'powershell -NoProfile -Command "fsutil quota enable C:"',
-  'qol-disable-browser-hw-accel': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced\" /v DisableHWAcceleration /f -ErrorAction SilentlyContinue; reg delete \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Edge\" /v HardwareAccelerationModeEnabled /f -ErrorAction SilentlyContinue'",
+  'qol-disable-browser-hw-accel': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced\" /v DisableHWAcceleration /f; reg delete \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Edge\" /v HardwareAccelerationModeEnabled /f'",
 
   // NEW FREE TWEAKS RESTORE
   'sys-disable-tips': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager\" /v SoftLandingEnabled /t REG_DWORD /d 1 /f; reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager\" /v SubscribedContent-338388Enabled /t REG_DWORD /d 1 /f'",
   'sys-disable-lockscreen-spotlight': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager\" /v RotatingLockScreenEnabled /t REG_DWORD /d 1 /f; reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager\" /v RotatingLockScreenOverlayEnabled /t REG_DWORD /d 1 /f'",
   'sys-disable-start-suggestions': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager\" /v SubscribedContent-338388Enabled /t REG_DWORD /d 1 /f; reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager\" /v SubscribedContent-310093Enabled /t REG_DWORD /d 1 /f'",
   'sys-disable-error-reporting': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Microsoft\\Windows\\Windows Error Reporting\" /v Disabled /t REG_DWORD /d 0 /f; Set-Service -Name WerSvc -StartupType Manual -ErrorAction SilentlyContinue'",
-  'sys-disable-delivery-optimization': "powershell -NoProfile -Command 'reg delete \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\DeliveryOptimization\" /v DODownloadMode /f -ErrorAction SilentlyContinue; reg add \"HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\DeliveryOptimization\\Config\" /v DODownloadMode /t REG_DWORD /d 1 /f'",
-  'sys-disable-location': "powershell -NoProfile -Command 'reg delete \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\LocationAndSensors\" /v DisableLocation /f -ErrorAction SilentlyContinue; reg delete \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\LocationAndSensors\" /v DisableWindowsLocationProvider /f -ErrorAction SilentlyContinue'",
+  'sys-disable-delivery-optimization': "powershell -NoProfile -Command 'reg delete \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\DeliveryOptimization\" /v DODownloadMode /f; reg add \"HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\DeliveryOptimization\\Config\" /v DODownloadMode /t REG_DWORD /d 1 /f'",
+  'sys-disable-location': "powershell -NoProfile -Command 'reg delete \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\LocationAndSensors\" /v DisableLocation /f; reg delete \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\LocationAndSensors\" /v DisableWindowsLocationProvider /f'",
   'sys-disable-find-my-device': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\FindMyDevice\" /v AllowFindMyDevice /t REG_DWORD /d 1 /f'",
-  'sys-disable-activity-history': "powershell -NoProfile -Command 'reg delete \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\System\" /v EnableActivityFeed /f -ErrorAction SilentlyContinue; reg delete \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\System\" /v PublishUserActivities /f -ErrorAction SilentlyContinue; reg delete \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\System\" /v UploadUserActivities /f -ErrorAction SilentlyContinue'",
-  'sys-disable-widgets': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Feeds\" /v ShellFeedsEnabled /t REG_DWORD /d 1 /f; reg delete \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\Windows Feeds\" /v EnableFeeds /f -ErrorAction SilentlyContinue'",
+  'sys-disable-activity-history': "powershell -NoProfile -Command 'reg delete \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\System\" /v EnableActivityFeed /f; reg delete \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\System\" /v PublishUserActivities /f; reg delete \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\System\" /v UploadUserActivities /f'",
+  'sys-disable-widgets': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Feeds\" /v ShellFeedsEnabled /t REG_DWORD /d 1 /f; reg delete \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\Windows Feeds\" /v EnableFeeds /f'",
   'sys-disable-taskbar-search': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Search\" /v SearchboxTaskbarMode /t REG_DWORD /d 2 /f'",
   'sys-disable-cortana': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\Windows Search\" /v AllowCortana /t REG_DWORD /d 1 /f; reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Search\" /v CortanaEnabled /t REG_DWORD /d 1 /f'",
   'sys-disable-cloud-clipboard': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Microsoft\\Clipboard\" /v EnableCloudClipboard /t REG_DWORD /d 1 /f'",
-  'sys-disable-meet-now': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\Explorer\" /v HideSCAMeetNow /f -ErrorAction SilentlyContinue'",
+  'sys-disable-meet-now': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\Explorer\" /v HideSCAMeetNow /f'",
   'sys-disable-people-bar': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced\" /v PeopleBand /t REG_DWORD /d 1 /f'",
   'sys-disable-search-highlights': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\SearchSettings\" /v IsDynamicSearchBoxEnabled /t REG_DWORD /d 1 /f'",
   'sys-disable-taskbar-feed': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Feeds\" /v ShellFeedsEnabled /t REG_DWORD /d 1 /f; reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Feeds\" /v ShellFeedsShowFeeds /t REG_DWORD /d 1 /f'",
   'sys-disable-lockscreen-notifications': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Notifications\\Settings\\Windows.SystemToast.Suggested\" /v Enabled /t REG_DWORD /d 1 /f; reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager\" /v RotatingLockScreenEnabled /t REG_DWORD /d 1 /f'",
-  'sys-disable-action-center': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\Policies\\Microsoft\\Windows\\Explorer\" /v DisableNotificationCenter /f -ErrorAction SilentlyContinue; reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Notifications\\Settings\" /v NOC_GLOBAL_SETTING_TOASTS_ENABLED /t REG_DWORD /d 1 /f'",
+  'sys-disable-action-center': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\Policies\\Microsoft\\Windows\\Explorer\" /v DisableNotificationCenter /f; reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Notifications\\Settings\" /v NOC_GLOBAL_SETTING_TOASTS_ENABLED /t REG_DWORD /d 1 /f'",
   'sys-disable-scheduled-defrag': 'powershell -NoProfile -Command "Enable-ScheduledTask -TaskName \\Microsoft\\Windows\\Defrag\\ScheduledDefrag -ErrorAction SilentlyContinue"',
-  'qol-optimize-browsing': "powershell -NoProfile -Command 'reg delete \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Edge\" /v BackgroundModeEnabled /f -ErrorAction SilentlyContinue'",
+  'qol-optimize-browsing': "powershell -NoProfile -Command 'reg delete \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Edge\" /v BackgroundModeEnabled /f'",
   'privacy-disable-vm-support': 'powershell -NoProfile -Command "Set-Service -Name vmcompute -StartupType Manual -ErrorAction SilentlyContinue; Set-Service -Name vmms -StartupType Manual -ErrorAction SilentlyContinue"',
   // ── NEW TWEAKS ──
   'net-disable-nagle': "powershell -NoProfile -Command 'Get-NetAdapter | Where-Object {$_.Status -eq \"Up\"} | ForEach-Object { Remove-ItemProperty -Path \"HKLM:\\SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces\\$($_.InterfaceGuid)\" -Name TcpAckFrequency -Force -ErrorAction SilentlyContinue; Remove-ItemProperty -Path \"HKLM:\\SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces\\$($_.InterfaceGuid)\" -Name TCPNoDelay -Force -ErrorAction SilentlyContinue; Remove-ItemProperty -Path \"HKLM:\\SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces\\$($_.InterfaceGuid)\" -Name TcpDelAckTicks -Force -ErrorAction SilentlyContinue }'",
@@ -1748,40 +1744,40 @@ const TWEAK_RESTORE_COMMANDS = {
   'storage-enable-write-cache': "powershell -NoProfile -Command 'Get-WmiObject Win32_DiskDrive | Where-Object {$_.InterfaceType -ne \"USB\"} | ForEach-Object { $regPath = \"HKLM:\\SYSTEM\\CurrentControlSet\\Enum\\PCI\\\" + (Get-WmiObject Win32_PnPEntity | Where-Object { $_.PNPDeviceID -like \"*Disk*\" } | Select-Object -First 1).PNPDeviceID.Replace(\"\\\",\"#\") + \"\\Device Parameters\\StorPort\"; if(Test-Path $regPath){ Set-ItemProperty -Path $regPath -Name WriteCacheEnable -Value 0 -ErrorAction SilentlyContinue } }'",
   'storage-disable-ahci-link-power': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\storahci\\Parameters\\Device\" /v DeviceWriteCacheEnabled /t REG_DWORD /d 0 /f; reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\storahci\\Parameters\\Device\" /v LpmPolicy /t REG_DWORD /d 1 /f'",
   'sys-disable-task-view': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced\" /v ShowTaskViewButton /t REG_DWORD /d 1 /f'",
-  'sys-disable-clipboard-history': "powershell -NoProfile -Command 'reg delete \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\System\" /v AllowClipboardHistory /f -ErrorAction SilentlyContinue; reg add \"HKCU\\Software\\Microsoft\\Clipboard\" /v EnableClipboardHistory /t REG_DWORD /d 1 /f'",
-  'sys-disable-feedback': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\Microsoft\\Siuf\\Rules\" /v NumberOfSIUFInPeriod /f -ErrorAction SilentlyContinue; reg delete \"HKCU\\Software\\Microsoft\\Siuf\\Rules\" /v PeriodInNanoSeconds /f -ErrorAction SilentlyContinue; reg delete \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\DataCollection\" /v DoNotShowFeedbackNotifications /f -ErrorAction SilentlyContinue'",
+  'sys-disable-clipboard-history': "powershell -NoProfile -Command 'reg delete \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\System\" /v AllowClipboardHistory /f; reg add \"HKCU\\Software\\Microsoft\\Clipboard\" /v EnableClipboardHistory /t REG_DWORD /d 1 /f'",
+  'sys-disable-feedback': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\Microsoft\\Siuf\\Rules\" /v NumberOfSIUFInPeriod /f; reg delete \"HKCU\\Software\\Microsoft\\Siuf\\Rules\" /v PeriodInNanoSeconds /f; reg delete \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\DataCollection\" /v DoNotShowFeedbackNotifications /f'",
   'sys-disable-suggested-content': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager\" /v SubscribedContent-338389Enabled /t REG_DWORD /d 1 /f; reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager\" /v SubscribedContent-310093Enabled /t REG_DWORD /d 1 /f; reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryManager\" /v SoftLandingEnabled /t REG_DWORD /d 1 /f'",
-  'sys-disable-web-search': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\Policies\\Microsoft\\Windows\\Explorer\" /v DisableSearchBoxSuggestions /f -ErrorAction SilentlyContinue; reg delete \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\Windows Search\" /v DisableWebSearch /f -ErrorAction SilentlyContinue; reg delete \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\Windows Search\" /v ConnectedSearchUseWeb /f -ErrorAction SilentlyContinue'",
+  'sys-disable-web-search': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\Policies\\Microsoft\\Windows\\Explorer\" /v DisableSearchBoxSuggestions /f; reg delete \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\Windows Search\" /v DisableWebSearch /f; reg delete \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\Windows Search\" /v ConnectedSearchUseWeb /f'",
 
   // ── DEBLOAT RESTORE ──
   'debloat-remove-store-bloatware': 'echo "Store apps reinstallation requires Windows Store"',
-  'debloat-remove-onedrive': "powershell -NoProfile -Command 'reg delete \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\OneDrive\" /v DisableFileSyncNGSC /f -ErrorAction SilentlyContinue'",
+  'debloat-remove-onedrive': "powershell -NoProfile -Command 'reg delete \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\OneDrive\" /v DisableFileSyncNGSC /f'",
   'debloat-clean-temp-files': 'echo "Temp files cannot be restored"',
-  'debloat-disable-telemetry': "powershell -NoProfile -Command 'Set-Service -Name DiagTrack -StartupType Automatic -ErrorAction SilentlyContinue; Start-Service -Name DiagTrack -ErrorAction SilentlyContinue; reg delete \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\DataCollection\" /v AllowTelemetry /f -ErrorAction SilentlyContinue'",
-  'debloat-remove-news-widget': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Feeds\" /v ShellFeedsEnabled /t REG_DWORD /d 1 /f; reg delete \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\Windows Feeds\" /v EnableFeeds /f -ErrorAction SilentlyContinue'",
-  'debloat-disable-web-experience': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\Windows Feeds\" /v EnableFeeds /t REG_DWORD /d 1 /f -ErrorAction SilentlyContinue'",
-  'debloat-disable-background-access': "powershell -NoProfile -Command 'Get-AppxPackage | ForEach-Object { $pkg = $_.PackageFullName; reg delete \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\BackgroundAccessApplications\\$pkg\" /v Disabled /f -ErrorAction SilentlyContinue }'",
-  'debloat-disable-store-updates': "powershell -NoProfile -Command 'reg delete \"HKLM\\SOFTWARE\\Policies\\Microsoft\\WindowsStore\" /v AutoDownload /f -ErrorAction SilentlyContinue'",
+  'debloat-disable-telemetry': "powershell -NoProfile -Command 'Set-Service -Name DiagTrack -StartupType Automatic -ErrorAction SilentlyContinue; Start-Service -Name DiagTrack -ErrorAction SilentlyContinue; reg delete \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\DataCollection\" /v AllowTelemetry /f'",
+  'debloat-remove-news-widget': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Feeds\" /v ShellFeedsEnabled /t REG_DWORD /d 1 /f; reg delete \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\Windows Feeds\" /v EnableFeeds /f'",
+  'debloat-disable-web-experience': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\Windows Feeds\" /v EnableFeeds /t REG_DWORD /d 1 /f'",
+  'debloat-disable-background-access': "powershell -NoProfile -Command 'Get-AppxPackage | ForEach-Object { $pkg = $_.PackageFullName; reg delete \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\BackgroundAccessApplications\\$pkg\" /v Disabled /f }'",
+  'debloat-disable-store-updates': "powershell -NoProfile -Command 'reg delete \"HKLM\\SOFTWARE\\Policies\\Microsoft\\WindowsStore\" /v AutoDownload /f'",
   'debloat-remove-xbox-packages': "powershell -NoProfile -Command 'Set-Service -Name XblAuthManager,XblGameSave,XboxGipSvc,XboxNetApiSvc -StartupType Manual -ErrorAction SilentlyContinue'",
 
   // ── GPU RESTORE ──
   'gpu-max-performance-mode': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Power\" /v PowerThrottlingOff /t REG_DWORD /d 0 /f; reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Power\" /v CsEnabled /t REG_DWORD /d 1 /f'",
   'gpu-disable-power-gating': "powershell -NoProfile -Command 'Get-NetAdapter | Where-Object {$_.Status -eq \"Up\"} | ForEach-Object { $desc = $_.InterfaceDescription; Get-WmiObject MSPower_DeviceEnable -Namespace root\\wmi -EA 0 | Where-Object { $_.InstanceName -match $desc } | ForEach-Object { $_.Enable = $true; $_.Put() } }'",
-  'gpu-optimize-shader-cache': "powershell -NoProfile -Command 'reg delete \"HKLM\\SOFTWARE\\NVIDIA Corporation\\Global\\NVTweak\" /v ShaderCacheSize /f -ErrorAction SilentlyContinue; reg delete \"HKLM\\SOFTWARE\\Microsoft\\DirectX\" /v ShaderCacheEnabled /f -ErrorAction SilentlyContinue'",
-  'gpu-disable-var-shading': "powershell -NoProfile -Command 'reg delete \"HKLM\\SOFTWARE\\Microsoft\\DirectX\" /v VariableShadingRate /f -ErrorAction SilentlyContinue'",
-  'gpu-set-preferred-mode': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\Microsoft\\DirectX UserGpuPreferences\" /v DirectXUserGlobalSettings /f -ErrorAction SilentlyContinue'",
+  'gpu-optimize-shader-cache': "powershell -NoProfile -Command 'reg delete \"HKLM\\SOFTWARE\\NVIDIA Corporation\\Global\\NVTweak\" /v ShaderCacheSize /f; reg delete \"HKLM\\SOFTWARE\\Microsoft\\DirectX\" /v ShaderCacheEnabled /f'",
+  'gpu-disable-var-shading': "powershell -NoProfile -Command 'reg delete \"HKLM\\SOFTWARE\\Microsoft\\DirectX\" /v VariableShadingRate /f'",
+  'gpu-set-preferred-mode': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\Microsoft\\DirectX UserGpuPreferences\" /v DirectXUserGlobalSettings /f'",
   'gpu-optimize-render-schedule': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\GraphicsDrivers\" /v TdrDelay /t REG_DWORD /d 2 /f; reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\GraphicsDrivers\" /v TdrDdiDelay /t REG_DWORD /d 5 /f'",
-  'gpu-disable-frame-pacing': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\NVIDIA Corporation\\Global\\NVTweak\" /v DisableFramePacing /f -ErrorAction SilentlyContinue'",
+  'gpu-disable-frame-pacing': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\NVIDIA Corporation\\Global\\NVTweak\" /v DisableFramePacing /f'",
 
   // ── GAMING RESTORE ──
   'game-optimize-priority': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\" /v SystemResponsiveness /t REG_DWORD /d 20 /f'",
-  'game-disable-dvr': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\GameDVR\" /v AppCaptureEnabled /f -ErrorAction SilentlyContinue; reg delete \"HKCU\\System\\GameConfigStore\" /v GameDVR_Enabled /f -ErrorAction SilentlyContinue; reg delete \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\GameDVR\" /v AllowGameDVR /f -ErrorAction SilentlyContinue'",
+  'game-disable-dvr': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\GameDVR\" /v AppCaptureEnabled /f; reg delete \"HKCU\\System\\GameConfigStore\" /v GameDVR_Enabled /f; reg delete \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\GameDVR\" /v AllowGameDVR /f'",
   'game-optimize-scheduler': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\PriorityControl\" /v Win32PrioritySeparation /t REG_DWORD /d 2 /f; reg add \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\" /v SystemResponsiveness /t REG_DWORD /d 20 /f'",
   'game-disable-game-bar-tips': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Microsoft\\GameBar\" /v ShowStartupPanel /t REG_DWORD /d 1 /f'",
-  'game-disable-background-recording': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\GameDVR\" /v AppCaptureEnabled /f -ErrorAction SilentlyContinue; reg delete \"HKCU\\System\\GameConfigStore\" /v GameDVR_Enabled /f -ErrorAction SilentlyContinue'",
-  'game-optimize-fullscreen': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\" /v DisableFullscreenOptimization /f -ErrorAction SilentlyContinue'",
+  'game-disable-background-recording': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\GameDVR\" /v AppCaptureEnabled /f; reg delete \"HKCU\\System\\GameConfigStore\" /v GameDVR_Enabled /f'",
+  'game-optimize-fullscreen': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\" /v DisableFullscreenOptimization /f'",
   'game-disable-hags': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\GraphicsDrivers\" /v HwSchMode /t REG_DWORD /d 2 /f'",
-  'game-optimize-shader-cache': "powershell -NoProfile -Command 'reg delete \"HKLM\\SOFTWARE\\Microsoft\\DirectX\" /v ShaderCacheEnabled /f -ErrorAction SilentlyContinue; reg delete \"HKLM\\SOFTWARE\\Microsoft\\DirectX\" /v ShaderCacheSize /f -ErrorAction SilentlyContinue'",
+  'game-optimize-shader-cache': "powershell -NoProfile -Command 'reg delete \"HKLM\\SOFTWARE\\Microsoft\\DirectX\" /v ShaderCacheEnabled /f; reg delete \"HKLM\\SOFTWARE\\Microsoft\\DirectX\" /v ShaderCacheSize /f'",
 
   // ── NETWORK RESTORE ──
   'net-optimize-mtu': "powershell -NoProfile -Command '$adapter = Get-NetAdapter | Where-Object {$_.Status -eq \"Up\"} | Select-Object -First 1; if($adapter){ netsh interface ipv4 set subinterface $($adapter.InterfaceIndex) mtu=1500 store=persistent }'",
@@ -1789,19 +1785,19 @@ const TWEAK_RESTORE_COMMANDS = {
   'net-optimize-tcp-window': "powershell -NoProfile -Command 'netsh int tcp set global autotuninglevel=normal'",
   'net-disable-flow-control': "powershell -NoProfile -Command 'Get-NetAdapter | ForEach-Object { $name = $_.Name; Set-NetAdapterAdvancedProperty -Name $name -DisplayName \"Flow Control\" -DisplayValue \"Tx & Rx Enabled\" -ErrorAction SilentlyContinue }'",
   'net-optimize-connection-limits': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\" /v TcpNumConnections /t REG_DWORD /d 0 /f'",
-  'net-disable-netbios': "powershell -NoProfile -Command 'Get-NetAdapter | Where-Object {$_.Status -eq \"Up\"} | ForEach-Object { $name = $_.Name; reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\NetBT\\Parameters\\Interfaces\\Tcpip_$name\" /v NetbiosOptions /t REG_DWORD /d 0 /f -ErrorAction SilentlyContinue }'",
+  'net-disable-netbios': "powershell -NoProfile -Command 'Get-NetAdapter | Where-Object {$_.Status -eq \"Up\"} | ForEach-Object { $name = $_.Name; reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\NetBT\\Parameters\\Interfaces\\Tcpip_$name\" /v NetbiosOptions /t REG_DWORD /d 0 /f }'",
 
   // ── AUDIO RESTORE ──
-  'audio-optimize-buffer-size': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\Microsoft\\MMSys\\Default\\AudioEffects\" /v AcousticEchoCancellation /f -ErrorAction SilentlyContinue'",
-  'audio-disable-spatial-sound': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Audio\" /v DisableSpatialSound /f -ErrorAction SilentlyContinue; reg delete \"HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Audio\" /v DisableSpatialSound /f -ErrorAction SilentlyContinue'",
-  'audio-set-exclusive-mode': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\Microsoft\\MMSys\\Default\\DevicePeriod\" /v Period /f -ErrorAction SilentlyContinue'",
-  'audio-disable-midi-synth': "powershell -NoProfile -Command 'reg delete \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Drivers32\" /v midi /f -ErrorAction SilentlyContinue'",
+  'audio-optimize-buffer-size': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\Microsoft\\MMSys\\Default\\AudioEffects\" /v AcousticEchoCancellation /f'",
+  'audio-disable-spatial-sound': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Audio\" /v DisableSpatialSound /f; reg delete \"HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Audio\" /v DisableSpatialSound /f'",
+  'audio-set-exclusive-mode': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\Microsoft\\MMSys\\Default\\DevicePeriod\" /v Period /f'",
+  'audio-disable-midi-synth': "powershell -NoProfile -Command 'reg delete \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Drivers32\" /v midi /f'",
 
   // ── SYSTEM RESTORE ──
-  'sys-set-timer-resolution': "powershell -NoProfile -Command 'reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\kernel\" /v GlobalTimerResolutionRequests /f -ErrorAction SilentlyContinue'",
+  'sys-set-timer-resolution': "powershell -NoProfile -Command 'reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\kernel\" /v GlobalTimerResolutionRequests /f'",
   'sys-disable-power-throttling': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Power\" /v PowerThrottlingOff /t REG_DWORD /d 0 /f'",
-  'sys-optimize-interrupts': "powershell -NoProfile -Command 'Get-NetAdapter | Where-Object {$_.Status -eq \"Up\"} | ForEach-Object { $name = $_.Name; reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\${name}\\Parameters\\Interrupt Management\" /v MessageNumberLimit /f -ErrorAction SilentlyContinue }'",
-  'sys-disable-spectre-mitigations': "powershell -NoProfile -Command 'reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management\" /v FeatureSettingsOverride /f -ErrorAction SilentlyContinue; reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management\" /v FeatureSettingsOverrideMask /f -ErrorAction SilentlyContinue'",
+  'sys-optimize-interrupts': "powershell -NoProfile -Command 'Get-NetAdapter | Where-Object {$_.Status -eq \"Up\"} | ForEach-Object { $name = $_.Name; reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\${name}\\Parameters\\Interrupt Management\" /v MessageNumberLimit /f }'",
+  'sys-disable-spectre-mitigations': "powershell -NoProfile -Command 'reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management\" /v FeatureSettingsOverride /f; reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management\" /v FeatureSettingsOverrideMask /f'",
   'sys-use-platform-clock': "powershell -NoProfile -Command 'bcdedit /useplatformclock false'",
   'sys-disable-dynamic-tick': "powershell -NoProfile -Command 'bcdedit /set disabledynamictick no'",
 
@@ -1809,9 +1805,9 @@ const TWEAK_RESTORE_COMMANDS = {
   'game-io-priority': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\PriorityControl\" /v IoPageLockLimit /t REG_DWORD /d 0 /f'",
   'game-memory-priority': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management\" /v LargeSystemCache /t REG_DWORD /d 1 /f'",
   'game-disable-game-bar-complete': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Microsoft\\GameBar\" /v AutoGameModeEnabled /t REG_DWORD /d 1 /f; reg add \"HKCU\\Software\\Microsoft\\GameBar\" /v AllowAutoGameMode /t REG_DWORD /d 1 /f; reg add \"HKCU\\Software\\Microsoft\\GameBar\" /v ShowStartupPanel /t REG_DWORD /d 1 /f'",
-  'game-optimize-directx': "powershell -NoProfile -Command 'reg delete \"HKLM\\SOFTWARE\\Microsoft\\DirectX\" /v DisableMaximizedWindowedMode /f -ErrorAction SilentlyContinue; reg delete \"HKLM\\SOFTWARE\\Microsoft\\DirectX\" /v EnableDebugMode /f -ErrorAction SilentlyContinue'",
-  'game-optimize-foreground-timer': "powershell -NoProfile -Command 'reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\kernel\" /v GlobalTimerResolutionRequests /f -ErrorAction SilentlyContinue; reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\kernel\" /v QuantumReset /f -ErrorAction SilentlyContinue'",
-  'game-disable-steam-overlay': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Valve\\Steam\" /v DisableOverlay /t REG_DWORD /d 0 /f; reg delete \"HKCU\\Software\\Valve\\Steam\\Apps\\*\" /v OverlayEnabled /f -ErrorAction SilentlyContinue'",
+  'game-optimize-directx': "powershell -NoProfile -Command 'reg delete \"HKLM\\SOFTWARE\\Microsoft\\DirectX\" /v DisableMaximizedWindowedMode /f; reg delete \"HKLM\\SOFTWARE\\Microsoft\\DirectX\" /v EnableDebugMode /f'",
+  'game-optimize-foreground-timer': "powershell -NoProfile -Command 'reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\kernel\" /v GlobalTimerResolutionRequests /f; reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\kernel\" /v QuantumReset /f'",
+  'game-disable-steam-overlay': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Valve\\Steam\" /v DisableOverlay /t REG_DWORD /d 0 /f; reg delete \"HKCU\\Software\\Valve\\Steam\\Apps\\*\" /v OverlayEnabled /f'",
   'game-optimize-cpu-affinity': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\PriorityControl\" /v Win32PrioritySeparation /t REG_DWORD /d 2 /f'",
   'game-disable-nagles-algorithm': "powershell -NoProfile -Command 'Get-NetAdapter | Where-Object {$_.Status -eq \"Up\"} | ForEach-Object { Remove-ItemProperty -Path \"HKLM:\\SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces\\$($_.InterfaceGuid)\" -Name TcpAckFrequency -Force -EA 0; Remove-ItemProperty -Path \"HKLM:\\SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces\\$($_.InterfaceGuid)\" -Name TCPNoDelay -Force -EA 0; Remove-ItemProperty -Path \"HKLM:\\SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces\\$($_.InterfaceGuid)\" -Name TcpDelAckTicks -Force -EA 0 }'",
   'game-optimize-udp-buffer': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\" /v MaxUserPort /t REG_DWORD /d 5000 /f; reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\" /v TcpTimedWaitDelay /t REG_DWORD /d 120 /f'",
@@ -1823,42 +1819,42 @@ const TWEAK_RESTORE_COMMANDS = {
   'storage-optimize-defrag': 'echo "Defrag schedule cannot be undone"',
   'storage-set-io-priority': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\PriorityControl\" /v IoPageLockLimit /t REG_DWORD /d 0 /f'",
   'storage-disable-indexing': 'powershell -NoProfile -Command "Set-Service -Name WSearch -StartupType Automatic -ErrorAction SilentlyContinue; Start-Service -Name WSearch -ErrorAction SilentlyContinue"',
-  'net-optimize-dns-cache': "powershell -NoProfile -Command 'reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\Dnscache\\Parameters\" /v MaxCacheEntryTtlLimit /f -ErrorAction SilentlyContinue; reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\Dnscache\\Parameters\" /v MaxSOACacheEntryTtlLimit /f -ErrorAction SilentlyContinue'",
+  'net-optimize-dns-cache': "powershell -NoProfile -Command 'reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\Dnscache\\Parameters\" /v MaxCacheEntryTtlLimit /f; reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\Dnscache\\Parameters\" /v MaxSOACacheEntryTtlLimit /f'",
   'net-disable-ecns': "powershell -NoProfile -Command 'netsh int tcp set global ecncapability=default'",
   'net-optimize-rss': "powershell -NoProfile -Command 'Get-NetAdapter | Where-Object {$_.Status -eq \"Up\"} | ForEach-Object { $name = $_.Name; Set-NetAdapterAdvancedProperty -Name $name -DisplayName \"Receive Side Scaling\" -DisplayValue \"Disabled\" -ErrorAction SilentlyContinue }'",
   'sys-optimize-file-cache': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management\" /v DisablePagingExecutive /t REG_DWORD /d 0 /f'",
   'sys-disable-prefetch': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management\\PrefetchParameters\" /v EnablePrefetcher /t REG_DWORD /d 3 /f; reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management\\PrefetchParameters\" /v EnableSuperfetch /t REG_DWORD /d 3 /f'",
   'sys-optimize-context-menu': "powershell -NoProfile -Command 'reg add \"HKCU\\Control Panel\\Desktop\" /v MenuShowDelay /t REG_SZ /d \"400\" /f'",
   'sys-clear-system-cache': 'echo "System cache cleared"',
-  'sys-optimize-dpc-latency': "powershell -NoProfile -Command 'reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\0000\" /v RMHwGpuPstateControlEnabled /f -ErrorAction SilentlyContinue'",
-  'mouse-optimize-polling': "powershell -NoProfile -Command 'reg delete \"HKCU\\Control Panel\\Mouse\" /v MouseSamplingRate /f -ErrorAction SilentlyContinue'",
+  'sys-optimize-dpc-latency': "powershell -NoProfile -Command 'reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\0000\" /v RMHwGpuPstateControlEnabled /f'",
+  'mouse-optimize-polling': "powershell -NoProfile -Command 'reg delete \"HKCU\\Control Panel\\Mouse\" /v MouseSamplingRate /f'",
   'keyboard-optimize-repeat': "powershell -NoProfile -Command 'reg add \"HKCU\\Control Panel\\Keyboard\" /v KeyboardDelay /t REG_SZ /d \"0\" /f; reg add \"HKCU\\Control Panel\\Keyboard\" /v KeyboardSpeed /t REG_SZ /d \"31\" /f'",
   'input-gaming-mode': "powershell -NoProfile -Command 'reg add \"HKCU\\Control Panel\\Keyboard\" /v KeyboardDelay /t REG_SZ /d \"1\" /f; reg add \"HKCU\\Control Panel\\Keyboard\" /v KeyboardSpeed /t REG_SZ /d \"31\" /f; reg add \"HKCU\\Control Panel\\Mouse\" /v MouseSpeed /t REG_SZ /d \"1\" /f; reg add \"HKCU\\Control Panel\\Mouse\" /v MouseThreshold1 /t REG_SZ /d \"6\" /f; reg add \"HKCU\\Control Panel\\Mouse\" /v MouseThreshold2 /t REG_SZ /d \"10\" /f; reg add \"HKCU\\Accessibility\\StickyKeys\" /v Flags /t REG_SZ /d \"510\" /f; reg add \"HKCU\\Accessibility\\ToggleKeys\" /v Flags /t REG_SZ /d \"58\" /f; reg add \"HKCU\\Accessibility\\Keyboard Response\" /v Flags /t REG_SZ /d \"122\" /f'",
-  'audio-disable-low-latency': "powershell -NoProfile -Command 'reg delete \"HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Audio\" /v DisableLowLatencySupport /f -ErrorAction SilentlyContinue'",
+  'audio-disable-low-latency': "powershell -NoProfile -Command 'reg delete \"HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Audio\" /v DisableLowLatencySupport /f'",
   'audio-optimize-sample-rate': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Microsoft\\Audio\\Settings\" /v SampleRate /t REG_DWORD /d 44100 /f'",
   'privacy-disable-ad-id': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\AdvertisingInfo\" /v Enabled /t REG_DWORD /d 1 /f'",
   'privacy-disable-app-launch': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced\" /v Start_TrackProgs /t REG_DWORD /d 1 /f'",
-  'game-disable-fullscreen-boost': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\" /v DisableFullscreenOptimization /f -ErrorAction SilentlyContinue'",
+  'game-disable-fullscreen-boost': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\" /v DisableFullscreenOptimization /f'",
   'game-optimize-network-priority': "powershell -NoProfile -Command 'Remove-NetQosPolicy -Name \"Game Traffic\" -ErrorAction SilentlyContinue'",
   'game-disable-eco-mode': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Power\" /v CsEnabled /t REG_DWORD /d 1 /f; reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Power\" /v PowerThrottlingOff /t REG_DWORD /d 0 /f'",
 
   // ── NEW TWEAK RESTORES ──
-  'wu-disable-auto-update': "powershell -NoProfile -Command 'reg delete \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate\\AU\" /v NoAutoUpdate /f -ErrorAction SilentlyContinue'",
-  'wu-disable-restart-reminder': "powershell -NoProfile -Command 'reg delete \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate\\AU\" /v AlwaysAutoRestart /f -ErrorAction SilentlyContinue'",
-  'wu-pause-updates-30days': "powershell -NoProfile -Command 'reg delete \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate\" /v PauseUpdates /f -ErrorAction SilentlyContinue'",
-  'wu-disable-drivers-update': "powershell -NoProfile -Command 'reg delete \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate\" /v ExcludeWUDriversInQualityUpdate /f -ErrorAction SilentlyContinue'",
-  'wu-disable-office-updates': "powershell -NoProfile -Command 'reg delete \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Office\\16.0\\Common\\OfficeUpdate\" /v PreventAutomaticUpdates /f -ErrorAction SilentlyContinue'",
+  'wu-disable-auto-update': "powershell -NoProfile -Command 'reg delete \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate\\AU\" /v NoAutoUpdate /f'",
+  'wu-disable-restart-reminder': "powershell -NoProfile -Command 'reg delete \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate\\AU\" /v AlwaysAutoRestart /f'",
+  'wu-pause-updates-30days': "powershell -NoProfile -Command 'reg delete \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate\" /v PauseUpdates /f'",
+  'wu-disable-drivers-update': "powershell -NoProfile -Command 'reg delete \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate\" /v ExcludeWUDriversInQualityUpdate /f'",
+  'wu-disable-office-updates': "powershell -NoProfile -Command 'reg delete \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Office\\16.0\\Common\\OfficeUpdate\" /v PreventAutomaticUpdates /f'",
   'edge-disable-startup-boost': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Edge\" /v StartupBoostEnabled /t REG_DWORD /d 1 /f'",
   'edge-disable-background-tabs': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Edge\" /v BackgroundModeEnabled /t REG_DWORD /d 1 /f'",
-  'edge-disable-preloading': "powershell -NoProfile -Command 'reg delete \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Edge\" /v PreconnectToSearch /f -ErrorAction SilentlyContinue'",
+  'edge-disable-preloading': "powershell -NoProfile -Command 'reg delete \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Edge\" /v PreconnectToSearch /f'",
   'chrome-disable-background-apps': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Policies\\Google\\Chrome\" /v BackgroundModeEnabled /t REG_DWORD /d 1 /f'",
-  'chrome-disable-renderer-bg': "powershell -NoProfile -Command 'reg delete \"HKLM\\SOFTWARE\\Policies\\Google\\Chrome\" /v RendererCodeIntegrityEnabled /f -ErrorAction SilentlyContinue'",
-  'browser-disable-hw-accel': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\Microsoft\\Avalon.Graphics\" /v DisableHWAcceleration /f -ErrorAction SilentlyContinue'",
+  'chrome-disable-renderer-bg': "powershell -NoProfile -Command 'reg delete \"HKLM\\SOFTWARE\\Policies\\Google\\Chrome\" /v RendererCodeIntegrityEnabled /f'",
+  'browser-disable-hw-accel': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\Microsoft\\Avalon.Graphics\" /v DisableHWAcceleration /f'",
   'power-ultimate-performance': "powershell -NoProfile -Command 'powercfg /setactive 381b4222-f694-41f0-9685-ff5bb260df2e'",
   'power-disable-power-saving': "powershell -NoProfile -Command 'powercfg /setacvalueindex SCHEME_CURRENT SUB_PROCESSOR THROTTLING 100; powercfg /setactive SCHEME_CURRENT'",
   'power-disable-sleep': "powershell -NoProfile -Command 'powercfg /change standby-timeout-ac 30; powercfg /change standby-timeout-dc 15'",
   'power-disable-hibernate': "powershell -NoProfile -Command 'powercfg -h on'",
-  'power-disable-link-state': "powershell -NoProfile -Command 'reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\pci\\Parameters\" /v ASPM /f -ErrorAction SilentlyContinue'",
+  'power-disable-link-state': "powershell -NoProfile -Command 'reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\pci\\Parameters\" /v ASPM /f'",
   'power-disable-processor-c-states': "powershell -NoProfile -Command 'powercfg /setacvalueindex SCHEME_CURRENT SUB_PROCESSOR IDLEDISABLE 0; powercfg /setactive SCHEME_CURRENT'",
   'svc-disable-sysmain': "powershell -NoProfile -Command 'Set-Service -Name SysMain -StartupType Manual -ErrorAction SilentlyContinue; Start-Service -Name SysMain -ErrorAction SilentlyContinue'",
   'svc-disable-diagtrack': "powershell -NoProfile -Command 'Set-Service -Name DiagTrack -StartupType Manual -ErrorAction SilentlyContinue; Start-Service -Name DiagTrack -ErrorAction SilentlyContinue'",
@@ -1870,21 +1866,21 @@ const TWEAK_RESTORE_COMMANDS = {
   'svc-disable-remote-registry': "powershell -NoProfile -Command 'Set-Service -Name RemoteRegistry -StartupType Manual -ErrorAction SilentlyContinue; Start-Service -Name RemoteRegistry -ErrorAction SilentlyContinue'",
   'svc-disable-xbox-live': "powershell -NoProfile -Command 'Set-Service -Name XblAuthManager -StartupType Manual -ErrorAction SilentlyContinue; Start-Service -Name XblAuthManager -ErrorAction SilentlyContinue; Set-Service -Name XblGameSave -StartupType Manual -ErrorAction SilentlyContinue; Start-Service -Name XblGameSave -ErrorAction SilentlyContinue'",
   'svc-disable-phone-link': "powershell -NoProfile -Command 'Set-Service -Name PhoneSvc -StartupType Manual -ErrorAction SilentlyContinue; Start-Service -Name PhoneSvc -ErrorAction SilentlyContinue'",
-  'gpu-disable-ulps': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\0000\" /v EnableUlps /t REG_DWORD /d 1 /f -ErrorAction SilentlyContinue'",
-  'gpu-set-power-limit-max': "powershell -NoProfile -Command 'nvidia-smi -pl 250 -ErrorAction SilentlyContinue'",
+  'gpu-disable-ulps': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\0000\" /v EnableUlps /t REG_DWORD /d 1 /f'",
+  'gpu-set-power-limit-max': "powershell -NoProfile -Command 'nvidia-smi -pl 250'",
   'gpu-enable-hw-scheduler': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\GraphicsDrivers\" /v HwSchMode /t REG_DWORD /d 1 /f'",
-  'gpu-disable-preemption': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\0000\" /v RMDisablePreemption /t REG_DWORD /d 0 /f -ErrorAction SilentlyContinue'",
-  'gpu-disable-mpo': "powershell -NoProfile -Command 'reg delete \"HKLM\\SOFTWARE\\Microsoft\\Windows\\Dwm\" /v OverlayTestMode /f -ErrorAction SilentlyContinue'",
+  'gpu-disable-preemption': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\0000\" /v RMDisablePreemption /t REG_DWORD /d 0 /f'",
+  'gpu-disable-mpo': "powershell -NoProfile -Command 'reg delete \"HKLM\\SOFTWARE\\Microsoft\\Windows\\Dwm\" /v OverlayTestMode /f'",
   'reg-mmcss-priority': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\" /v SystemResponsiveness /t REG_DWORD /d 20 /f'",
   'reg-timer-resolution': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\kernel\" /v GlobalTimerResolutionRequests /t REG_DWORD /d 0 /f'",
   'reg-priority-separation': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\PriorityControl\" /v PrioritySeparation /t REG_DWORD /d 2 /f'",
   'reg-system-clock-res': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\kernel\" /v GlobalTimerResolutionRequests /t REG_DWORD /d 0 /f'",
   'reg-gaming-scheduler': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\\Tasks\\Games\" /v GPU Priority /t REG_DWORD /d 2 /f; reg add \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\\Tasks\\Games\" /v Priority /t REG_DWORD /d 2 /f; reg add \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\\Tasks\\Games\" /v Scheduling Category /t REG_SZ /d Medium /f; reg add \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\\Tasks\\Games\" /v SFIO Priority /t REG_SZ /d Normal /f'",
-  'reg-interrupt-affinity': "powershell -NoProfile -Command 'reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\PriorityControl\" /v IRQ8Priority /f -ErrorAction SilentlyContinue'",
+  'reg-interrupt-affinity': "powershell -NoProfile -Command 'reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\PriorityControl\" /v IRQ8Priority /f'",
   'reg-dpc-priority': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management\" /v DisablePagingExecutive /t REG_DWORD /d 0 /f'",
   'reg-io-page-lockdown': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management\" /v DisablePagingExecutive /t REG_DWORD /d 0 /f'",
-  'bt-disable-pairing-reminder': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Bluetooth\" /v NotifyWhenUnpairedDeviceFound /t REG_DWORD /d 1 /f -ErrorAction SilentlyContinue'",
-  'bt-disable-auto-reconnect': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Bluetooth\\AutoReconnect\" /v Enable /t REG_DWORD /d 1 /f -ErrorAction SilentlyContinue'",
+  'bt-disable-pairing-reminder': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Bluetooth\" /v NotifyWhenUnpairedDeviceFound /t REG_DWORD /d 1 /f'",
+  'bt-disable-auto-reconnect': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Bluetooth\\AutoReconnect\" /v Enable /t REG_DWORD /d 1 /f'",
   'vis-disable-transparency': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize\" /v EnableTransparency /t REG_DWORD /d 1 /f'",
   'vis-dark-mode': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize\" /v AppsUseLightTheme /t REG_DWORD /d 1 /f; reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize\" /v SystemUsesLightTheme /t REG_DWORD /d 1 /f'",
   'vis-disable-acrylic': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize\" /v EnableTransparency /t REG_DWORD /d 1 /f'",
@@ -1892,18 +1888,18 @@ const TWEAK_RESTORE_COMMANDS = {
   'vis-minimize-maximize': "powershell -NoProfile -Command 'reg add \"HKCU\\Control Panel\\Desktop\\WindowMetrics\" /v MinAnimate /t REG_SZ /d 1 /f'",
   'vis-disable-fade': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced\" /v ListviewAlphaSelect /t REG_DWORD /d 1 /f'",
   'vis-start-menu-clean': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced\" /v Start_TrackProgs /t REG_DWORD /d 1 /f'",
-  'vis-context-menu-classic': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\Classes\\CLSID\\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\\InprocServer32\" /f -ErrorAction SilentlyContinue'",
+  'vis-context-menu-classic': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\Classes\\CLSID\\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\\InprocServer32\" /f'",
   'sec-disable-smartscreen': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\System\" /v EnableSmartScreen /t REG_DWORD /d 1 /f'",
   'sec-disable-realtime-protection': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows Defender\\Real-Time Protection\" /v DisableRealtimeMonitoring /t REG_DWORD /d 0 /f'",
   'sec-disable-defender-scheduled': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows Defender\\Scan\" /v DisableScanOnRealtimeEnable /t REG_DWORD /d 0 /f'",
   'sec-disable-sample-submission': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows Defender\\Spynet\" /v SubmitSamplesConsent /t REG_DWORD /d 1 /f'",
-  'sec-disable-network-protection': "powershell -NoProfile -Command 'reg delete \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows Defender\\Network Protection\" /v AllowNetworkProtectionOnWinServer /f -ErrorAction SilentlyContinue'",
+  'sec-disable-network-protection': "powershell -NoProfile -Command 'reg delete \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows Defender\\Network Protection\" /v AllowNetworkProtectionOnWinServer /f'",
   'net-disable-rsc': "powershell -NoProfile -Command 'netsh int tcp set global rsc=enabled'",
   'net-optimize-rss': "powershell -NoProfile -Command 'netsh int tcp set global rss=disabled'",
   'net-disable-ecnc': "powershell -NoProfile -Command 'netsh int tcp set global ecncapability=enabled'",
   'net-disable-task-offload': "powershell -NoProfile -Command 'netsh int ip set global taskoffload=enabled'",
   'net-disable-llmnr': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows NT\\DNSClient\" /v EnableMulticast /t REG_DWORD /d 1 /f'",
-  'net-disable-wsd': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\NetCache\" /v Enabled /t REG_DWORD /d 1 /f -ErrorAction SilentlyContinue'",
+  'net-disable-wsd': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\NetCache\" /v Enabled /t REG_DWORD /d 1 /f'",
   'net-optimize-adapter': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\" /v DefaultTTL /t REG_DWORD /d 128 /f; reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\" /v Tcp1323Opts /t REG_DWORD /d 1 /f'",
   'game-dvr-disable': "powershell -NoProfile -Command 'reg add \"HKCU\\System\\GameConfigStore\" /v GameDVR_Enabled /t REG_DWORD /d 1 /f'",
   'game-bar-complete': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\GameDVR\" /v AppCaptureEnabled /t REG_DWORD /d 1 /f; reg add \"HKCU\\System\\GameConfigStore\" /v GameDVR_Enabled /t REG_DWORD /d 1 /f'",
@@ -1914,19 +1910,19 @@ const TWEAK_RESTORE_COMMANDS = {
   'game-hrtimer': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\kernel\" /v GlobalTimerResolutionRequests /t REG_DWORD /d 0 /f'",
   'game-foreground-priority': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\\Tasks\\Games\" /v Priority /t REG_DWORD /d 2 /f; reg add \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\\Tasks\\Games\" /v SFIO Priority /t REG_SZ /d Normal /f'",
   'startup-disable-cortana': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\Windows Search\" /v AllowCortana /t REG_DWORD /d 1 /f'",
-  'startup-disable-onedrive': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run\" /v OneDrive /t REG_SZ /d \"\\\"C:\\Users\\%USERNAME%\\AppData\\Local\\Microsoft\\OneDrive\\OneDrive.exe\\\" /background\" /f -ErrorAction SilentlyContinue'",
-  'startup-disable-teams': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run\" /v com.squirrel.Teams /t REG_SZ /d \"\" /f -ErrorAction SilentlyContinue'",
+  'startup-disable-onedrive': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run\" /v OneDrive /t REG_SZ /d \"\\\"C:\\Users\\%USERNAME%\\AppData\\Local\\Microsoft\\OneDrive\\OneDrive.exe\\\" /background\" /f'",
+  'startup-disable-teams': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run\" /v com.squirrel.Teams /t REG_SZ /d \"\" /f'",
   'startup-disable-edge-updater': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\EdgeUpdate\" /v UpdateDefault /t REG_DWORD /d 1 /f'",
-  'startup-disable-adobe-updater': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Policies\\Adobe\\Adobe ARM\\1.0\" /v DisableAutomaticAppUpdate /t REG_DWORD /d 0 /f -ErrorAction SilentlyContinue'",
-  'startup-disable-discord-startup': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run\" /v Discord /t REG_SZ /d \"\" /f -ErrorAction SilentlyContinue'",
-  'startup-disable-epic-games': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run\" /v EpicGamesLauncher /t REG_SZ /d \"\" /f -ErrorAction SilentlyContinue'",
-  'startup-disable-steam': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run\" /v Steam /t REG_SZ /d \"\" /f -ErrorAction SilentlyContinue'",
-  'startup-disable-spotify': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run\" /v Spotify /t REG_SZ /d \"\" /f -ErrorAction SilentlyContinue'",
+  'startup-disable-adobe-updater': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Policies\\Adobe\\Adobe ARM\\1.0\" /v DisableAutomaticAppUpdate /t REG_DWORD /d 0 /f'",
+  'startup-disable-discord-startup': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run\" /v Discord /t REG_SZ /d \"\" /f'",
+  'startup-disable-epic-games': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run\" /v EpicGamesLauncher /t REG_SZ /d \"\" /f'",
+  'startup-disable-steam': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run\" /v Steam /t REG_SZ /d \"\" /f'",
+  'startup-disable-spotify': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run\" /v Spotify /t REG_SZ /d \"\" /f'",
   'startup-disable-widgets': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Dsh\" /v AllowNewsAndInterests /t REG_DWORD /d 1 /f'",
   'mem-optimize-pagefile': "powershell -NoProfile -Command 'wmic computersystem set AutomaticManagedPagefile=True'",
   'mem-large-system-cache': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management\" /v LargeSystemCache /t REG_DWORD /d 0 /f'",
   'mem-flush-timer': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management\" /v DisablePagingExecutive /t REG_DWORD /d 0 /f'",
-  'mem-deoptimize-standby': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management\" /v StandbyMemoryInActiveMemoryList /t REG_DWORD /d 0 /f -ErrorAction SilentlyContinue'",
+  'mem-deoptimize-standby': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management\" /v StandbyMemoryInActiveMemoryList /t REG_DWORD /d 0 /f'",
   'mem-disable-superfetch': "powershell -NoProfile -Command 'Set-Service -Name SysMain -StartupType Manual -ErrorAction SilentlyContinue; Start-Service -Name SysMain -ErrorAction SilentlyContinue'",
   'mem-clean-standby': "powershell -NoProfile -Command '[System.GC]::Collect(); [System.GC]::WaitForPendingFinalizers()'",
   'debloat-remove-copilot': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsCopilot\" /v TurnOffWindowsCopilot /t REG_DWORD /d 0 /f; reg add \"HKCU\\Software\\Policies\\Microsoft\\Windows\\WindowsCopilot\" /v TurnOffWindowsCopilot /t REG_DWORD /d 0 /f'",
@@ -1946,92 +1942,92 @@ const TWEAK_RESTORE_COMMANDS = {
   'debloat-remove-taskbar-feed': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Feeds\" /v ShellFeedsTaskbarViewMode /t REG_DWORD /d 1 /f'",
 
   // ── SOUND RESTORE ──
-  'snd-exclusive-mode': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\Microsoft\\MmcSnapins\\FxTools\\AudioPolicyManager\" /v EnableExclusiveMode /f -ErrorAction SilentlyContinue'",
-  'snd-reduce-buffer': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Audio\" /v MaxBufferCount /f -ErrorAction SilentlyContinue'",
-  'snd-mmcss-audio': "powershell -NoProfile -Command 'reg delete \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\" /v \"NoLazyMode\" /f -ErrorAction SilentlyContinue'",
-  'snd-disable-spatial': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Audio\" /v DisableSpatialSound /f -ErrorAction SilentlyContinue'",
-  'snd-optimize-sample-rate': "powershell -NoProfile -Command 'reg delete \"HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Audio\" /v SampleRateOptimization /f -ErrorAction SilentlyContinue'",
-  'snd-disable-midi': "powershell -NoProfile -Command 'reg delete \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Drivers32\" /v midiwave /f -ErrorAction SilentlyContinue'",
-  'snd-optimize-audio-thread': "powershell -NoProfile -Command 'reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\Audiosrv\" /v DependOnService /f -ErrorAction SilentlyContinue'",
-  'snd-disable-audio-gpu-sync': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Audio\" /v DisableGPUSync /f -ErrorAction SilentlyContinue'",
+  'snd-exclusive-mode': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\Microsoft\\MmcSnapins\\FxTools\\AudioPolicyManager\" /v EnableExclusiveMode /f'",
+  'snd-reduce-buffer': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Audio\" /v MaxBufferCount /f'",
+  'snd-mmcss-audio': "powershell -NoProfile -Command 'reg delete \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\" /v \"NoLazyMode\" /f'",
+  'snd-disable-spatial': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Audio\" /v DisableSpatialSound /f'",
+  'snd-optimize-sample-rate': "powershell -NoProfile -Command 'reg delete \"HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Audio\" /v SampleRateOptimization /f'",
+  'snd-disable-midi': "powershell -NoProfile -Command 'reg delete \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Drivers32\" /v midiwave /f'",
+  'snd-optimize-audio-thread': "powershell -NoProfile -Command 'reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\Audiosrv\" /v DependOnService /f'",
+  'snd-disable-audio-gpu-sync': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Audio\" /v DisableGPUSync /f'",
 
   // ── BCDEdit RESTORE ──
-  'bcd-timer-resolution': "bcdedit /deletevalue useplatformclock",
-  'bcd-disable-dynamic-tick': "bcdedit /deletevalue disabledynamictick",
-  'bcd-use-platform-clock': "bcdedit /deletevalue useplatformtick",
+  'bcd-timer-resolution': "powershell -NoProfile -Command 'bcdedit /deletevalue useplatformclock 2>&1 | Out-Null'",
+  'bcd-disable-dynamic-tick': "powershell -NoProfile -Command 'bcdedit /deletevalue disabledynamictick 2>&1 | Out-Null'",
+  'bcd-use-platform-clock': "powershell -NoProfile -Command 'bcdedit /deletevalue useplatformtick 2>&1 | Out-Null'",
   'bcd-increase-usnjrnl': "powershell -NoProfile -Command 'echo \"USN journal: restart to apply default settings\"'",
-  'bcd-optimize-boot': "bcdedit /set bootmenupolicy standard",
-  'bcd-disable-quiet-boot': "bcdedit /deletevalue quietboot",
-  'bcd-increase-stack': "bcdedit /deletevalue stacksize",
-  'bcd-optimize-test-signing': "bcdedit /set testsigning off",
+  'bcd-optimize-boot': "powershell -NoProfile -Command 'bcdedit /set bootmenupolicy standard 2>&1 | Out-Null'",
+  'bcd-disable-quiet-boot': "powershell -NoProfile -Command 'bcdedit /deletevalue quietboot 2>&1 | Out-Null'",
+  'bcd-increase-stack': "powershell -NoProfile -Command 'bcdedit /deletevalue stacksize 2>&1 | Out-Null'",
+  'bcd-optimize-test-signing': "powershell -NoProfile -Command 'bcdedit /set testsigning off 2>&1 | Out-Null'",
 
   // ── NVIDIA GPU RESTORE ──
-  'nv-max-power-management': "powershell -NoProfile -Command 'reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\0000\" /v PowerMizerEnable /f -ErrorAction SilentlyContinue; reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\0000\" /v PowerMizerLevel /f -ErrorAction SilentlyContinue'",
-  'nv-disable-thermal-throttle': "powershell -NoProfile -Command 'reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\0000\" /v ThermalThrottleLimit /f -ErrorAction SilentlyContinue'",
-  'nv-optimize-pcie': "powershell -NoProfile -Command 'reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\0000\" /v PCIeLinkSpeed /f -ErrorAction SilentlyContinue'",
-  'nv-disable-gpu-preemption': "powershell -NoProfile -Command 'reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\GraphicsDrivers\" /v DisablePreemption /f -ErrorAction SilentlyContinue'",
+  'nv-max-power-management': "powershell -NoProfile -Command 'reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\0000\" /v PowerMizerEnable /f; reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\0000\" /v PowerMizerLevel /f'",
+  'nv-disable-thermal-throttle': "powershell -NoProfile -Command 'reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\0000\" /v ThermalThrottleLimit /f'",
+  'nv-optimize-pcie': "powershell -NoProfile -Command 'reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\0000\" /v PCIeLinkSpeed /f'",
+  'nv-disable-gpu-preemption': "powershell -NoProfile -Command 'reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\GraphicsDrivers\" /v DisablePreemption /f'",
   'nv-max-frames-ahead': "reg delete \"HKCU\\Software\\NVIDIA Corporation\\Global\\NVTweak\" /v PreRenderLimit /f",
-  'nv-disable-mpo': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\Microsoft\\Windows\\Dwm\" /v EnableTearing /f -ErrorAction SilentlyContinue'",
-  'nv-shader-cache-size': "powershell -NoProfile -Command 'reg delete \"HKLM\\SOFTWARE\\NVIDIA Corporation\\Global\\NVTweak\" /v ShaderCacheSizeMB /f -ErrorAction SilentlyContinue'",
-  'nv-optimization-level': "powershell -NoProfile -Command 'reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\0000\" /v PerfLevelSrc /f -ErrorAction SilentlyContinue'",
-  'nv-disable-spread-spectrum': "powershell -NoProfile -Command 'reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\0000\" /v DisableSpreadSpectrum /f -ErrorAction SilentlyContinue'",
-  'nv-rm-gpu-accl': "powershell -NoProfile -Command 'reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\GraphicsDrivers\" /v HwSchMode /f -ErrorAction SilentlyContinue'",
+  'nv-disable-mpo': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\Microsoft\\Windows\\Dwm\" /v EnableTearing /f'",
+  'nv-shader-cache-size': "powershell -NoProfile -Command 'reg delete \"HKLM\\SOFTWARE\\NVIDIA Corporation\\Global\\NVTweak\" /v ShaderCacheSizeMB /f'",
+  'nv-optimization-level': "powershell -NoProfile -Command 'reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\0000\" /v PerfLevelSrc /f'",
+  'nv-disable-spread-spectrum': "powershell -NoProfile -Command 'reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\0000\" /v DisableSpreadSpectrum /f'",
+  'nv-rm-gpu-accl': "powershell -NoProfile -Command 'reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\GraphicsDrivers\" /v HwSchMode /f'",
 
   // ── AMD/Radeon GPU RESTORE ──
-  'amd-disable-chill': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\AMD\\Chill\" /v Enable /f -ErrorAction SilentlyContinue'",
-  'amd-disable-vsr': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\AMD\\VSR\" /v Enable /f -ErrorAction SilentlyContinue'",
-  'amd-enable-antilag': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\AMD\\AntiLag\" /v Enable /f -ErrorAction SilentlyContinue'",
-  'amd-disable-rtss-sync': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\AMD\\RTSS\" /v Sync /f -ErrorAction SilentlyContinue'",
-  'amd-max-power-limit': "powershell -NoProfile -Command 'reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\0000\" /v PowerLimit /f -ErrorAction SilentlyContinue'",
-  'amd-disable-smart-access': "powershell -NoProfile -Command 'reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\0000\" /v EnableSAM /f -ErrorAction SilentlyContinue'",
-  'amd-disable-hdcp': "powershell -NoProfile -Command 'reg delete \"HKLM\\SOFTWARE\\AMD\\CN\" /v EnableHDCP /f -ErrorAction SilentlyContinue'",
-  'amd-set-gpu-mode': "powershell -NoProfile -Command 'reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\0000\" /v PowerMode /f -ErrorAction SilentlyContinue'",
-  'amd-disable-overlay': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\AMD\\Overlay\" /v Enable /f -ErrorAction SilentlyContinue'",
-  'amd-optimize-memory': "powershell -NoProfile -Command 'reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\0000\" /v VRAMPagingMode /f -ErrorAction SilentlyContinue'",
+  'amd-disable-chill': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\AMD\\Chill\" /v Enable /f'",
+  'amd-disable-vsr': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\AMD\\VSR\" /v Enable /f'",
+  'amd-enable-antilag': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\AMD\\AntiLag\" /v Enable /f'",
+  'amd-disable-rtss-sync': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\AMD\\RTSS\" /v Sync /f'",
+  'amd-max-power-limit': "powershell -NoProfile -Command 'reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\0000\" /v PowerLimit /f'",
+  'amd-disable-smart-access': "powershell -NoProfile -Command 'reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\0000\" /v EnableSAM /f'",
+  'amd-disable-hdcp': "powershell -NoProfile -Command 'reg delete \"HKLM\\SOFTWARE\\AMD\\CN\" /v EnableHDCP /f'",
+  'amd-set-gpu-mode': "powershell -NoProfile -Command 'reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\0000\" /v PowerMode /f'",
+  'amd-disable-overlay': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\AMD\\Overlay\" /v Enable /f'",
+  'amd-optimize-memory': "powershell -NoProfile -Command 'reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\0000\" /v VRAMPagingMode /f'",
 
   // ── DIRECTX RESTORE ──
-  'dx-shader-cache-enable': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\Microsoft\\DirectX\\UserGpuPreferences\" /v ShaderCacheEnabled /f -ErrorAction SilentlyContinue'",
-  'dx-disable-debug-layer': "powershell -NoProfile -Command 'reg delete \"HKLM\\SOFTWARE\\Microsoft\\DirectX\\Global\" /v EnableDebugLayer /f -ErrorAction SilentlyContinue'",
-  'dx-optimize-agility-sdk': "powershell -NoProfile -Command 'reg delete \"HKLM\\SOFTWARE\\Microsoft\\DirectX\\AgilitySDK\" /v Enable /f -ErrorAction SilentlyContinue'",
-  'dx-force-hw-d3d': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\Microsoft\\Direct3D\" /v DisableDDI /f -ErrorAction SilentlyContinue'",
-  'dx-disable-d3d-debug': "powershell -NoProfile -Command 'reg delete \"HKLM\\SOFTWARE\\Microsoft\\Direct3D12\" /v EnableGpuBasedValidation /f -ErrorAction SilentlyContinue'",
-  'dx-optimize-texture-format': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\Microsoft\\DirectX\\UserGpuPreferences\" /v TextureFormatOpt /f -ErrorAction SilentlyContinue'",
-  'dx-enable-variable-shading': "powershell -NoProfile -Command 'reg delete \"HKLM\\SOFTWARE\\Microsoft\\DirectX\\UserGpuPreferences\" /v VariableRateShading /f -ErrorAction SilentlyContinue'",
-  'dx-optimize-present-params': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\Microsoft\\DirectX\\UserGpuPreferences\" /v LowLatencyPresent /f -ErrorAction SilentlyContinue'",
+  'dx-shader-cache-enable': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\Microsoft\\DirectX\\UserGpuPreferences\" /v ShaderCacheEnabled /f'",
+  'dx-disable-debug-layer': "powershell -NoProfile -Command 'reg delete \"HKLM\\SOFTWARE\\Microsoft\\DirectX\\Global\" /v EnableDebugLayer /f'",
+  'dx-optimize-agility-sdk': "powershell -NoProfile -Command 'reg delete \"HKLM\\SOFTWARE\\Microsoft\\DirectX\\AgilitySDK\" /v Enable /f'",
+  'dx-force-hw-d3d': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\Microsoft\\Direct3D\" /v DisableDDI /f'",
+  'dx-disable-d3d-debug': "powershell -NoProfile -Command 'reg delete \"HKLM\\SOFTWARE\\Microsoft\\Direct3D12\" /v EnableGpuBasedValidation /f'",
+  'dx-optimize-texture-format': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\Microsoft\\DirectX\\UserGpuPreferences\" /v TextureFormatOpt /f'",
+  'dx-enable-variable-shading': "powershell -NoProfile -Command 'reg delete \"HKLM\\SOFTWARE\\Microsoft\\DirectX\\UserGpuPreferences\" /v VariableRateShading /f'",
+  'dx-optimize-present-params': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\Microsoft\\DirectX\\UserGpuPreferences\" /v LowLatencyPresent /f'",
 
   // ── LATENCY RESTORE ──
-  'lat-hpet-enable': "bcdedit /deletevalue useplatformclock",
-  'lat-timer-resolution': "powershell -NoProfile -Command 'reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\kernel\" /v GlobalTimerResolutionRequests /f -ErrorAction SilentlyContinue'",
-  'lat-tsc-invariant': "powershell -NoProfile -Command 'reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\kernel\" /v UseTscInvariant /f -ErrorAction SilentlyContinue'",
-  'lat-disable-synthetic': "powershell -NoProfile -Command 'reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\kernel\" /v DisableSyntheticTimers /f -ErrorAction SilentlyContinue'",
-  'lat-optimize-interrupts': "powershell -NoProfile -Command 'reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\PriorityControl\" /v InterruptSteeringDisabled /f -ErrorAction SilentlyContinue'",
-  'lat-force-tsc': "bcdedit /deletevalue useplatformtick",
-  'lat-disable-acpi-pm': "bcdedit /deletevalue useplatformclock",
-  'lat-optimize-dpc': "powershell -NoProfile -Command 'reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\0000\" /v DPCPriority /f -ErrorAction SilentlyContinue'",
+  'lat-hpet-enable': "powershell -NoProfile -Command 'bcdedit /deletevalue useplatformclock 2>&1 | Out-Null'",
+  'lat-timer-resolution': "powershell -NoProfile -Command 'reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\kernel\" /v GlobalTimerResolutionRequests /f'",
+  'lat-tsc-invariant': "powershell -NoProfile -Command 'reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\kernel\" /v UseTscInvariant /f'",
+  'lat-disable-synthetic': "powershell -NoProfile -Command 'reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\kernel\" /v DisableSyntheticTimers /f'",
+  'lat-optimize-interrupts': "powershell -NoProfile -Command 'reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\PriorityControl\" /v InterruptSteeringDisabled /f'",
+  'lat-force-tsc': "powershell -NoProfile -Command 'bcdedit /deletevalue useplatformtick 2>&1 | Out-Null'",
+  'lat-disable-acpi-pm': "powershell -NoProfile -Command 'bcdedit /deletevalue useplatformclock 2>&1 | Out-Null'",
+  'lat-optimize-dpc': "powershell -NoProfile -Command 'reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\0000\" /v DPCPriority /f'",
 
   // ── ALT-TAB RESTORE ──
-  'atd-disable-fade': "powershell -NoProfile -Command 'reg delete \"HKCU\\Control Panel\\Desktop\" /v UserPreferencesMask /f -ErrorAction SilentlyContinue'",
+  'atd-disable-fade': "powershell -NoProfile -Command 'reg delete \"HKCU\\Control Panel\\Desktop\" /v UserPreferencesMask /f'",
   'atd-disable-switch-delay': "powershell -NoProfile -Command 'reg add \"HKCU\\Control Panel\\Desktop\" /v MenuShowDelay /t REG_SZ /d 400 /f'",
-  'atd-optimize-dwm': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\Microsoft\\Windows\\Dwm\" /v AlwaysHibernateThumbnails /f -ErrorAction SilentlyContinue'",
-  'atd-disable-thumbnail': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\Microsoft\\Windows\\Dwm\" /v EnableAeroPeek /f -ErrorAction SilentlyContinue'",
-  'atd-force-classic': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced\" /v AltTabSettings /f -ErrorAction SilentlyContinue'",
-  'atd-prioritize-game': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced\" /v RestartApps /f -ErrorAction SilentlyContinue'",
+  'atd-optimize-dwm': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\Microsoft\\Windows\\Dwm\" /v AlwaysHibernateThumbnails /f'",
+  'atd-disable-thumbnail': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\Microsoft\\Windows\\Dwm\" /v EnableAeroPeek /f'",
+  'atd-force-classic': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced\" /v AltTabSettings /f'",
+  'atd-prioritize-game': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced\" /v RestartApps /f'",
   'atd-disable-snap': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced\" /v SnapAssist /t REG_DWORD /d 1 /f'",
   'atd-optimize-peek': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Microsoft\\Windows\\Dwm\" /v EnableAeroPeek /t REG_DWORD /d 1 /f'",
 
   // ── APP DEBLOAT RESTORE ──
-  'appdb-chrome-disable-hw': "powershell -NoProfile -Command 'reg delete \"HKLM\\SOFTWARE\\Policies\\Google\\Chrome\" /v HardwareAccelerationModeEnabled /f -ErrorAction SilentlyContinue'",
-  'appdb-chrome-disable-extensions': "powershell -NoProfile -Command 'reg delete \"HKLM\\SOFTWARE\\Policies\\Google\\Chrome\" /v ExtensionSettings /f -ErrorAction SilentlyContinue'",
+  'appdb-chrome-disable-hw': "powershell -NoProfile -Command 'reg delete \"HKLM\\SOFTWARE\\Policies\\Google\\Chrome\" /v HardwareAccelerationModeEnabled /f'",
+  'appdb-chrome-disable-extensions': "powershell -NoProfile -Command 'reg delete \"HKLM\\SOFTWARE\\Policies\\Google\\Chrome\" /v ExtensionSettings /f'",
   'appdb-chrome-priority': "powershell -NoProfile -Command 'Get-Process chrome -ErrorAction SilentlyContinue | ForEach-Object { $_.PriorityClass = [System.Diagnostics.ProcessPriorityClass]::Normal }'",
-  'appdb-discord-disable-hw': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\Discord\\CEFI\" /v HardwareAcceleration /f -ErrorAction SilentlyContinue'",
+  'appdb-discord-disable-hw': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\Discord\\CEFI\" /v HardwareAcceleration /f'",
   'appdb-discord-disable-autostart': "reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run\" /v Discord /t REG_SZ /d \"\" /f",
-  'appdb-discord-optimize': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\Discord\\CEFI\" /v OverlayEnabled /f -ErrorAction SilentlyContinue; reg delete \"HKCU\\Software\\Discord\\CEFI\" /v NoiseSuppression /f -ErrorAction SilentlyContinue'",
-  'appdb-epic-disable-telemetry': "powershell -NoProfile -Command 'reg delete \"HKLM\\SOFTWARE\\Epic Games\\EpicGamesLauncher\" /v Telemetry /f -ErrorAction SilentlyContinue'",
-  'appdb-epic-disable-hw': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\Epic Games\\EpicGamesLauncher\" /v HardwareAcceleration /f -ErrorAction SilentlyContinue'",
-  'appdb-epic-preload': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\Epic Games\\EpicGamesLauncher\" /v EnableGamePreLoad /f -ErrorAction SilentlyContinue'",
+  'appdb-discord-optimize': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\Discord\\CEFI\" /v OverlayEnabled /f; reg delete \"HKCU\\Software\\Discord\\CEFI\" /v NoiseSuppression /f'",
+  'appdb-epic-disable-telemetry': "powershell -NoProfile -Command 'reg delete \"HKLM\\SOFTWARE\\Epic Games\\EpicGamesLauncher\" /v Telemetry /f'",
+  'appdb-epic-disable-hw': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\Epic Games\\EpicGamesLauncher\" /v HardwareAcceleration /f'",
+  'appdb-epic-preload': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\Epic Games\\EpicGamesLauncher\" /v EnableGamePreLoad /f'",
   'appdb-steam-disable-hw': "reg delete \"HKCU\\Software\\Valve\\Steam\" /v DisableHWAcceleration /f",
   'appdb-steam-disable-popup': "reg delete \"HKCU\\Software\\Valve\\Steam\" /v SuppressPopups /f",
-  'appdb-teams-disable-background': "powershell -NoProfile -Command 'reg delete \"HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Communications\" /v ConfigureChatAutoDiscovery /f -ErrorAction SilentlyContinue'",
+  'appdb-teams-disable-background': "powershell -NoProfile -Command 'reg delete \"HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Communications\" /v ConfigureChatAutoDiscovery /f'",
   'appdb-edge-disable-service': "powershell -NoProfile -Command 'Set-Service -Name edgeupdate -StartupType Manual'",
   'appdb-spotify-disable-startup': "reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run\" /v Spotify /t REG_SZ /d \"\" /f",
   'appdb-onecloud-disable': "reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run\" /v OneDrive /t REG_SZ /d \"\" /f",
@@ -2074,41 +2070,41 @@ const TWEAK_RESTORE_COMMANDS = {
   'net-increase-transmit-buffers': "powershell -NoProfile -Command 'Get-NetAdapter | Where-Object {$_.Status -eq \"Up\"} | ForEach-Object { Set-NetAdapterAdvancedProperty -Name $_.Name -DisplayName \"Transmit Buffers\" -DisplayValue 256 -ErrorAction SilentlyContinue }'",
   'net-disable-gro-segmentation': "powershell -NoProfile -Command 'Get-NetAdapter | Where-Object {$_.Status -eq \"Up\"} | ForEach-Object { Set-NetAdapterAdvancedProperty -Name $_.Name -DisplayName \"Generic Receive Offload\" -DisplayValue \"Enabled\" -ErrorAction SilentlyContinue }'",
   'net-optimize-tcp-nodelay': "powershell -NoProfile -Command 'Get-NetAdapter | Where-Object {$_.Status -eq \"Up\"} | ForEach-Object { Remove-ItemProperty -Path \"HKLM:\\SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces\\$($_.InterfaceGuid)\" -Name TcpNoDelay -Force -EA 0 }'",
-  'net-disable-arbitration': "powershell -NoProfile -Command 'reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\NDIS\\Parameters\" /v ArbitrationDisabled /f -EA 0'",
+  'net-disable-arbitration': "powershell -NoProfile -Command 'reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\NDIS\\Parameters\" /v ArbitrationDisabled /f'",
   // ── POWER ADVANCED ──
   'power-disable-dynamic-boost': 'echo "Dynamic boost settings restored to default"',
   'power-max-pcie-power': 'powershell -NoProfile -Command "powercfg /setacvalueindex SCHEME_CURRENT 501a4e6c-5e1d-4773-837a-4738476e23d4 1; powercfg /setactive SCHEME_CURRENT"',
   'power-disable-usb-suspend': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\USB\" /v DisableSelectiveSuspend /t REG_DWORD /d 0 /f'",
   'power-processor-performance': "powershell -NoProfile -Command 'powercfg /setacvalueindex SCHEME_CURRENT SUB_PROCESSOR PROCTHROTTLEMIN 5; powercfg /setactive SCHEME_CURRENT'",
   // ── BROWSER DEEP DEBLOAT ──
-  'chrome-deep-debloat': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Policies\\Google\\Chrome\" /v SafeBrowsingProtectionLevel /t REG_DWORD /d 1 /f; reg delete \"HKLM\\SOFTWARE\\Policies\\Google\\Chrome\" /v SpellcheckEnabled /f -EA 0; reg delete \"HKLM\\SOFTWARE\\Policies\\Google\\Chrome\" /v TranslateEnabled /f -EA 0; reg delete \"HKLM\\SOFTWARE\\Policies\\Google\\Chrome\" /v SyncDisabled /f -EA 0'",
+  'chrome-deep-debloat': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Policies\\Google\\Chrome\" /v SafeBrowsingProtectionLevel /t REG_DWORD /d 1 /f; reg delete \"HKLM\\SOFTWARE\\Policies\\Google\\Chrome\" /v SpellcheckEnabled /f; reg delete \"HKLM\\SOFTWARE\\Policies\\Google\\Chrome\" /v TranslateEnabled /f; reg delete \"HKLM\\SOFTWARE\\Policies\\Google\\Chrome\" /v SyncDisabled /f'",
   'edge-deep-debloat': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Edge\" /v HubsSidebarEnabled /t REG_DWORD /d 1 /f; reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Edge\" /v SleepingTabsEnabled /t REG_DWORD /d 0 /f'",
-  'discord-deep-debloat': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\Discord\\CEFI\" /v GamesDetectionDisabled /f -EA 0; reg delete \"HKCU\\Software\\Discord\\CEFI\" /v RichPresenceDisabled /f -EA 0'",
-  'firefox-deep-debloat': "powershell -NoProfile -Command 'reg delete \"HKLM\\SOFTWARE\\Policies\\Mozilla\\Firefox\" /v DisablePocket /f -EA 0; reg delete \"HKLM\\SOFTWARE\\Policies\\Mozilla\\Firefox\" /v DisableDefaultBrowserAgent /f -EA 0'",
+  'discord-deep-debloat': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\Discord\\CEFI\" /v GamesDetectionDisabled /f; reg delete \"HKCU\\Software\\Discord\\CEFI\" /v RichPresenceDisabled /f'",
+  'firefox-deep-debloat': "powershell -NoProfile -Command 'reg delete \"HKLM\\SOFTWARE\\Policies\\Mozilla\\Firefox\" /v DisablePocket /f; reg delete \"HKLM\\SOFTWARE\\Policies\\Mozilla\\Firefox\" /v DisableDefaultBrowserAgent /f'",
   // ── GPU ADVANCED ──
   'gpu-force-max-clocks': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\0000\" /v PerfLevelSrc /t REG_DWORD /d 0 /f; reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\0000\" /v PowerMizerLevel /t REG_DWORD /d 0 /f'",
   'gpu-disable-gpu-preemption-deep': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\GraphicsDrivers\" /v DisablePreemption /t REG_DWORD /d 0 /f'",
-  'gpu-disable-tdr': "powershell -NoProfile -Command 'reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\GraphicsDrivers\" /v TdrLevel /f -EA 0; reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\GraphicsDrivers\" /v TdrDelay /f -EA 0'",
+  'gpu-disable-tdr': "powershell -NoProfile -Command 'reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\GraphicsDrivers\" /v TdrLevel /f; reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\GraphicsDrivers\" /v TdrDelay /f'",
   // ── TIMER & LATENCY DEEP ──
-  'timer-force-1ms': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\kernel\" /v GlobalTimerResolutionRequests /t REG_DWORD /d 0 /f; reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\kernel\" /v QuantumReset /f -EA 0'",
+  'timer-force-1ms': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\kernel\" /v GlobalTimerResolutionRequests /t REG_DWORD /d 0 /f; reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\kernel\" /v QuantumReset /f'",
   'timer-disable-power-saving-timer': "powershell -NoProfile -Command 'bcdedit /set useplatformclock false; bcdedit /set disabledynamictick no; bcdedit /deletevalue useplatformtick'",
   // ── STORAGE ADVANCED ──
   'storage-disable-ahci-power': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\storahci\\Parameters\\Device\" /v LpmPolicy /t REG_DWORD /d 1 /f'",
-  'storage-optimize-nvme-queues': "powershell -NoProfile -Command 'reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\stornvme\\Parameters\\Device\" /v NVMeNumberOfQueues /f -EA 0; reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\stornvme\\Parameters\\Device\" /v NVMeInterruptCoalescingTimeout /f -EA 0'",
+  'storage-optimize-nvme-queues': "powershell -NoProfile -Command 'reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\stornvme\\Parameters\\Device\" /v NVMeNumberOfQueues /f; reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\stornvme\\Parameters\\Device\" /v NVMeInterruptCoalescingTimeout /f'",
   // ── PRIVACY DEEP ──
   'privacy-disable-cortana-deep': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\Windows Search\" /v AllowCortana /t REG_DWORD /d 1 /f'",
   'privacy-disable-telemetry-deep': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\DataCollection\" /v AllowTelemetry /t REG_DWORD /d 3 /f; Remove-NetFirewallRule -DisplayName \"Block Telemetry\" -EA 0'",
   'privacy-disable-tracking': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\System\" /v EnableActivityFeed /t REG_DWORD /d 1 /f; reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\System\" /v PublishUserActivities /t REG_DWORD /d 1 /f'",
   // ── AUDIO DEEP ──
-  'audio-optimize-latency': "powershell -NoProfile -Command 'reg delete \"HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Audio\" /v DisableAudioEnhancements /f -EA 0; reg delete \"HKCU\\Software\\Microsoft\\MMSys\\Default\\DevicePeriod\" /v Period /f -EA 0'",
-  'audio-disable-all-enhancements': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Microsoft\\MMSys\\Default\\AudioEffects\\AudioEnhancementSceneGraph\" /v Enabled /t REG_DWORD /d 1 /f; reg delete \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Audio\" /v DisableSpatialSound /f -EA 0; reg delete \"HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Audio\" /v DisableAudioEnhancements /f -EA 0'",
+  'audio-optimize-latency': "powershell -NoProfile -Command 'reg delete \"HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Audio\" /v DisableAudioEnhancements /f; reg delete \"HKCU\\Software\\Microsoft\\MMSys\\Default\\DevicePeriod\" /v Period /f'",
+  'audio-disable-all-enhancements': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Microsoft\\MMSys\\Default\\AudioEffects\\AudioEnhancementSceneGraph\" /v Enabled /t REG_DWORD /d 1 /f; reg delete \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Audio\" /v DisableSpatialSound /f; reg delete \"HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Audio\" /v DisableAudioEnhancements /f'",
   // ── WINDOWS ADVANCED ──
   'windows-disable-all-animations': "powershell -NoProfile -Command 'reg add \"HKCU\\Control Panel\\Desktop\\WindowMetrics\" /v MinAnimate /t REG_SZ /d 1 /f; reg add \"HKCU\\Software\\Microsoft\\Windows\\Dwm\" /v EnableAeroPeek /t REG_DWORD /d 1 /f'",
-  'windows-optimize-explorer-deep': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced\" /v DisablePreviewPane /f -EA 0; reg delete \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced\" /v DisableThumbnailCache /f -EA 0; Start-Service WSearch -EA 0; Set-Service WSearch -StartupType Automatic -EA 0'",
+  'windows-optimize-explorer-deep': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced\" /v DisablePreviewPane /f; reg delete \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced\" /v DisableThumbnailCache /f; Start-Service WSearch -EA 0; Set-Service WSearch -StartupType Automatic -EA 0'",
   'windows-disable-all-services': 'echo "Services restored to defaults - use System Restore or manually re-enable"',
   // ── GAMING DEEP ──
-  'game-optimize-all': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\PriorityControl\" /v Win32PrioritySeparation /t REG_DWORD /d 2 /f; reg add \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\" /v SystemResponsiveness /t REG_DWORD /d 20 /f; reg add \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\" /v NetworkThrottlingIndex /t REG_DWORD /d 10 /f; reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\kernel\" /v GlobalTimerResolutionRequests /f -EA 0'",
-  'game-disable-all-overlays': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\Microsoft\\GameBar\" /v ShowStartupPanel /f -EA 0; reg add \"HKCU\\System\\GameConfigStore\" /v GameDVR_Enabled /t REG_DWORD /d 1 /f'",
+  'game-optimize-all': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\PriorityControl\" /v Win32PrioritySeparation /t REG_DWORD /d 2 /f; reg add \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\" /v SystemResponsiveness /t REG_DWORD /d 20 /f; reg add \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\" /v NetworkThrottlingIndex /t REG_DWORD /d 10 /f; reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\kernel\" /v GlobalTimerResolutionRequests /f'",
+  'game-disable-all-overlays': "powershell -NoProfile -Command 'reg delete \"HKCU\\Software\\Microsoft\\GameBar\" /v ShowStartupPanel /f; reg add \"HKCU\\System\\GameConfigStore\" /v GameDVR_Enabled /t REG_DWORD /d 1 /f'",
   'game-optimize-memory-deep': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management\" /v LargeSystemCache /t REG_DWORD /d 0 /f; Start-Service -Name SysMain -EA 0; Set-Service -Name SysMain -StartupType Automatic -EA 0'",
 };
 
@@ -2451,18 +2447,61 @@ ipcMain.handle("restore-all", async () => {
 
 function runTweakCommand(cmd, timeout = 15000) {
   return new Promise((resolve) => {
-    const child = exec(cmd, { timeout, windowsHide: true }, (error, stdout, stderr) => {
-      const exitCode = child?.exitCode ?? 0;
-      if (error && exitCode !== 0) {
-        const msg = stderr?.trim() || error.message;
-        if (msg.includes('Access is denied') || msg.includes('permission') || msg.includes('not found')) {
-          resolve({ success: false, error: msg });
-        } else {
-          resolve({ success: true });
-        }
+    const handleResult = (stdout, stderr) => {
+      const errMsg = stderr?.trim() || '';
+      const outMsg = stdout?.trim() || '';
+      const combined = (errMsg + ' ' + outMsg).toLowerCase();
+      const isRealError = combined.length > 0 && (
+        combined.includes('error') ||
+        combined.includes('access denied') ||
+        combined.includes('permission') ||
+        combined.includes('not found') ||
+        combined.includes('not recognized') ||
+        combined.includes('does not exist') ||
+        combined.includes('cannot find') ||
+        combined.includes('failed') ||
+        combined.includes('invalid') ||
+        combined.includes('unable')
+      );
+      if (isRealError) {
+        resolve({ success: false, error: errMsg || outMsg });
       } else {
         resolve({ success: true });
       }
+    };
+
+    const trimmed = cmd.trim();
+    const isPowerShell = trimmed.toLowerCase().startsWith('powershell');
+
+    if (isPowerShell) {
+      const cmdMatch = trimmed.match(/-Command\s+(['"])([\s\S]*)\1\s*$/);
+      if (cmdMatch) {
+        const script = cmdMatch[2];
+        try {
+          const child = spawn('powershell.exe', ['-NoProfile', '-Command', script], {
+            timeout,
+            windowsHide: true,
+            shell: false,
+            stdio: ['pipe', 'pipe', 'pipe']
+          });
+          let stdout = '';
+          let stderr = '';
+          child.stdout.on('data', (d) => { stdout += d; });
+          child.stderr.on('data', (d) => { stderr += d; });
+          child.on('close', () => handleResult(stdout, stderr));
+          child.on('error', (e) => {
+            if (e.killed) resolve({ success: false, error: 'Command timed out' });
+            else resolve({ success: false, error: e.message });
+          });
+          return;
+        } catch (_) {
+          // fall through to exec fallback
+        }
+      }
+    }
+
+    const child = exec(cmd, { timeout, windowsHide: true }, (error, stdout, stderr) => {
+      handleResult(stdout, stderr);
     });
     child.on('error', (e) => {
       if (e.killed) resolve({ success: false, error: 'Command timed out' });

@@ -24,7 +24,7 @@ declare global {
       optimizeProcesses: (mode: 'safe' | 'aggressive') => Promise<{ success: boolean; killed: number; savedRam: number; mode: string; processes: ProcessInfo[] }>
       restoreProcesses: () => Promise<{ success: boolean; restored: number; message: string }>
       detectGames: (executables: string[]) => Promise<{ running: { name: string; pid: number }[] }>
-      applyGameTweaks: (tweakIds: string[]) => Promise<{ success: boolean; applied: number }>
+      applyGameTweaks: (tweakIds: string[]) => Promise<{ success: boolean; applied: number; total: number; results: { id: string; success: boolean; error?: string }[]; failed: { id: string; success: boolean; error?: string }[] }>
       restoreGameTweaks: (tweakIds: string[]) => Promise<{ success: boolean; restored: number }>
       startAutopilot: (games: GameProfile[]) => Promise<{ success: boolean }>
       stopAutopilot: () => Promise<{ success: boolean }>

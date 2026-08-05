@@ -7,6 +7,7 @@ interface Toast {
   id: number
   message: string
   type: 'success' | 'error' | 'info'
+  exiting?: boolean
 }
 
 const ToastContext = createContext<{ addToast: (message: string, type?: Toast['type']) => void }>({ addToast: () => {} })
@@ -20,7 +21,8 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   const nextIdRef = useRef(0)
 
   const removeToast = useCallback((id: number) => {
-    setToasts(prev => prev.filter(t => t.id !== id))
+    setToasts(prev => prev.map(t => t.id === id ? { ...t, exiting: true } : t))
+    setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 250)
   }, [])
 
   const addToast = useCallback((message: string, type: Toast['type'] = 'info') => {
@@ -60,7 +62,9 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
                 border: `1px solid ${colors.border}`,
                 boxShadow: `0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px ${colors.border}, inset 0 1px 0 rgba(255,255,255,0.04)`,
                 backdropFilter: 'blur(16px) saturate(1.3)',
-                animation: 'springIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                animation: toast.exiting
+                  ? 'toastSlideOut 0.25s cubic-bezier(0.4, 0, 1, 1) forwards'
+                  : 'toastSlideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1)',
               }}>
               <div className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0" style={{ background: colors.glow }}>
                 {getIcon(toast.type)}

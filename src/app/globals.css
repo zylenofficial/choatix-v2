@@ -87,11 +87,10 @@
     backdrop-filter: blur(12px) saturate(1.4);
     border: 1px solid rgba(255,255,255,0.08);
     border-radius: var(--radius-lg);
-    transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s ease, box-shadow 0.25s ease;
     position: relative;
     overflow: hidden;
     box-shadow: 0 4px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05);
-    will-change: transform;
   }
   .card-widget::before {
     content: "";
@@ -100,14 +99,15 @@
     height: 1px;
     background: linear-gradient(90deg, transparent 10%, rgba(255,255,255,0.08) 50%, transparent 90%);
     opacity: 0;
-    transition: opacity 0.2s;
+    transition: opacity 0.25s ease;
   }
   .card-widget:hover::before {
     opacity: 1;
   }
   .card-widget:hover {
+    transform: translateY(-2px);
     border-color: var(--border-default);
-    box-shadow: var(--shadow-md);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.06);
   }
 
   .score-ring-lg {
@@ -126,13 +126,16 @@
     display: flex; align-items: center; gap: 10px;
     padding: 10px 14px; border-radius: var(--radius-md);
     font-size: 13px; font-weight: 500; color: var(--text-secondary);
-    transition: background 0.15s ease, color 0.15s ease;
+    transition: background 0.2s cubic-bezier(0.16, 1, 0.3, 1), color 0.2s ease, transform 0.15s ease;
     cursor: pointer; user-select: none;
     position: relative;
   }
   .sidebar-item:hover {
     background: var(--bg-hover);
     color: var(--text-primary);
+  }
+  .sidebar-item:active {
+    transform: scale(0.98);
   }
   .sidebar-item.active {
     background: rgba(255,255,255,0.06);
@@ -147,6 +150,11 @@
     background: var(--accent);
     border-radius: 0 3px 3px 0;
     opacity: 0.8;
+    animation: sidebarActiveBar 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+  @keyframes sidebarActiveBar {
+    from { height: 0%; opacity: 0; }
+    to { height: 60%; opacity: 0.8; }
   }
 
   @keyframes spin {
@@ -171,35 +179,35 @@
   }
 
   .fade-in {
-    animation: fadeIn 0.35s ease forwards;
+    animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     opacity: 0;
   }
   @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(8px); }
+    from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
   }
   .fade-in-scale {
-    animation: fadeInScale 0.25s ease forwards;
+    animation: fadeInScale 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     opacity: 0;
   }
   @keyframes fadeInScale {
-    from { opacity: 0; transform: scale(0.97); }
+    from { opacity: 0; transform: scale(0.96); }
     to { opacity: 1; transform: scale(1); }
   }
   .stagger > * {
-    opacity: 0; animation: fadeIn 0.35s ease forwards;
+    opacity: 0; animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   }
   .stagger > *:nth-child(1) { animation-delay: 0ms; }
-  .stagger > *:nth-child(2) { animation-delay: 30ms; }
-  .stagger > *:nth-child(3) { animation-delay: 60ms; }
-  .stagger > *:nth-child(4) { animation-delay: 90ms; }
+  .stagger > *:nth-child(2) { animation-delay: 40ms; }
+  .stagger > *:nth-child(3) { animation-delay: 80ms; }
+  .stagger > *:nth-child(4) { animation-delay: 100ms; }
   .stagger > *:nth-child(5) { animation-delay: 120ms; }
-  .stagger > *:nth-child(6) { animation-delay: 150ms; }
-  .stagger > *:nth-child(7) { animation-delay: 180ms; }
-  .stagger > *:nth-child(8) { animation-delay: 210ms; }
-  .stagger > *:nth-child(9) { animation-delay: 240ms; }
-  .stagger > *:nth-child(10) { animation-delay: 270ms; }
-  .stagger > *:nth-child(n+11) { animation-delay: 300ms; }
+  .stagger > *:nth-child(6) { animation-delay: 140ms; }
+  .stagger > *:nth-child(7) { animation-delay: 160ms; }
+  .stagger > *:nth-child(8) { animation-delay: 180ms; }
+  .stagger > *:nth-child(9) { animation-delay: 200ms; }
+  .stagger > *:nth-child(10) { animation-delay: 220ms; }
+  .stagger > *:nth-child(n+11) { animation-delay: 240ms; }
 
   @keyframes pulseGlow {
     0%, 100% { box-shadow: 0 0 0 0 rgba(255,255,255,0.15); }
@@ -213,7 +221,7 @@
   }
   .progress-bar .fill {
     height: 100%; border-radius: 3px;
-    transition: width 0.6s ease;
+    transition: width 0.8s cubic-bezier(0.16, 1, 0.3, 1);
     position: relative;
   }
   .progress-bar .fill::after {
@@ -233,11 +241,10 @@
     color: #000;
     font-weight: 600;
     border-radius: var(--radius-md);
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease, background 0.15s ease;
     box-shadow: 0 2px 10px rgba(255,255,255,0.10);
     position: relative;
     overflow: hidden;
-    will-change: transform;
   }
   .btn-primary::before {
     content: '';
@@ -254,7 +261,7 @@
     background: var(--accent-hover);
   }
   .btn-primary:active {
-    transform: translateY(0);
+    transform: translateY(0) scale(0.98);
     box-shadow: 0 1px 4px rgba(255,255,255,0.08);
   }
 
@@ -264,12 +271,15 @@
     font-weight: 500;
     border: 1px solid var(--border-subtle);
     border-radius: var(--radius-md);
-    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+    transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
   }
   .btn-ghost:hover {
     background: var(--bg-hover);
     color: var(--text-primary);
     border-color: var(--border-default);
+  }
+  .btn-ghost:active {
+    transform: scale(0.98);
   }
 
   .btn-danger {
@@ -291,8 +301,7 @@
   }
 
   .hover-lift {
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-    will-change: transform;
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease;
   }
   .hover-lift:hover {
     transform: translateY(-2px);
@@ -333,8 +342,7 @@
   }
 
   .game-card {
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
-    will-change: transform;
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease;
   }
   .game-card:hover {
     transform: scale(1.03);
@@ -344,21 +352,21 @@
     transform: scale(1.08);
   }
   .game-card-image {
-    transition: transform 0.15s ease;
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
   .modal-overlay {
-    animation: overlayIn 0.15s ease-out;
+    animation: overlayIn 0.2s ease-out;
   }
   @keyframes overlayIn {
     from { opacity: 0; }
     to { opacity: 1; }
   }
   .modal-content {
-    animation: modalIn 0.2s ease;
+    animation: modalIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
   }
   @keyframes modalIn {
-    from { opacity: 0; transform: scale(0.96) translateY(8px); }
+    from { opacity: 0; transform: scale(0.95) translateY(12px); }
     to { opacity: 1; transform: scale(1) translateY(0); }
   }
 
@@ -369,12 +377,13 @@
     color: var(--text-primary);
     font-size: 13px;
     padding: 10px 14px;
-    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
     outline: none;
   }
   .input-field:focus {
     border-color: var(--border-strong);
-    box-shadow: 0 0 0 2px rgba(255,255,255,0.06);
+    box-shadow: 0 0 0 3px rgba(255,255,255,0.06);
+    background: rgba(20,20,20,0.8);
   }
   .input-field::placeholder {
     color: var(--text-muted);
@@ -386,12 +395,15 @@
     justify-content: space-between;
     padding: 12px 16px;
     border-radius: var(--radius-md);
-    transition: background 0.15s ease, border-color 0.15s ease;
+    transition: background 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
     border: 1px solid transparent;
   }
   .tweak-row:hover {
     background: var(--bg-hover);
     border-color: var(--border-subtle);
+  }
+  .tweak-row:active {
+    transform: scale(0.99);
   }
 
   @keyframes checkmark {
@@ -420,21 +432,13 @@
     white-space: nowrap;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.1s, transform 0.1s;
+    transition: opacity 0.15s ease, transform 0.15s cubic-bezier(0.16, 1, 0.3, 1);
     border: 1px solid var(--border-subtle);
     box-shadow: var(--shadow-md);
   }
   .tooltip:hover::after {
     opacity: 1;
     transform: translateX(-50%) translateY(-8px);
-  }
-
-  .page-transition {
-    animation: pageIn 0.25s ease;
-  }
-  @keyframes pageIn {
-    from { opacity: 0; transform: translateY(6px); }
-    to { opacity: 1; transform: translateY(0); }
   }
 
   .stat-card {
@@ -444,11 +448,12 @@
     padding: 20px;
     position: relative;
     overflow: hidden;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   }
   .stat-card:hover {
     border-color: var(--border-default);
     box-shadow: var(--shadow-md);
+    transform: translateY(-1px);
   }
   .stat-card::after {
     content: '';
@@ -557,8 +562,7 @@
   }
 
   .card-hover-pulse {
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-    will-change: transform;
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease;
   }
   .card-hover-pulse:hover {
     transform: translateY(-2px);
@@ -584,8 +588,7 @@
   }
 
   .btn-press {
-    transition: transform 0.1s ease;
-    will-change: transform;
+    transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1);
   }
   .btn-press:active {
     transform: scale(0.97);
@@ -596,18 +599,17 @@
   }
 
   .spring-in {
-    animation: springIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    animation: springIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
     opacity: 0;
   }
   @keyframes springIn {
-    from { opacity: 0; transform: scale(0.9) translateY(6px); }
+    from { opacity: 0; transform: scale(0.92) translateY(8px); }
     to { opacity: 1; transform: scale(1) translateY(0); }
   }
 
   .glow-hover {
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease;
     position: relative;
-    will-change: transform;
   }
   .glow-hover::after {
     content: '';
@@ -616,7 +618,7 @@
     border-radius: inherit;
     background: linear-gradient(135deg, rgba(255,255,255,0.1), transparent, rgba(255,255,255,0.05));
     opacity: 0;
-    transition: opacity 0.2s ease;
+    transition: opacity 0.25s ease;
     pointer-events: none;
     z-index: 0;
   }
@@ -656,7 +658,7 @@
     height: 200%;
     background: radial-gradient(circle, rgba(255,255,255,0.06) 0%, transparent 60%);
     opacity: 0;
-    transition: opacity 0.3s ease;
+    transition: opacity 0.35s ease;
     pointer-events: none;
   }
   .card-shine:hover::before {
@@ -664,10 +666,10 @@
   }
 
   .page-transition {
-    animation: pageSlideIn 0.25s ease;
+    animation: pageSlideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
   }
   @keyframes pageSlideIn {
-    from { opacity: 0; transform: translateY(8px); }
+    from { opacity: 0; transform: translateY(6px); }
     to { opacity: 1; transform: translateY(0); }
   }
 
@@ -707,11 +709,6 @@
     100% { background-position: -200% 0; }
   }
 
-  .sidebar-item.active {
-    background: rgba(255,255,255,0.06);
-    color: var(--text-primary);
-  }
-
   .modal-backdrop {
     background: rgba(0,0,0,0.7);
     backdrop-filter: blur(6px) saturate(1.2);
@@ -741,7 +738,7 @@
     mask-composite: exclude;
     pointer-events: none;
     opacity: 0;
-    transition: opacity 0.2s ease;
+    transition: opacity 0.3s ease;
   }
   .gradient-border:hover::before {
     opacity: 1;
@@ -762,18 +759,18 @@
 
   /* Reveal animation - no blur, just opacity+transform */
   @keyframes revealUp {
-    from { opacity: 0; transform: translateY(12px); }
+    from { opacity: 0; transform: translateY(14px); }
     to { opacity: 1; transform: translateY(0); }
   }
   .reveal-up {
-    animation: revealUp 0.35s ease forwards;
+    animation: revealUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     opacity: 0;
   }
   .reveal-up-1 { animation-delay: 0ms; }
-  .reveal-up-2 { animation-delay: 40ms; }
-  .reveal-up-3 { animation-delay: 80ms; }
-  .reveal-up-4 { animation-delay: 120ms; }
-  .reveal-up-5 { animation-delay: 160ms; }
+  .reveal-up-2 { animation-delay: 50ms; }
+  .reveal-up-3 { animation-delay: 100ms; }
+  .reveal-up-4 { animation-delay: 150ms; }
+  .reveal-up-5 { animation-delay: 200ms; }
 
   /* Glowing divider line */
   .glow-divider {
@@ -789,8 +786,7 @@
   }
 
   .hover-expand {
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-    will-change: transform;
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease;
   }
   .hover-expand:hover {
     transform: scale(1.01);
@@ -809,7 +805,7 @@
     width: 0;
     height: 1px;
     background: linear-gradient(90deg, rgba(255,255,255,0.4), transparent);
-    transition: width 0.25s ease;
+    transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   }
   .animated-underline:hover::after {
     width: 100%;
@@ -872,17 +868,16 @@
       rgba(255,255,255,0.04) 60%,
       transparent 100%
     );
-    animation: shimmer 1.8s ease-in-out infinite;
+    animation: skeletonShimmer 1.8s ease-in-out infinite;
   }
-  @keyframes shimmer {
+  @keyframes skeletonShimmer {
     0% { transform: translateX(-100%); }
     100% { transform: translateX(100%); }
   }
 
   /* ─── Card Hover Glow ──────────────────────── */
   .card-glow {
-    transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.25s ease;
-    will-change: transform;
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s ease, box-shadow 0.25s ease;
   }
   .card-glow:hover {
     transform: translateY(-2px);
@@ -906,5 +901,15 @@
     border: 1px solid rgba(255,255,255,0.08);
     border-radius: 4px;
     line-height: 1;
+  }
+
+  /* ─── Toast Animations ──────────────────────── */
+  @keyframes toastSlideIn {
+    from { opacity: 0; transform: translateX(24px) scale(0.96); }
+    to { opacity: 1; transform: translateX(0) scale(1); }
+  }
+  @keyframes toastSlideOut {
+    from { opacity: 1; transform: translateX(0) scale(1); }
+    to { opacity: 0; transform: translateX(24px) scale(0.96); }
   }
 }

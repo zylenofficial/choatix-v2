@@ -1,9 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { LayoutDashboard, Zap, Gamepad2, Monitor, Settings, Shield, Target, Mouse, ScanSearch, ChevronRight, Trophy } from 'lucide-react'
+import { LayoutDashboard, Zap, Gamepad2, Monitor, Settings, Shield, Target, Mouse, ScanSearch, ChevronRight } from 'lucide-react'
 
-export type Page = 'home' | 'optimize' | 'quick-boost' | 'zero-delay' | 'scan' | 'games' | 'leaderboard' | 'system' | 'settings'
+export type Page = 'home' | 'optimize' | 'quick-boost' | 'zero-delay' | 'scan' | 'games' | 'system' | 'settings'
 
 interface SidebarProps {
   active: Page
@@ -20,7 +20,6 @@ const NAV_ITEMS: { id: Page; label: string; icon: any }[] = [
   { id: 'quick-boost', label: 'Quick Boost', icon: Target },
   { id: 'zero-delay', label: '0 Delay', icon: Mouse },
   { id: 'games', label: 'Games', icon: Gamepad2 },
-  { id: 'leaderboard', label: 'Leaderboard', icon: Trophy },
   { id: 'system', label: 'System', icon: Monitor },
   { id: 'settings', label: 'Settings', icon: Settings },
 ]
@@ -59,7 +58,7 @@ export function Sidebar({ active, onNavigate, tier, onUpgrade, rollbackCount }: 
                 onClick={() => onNavigate(item.id)}
                 onMouseEnter={() => setHoveredItem(item.id)}
                 onMouseLeave={() => setHoveredItem(null)}
-                className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-left transition-all duration-150 relative overflow-hidden group"
+                className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-left relative overflow-hidden group"
                 style={{
                   background: isActive
                     ? 'rgba(255,255,255,0.07)'
@@ -70,18 +69,20 @@ export function Sidebar({ active, onNavigate, tier, onUpgrade, rollbackCount }: 
                   boxShadow: isActive
                     ? 'inset 0 0 20px rgba(255,255,255,0.03), 0 0 16px rgba(255,255,255,0.02)'
                     : 'none',
+                  transition: 'background 0.2s cubic-bezier(0.16, 1, 0.3, 1), color 0.2s ease, transform 0.15s ease',
                 }}
               >
                 {/* Active indicator bar */}
                 {isActive && (
-                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-[55%] rounded-r-full transition-all duration-150" style={{
+                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-[55%] rounded-r-full" style={{
                     background: 'linear-gradient(180deg, rgba(255,255,255,0.6), rgba(255,255,255,0.3))',
                     boxShadow: '0 0 8px rgba(255,255,255,0.2)',
+                    animation: 'sidebarActiveBar 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards',
                   }} />
                 )}
 
                 {/* Icon container */}
-                <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-all duration-150" style={{
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{
                   background: isActive
                     ? 'rgba(255,255,255,0.08)'
                     : isHovered
@@ -90,39 +91,44 @@ export function Sidebar({ active, onNavigate, tier, onUpgrade, rollbackCount }: 
                   boxShadow: isActive
                     ? '0 0 12px rgba(255,255,255,0.05)'
                     : 'none',
+                  transition: 'background 0.2s ease, box-shadow 0.2s ease',
                 }}>
                   <Icon
-                    className="w-4 h-4 transition-all duration-150"
+                    className="w-4 h-4"
                     strokeWidth={isActive ? 2 : 1.5}
                     style={{
                       color: isActive ? '#fff' : isHovered ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.35)',
                       transform: isHovered && !isActive ? 'scale(1.1)' : 'scale(1)',
+                      transition: 'color 0.2s ease, transform 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
                     }}
                   />
                 </div>
 
                 {/* Label */}
-                <span className={`flex-1 text-[12.5px] transition-all duration-150 ${isActive ? 'font-semibold' : 'font-medium'}`}
+                <span className={`flex-1 text-[12.5px] ${isActive ? 'font-semibold' : 'font-medium'}`}
                   style={{
                     color: isActive ? '#fff' : isHovered ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.4)',
+                    transition: 'color 0.2s ease',
                   }}>
                   {item.label}
                 </span>
 
                 {/* Hover arrow */}
-                <ChevronRight className="w-3 h-3 transition-all duration-150 shrink-0" style={{
+                <ChevronRight className="w-3 h-3 shrink-0" style={{
                   opacity: isHovered && !isActive ? 1 : 0,
                   transform: isHovered && !isActive ? 'translateX(0)' : 'translateX(-4px)',
                   color: 'rgba(255,255,255,0.2)',
+                  transition: 'opacity 0.2s ease, transform 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
                 }} />
 
                 {/* Settings badge */}
                 {item.id === 'settings' && rollbackCount > 0 && (
-                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center transition-all duration-150" style={{
+                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center" style={{
                     background: 'var(--accent-dim)',
                     color: 'var(--accent)',
                     border: '1px solid rgba(255,255,255,0.10)',
                     boxShadow: '0 0 8px rgba(255,255,255,0.05)',
+                    transition: 'all 0.2s ease',
                   }}>
                     {rollbackCount}
                   </span>
@@ -144,10 +150,11 @@ export function Sidebar({ active, onNavigate, tier, onUpgrade, rollbackCount }: 
 
       {/* Upgrade Card */}
       <div className="p-3">
-        <div className="relative rounded-xl p-3.5 overflow-hidden transition-all duration-400" style={{
+        <div className="relative rounded-xl p-3.5 overflow-hidden" style={{
           background: 'linear-gradient(135deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01))',
           border: '1px solid rgba(255,255,255,0.06)',
           boxShadow: '0 2px 12px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04)',
+          transition: 'border-color 0.25s ease, box-shadow 0.25s ease',
         }}>
           {/* Subtle glow */}
           <div className="absolute -top-10 -right-10 w-20 h-20 rounded-full pointer-events-none" style={{

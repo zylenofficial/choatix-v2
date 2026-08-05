@@ -19,8 +19,6 @@ const AdvisorPage = dynamic(() => import('@/components/AdvisorPage').then(m => (
 const GamesPage = dynamic(() => import('@/components/pages/GamesPage').then(m => ({ default: m.GamesPage })), { ssr: false })
 const SystemPage = dynamic(() => import('@/components/pages/SystemPage').then(m => ({ default: m.SystemPage })), { ssr: false })
 const SettingsPage = dynamic(() => import('@/components/pages/SettingsPage').then(m => ({ default: m.SettingsPage })), { ssr: false })
-const FanControlPage = dynamic(() => import('@/components/pages/FanControlPage').then(m => ({ default: m.FanControlPage })), { ssr: false })
-const LeaderboardPage = dynamic(() => import('@/components/pages/LeaderboardPage').then(m => ({ default: m.LeaderboardPage })), { ssr: false })
 
 const PAGES: Record<Page, React.ComponentType> = {
   home: DashboardPage,
@@ -31,13 +29,13 @@ const PAGES: Record<Page, React.ComponentType> = {
   games: GamesPage,
   system: SystemPage,
   settings: SettingsPage,
-  leaderboard: LeaderboardPage,
 }
 
 export default function Home() {
   const [activePage, setActivePage] = useState<Page>('home')
   const [displayPage, setDisplayPage] = useState<Page>('home')
   const [transitioning, setTransitioning] = useState(false)
+  const [transitionDirection, setTransitionDirection] = useState<'forward' | 'backward'>('forward')
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
   const [showDisclaimer, setShowDisclaimer] = useState(true)
 
@@ -113,27 +111,34 @@ export default function Home() {
     const handler = (e: Event) => {
       const page = (e as CustomEvent).detail as Page
       if (page && page !== activePage) {
+        const PAGE_ORDER: Page[] = ['home','scan','optimize','quick-boost','zero-delay','games','system','settings']
+        const fromIdx = PAGE_ORDER.indexOf(activePage)
+        const toIdx = PAGE_ORDER.indexOf(page)
+        setTransitionDirection(toIdx >= fromIdx ? 'forward' : 'backward')
         setTransitioning(true)
         setTimeout(() => {
           setActivePage(page)
           setDisplayPage(page)
           setTimeout(() => setTransitioning(false), 50)
-        }, 150)
+        }, 120)
       }
     }
     window.addEventListener('choatix-navigate', handler)
     return () => window.removeEventListener('choatix-navigate', handler)
   }, [activePage])
 
-  const handleUpgrade = useCallback(() => { setShowUpgradeModal(false) }, [])
   const handleNavigate = useCallback((page: Page) => {
     if (page === activePage) return
+    const PAGE_ORDER: Page[] = ['home','scan','optimize','quick-boost','zero-delay','games','system','settings']
+    const fromIdx = PAGE_ORDER.indexOf(activePage)
+    const toIdx = PAGE_ORDER.indexOf(page)
+    setTransitionDirection(toIdx >= fromIdx ? 'forward' : 'backward')
     setTransitioning(true)
     setTimeout(() => {
       setActivePage(page)
       setDisplayPage(page)
       setTimeout(() => setTransitioning(false), 50)
-    }, 150)
+    }, 120)
   }, [activePage])
 
   const ActiveComponent = PAGES[displayPage]
@@ -172,10 +177,10 @@ export default function Home() {
       />
       <div className="flex-1 flex flex-col overflow-hidden">
         <main className="flex-1 flex flex-col overflow-y-auto">
-          <div className="flex-1 page-transition" style={{
+          <div className="flex-1" style={{
             opacity: transitioning ? 0 : 1,
-            transform: transitioning ? 'translateY(8px) scale(0.99)' : 'translateY(0) scale(1)',
-            transition: 'opacity 0.15s ease, transform 0.15s ease',
+            transform: transitioning ? `translateY(${transitionDirection === 'forward' ? '8px' : '-8px'})` : 'translateY(0)',
+            transition: 'opacity 0.12s ease, transform 0.12s ease',
           }}>
             <ActiveComponent />
           </div>
