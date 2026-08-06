@@ -104,6 +104,15 @@ export default function Home() {
     return () => clearInterval(interval)
   }, [])
 
+  // Pause video when tab hidden to save GPU
+  useEffect(() => {
+    const video = document.querySelector('video') as HTMLVideoElement | null
+    if (!video) return
+    const onVis = () => { document.hidden ? video.pause() : video.play().catch(() => {}) }
+    document.addEventListener('visibilitychange', onVis)
+    return () => document.removeEventListener('visibilitychange', onVis)
+  }, [])
+
   // Auto-save when important state changes
   useEffect(() => { saveState() }, [appliedTweaks, discordId, license, selectedGames, autopilotEnabled, rollbackEntries, saveState])
 

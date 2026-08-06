@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useRef, createContext, useContext } from 'react'
+import { useState, useCallback, useRef, useEffect, createContext, useContext } from 'react'
 import { CheckCircle2, AlertCircle, Info, X } from 'lucide-react'
 
 interface Toast {
@@ -19,16 +19,26 @@ export function useToast() {
 export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([])
   const nextIdRef = useRef(0)
+  const timersRef = useRef<Map<number, ReturnType<typeof setTimeout>>>(new Map())
+
+  useEffect(() => {
+    return () => {
+      timersRef.current.forEach(t => clearTimeout(t))
+      timersRef.current.clear()
+    }
+  }, [])
 
   const removeToast = useCallback((id: number) => {
-    setToasts(prev => prev.map(t => t.id === id ? { ...t, exiting: true } : t))
-    setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 250)
+    const t = setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 250)
+    timersRef.current.set(id + 0.1, t)
+    setToasts(prev => prev.map(toast => toast.id === id ? { ...toast, exiting: true } : toast))
   }, [])
 
   const addToast = useCallback((message: string, type: Toast['type'] = 'info') => {
     const id = nextIdRef.current++
     setToasts(prev => [...prev.slice(-4), { id, message, type }])
-    setTimeout(() => removeToast(id), 3500)
+    const t = setTimeout(() => removeToast(id), 3500)
+    timersRef.current.set(id, t)
   }, [removeToast])
 
   const getIcon = (type: Toast['type']) => {

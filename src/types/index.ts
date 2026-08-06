@@ -36,6 +36,12 @@ declare global {
       unscheduleScan: (id: string) => Promise<{ success: boolean }>
       oneClickOptimize: () => Promise<{ success: boolean; applied: number; total: number }>
       checkForUpdates: () => Promise<UpdateInfo>
+      downloadUpdate: () => Promise<{ success: boolean; error?: string }>
+      installUpdate: () => void
+      onUpdateAvailable: (cb: (info: { version: string }) => void) => (() => void) | undefined
+      onUpdateNotAvailable: (cb: () => void) => (() => void) | undefined
+      onUpdateProgress: (cb: (progress: { percent: number }) => void) => (() => void) | undefined
+      onUpdateDownloaded: (cb: () => void) => (() => void) | undefined
       reportCrash: (data: { error: string; stack: string; context: string }) => Promise<{ success: boolean }>
       exportSettings: () => Promise<{ success: boolean; data?: string; error?: string }>
       importSettings: (data: string) => Promise<{ success: boolean; error?: string }>

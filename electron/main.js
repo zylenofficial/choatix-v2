@@ -2627,6 +2627,21 @@ ipcMain.handle("check-for-updates", async () => {
   }
 });
 
+ipcMain.handle("download-update", async () => {
+  try {
+    const { autoUpdater } = require("electron-updater");
+    await autoUpdater.downloadUpdate();
+    return { success: true };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+});
+
+ipcMain.handle("install-update", () => {
+  const { autoUpdater } = require("electron-updater");
+  autoUpdater.quitAndInstall();
+});
+
 // ═══════════════════════════════════════════
 // ── Send Update Notification IPC ──
 // ═══════════════════════════════════════════
@@ -4010,6 +4025,32 @@ process.on("unhandledRejection", (reason) => {
 app.whenReady().then(async () => {
   if (isDev) createWindow(0);
   else { const port = await startServer(); createWindow(port); }
+
+  // Auto-updater
+  if (!isDev) {
+    const { autoUpdater } = require("electron-updater");
+    autoUpdater.autoDownload = false;
+    autoUpdater.autoInstallOnAppQuit = true;
+
+    autoUpdater.on("update-available", (info) => {
+      if (mainWindow) mainWindow.webContents.send("update-available", { version: info.version });
+    });
+    autoUpdater.on("update-not-available", () => {
+      if (mainWindow) mainWindow.webContents.send("update-not-available");
+    });
+    autoUpdater.on("download-progress", (progress) => {
+      if (mainWindow) mainWindow.webContents.send("update-progress", { percent: progress.percent });
+    });
+    autoUpdater.on("update-downloaded", () => {
+      if (mainWindow) mainWindow.webContents.send("update-downloaded");
+    });
+    autoUpdater.on("error", (err) => {
+      console.error("Auto-updater error:", err.message);
+    });
+
+    // Check for updates 5 seconds after launch
+    setTimeout(() => { autoUpdater.checkForUpdates().catch(() => {}); }, 5000);
+  }
 });
 app.on("window-all-closed", () => { if (server) server.close(); if (process.platform !== "darwin") app.quit(); });
 app.on("activate", async () => {

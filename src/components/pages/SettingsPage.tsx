@@ -19,6 +19,9 @@ export function SettingsPage() {
   const [statusMsg, setStatusMsg] = useState('')
   const [updateInfo, setUpdateInfo] = useState<UpdateInfo | null>(null)
   const [checkingUpdate, setCheckingUpdate] = useState(false)
+  const [updateDownloading, setUpdateDownloading] = useState(false)
+  const [updateProgress, setUpdateProgress] = useState(0)
+  const [updateReady, setUpdateReady] = useState(false)
   const [exportStatus, setExportStatus] = useState<string | null>(null)
   const [importStatus, setImportStatus] = useState<string | null>(null)
   const [updateVersion, setUpdateVersion] = useState('')
@@ -44,6 +47,26 @@ export function SettingsPage() {
     const ADMIN_IDS = ['1520176133461512324', '1322475983386837006']
     setIsAdmin(ADMIN_IDS.includes(discordId.trim()))
   }, [discordId])
+
+  // Auto-updater event listeners
+  useEffect(() => {
+    if (!window.electronAPI) return
+    const unsubs = [
+      window.electronAPI.onUpdateAvailable?.((info: { version: string }) => {
+        setUpdateInfo({ currentVersion: '', latestVersion: info.version, updateAvailable: true, downloadUrl: '', releaseNotes: '' })
+        addToast(`Update v${info.version} found`, 'info')
+      }),
+      window.electronAPI.onUpdateProgress?.((p: { percent: number }) => {
+        setUpdateProgress(p.percent)
+      }),
+      window.electronAPI.onUpdateDownloaded?.(() => {
+        setUpdateReady(true)
+        setUpdateDownloading(false)
+        addToast('Update ready to install', 'success')
+      }),
+    ]
+    return () => { unsubs.forEach(u => u?.()) }
+  }, [addToast])
 
   const handleRevertEntry = useCallback(async (entryId: string) => {
     const entry = rollbackEntries.find(e => e.id === entryId)
@@ -99,6 +122,16 @@ export function SettingsPage() {
     setCheckingUpdate(true)
     const info = await window.electronAPI.checkForUpdates()
     setUpdateInfo(info); setCheckingUpdate(false)
+  }, [])
+
+  const handleDownloadUpdate = useCallback(async () => {
+    if (!window.electronAPI) return
+    setUpdateDownloading(true); setUpdateProgress(0)
+    await window.electronAPI.downloadUpdate()
+  }, [])
+
+  const handleInstallUpdate = useCallback(() => {
+    window.electronAPI?.installUpdate()
   }, [])
 
   const handleExport = useCallback(async () => {
@@ -386,16 +419,36 @@ export function SettingsPage() {
                 {checkingUpdate ? 'Checking...' : 'Check'}
               </button>
             </div>
-            {updateInfo && updateInfo.updateAvailable && (
-              <div className="flex items-center gap-3 p-3.5 rounded-xl mt-4" style={{ background: 'rgba(74,222,128,0.05)', border: '1px solid rgba(74,222,128,0.1)' }}>
-                <CheckCircle className="w-4 h-4" style={{ color: '#4ade80' }} />
-                <span className="text-[11px] font-medium text-white flex-1">v{updateInfo.latestVersion} available</span>
-                {updateInfo.downloadUrl && (
-                  <a href={updateInfo.downloadUrl} target="_blank" rel="noreferrer" className="text-[10px] font-bold px-3 py-1.5 rounded-lg" style={{ color: '#4ade80', background: 'rgba(74,222,128,0.08)' }}>Download</a>
+            {updateInfo && updateInfo.updateAvailable && !updateReady && (
+              <div className="p-3.5 rounded-xl mt-4" style={{ background: 'rgba(74,222,128,0.05)', border: '1px solid rgba(74,222,128,0.1)' }}>
+                <div className="flex items-center gap-3">
+                  <CheckCircle className="w-4 h-4" style={{ color: '#4ade80' }} />
+                  <span className="text-[11px] font-medium text-white flex-1">v{updateInfo.latestVersion} available</span>
+                  {!updateDownloading ? (
+                    <button onClick={handleDownloadUpdate} className="text-[10px] font-bold px-3 py-1.5 rounded-lg btn-press" style={{ color: '#4ade80', background: 'rgba(74,222,128,0.08)' }}>
+                      Download
+                    </button>
+                  ) : (
+                    <span className="text-[10px] font-medium" style={{ color: '#4ade80' }}>{Math.round(updateProgress)}%</span>
+                  )}
+                </div>
+                {updateDownloading && (
+                  <div className="mt-2.5 h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(74,222,128,0.1)' }}>
+                    <div className="h-full rounded-full transition-all duration-300" style={{ width: `${updateProgress}%`, background: '#4ade80' }} />
+                  </div>
                 )}
               </div>
             )}
-            {updateInfo && !updateInfo.updateAvailable && (
+            {updateReady && (
+              <div className="flex items-center gap-3 p-3.5 rounded-xl mt-4" style={{ background: 'rgba(74,222,128,0.05)', border: '1px solid rgba(74,222,128,0.1)' }}>
+                <CheckCircle className="w-4 h-4" style={{ color: '#4ade80' }} />
+                <span className="text-[11px] font-medium text-white flex-1">Update downloaded</span>
+                <button onClick={handleInstallUpdate} className="text-[10px] font-bold px-3 py-1.5 rounded-lg btn-press" style={{ color: '#000', background: '#4ade80' }}>
+                  Restart & Install
+                </button>
+              </div>
+            )}
+            {updateInfo && !updateInfo.updateAvailable && !updateReady && (
               <div className="flex items-center gap-3 p-3.5 rounded-xl mt-4" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)' }}>
                 <CheckCircle className="w-4 h-4" style={{ color: 'rgba(255,255,255,0.3)' }} />
                 <span className="text-[11px] font-medium" style={{ color: 'rgba(255,255,255,0.4)' }}>You are up to date</span>

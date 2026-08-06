@@ -1,18 +1,23 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 
 export default function Disclaimer({ onAccept }: { onAccept: () => void }) {
   const [visible, setVisible] = useState(false)
   const [exiting, setExiting] = useState(false)
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     const t = setTimeout(() => setVisible(true), 100)
     return () => clearTimeout(t)
   }, [])
 
+  useEffect(() => {
+    return () => { if (timerRef.current) clearTimeout(timerRef.current) }
+  }, [])
+
   const handleAccept = () => {
     setExiting(true)
-    setTimeout(onAccept, 500)
+    timerRef.current = setTimeout(onAccept, 500)
   }
 
   return (

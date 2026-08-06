@@ -47,6 +47,11 @@
   "build": {
     "appId": "com.choatix.v2",
     "productName": "Choatix V2",
+    "publish": {
+      "provider": "github",
+      "owner": "zylenofficial",
+      "repo": "choatix-v2"
+    },
     "directories": {
       "output": "dist"
     },
@@ -85,6 +90,7 @@
     }
   },
   "dependencies": {
+    "electron-updater": "^6.8.9",
     "pg": "^8.22.0",
     "systeminformation": "^5.31.17"
   }

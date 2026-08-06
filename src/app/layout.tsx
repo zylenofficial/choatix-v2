@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import { ClientShell } from '@/components/ClientShell'
 
 export const metadata: Metadata = {
   title: 'Choatix',
@@ -14,7 +15,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="h-screen overflow-hidden">
-        {children}
+        <ClientShell>{children}</ClientShell>
       </body>
     </html>
   )
