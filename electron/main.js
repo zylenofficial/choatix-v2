@@ -32,7 +32,6 @@ app.commandLine.appendSwitch('js-flags', '--max-old-space-size=128');
 const isDev = !app.isPackaged;
 let mainWindow;
 let server;
-const WEBHOOK_URL = "";
 const DISCORD_WEBHOOK = process.env.DISCORD_CRASH_WEBHOOK || "";
 
 let FEEDBACK_WEBHOOK = process.env.DISCORD_FEEDBACK_WEBHOOK || "";
@@ -46,7 +45,16 @@ if (!FEEDBACK_WEBHOOK) {
   } catch {}
 }
 
-const UPDATE_WEBHOOK = "https://discord.com/api/webhooks/1522575081501360279/waG1l24hDq4KZyYoTL9_iJ63XJrq8x33VJaTLt2RC7aeNZKuG0JcdpcwcbnIg_djuTnM";
+let UPDATE_WEBHOOK = process.env.DISCORD_UPDATE_WEBHOOK || "";
+if (!UPDATE_WEBHOOK) {
+  try {
+    const configPath = isDev ? path.join(__dirname, "..", "config.json") : path.join(process.resourcesPath, "config.json");
+    if (fs.existsSync(configPath)) {
+      const config = JSON.parse(fs.readFileSync(configPath, "utf-8"));
+      UPDATE_WEBHOOK = config.DISCORD_UPDATE_WEBHOOK || "";
+    }
+  } catch {}
+}
 
 const SETTINGS_FILE = path.join(app.getPath("userData"), "choatix-settings.json");
 let prevNetBytes = { received: 0, sent: 0, timestamp: 0 };
@@ -269,7 +277,7 @@ async function getMouse() {
     psAsync("(Get-ItemProperty -Path 'HKCU:\\Control Panel\\Mouse' -Name 'MouseSpeed' -EA 0).MouseSpeed"),
   ]);
   const enhancePointerPrecision = epp === "1" || epp === "2";
-  return { name: name || "Unavailable", enhancePointerPrecision, pollingRateDetected: false };
+  return { name: name || "Unavailable", enhancePointerPrecision };
 }
 
 // ── Device Type Detection ──
@@ -800,9 +808,16 @@ ipcMain.handle("optimize-processes", async (_event, mode) => {
 });
 
 ipcMain.handle("restore-processes", async () => {
-  const restored = optimizedProcesses.length;
+  const toRestore = [...optimizedProcesses];
   optimizedProcesses = [];
-  return { success: true, restored, message: "Processes will restart on next system boot or when launched manually." };
+  let restored = 0;
+  for (const proc of toRestore) {
+    try {
+      await psAsync(`Start-Process -FilePath '${proc.name}' -EA SilentlyContinue`);
+      restored++;
+    } catch {}
+  }
+  return { success: true, restored, message: restored > 0 ? `Restarted ${restored} process(es).` : "Processes will restart when launched manually or on next system boot." };
 });
 
 // ── Game Detection IPC ──
@@ -832,7 +847,7 @@ ipcMain.handle("apply-game-tweaks", async (_event, tweakIds) => {
   }
   const applied = results.filter(r => r.success).length;
   const failed = results.filter(r => !r.success);
-  return { success: true, applied, total: tweakIds.length, results, failed };
+  return { success: failed.length === 0, applied, total: tweakIds.length, results, failed };
 });
 
 ipcMain.handle("restore-game-tweaks", async (_event, tweakIds) => {
@@ -840,10 +855,11 @@ ipcMain.handle("restore-game-tweaks", async (_event, tweakIds) => {
   for (const tweakId of tweakIds) {
     const cmd = TWEAK_RESTORE_COMMANDS[tweakId];
     if (cmd) {
-      try { await execAsync(cmd, { timeout: 15000, windowsHide: true }); restored++; } catch {}
+      const result = await runTweakCommand(cmd, 15000);
+      if (result.success) restored++;
     }
   }
-  return { success: true, restored };
+  return { success: restored === tweakIds.filter(id => TWEAK_RESTORE_COMMANDS[id]).length, restored };
 });
 
 // ═══════════════════════════════════════════
@@ -866,13 +882,15 @@ async function autoOptScan() {
         autoOpt.currentGame = { name: game.name, executable: game.executable, pid: proc.id, tier: game.tier };
         const tweakIds = game.tweakIds || [];
         let applied = 0;
+        const successfullyApplied = [];
         for (const tweakId of tweakIds) {
           const cmd = TWEAK_COMMANDS[tweakId];
           if (cmd) {
-            try { await execAsync(cmd, { timeout: 15000, windowsHide: true }); applied++; } catch {}
+            const result = await runTweakCommand(cmd, 15000);
+            if (result.success) { applied++; successfullyApplied.push(tweakId); }
           }
         }
-        autoOpt.appliedTweaks = tweakIds;
+        autoOpt.appliedTweaks = successfullyApplied;
         if (mainWindow) {
           mainWindow.webContents.send("autopilot-event", {
             type: "game-detected", game: game.name, pid: proc.id, tier: game.tier, applied
@@ -887,8 +905,9 @@ async function autoOptScan() {
       let restored = 0;
       for (const tweakId of tweakIds) {
         const cmd = TWEAK_RESTORE_COMMANDS[tweakId];
-        if (cmd) {
-          try { await execAsync(cmd, { timeout: 15000, windowsHide: true }); restored++; } catch {}
+          if (cmd) {
+            const result = await runTweakCommand(cmd, 15000);
+            if (result.success) restored++;
         }
       }
       if (mainWindow) {
@@ -2108,6 +2127,69 @@ const TWEAK_RESTORE_COMMANDS = {
   'game-optimize-memory-deep': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management\" /v LargeSystemCache /t REG_DWORD /d 0 /f; Start-Service -Name SysMain -EA 0; Set-Service -Name SysMain -StartupType Automatic -EA 0'",
 };
 
+// ── Audited Windows 10/11 tweak surface ───────────────────────────────────
+// The old catalogue above was assembled from community tweak lists and
+// contains undocumented driver keys, BCD timer changes, security reductions,
+// and commands that cannot be verified.  Keep only actions with a documented
+// Windows interface, an exact post-condition, and a reversible restore path.
+function verifiedPowerShell(script) {
+  return `powershell.exe -NoProfile -NonInteractive -Command '${script.replace(/'/g, "''")}'`;
+}
+
+const AUDITED_TWEAKS = {
+  'sys-high-performance': {
+    apply: `$ErrorActionPreference='Stop'; powercfg /setactive 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c; if(-not ((powercfg /getactivescheme) -match '8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c')){throw 'High performance plan was not activated'}`,
+    restore: `$ErrorActionPreference='Stop'; powercfg /setactive SCHEME_BALANCED; if(-not ((powercfg /getactivescheme) -match '381b4222-f694-41f0-9685-ff5bb260df2e')){throw 'Balanced plan was not activated'}`,
+  },
+  'sys-enable-game-mode': {
+    apply: `$ErrorActionPreference='Stop'; New-Item -Path 'HKCU:\Software\Microsoft\GameBar' -Force | Out-Null; Set-ItemProperty -Path 'HKCU:\Software\Microsoft\GameBar' -Name AllowAutoGameMode -Type DWord -Value 1; if((Get-ItemPropertyValue -Path 'HKCU:\Software\Microsoft\GameBar' -Name AllowAutoGameMode) -ne 1){throw 'Game Mode verification failed'}`,
+    restore: `$ErrorActionPreference='Stop'; Set-ItemProperty -Path 'HKCU:\Software\Microsoft\GameBar' -Name AllowAutoGameMode -Type DWord -Value 0; if((Get-ItemPropertyValue -Path 'HKCU:\Software\Microsoft\GameBar' -Name AllowAutoGameMode) -ne 0){throw 'Game Mode restore verification failed'}`,
+  },
+  'sys-disable-gamebar': {
+    apply: `$ErrorActionPreference='Stop'; New-Item -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\GameDVR','HKCU:\System\GameConfigStore' -Force | Out-Null; Set-ItemProperty -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\GameDVR' -Name AppCaptureEnabled -Type DWord -Value 0; Set-ItemProperty -Path 'HKCU:\System\GameConfigStore' -Name GameDVR_Enabled -Type DWord -Value 0; if((Get-ItemPropertyValue 'HKCU:\Software\Microsoft\Windows\CurrentVersion\GameDVR' AppCaptureEnabled) -ne 0 -or (Get-ItemPropertyValue 'HKCU:\System\GameConfigStore' GameDVR_Enabled) -ne 0){throw 'Game Bar capture verification failed'}`,
+    restore: `$ErrorActionPreference='Stop'; Set-ItemProperty -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\GameDVR' -Name AppCaptureEnabled -Type DWord -Value 1; Set-ItemProperty -Path 'HKCU:\System\GameConfigStore' -Name GameDVR_Enabled -Type DWord -Value 1; if((Get-ItemPropertyValue 'HKCU:\Software\Microsoft\Windows\CurrentVersion\GameDVR' AppCaptureEnabled) -ne 1){throw 'Game Bar restore verification failed'}`,
+  },
+  'mouse-disable-acceleration': {
+    apply: `$ErrorActionPreference='Stop'; $p='HKCU:\Control Panel\Mouse'; Set-ItemProperty $p MouseSpeed '0'; Set-ItemProperty $p MouseThreshold1 '0'; Set-ItemProperty $p MouseThreshold2 '0'; Set-ItemProperty $p MouseSensitivity '10'; $v=Get-ItemProperty $p; if($v.MouseSpeed -ne '0' -or $v.MouseThreshold1 -ne '0' -or $v.MouseThreshold2 -ne '0'){throw 'Mouse setting verification failed'}`,
+    restore: `$ErrorActionPreference='Stop'; $p='HKCU:\Control Panel\Mouse'; Set-ItemProperty $p MouseSpeed '1'; Set-ItemProperty $p MouseThreshold1 '6'; Set-ItemProperty $p MouseThreshold2 '10'; Set-ItemProperty $p MouseSensitivity '10'`,
+  },
+  'cpu-core-parking-disable': {
+    apply: `$ErrorActionPreference='Stop'; powercfg /setacvalueindex SCHEME_CURRENT SUB_PROCESSOR CPMINCORES 100; powercfg /setactive SCHEME_CURRENT; if(-not ((powercfg /query SCHEME_CURRENT SUB_PROCESSOR CPMINCORES) -match '0x00000064')){throw 'Core-parking setting verification failed'}`,
+    restore: `$ErrorActionPreference='Stop'; powercfg /setacvalueindex SCHEME_CURRENT SUB_PROCESSOR CPMINCORES 10; powercfg /setactive SCHEME_CURRENT; if(-not ((powercfg /query SCHEME_CURRENT SUB_PROCESSOR CPMINCORES) -match '0x0000000a')){throw 'Core-parking restore verification failed'}`,
+  },
+  'sys-disable-hibernation': {
+    apply: `$ErrorActionPreference='Stop'; powercfg /hibernate off; if(Test-Path "$env:SystemDrive\hiberfil.sys"){throw 'Hibernation file still exists'}`,
+    restore: `$ErrorActionPreference='Stop'; powercfg /hibernate on; if(-not (Test-Path "$env:SystemDrive\hiberfil.sys")){throw 'Hibernation file was not restored'}`,
+  },
+  'storage-ssd-optimization': {
+    apply: `$ErrorActionPreference='Stop'; fsutil behavior set disablelastaccess 1; if(-not ((fsutil behavior query disablelastaccess) -match '1')){throw 'Last-access setting verification failed'}`,
+    restore: `$ErrorActionPreference='Stop'; fsutil behavior set disablelastaccess 2; if(-not ((fsutil behavior query disablelastaccess) -match '2')){throw 'Last-access restore verification failed'}`,
+  },
+  'storage-trim-optimization': {
+    apply: `$ErrorActionPreference='Stop'; Optimize-Volume -DriveLetter $env:SystemDrive.TrimEnd(':') -ReTrim -Verbose`,
+  },
+  'windows-explorer-optimization': {
+    apply: `$ErrorActionPreference='Stop'; $p='HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced'; Set-ItemProperty $p LaunchTo -Type DWord -Value 1; if((Get-ItemPropertyValue $p LaunchTo) -ne 1){throw 'Explorer preference verification failed'}`,
+    restore: `$ErrorActionPreference='Stop'; $p='HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced'; Set-ItemProperty $p LaunchTo -Type DWord -Value 2; if((Get-ItemPropertyValue $p LaunchTo) -ne 2){throw 'Explorer preference restore verification failed'}`,
+  },
+  'sys-disable-tips': { apply: `$ErrorActionPreference='Stop'; $p='HKCU:\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager'; Set-ItemProperty $p SoftLandingEnabled -Type DWord -Value 0; Set-ItemProperty $p SubscribedContent-338388Enabled -Type DWord -Value 0; if((Get-ItemPropertyValue $p SoftLandingEnabled) -ne 0){throw 'Tips verification failed'}`, restore: `$ErrorActionPreference='Stop'; $p='HKCU:\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager'; Set-ItemProperty $p SoftLandingEnabled -Type DWord -Value 1; Set-ItemProperty $p SubscribedContent-338388Enabled -Type DWord -Value 1` },
+  'sys-disable-widgets': { apply: `$ErrorActionPreference='Stop'; New-Item 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\Windows Feeds' -Force|Out-Null; Set-ItemProperty 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Feeds' ShellFeedsTaskbarViewMode -Type DWord -Value 2; Set-ItemProperty 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\Windows Feeds' EnableFeeds -Type DWord -Value 0; if((Get-ItemPropertyValue 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\Windows Feeds' EnableFeeds) -ne 0){throw 'Widgets verification failed'}`, restore: `$ErrorActionPreference='Stop'; Remove-ItemProperty 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\Windows Feeds' EnableFeeds -EA SilentlyContinue; Set-ItemProperty 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Feeds' ShellFeedsTaskbarViewMode -Type DWord -Value 0` },
+  'sys-disable-activity-history': { apply: `$ErrorActionPreference='Stop'; $p='HKLM:\SOFTWARE\Policies\Microsoft\Windows\System'; New-Item $p -Force|Out-Null; 'EnableActivityFeed','PublishUserActivities','UploadUserActivities'|%{Set-ItemProperty $p $_ -Type DWord -Value 0}; if((Get-ItemPropertyValue $p EnableActivityFeed) -ne 0){throw 'Activity history verification failed'}`, restore: `$ErrorActionPreference='Stop'; $p='HKLM:\SOFTWARE\Policies\Microsoft\Windows\System'; 'EnableActivityFeed','PublishUserActivities','UploadUserActivities'|%{Remove-ItemProperty $p $_ -EA SilentlyContinue}` },
+  'sys-disable-location': { apply: `$ErrorActionPreference='Stop'; $p='HKLM:\SOFTWARE\Policies\Microsoft\Windows\LocationAndSensors'; New-Item $p -Force|Out-Null; Set-ItemProperty $p DisableLocation -Type DWord -Value 1; Set-ItemProperty $p DisableWindowsLocationProvider -Type DWord -Value 1; if((Get-ItemPropertyValue $p DisableLocation) -ne 1){throw 'Location policy verification failed'}`, restore: `$ErrorActionPreference='Stop'; $p='HKLM:\SOFTWARE\Policies\Microsoft\Windows\LocationAndSensors'; Remove-ItemProperty $p DisableLocation,DisableWindowsLocationProvider -EA SilentlyContinue` },
+  'privacy-disable-ad-id': { apply: `$ErrorActionPreference='Stop'; $p='HKCU:\Software\Microsoft\Windows\CurrentVersion\AdvertisingInfo'; Set-ItemProperty $p Enabled -Type DWord -Value 0; if((Get-ItemPropertyValue $p Enabled) -ne 0){throw 'Advertising ID verification failed'}`, restore: `$ErrorActionPreference='Stop'; Set-ItemProperty 'HKCU:\Software\Microsoft\Windows\CurrentVersion\AdvertisingInfo' Enabled -Type DWord -Value 1` },
+};
+
+for (const id of Object.keys(TWEAK_COMMANDS)) {
+  if (!Object.prototype.hasOwnProperty.call(AUDITED_TWEAKS, id)) delete TWEAK_COMMANDS[id];
+}
+for (const id of Object.keys(TWEAK_RESTORE_COMMANDS)) {
+  if (!Object.prototype.hasOwnProperty.call(AUDITED_TWEAKS, id)) delete TWEAK_RESTORE_COMMANDS[id];
+}
+for (const [id, definition] of Object.entries(AUDITED_TWEAKS)) {
+  TWEAK_COMMANDS[id] = verifiedPowerShell(definition.apply);
+  if (definition.restore) TWEAK_RESTORE_COMMANDS[id] = verifiedPowerShell(definition.restore);
+}
+
 ipcMain.handle("restore-tweak", async (_event, tweakId) => {
   const cmd = TWEAK_RESTORE_COMMANDS[tweakId];
   if (!cmd) return { success: false, error: `Unknown tweak: ${tweakId}` };
@@ -2488,7 +2570,10 @@ function runTweakCommand(cmd, timeout = 15000) {
           let stderr = '';
           child.stdout.on('data', (d) => { stdout += d; });
           child.stderr.on('data', (d) => { stderr += d; });
-          child.on('close', () => handleResult(stdout, stderr));
+          child.on('close', (code, signal) => {
+            if (signal || code !== 0) return resolve({ success: false, error: stderr.trim() || stdout.trim() || `Command failed with exit code ${code}` });
+            handleResult(stdout, stderr);
+          });
           child.on('error', (e) => {
             if (e.killed) resolve({ success: false, error: 'Command timed out' });
             else resolve({ success: false, error: e.message });
@@ -2501,6 +2586,7 @@ function runTweakCommand(cmd, timeout = 15000) {
     }
 
     const child = exec(cmd, { timeout, windowsHide: true }, (error, stdout, stderr) => {
+      if (error) return resolve({ success: false, error: stderr?.trim() || stdout?.trim() || error.message });
       handleResult(stdout, stderr);
     });
     child.on('error', (e) => {
@@ -2522,38 +2608,11 @@ ipcMain.handle("is-admin", () => isAdmin());
 // ── One-Click Optimize IPC ──
 // ═══════════════════════════════════════════
 ipcMain.handle("one-click-optimize", async () => {
-  try {
-    const cmds = [
-      // System
-      'powercfg /setactive 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c',
-      'reg add "HKCU\\Software\\Microsoft\\GameBar" /v AllowAutoGameMode /t REG_DWORD /d 1 /f',
-      'reg add "HKCU\\Software\\Microsoft\\GameBar" /v AutoGameModeEnabled /t REG_DWORD /d 1 /f',
-      'powershell -Command "Disable-MMAgent -MemoryCompression -ErrorAction SilentlyContinue"',
-      'reg add "HKLM\\SYSTEM\\CurrentControlSet\\Control\\PriorityControl" /v Win32PrioritySeparation /t REG_DWORD /d 38 /f',
-      'reg add "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management" /v LargeSystemCache /t REG_DWORD /d 0 /f',
-      'reg add "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management" /v DisablePagingExecutive /t REG_DWORD /d 1 /f',
-      // Memory
-      'powershell -Command "Get-Service -Name SysMain -EA SilentlyContinue | Stop-Service -Force"',
-      'reg add "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management" /v PagingFiles /t REG_MULTI_SZ /d "" /f',
-      // Network
-      'netsh int tcp set global autotuninglevel=normal',
-      'powershell -Command "Set-NetTCPSetting -SettingName Internet -CongestionProvider CTCP -EA SilentlyContinue"',
-      // Mouse
-      'reg add "HKCU\\Control Panel\\Mouse" /v MouseSpeed /t REG_SZ /d "0" /f',
-      'reg add "HKCU\\Control Panel\\Mouse" /v MouseThreshold1 /t REG_SZ /d "0" /f',
-      'reg add "HKCU\\Control Panel\\Mouse" /v MouseThreshold2 /t REG_SZ /d "0" /f',
-      // Keyboard
-      'reg add "HKCU\\Control Panel\\Keyboard" /v KeyboardDelay /t REG_SZ /d "0" /f',
-      'reg add "HKCU\\Control Panel\\Keyboard" /v KeyboardSpeed /t REG_SZ /d "31" /f',
-    ];
-    let applied = 0;
-    for (const cmd of cmds) {
-      try { await execAsync(cmd, { timeout: 10000, windowsHide: true }); applied++; } catch {}
-    }
-    return { success: true, applied, total: cmds.length };
-  } catch (e) {
-    return { success: false, error: e.message };
-  }
+  const ids = ['sys-high-performance', 'sys-enable-game-mode', 'sys-disable-gamebar', 'mouse-disable-acceleration'];
+  const results = [];
+  for (const id of ids) results.push({ id, ...(await runTweakCommand(TWEAK_COMMANDS[id], 15000)) });
+  const applied = results.filter(result => result.success).length;
+  return { success: applied === ids.length, applied, total: ids.length, results, failed: results.filter(result => !result.success) };
 });
 
 // ── Leaderboard IPC ──
@@ -2695,7 +2754,6 @@ ipcMain.handle("send-update-notification", async (_e, { version, changes }) => {
 // ── Crash Reporter IPC ──
 // ═══════════════════════════════════════════
 ipcMain.handle("report-crash", async (_e, { error, stack, context }) => {
-  const DISCORD_WEBHOOK = process.env.DISCORD_CRASH_WEBHOOK || "";
   if (!DISCORD_WEBHOOK) return { success: false };
   try {
     const payload = JSON.stringify({ embeds: [{ title: "Choatix Crash", color: 0xFF0000, fields: [
@@ -3093,22 +3151,10 @@ ipcMain.handle("get-timer-resolution", async () => {
 });
 
 ipcMain.handle("set-timer-resolution", async (_event, mode) => {
-  try {
-    if (mode === 'optimal') {
-      await psAsync('reg add "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\kernel" /v GlobalTimerResolutionRequests /t REG_DWORD /d 1 /f', 5000);
-      await psAsync('bcdedit /set disabledynamictick yes', 5000);
-      await psAsync('bcdedit /set useplatformclock true', 5000);
-      return { success: true };
-    } else if (mode === 'reset') {
-      await psAsync('reg add "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\kernel" /v GlobalTimerResolutionRequests /t REG_DWORD /d 0 /f', 5000);
-      await psAsync('bcdedit /set disabledynamictick no', 5000);
-      await psAsync('bcdedit /set useplatformclock false', 5000);
-      return { success: true };
-    }
-    return { success: false, error: 'Unknown mode' };
-  } catch (e) {
-    return { success: false, error: e.message };
-  }
+  // Windows owns timer resolution dynamically; forcing HPET, Dynamic Tick, or
+  // undocumented kernel values is neither a reliable latency optimization nor
+  // a safe global default.  Do not overwrite a user's BCD configuration.
+  return { success: false, error: 'Global timer/BCD changes were removed. Windows and games manage timer resolution per process.' };
 });
 
 // ═══════════════════════════════════════════
@@ -3596,7 +3642,7 @@ ipcMain.handle("quick-action", async (_event, action) => {
           try {
             await psAsync(`Stop-Process -Id ${pid.trim()} -Force`, 3000);
             killed++;
-          } catch {}
+      } catch (e) { console.error("[optimize-processes] Failed to kill process:", name, e.message); }
         }
         result.message = killed > 0 ? `Killed ${killed} frozen process${killed > 1 ? 'es' : ''}` : 'No frozen processes found';
         break;
@@ -3756,7 +3802,7 @@ ipcMain.handle("set-fan-speed", async (_e, { fanName, speed }) => {
     if (result === "LHM_CONTROLLED") {
       return { success: true, message: "Fan speed set via LibreHardwareMonitor" };
     } else {
-      return { success: false, error: "Fan control requires LibreHardwareMonitor running as admin. Install it from https://github.com/LibreHardwareMonitor/LibreHardwareMonitor" };
+      return { success: false, error: "Fan control requires LibreHardwareMonitor running as admin. Download it from https://github.com/LibreHardwareMonitor/LibreHardwareMonitor and run it before using this feature." };
     }
   } catch (e) {
     return { success: false, error: e.message };

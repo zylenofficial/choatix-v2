@@ -12,7 +12,7 @@
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "clean": "if exist out rmdir /s /q out & if exist .next rmdir /s /q .next & if exist dist rmdir /s /q dist",
-    "electron:dev": "concurrently \"next dev\" \"cross-env DISCORD_FEEDBACK_WEBHOOK=https://discordapp.com/api/webhooks/1517719109633183816/a7i_DLoAUzzvQybXz2N1Wh172vDISAU_slS4GDxa9lNHU23ArUUrd4e9FbZb_blRN1IU wait-on http://localhost:3000 && electron .\"",
+    "electron:dev": "concurrently \"next dev\" \"cross-env wait-on http://localhost:3000 && electron .\"",
     "electron:build": "npm run clean & next build && electron-builder --win",
     "electron:build:portable": "npm run clean & next build && electron-builder --win portable"
   },
@@ -91,7 +91,6 @@
   },
   "dependencies": {
     "electron-updater": "^6.8.9",
-    "pg": "^8.22.0",
     "systeminformation": "^5.31.17"
   }
 }
