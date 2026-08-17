@@ -9,11 +9,11 @@ const API = 'https://choatix-v2.onrender.com';
 const DISCORD_INVITE = 'https://discord.gg/AhEK85REhG';
 
 const PRODUCTS = {
-  basic:     { id: 'basic',     name: 'Basic Tweaks',         price: 1.99,  tier: 'pro',     subtitle: 'Essential',  desc: 'Windows debloat, essential settings, GPU, network, and power optimization.', tweaks: 220, badge: '',      color: '' },
-  pro:       { id: 'pro',       name: 'Pro Tweaks',           price: 3.99,  tier: 'pro',     subtitle: 'Advanced',   desc: 'Everything in Basic plus BCD boot tweaks, RAM optimization, USB tuning, and deep cleanup.', tweaks: 291, badge: '',      color: '' },
-  extreme:   { id: 'extreme',   name: 'Extreme Tweaks',       price: 5.99,  tier: 'premium', subtitle: 'Maximum',    desc: 'Full debloat, buffer bloat fix, DirectX optimization, registry tuning, and process optimization.', tweaks: 283, badge: 'Best Seller', color: '' },
-  full:      { id: 'full',      name: 'Full Optimization',    price: 9.99,  tier: 'premium', subtitle: 'Everything', desc: 'All 461 tweaks combined — the complete optimization suite with every category included.', tweaks: 461, badge: 'Main Product', color: '' },
-  precision: { id: 'precision', name: 'Precision Pack',       price: 2.99,  tier: 'pro',     subtitle: 'Input',      desc: 'Input lag fix, mouse/keyboard optimization, GPU low latency, and network tweaks for competitive FPS.', tweaks: 128, badge: '',      color: 'aim' },
+  basic:     { id: 'basic',     name: 'Basic Tweaks',         price: 4.99,  tier: 'pro',     subtitle: 'Essential',  desc: 'Windows debloat, essential settings, GPU, network, and power optimization.', tweaks: 220, badge: '',      color: '' },
+  pro:       { id: 'pro',       name: 'Pro Tweaks',           price: 9.99,  tier: 'pro',     subtitle: 'Advanced',   desc: 'Everything in Basic plus BCD boot tweaks, RAM optimization, USB tuning, and deep cleanup.', tweaks: 291, badge: '',      color: '' },
+  extreme:   { id: 'extreme',   name: 'Extreme Tweaks',       price: 14.99, tier: 'premium', subtitle: 'Maximum',    desc: 'Full debloat, buffer bloat fix, DirectX optimization, registry tuning, and process optimization.', tweaks: 283, badge: 'Best Seller', color: '' },
+  full:      { id: 'full',      name: 'Full Optimization',    price: 24.99, tier: 'premium', subtitle: 'Everything', desc: 'All 461 tweaks combined — the complete optimization suite with every category included.', tweaks: 461, badge: 'Main Product', color: '' },
+  precision: { id: 'precision', name: 'Precision Pack',       price: 5.99,  tier: 'pro',     subtitle: 'Input',      desc: 'Input lag fix, mouse/keyboard optimization, GPU low latency, and network tweaks for competitive FPS.', tweaks: 128, badge: '',      color: 'aim' },
   vibrance:  { id: 'vibrance',  name: 'Vibrance Controller',  price: null,  tier: null,      subtitle: 'Display',    desc: 'Digital vibrance control with per-game profiles and auto-detection.', tweaks: 0, badge: 'Coming Soon', color: 'soon' }
 };
 
@@ -92,7 +92,7 @@ const TEAM = [
 const FAQ = [
   { q: 'Is Choatix V2 safe to use?', a: 'Yes. Every tweak is reversible with one click. Choatix never modifies critical system files and all changes can be rolled back from the Settings page.' },
   { q: 'How much FPS will I gain?', a: 'Results vary by hardware and game. Most users see 15-60% FPS improvement. Check the FPS Comparison section for average gains across popular games.' },
-  { q: 'What\'s the difference between the products?', a: '<strong>Full Optimization (&euro;9.99)</strong> — 461 tweaks: Everything combined. <strong>Basic (&euro;1.99)</strong> — 220 tweaks: Windows debloat, essential settings, GPU/network/power. <strong>Pro (&euro;3.99)</strong> — 291 tweaks: Basic + BCD, RAM, USB, deep cleanup. <strong>Extreme (&euro;5.99)</strong> — 283 tweaks: Full debloat, DirectX, buffer bloat, registry. <strong>Precision (&euro;2.99)</strong> — 128 tweaks: Input lag, mouse/keyboard, GPU latency for FPS games.' },
+  { q: 'What\'s the difference between the products?', a: '<strong>Full Optimization (&euro;24.99)</strong> — 461 tweaks: Everything combined. <strong>Basic (&euro;4.99)</strong> — 220 tweaks: Windows debloat, essential settings, GPU/network/power. <strong>Pro (&euro;9.99)</strong> — 291 tweaks: Basic + BCD, RAM, USB, deep cleanup. <strong>Extreme (&euro;14.99)</strong> — 283 tweaks: Full debloat, DirectX, buffer bloat, registry. <strong>Precision (&euro;5.99)</strong> — 128 tweaks: Input lag, mouse/keyboard, GPU latency for FPS games.' },
   { q: 'Do I need to restart my PC after optimizing?', a: 'Some tweaks take effect immediately, others require a restart. Choatix will notify you when a restart is needed. Quick Boost works instantly without restart.' },
   { q: 'How do I buy a product?', a: 'Go to the Products page, add items to cart, and checkout via PayPal. After payment, you\'ll be redirected to a download page with your .exe installer.' },
   { q: 'Does it work on Windows 11?', a: 'Yes. Choatix V2 supports Windows 10 and Windows 11. All tweaks are compatible with the latest updates.' },
@@ -570,11 +570,11 @@ function renderFeatures() {
     </div>`).join('');
 
   const lineupHTML = [
-    { id: 'basic',     badge: '&euro;1.99', cls: '' },
-    { id: 'pro',       badge: '&euro;3.99', cls: '' },
-    { id: 'extreme',   badge: '&euro;5.99', cls: 'featured' },
-    { id: 'precision', badge: '&euro;2.99', cls: 'aim' },
-    { id: 'full',      badge: '&euro;9.99', cls: 'save' }
+    { id: 'basic',     badge: '&euro;4.99', cls: '' },
+    { id: 'pro',       badge: '&euro;9.99', cls: '' },
+    { id: 'extreme',   badge: '&euro;14.99', cls: 'featured' },
+    { id: 'precision', badge: '&euro;5.99', cls: 'aim' },
+    { id: 'full',      badge: '&euro;24.99', cls: 'save' }
   ].map(p => {
     const prod = PRODUCTS[p.id];
     return `
@@ -784,8 +784,8 @@ function renderProductDetail(id) {
 function renderPricing() {
   const tiers = [
     { name: 'Free', price: '0', period: 'Forever', features: ['System Health Overview', 'Scan PC', 'Quick Boost', 'System Info', 'Process Manager', 'Community Support'], cta: 'Download Free', href: '#products', cls: '' },
-    { name: 'Full', price: '9.99', period: 'One-time', popular: true, features: ['Everything below', TOTAL_TWEAKS + ' System Tweaks', '20 Game Presets', 'Game Library (auto-detect)', 'VBS/HVCI, C-States, Hyper-V', 'NVIDIA Telemetry, Drive Optim', 'Auto Restore Points', 'TrustedInstaller Elevation', 'Everything in Free'], cta: 'Get Full App', href: '#products', cls: 'popular' },
-    { name: 'Pro', price: '3.99', period: 'One-time', features: ['Everything in Free', '291 System Tweaks', 'Game Presets', 'Deep Clean', 'FPS Compare'], cta: 'Get Pro', href: '#products', cls: '' }
+    { name: 'Full', price: '24.99', period: 'One-time', popular: true, features: ['Everything below', TOTAL_TWEAKS + ' System Tweaks', '20 Game Presets', 'Game Library (auto-detect)', 'VBS/HVCI, C-States, Hyper-V', 'NVIDIA Telemetry, Drive Optim', 'Auto Restore Points', 'TrustedInstaller Elevation', 'Everything in Free'], cta: 'Get Full App', href: '#products', cls: 'popular' },
+    { name: 'Pro', price: '9.99', period: 'One-time', features: ['Everything in Free', '291 System Tweaks', 'Game Presets', 'Deep Clean', 'FPS Compare'], cta: 'Get Pro', href: '#products', cls: '' }
   ];
 
   const pricingCards = tiers.map((t, i) => `
@@ -937,11 +937,11 @@ function renderRefund() {
 
 function renderAffiliate() {
   const commissionRows = [
-    { name: 'Basic Tweaks', price: '1.99', comm: '0.20', tier: 'PRO' },
-    { name: 'Pro Tweaks', price: '3.99', comm: '0.40', tier: 'PRO' },
-    { name: 'Precision Pack', price: '2.99', comm: '0.30', tier: 'PRO' },
-    { name: 'Extreme Tweaks', price: '5.99', comm: '0.60', tier: 'PREMIUM' },
-    { name: 'Full Optimization', price: '9.99', comm: '1.00', tier: 'PREMIUM' }
+    { name: 'Basic Tweaks', price: '4.99', comm: '0.50', tier: 'PRO' },
+    { name: 'Pro Tweaks', price: '9.99', comm: '1.00', tier: 'PRO' },
+    { name: 'Precision Pack', price: '5.99', comm: '0.60', tier: 'PRO' },
+    { name: 'Extreme Tweaks', price: '14.99', comm: '1.50', tier: 'PREMIUM' },
+    { name: 'Full Optimization', price: '24.99', comm: '2.50', tier: 'PREMIUM' }
   ].map(r => `<tr><td>${r.name}</td><td class="price">&euro;${r.price}</td><td class="commission">&euro;${r.comm}</td><td><span class="tier-badge tier-${r.tier.toLowerCase()}">${r.tier}</span></td></tr>`).join('');
 
   return `
