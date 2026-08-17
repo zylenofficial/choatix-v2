@@ -463,6 +463,7 @@ function getPage() {
 function router() {
   const page = getPage();
   const main = document.getElementById('app-content');
+  const PRODUCT_IDS = ['basic','pro','extreme','full','precision','vibrance'];
   const pages = {
     '':         renderHome,
     'features': renderFeatures,
@@ -475,7 +476,7 @@ function router() {
     'team':     renderTeam,
     'download': renderDownload
   };
-  const render = pages[page] || render404;
+  const render = PRODUCT_IDS.includes(page) ? () => renderProductDetail(page) : (pages[page] || render404);
   main.innerHTML = render();
   renderNav();
   renderCart();
