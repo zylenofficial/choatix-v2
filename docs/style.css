@@ -11,13 +11,11 @@ link,script,img{border:none}
 @keyframes fadeUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
 @keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 12px var(--green)}50%{opacity:.4;box-shadow:0 0 24px var(--green)}}
 @keyframes gridMove{0%{background-position:0 0}100%{background-position:60px 60px}}
-@keyframes orbFloat1{0%,100%{transform:translate(0,0) scale(1)}25%{transform:translate(-40px,30px) scale(1.1)}50%{transform:translate(20px,-20px) scale(.95)}75%{transform:translate(-20px,-40px) scale(1.05)}}
-@keyframes orbFloat2{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(40px,-30px) scale(1.12)}66%{transform:translate(-30px,20px) scale(.9)}}
-@keyframes orbFloat3{0%,100%{transform:translate(0,0)}50%{transform:translate(50px,-50px)}}
 @keyframes borderGlow{0%,100%{border-color:rgba(0,230,118,0.15)}50%{border-color:rgba(0,230,118,0.35)}}
 
+/* ── Background ── */
 .scroll-bar{position:fixed;top:0;left:0;height:2px;background:var(--green);z-index:10001;width:0}
-#particles{position:fixed;inset:0;z-index:-1;pointer-events:none}
+#matrix-rain{position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:-1;pointer-events:none}
 .noise{position:fixed;inset:0;z-index:9990;pointer-events:none;opacity:0.02;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
 
 /* ── NAV ── */
@@ -32,6 +30,8 @@ nav.scrolled{background:rgba(2,2,2,0.75);backdrop-filter:blur(30px) saturate(180
 .nav-links a:hover{color:var(--text)}
 .nav-links a::after{content:'';position:absolute;bottom:-4px;left:0;width:0;height:1px;background:var(--green);transition:width 0.4s cubic-bezier(0.16,1,0.3,1);box-shadow:0 0 6px rgba(0,230,118,0.3)}
 .nav-links a:hover::after,.nav-links a.active::after{width:100%}
+.nav-affiliate{color:var(--green)!important}
+.nav-affiliate::after{background:var(--green)!important}
 
 /* ── BUTTONS ── */
 .btn{display:inline-flex;align-items:center;gap:0.5rem;padding:0.7rem 1.5rem;border-radius:10px;font-size:0.85rem;font-weight:600;text-decoration:none;transition:all 0.35s cubic-bezier(0.16,1,0.3,1);border:none;cursor:pointer;font-family:inherit;position:relative;overflow:hidden}
@@ -61,6 +61,7 @@ footer p{font-size:0.75rem;color:var(--text-dim)}
 .footer-links{display:flex;gap:2rem;justify-content:center;margin-bottom:1.5rem}
 .footer-links a{font-size:0.8rem;color:var(--text-dim);transition:color 0.2s}
 .footer-links a:hover{color:var(--green)}
+.footer-affiliate{color:var(--green)!important}
 
 /* ── PAGE HERO ── */
 .page-hero{padding:8rem 2rem 3rem;text-align:center}
@@ -140,11 +141,6 @@ footer p{font-size:0.75rem;color:var(--text-dim)}
 /* ── HERO ── */
 .hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:8rem 2rem 4rem;position:relative;overflow:hidden}
 .hero::before{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,0.015) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.015) 1px,transparent 1px);background-size:60px 60px;animation:gridMove 30s linear infinite;mask-image:radial-gradient(ellipse 70% 60% at 50% 40%,black 20%,transparent 70%);-webkit-mask-image:radial-gradient(ellipse 70% 60% at 50% 40%,black 20%,transparent 70%);pointer-events:none}
-.hero-mesh{position:absolute;inset:0;overflow:hidden}
-.mesh-blob{position:absolute;border-radius:50%;filter:blur(120px);opacity:0.5}
-.mesh-blob-1{width:600px;height:600px;background:radial-gradient(circle,rgba(0,230,118,0.15) 0%,transparent 70%);top:-10%;left:50%;animation:orbFloat1 20s ease-in-out infinite}
-.mesh-blob-2{width:450px;height:450px;background:radial-gradient(circle,rgba(41,121,255,0.1) 0%,transparent 70%);bottom:10%;right:10%;animation:orbFloat2 25s ease-in-out infinite}
-.mesh-blob-3{width:350px;height:350px;background:radial-gradient(circle,rgba(124,77,255,0.07) 0%,transparent 70%);top:40%;left:10%;animation:orbFloat3 18s ease-in-out infinite}
 .hero-content{position:relative;z-index:1}
 .hero-badge{display:inline-flex;align-items:center;gap:0.5rem;padding:0.5rem 1.2rem;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:100px;font-size:0.75rem;font-weight:500;color:var(--text-mid);margin-bottom:2.5rem;animation:fadeUp 0.8s ease forwards;opacity:0;backdrop-filter:blur(10px)}
 .hero-badge .dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 12px var(--green);animation:pulse 2s ease-in-out infinite}

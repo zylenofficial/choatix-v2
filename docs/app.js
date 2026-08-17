@@ -8,35 +8,102 @@ if (nav) {
   });
 }
 
-// ── Particles ──
-const canvas = document.getElementById('particles');
-if (canvas) {
-  const ctx = canvas.getContext('2d');
-  let W, H; const particles = []; const COUNT = 50; const DIST = 130;
-  function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
-  resize(); window.addEventListener('resize', resize);
-  class P {
-    constructor() { this.x = Math.random() * W; this.y = Math.random() * H; this.vx = (Math.random() - 0.5) * 0.3; this.vy = (Math.random() - 0.5) * 0.3; this.r = Math.random() * 1.5 + 0.5; }
-    update() { this.x += this.vx; this.y += this.vy; if (this.x < 0 || this.x > W) this.vx *= -1; if (this.y < 0 || this.y > H) this.vy *= -1; }
-    draw() { ctx.beginPath(); ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2); ctx.fillStyle = 'rgba(255,255,255,0.12)'; ctx.fill(); }
+// ── Matrix Rain Background ──
+const matrixCanvas = document.getElementById('matrix-rain');
+if (matrixCanvas) {
+  const ctx = matrixCanvas.getContext('2d');
+  const CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789ΣΩλπφψ'.split('');
+  const FONT_SIZE = 14;
+  const CHAR_SPACING = 18;
+  let W, H, cols = [];
+
+  function initMatrix() {
+    const dpr = window.devicePixelRatio || 1;
+    W = window.innerWidth;
+    H = window.innerHeight;
+    matrixCanvas.width = W * dpr;
+    matrixCanvas.height = H * dpr;
+    matrixCanvas.style.width = W + 'px';
+    matrixCanvas.style.height = H + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    cols = [];
+    const numCols = Math.floor(W / CHAR_SPACING);
+    for (let i = 0; i < numCols; i++) {
+      const centerX = W / 2;
+      const dist = Math.abs(i * CHAR_SPACING - centerX) / (W / 2);
+      const chance = dist < 0.3 ? 0.9 : dist < 0.6 ? 0.5 : 0.15;
+      if (Math.random() > chance) continue;
+
+      const speed = 1.2 + Math.random() * 2.5;
+      const trailLen = 8 + Math.floor(Math.random() * 14);
+      const chars = [];
+      for (let j = 0; j < trailLen; j++) {
+        chars.push(CHARS[Math.floor(Math.random() * CHARS.length)]);
+      }
+      cols.push({
+        x: i * CHAR_SPACING + CHAR_SPACING / 2,
+        y: Math.random() * H * 1.5 - H * 0.5,
+        speed, chars,
+        flickerTimer: 0,
+        flickerRate: 3 + Math.floor(Math.random() * 5)
+      });
+    }
   }
-  for (let i = 0; i < COUNT; i++) particles.push(new P());
-  function anim() {
-    ctx.clearRect(0, 0, W, H);
-    particles.forEach(p => { p.update(); p.draw(); });
-    for (let i = 0; i < particles.length; i++) {
-      for (let j = i + 1; j < particles.length; j++) {
-        const dx = particles[i].x - particles[j].x, dy = particles[i].y - particles[j].y;
-        const d = Math.sqrt(dx * dx + dy * dy);
-        if (d < DIST) {
-          ctx.beginPath(); ctx.moveTo(particles[i].x, particles[i].y); ctx.lineTo(particles[j].x, particles[j].y);
-          ctx.strokeStyle = 'rgba(255,255,255,' + (0.025 * (1 - d / DIST)) + ')'; ctx.lineWidth = 0.5; ctx.stroke();
+
+  initMatrix();
+  window.addEventListener('resize', initMatrix);
+
+  function drawMatrix() {
+    ctx.fillStyle = 'rgba(0,0,0,0.35)';
+    ctx.fillRect(0, 0, W, H);
+    ctx.font = FONT_SIZE + 'px Consolas, "SF Mono", monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+
+    for (const col of cols) {
+      col.y += col.speed;
+      col.flickerTimer++;
+      if (col.flickerTimer >= col.flickerRate) {
+        col.flickerTimer = 0;
+        const idx = Math.floor(Math.random() * col.chars.length);
+        col.chars[idx] = CHARS[Math.floor(Math.random() * CHARS.length)];
+      }
+
+      for (let j = 0; j < col.chars.length; j++) {
+        const cy = col.y - j * CHAR_SPACING;
+        if (cy < -FONT_SIZE || cy > H + FONT_SIZE) continue;
+
+        let alpha;
+        if (j === 0) alpha = 0.95;
+        else if (j < 3) alpha = 0.6 - j * 0.1;
+        else alpha = Math.max(0.02, 0.45 * Math.pow(0.82, j - 2));
+
+        if (cy < 80) alpha *= cy / 80;
+        if (cy > H - 60) alpha *= (H - cy) / 60;
+        alpha = Math.max(0, Math.min(1, alpha));
+
+        if (j === 0) { ctx.shadowColor = 'rgba(255,255,255,0.4)'; ctx.shadowBlur = 6; }
+        else ctx.shadowBlur = 0;
+
+        ctx.fillStyle = 'rgba(255,255,255,' + alpha + ')';
+        ctx.fillText(col.chars[j], col.x, cy);
+      }
+      ctx.shadowBlur = 0;
+
+      if (col.y - col.chars.length * CHAR_SPACING > H) {
+        col.y = -CHAR_SPACING * 2;
+        col.speed = 1.2 + Math.random() * 2.5;
+        col.chars = [];
+        const trailLen = 8 + Math.floor(Math.random() * 14);
+        for (let j = 0; j < trailLen; j++) {
+          col.chars.push(CHARS[Math.floor(Math.random() * CHARS.length)]);
         }
       }
     }
-    requestAnimationFrame(anim);
+    requestAnimationFrame(drawMatrix);
   }
-  anim();
+  drawMatrix();
 }
 
 // ── Reveal ──
@@ -82,11 +149,7 @@ document.querySelectorAll('.feature-card').forEach(c => {
   c.addEventListener('mousemove', e => { const r = c.getBoundingClientRect(); c.style.setProperty('--mx', ((e.clientX - r.left) / r.width * 100) + '%'); c.style.setProperty('--my', ((e.clientY - r.top) / r.height * 100) + '%'); });
 });
 
-// ── Parallax ──
-window.addEventListener('scroll', () => {
-  const s = window.scrollY;
-  document.querySelectorAll('.mesh-blob').forEach((b, i) => b.style.transform = 'translateY(' + (s * (0.08 + i * 0.04)) + 'px)');
-});
+// ── Parallax (removed — matrix rain is the background) ──
 
 // ── Shopping Cart ──
 const CART_KEY = 'choatix_cart';
