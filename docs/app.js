@@ -379,8 +379,13 @@ function renderNav() {
   }).join('');
 
   const avatarHTML = user
-    ? `<img class="user-avatar" id="userAvatar" src="${user.avatar ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png` : ''}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-       <div class="user-avatar-fallback" id="userAvatarFallback" style="${user.avatar ? 'display:none' : ''}">${user.name?.charAt(0)?.toUpperCase() || '?'}</div>`
+    ? (() => {
+        const av = user.avatar;
+        const ext = av && av.startsWith('a_') ? 'gif' : 'webp';
+        const src = av ? `https://cdn.discordapp.com/avatars/${user.id}/${av}.${ext}?size=128` : '';
+        return `<img class="user-avatar" id="userAvatar" src="${src}" crossorigin="anonymous" referrerpolicy="no-referrer" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+       <div class="user-avatar-fallback" id="userAvatarFallback" style="${av ? 'display:none' : ''}">${user.name?.charAt(0)?.toUpperCase() || '?'}</div>`;
+      })()
     : '';
 
   const tierHTML = user?.tier
