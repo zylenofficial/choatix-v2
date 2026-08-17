@@ -1,32 +1,1187 @@
-// ── Nav Scroll ──
-const nav = document.getElementById('nav');
-const scrollBar = document.getElementById('scrollBar');
-if (nav) {
-  window.addEventListener('scroll', () => {
-    nav.classList.toggle('scrolled', window.scrollY > 50);
-    if (scrollBar) scrollBar.style.width = (window.scrollY / (document.documentElement.scrollHeight - window.innerHeight) * 100) + '%';
-  });
+// ════════════════════════════════════════════════════════════════
+// CHOATIX V2 — Complete App
+// Single file: data + state + router + components + pages + effects
+// ════════════════════════════════════════════════════════════════
+
+// ── DATA LAYER ──
+
+const API = 'https://choatix-v2.onrender.com';
+const DISCORD_INVITE = 'https://discord.gg/AhEK85REhG';
+
+const PRODUCTS = {
+  basic:     { id: 'basic',     name: 'Basic Tweaks',         price: 1.99,  tier: 'pro',     subtitle: 'Essential',  desc: 'Windows debloat, essential settings, GPU, network, and power optimization.', tweaks: 220, badge: '',      color: '' },
+  pro:       { id: 'pro',       name: 'Pro Tweaks',           price: 3.99,  tier: 'pro',     subtitle: 'Advanced',   desc: 'Everything in Basic plus BCD boot tweaks, RAM optimization, USB tuning, and deep cleanup.', tweaks: 291, badge: '',      color: '' },
+  extreme:   { id: 'extreme',   name: 'Extreme Tweaks',       price: 5.99,  tier: 'premium', subtitle: 'Maximum',    desc: 'Full debloat, buffer bloat fix, DirectX optimization, registry tuning, and process optimization.', tweaks: 283, badge: 'Best Seller', color: '' },
+  full:      { id: 'full',      name: 'Full Optimization',    price: 9.99,  tier: 'premium', subtitle: 'Everything', desc: 'All 461 tweaks combined — the complete optimization suite with every category included.', tweaks: 461, badge: 'Main Product', color: '' },
+  precision: { id: 'precision', name: 'Precision Pack',       price: 2.99,  tier: 'pro',     subtitle: 'Input',      desc: 'Input lag fix, mouse/keyboard optimization, GPU low latency, and network tweaks for competitive FPS.', tweaks: 128, badge: '',      color: 'aim' },
+  vibrance:  { id: 'vibrance',  name: 'Vibrance Controller',  price: null,  tier: null,      subtitle: 'Display',    desc: 'Digital vibrance control with per-game profiles and auto-detection.', tweaks: 0, badge: 'Coming Soon', color: 'soon' }
+};
+
+const DOWNLOADS = {
+  full:      { name: 'Choatix Full Optimization',   url: 'https://drive.google.com/uc?export=download&id=1nQQuwAsU7zN3NZjVbhAVnW25fHkEqH5D' },
+  basic:     { name: 'Choatix Basic Tweaks',        url: 'https://drive.google.com/uc?export=download&id=1nQQuwAsU7zN3NZjVbhAVnW25fHkEqH5D' },
+  pro:       { name: 'Choatix Pro Tweaks',          url: 'https://drive.google.com/uc?export=download&id=1mjhxk5tHmwcQbBzgJOczbMdO8mLa9UZ8' },
+  extreme:   { name: 'Choatix Extreme Tweaks',      url: 'https://drive.google.com/uc?export=download&id=17BQS4j3yaqaRWiRm_pNfj_coJRr9TdYo' },
+  precision: { name: 'Choatix Precision Pack',      url: 'https://drive.google.com/uc?export=download&id=1TqpIVFWW6WNRZUpDCG2kZiVsHCGG1FGf' },
+  vibrance:  { name: 'Choatix Vibrance Controller', url: null, comingSoon: true }
+};
+
+const TWEAK_CATEGORIES = [
+  { id: 'deep-clean', icon: '&#128465;',  name: 'Deep Clean', count: 14, items: [
+    { name: 'Disk Cleanup', impact: 'low' }, { name: 'DNS Cache Flush', impact: 'low' }, { name: 'Windows Store Cache', impact: 'low' },
+    { name: 'Thumbnail Cache', impact: 'low' }, { name: 'Icon Cache', impact: 'low' }, { name: 'Windows Update Cache', impact: 'low' },
+    { name: 'Font Cache', impact: 'low' }, { name: 'Prefetch Cleanup', impact: 'low' }, { name: 'Windows Error Reports', impact: 'low' },
+    { name: 'Old Windows Install', impact: 'low' }, { name: 'Windows Temp Files', impact: 'low' }, { name: 'User Temp Files', impact: 'low' },
+    { name: 'Crash Dumps', impact: 'low' }, { name: 'Software Distribution', impact: 'low' }
+  ]},
+  { id: 'network', icon: '&#127760;', name: 'Network', count: 6, items: [
+    { name: 'Network Throttling', impact: 'high' }, { name: 'TCP Auto-Tuning', impact: 'medium' },
+    { name: 'Nagle Algorithm', impact: 'medium' }, { name: 'DNS Optimization', impact: 'medium' },
+    { name: 'Network Priority', impact: 'medium' }, { name: 'RSS', impact: 'low' }
+  ]},
+  { id: 'power', icon: '&#9889;', name: 'Power', count: 4, items: [
+    { name: 'High Performance Plan', impact: 'high' }, { name: 'Disable Power Throttling', impact: 'high' },
+    { name: 'Disable Core Parking', impact: 'medium' }, { name: 'Processor Performance Boost', impact: 'high' }
+  ]},
+  { id: 'browser', icon: '&#127760;', name: 'Browser', count: 4, items: [
+    { name: 'Hardware Acceleration', impact: 'medium' }, { name: 'Browser Pre-rendering', impact: 'low' },
+    { name: 'DNS Prefetch', impact: 'low' }, { name: 'Disable Telemetry', impact: 'low' }
+  ]},
+  { id: 'gpu', icon: '&#127918;', name: 'GPU', count: 3, items: [
+    { name: 'NVIDIA Low Latency', impact: 'high' }, { name: 'GPU Power Management', impact: 'high' }, { name: 'Shader Cache', impact: 'medium' }
+  ]},
+  { id: 'timer', icon: '&#9201;', name: 'Timer', count: 2, items: [
+    { name: 'Timer Resolution', impact: 'high' }, { name: 'TSC Sync', impact: 'medium' }
+  ]},
+  { id: 'storage', icon: '&#128190;', name: 'Storage', count: 4, items: [
+    { name: 'AHCI Link Power', impact: 'medium' }, { name: 'TRIM Optimization', impact: 'medium' },
+    { name: 'Write Caching', impact: 'medium' }, { name: 'NVMe Optimization', impact: 'high' }
+  ]},
+  { id: 'privacy', icon: '&#128274;', name: 'Privacy', count: 3, items: [
+    { name: 'Telemetry Disable', impact: 'low' }, { name: 'Cortana Disable', impact: 'low' }, { name: 'Activity History', impact: 'low' }
+  ]},
+  { id: 'audio', icon: '&#127925;', name: 'Audio', count: 2, items: [
+    { name: 'Audio Latency', impact: 'low' }, { name: 'Exclusive Mode', impact: 'low' }
+  ]},
+  { id: 'windows', icon: '&#128187;', name: 'Windows', count: 3, items: [
+    { name: 'Game Mode', impact: 'medium' }, { name: 'Fullscreen Optimizations', impact: 'medium' }, { name: 'Visual Effects', impact: 'medium' }
+  ]},
+  { id: 'gaming', icon: '&#127918;', name: 'Gaming', count: 3, items: [
+    { name: 'Game Bar Disable', impact: 'medium' }, { name: 'Game DVR', impact: 'high' }, { name: 'Xbox Services', impact: 'medium' }
+  ]},
+  { id: 'core', icon: '&#9881;', name: 'Core Tweaks', count: 413, items: [
+    { name: 'CPU Priority Optimization', impact: 'high' }, { name: 'VBS / Hyper-V', impact: 'high' },
+    { name: 'Mitigations', impact: 'high' }, { name: 'MSI Mode', impact: 'high' },
+    { name: 'Device Affinities', impact: 'medium' }, { name: 'Memory Management', impact: 'medium' },
+    { name: 'Background Services', impact: 'medium' }, { name: 'Scheduled Tasks', impact: 'low' },
+    { name: 'Registry Optimizations', impact: 'high' }, { name: 'Power Plan Tweaks', impact: 'high' },
+    { name: 'Input Optimization', impact: 'medium' }, { name: 'USB Optimization', impact: 'low' }
+  ]}
+];
+
+const TOTAL_TWEAKS = TWEAK_CATEGORIES.reduce((s, c) => s + c.count, 0);
+
+const TEAM = [
+  { id: '1014494449809772544', name: 'zylen',   role: 'Developer',    level: 'owner' },
+  { id: '1032970883192606780', name: 'domi',    role: 'Server Owner', level: 'admin' },
+  { id: '398137085430726656',  name: 'nedis',   role: 'Admin',        level: 'admin' },
+  { id: '1322475983386837006', name: 'donce',   role: 'Admin',        level: 'admin' },
+  { id: '1402203036914290764', name: 'lukutis', role: 'Ticket Support', level: 'support' }
+];
+
+const FAQ = [
+  { q: 'Is Choatix V2 safe to use?', a: 'Yes. Every tweak is reversible with one click. Choatix never modifies critical system files and all changes can be rolled back from the Settings page.' },
+  { q: 'How much FPS will I gain?', a: 'Results vary by hardware and game. Most users see 15-60% FPS improvement. Check the FPS Comparison section for average gains across popular games.' },
+  { q: 'What\'s the difference between the products?', a: '<strong>Full Optimization (&euro;9.99)</strong> — 461 tweaks: Everything combined. <strong>Basic (&euro;1.99)</strong> — 220 tweaks: Windows debloat, essential settings, GPU/network/power. <strong>Pro (&euro;3.99)</strong> — 291 tweaks: Basic + BCD, RAM, USB, deep cleanup. <strong>Extreme (&euro;5.99)</strong> — 283 tweaks: Full debloat, DirectX, buffer bloat, registry. <strong>Precision (&euro;2.99)</strong> — 128 tweaks: Input lag, mouse/keyboard, GPU latency for FPS games.' },
+  { q: 'Do I need to restart my PC after optimizing?', a: 'Some tweaks take effect immediately, others require a restart. Choatix will notify you when a restart is needed. Quick Boost works instantly without restart.' },
+  { q: 'How do I buy a product?', a: 'Go to the Products page, add items to cart, and checkout via PayPal. After payment, you\'ll be redirected to a download page with your .exe installer.' },
+  { q: 'Does it work on Windows 11?', a: 'Yes. Choatix V2 supports Windows 10 and Windows 11. All tweaks are compatible with the latest updates.' },
+  { q: 'Do I need to run as Administrator?', a: 'Yes. System-level tweaks (registry HKLM, services, power plans, bcdedit) require Administrator privileges. The app will warn you if not running as admin.' },
+  { q: 'Can I revert changes?', a: 'Yes. Every tweak has a revert command. Use "Revert All" or click the checkmark next to any category to undo everything safely.' },
+  { q: 'What if I lose my download link?', a: 'Your purchase is tied to your Discord username. Contact support in our Discord server with your username and we\'ll resend the download link.' },
+  { q: 'What is your refund policy?', a: '<strong>No refunds.</strong> All sales are final. You receive a digital product that cannot be returned. If the app doesn\'t work, contact support on Discord.' }
+];
+
+const REFUND_POLICY = `
+  <h2>Digital Products</h2>
+  <p>Our products are digital downloads that provide immediate access upon purchase. Once accessed, they cannot be returned.</p>
+  <h3>1. General Policy</h3>
+  <p>Choatix V2 operates on a strict no-refund policy. All purchases of our digital products and services are final and non-refundable.</p>
+  <h3>2. Why No Refunds?</h3>
+  <ul>
+    <li><strong>Digital Nature:</strong> Our products are digital downloads that provide immediate access and cannot be physically returned.</li>
+    <li><strong>Immediate Access:</strong> Once purchased, you gain instant access to our optimization tools and cannot "unuse" them.</li>
+    <li><strong>Intellectual Property:</strong> Our software contains proprietary technology that cannot be returned.</li>
+  </ul>
+  <h3>3. What This Means</h3>
+  <ul>
+    <li><strong>No Refunds:</strong> We will not process refunds for any reason, including dissatisfaction, change of mind, or technical issues.</li>
+    <li><strong>No Chargebacks:</strong> Attempting to file a chargeback may result in account suspension and legal action.</li>
+    <li><strong>No Exchanges:</strong> We do not offer exchanges for different products or services.</li>
+  </ul>
+  <h3>4. Before You Purchase</h3>
+  <p>We strongly encourage all customers to thoroughly research our products before making a purchase.</p>
+  <h3>5. Technical Support</h3>
+  <p>While we don't offer refunds, we provide comprehensive technical support. If you experience any issues:</p>
+  <div class="refund-support-grid">
+    <div class="refund-support-card discord">
+      <div class="refund-support-icon">&#128172;</div>
+      <div class="refund-support-title">Discord Support</div>
+      <div class="refund-support-desc">Join our Discord server for instant help</div>
+      <a href="${DISCORD_INVITE}" target="_blank" class="btn btn-discord">Join Discord</a>
+    </div>
+    <div class="refund-support-card">
+      <div class="refund-support-icon">&#9993;</div>
+      <div class="refund-support-title">Email Support</div>
+      <div class="refund-support-desc">Send us a detailed email for complex issues</div>
+      <a href="mailto:choatixtweaks@gmail.com" class="btn btn-secondary">Send Email</a>
+    </div>
+  </div>
+  <h3>6. Exceptions</h3>
+  <p>The only exception is if we are unable to deliver the purchased product due to technical issues on our end.</p>
+  <h3>7. Contact</h3>
+  <p>Questions? Contact us at <a href="mailto:choatixtweaks@gmail.com">choatixtweaks@gmail.com</a> or join our <a href="${DISCORD_INVITE}" target="_blank">Discord server</a>.</p>
+  <div class="refund-warning"><p><strong>By completing a purchase, you agree to this policy.</strong></p></div>
+`;
+
+const FPS_DATA = [
+  { name: 'Fortnite', before: 110, after: 170, pct: 55 },
+  { name: 'Valorant', before: 200, after: 320, pct: 60 },
+  { name: 'CS2', before: 180, after: 300, pct: 67 },
+  { name: 'Apex Legends', before: 100, after: 160, pct: 60 },
+  { name: 'Minecraft', before: 120, after: 260, pct: 117 },
+  { name: 'GTA V', before: 85, after: 125, pct: 47 }
+];
+
+const FEATURES = [
+  { icon: '&#128293;', title: 'System Optimizer', desc: 'Apply 220-461 tweaks per tier. CPU, GPU, RAM, network, power — all optimized.' },
+  { icon: '&#127918;', title: 'Game Optimizer', desc: 'Per-game profiles for Fortnite, Valorant, CS2, Apex, Minecraft and more.' },
+  { icon: '&#128640;', title: 'Quick Boost', desc: 'Instant performance boost. Free up RAM, kill bloat, boost GPU priority.' },
+  { icon: '&#9201;',   title: 'Zero Delay', desc: 'Reduce input lag. Optimize timer resolution, mouse latency, render pipeline.' },
+  { icon: '&#128202;', title: 'FPS Compare', desc: 'Test before and after. See exact FPS improvement with side-by-side bars.' },
+  { icon: '&#127942;', title: 'Benchmark Leaderboard', desc: 'Submit your score, compete globally, climb the ranks.' },
+  { icon: '&#128260;', title: 'Safe Rollback', desc: 'Every change is reversible. One click to restore original Windows settings.' },
+  { icon: '&#129529;', title: 'Deep Clean', desc: 'Clean 14 system caches in one click. Temp files, DNS, Windows Store cache.' },
+  { icon: '&#128190;', title: 'Game Settings Backup', desc: 'Backup and restore game settings for Fortnite, Valorant, CS2, Apex.' },
+  { icon: '&#9000;&#65039;', title: 'Keyboard Shortcuts', desc: 'Navigate pages instantly with number keys 1-9. Built for power users.' },
+  { icon: '&#128279;', title: 'Discord Bot', desc: 'License management, giveaway system, daily quests, coins shop, admin tools.' }
+];
+
+// ── STATE ──
+
+const CART_KEY = 'choatix_cart';
+const DISCOUNT_KEY = 'choatix_discount';
+let cart = JSON.parse(localStorage.getItem(CART_KEY) || '[]');
+let appliedDiscount = JSON.parse(localStorage.getItem(DISCOUNT_KEY) || 'null');
+let user = null;
+
+// ── AUTH ──
+
+function initAuth() {
+  const params = new URLSearchParams(location.search);
+  if (params.get('discord_id')) {
+    localStorage.setItem('discord_id', params.get('discord_id'));
+    localStorage.setItem('username', params.get('username'));
+    localStorage.setItem('avatar', params.get('avatar') || '');
+    history.replaceState({}, '', location.pathname);
+  }
+  if (params.get('checkout') === 'success') {
+    const user = params.get('user') || '';
+    const token = params.get('token') || '';
+    const products = params.get('products') || '';
+    history.replaceState({}, '', location.pathname);
+    location.href = '#download?token=' + encodeURIComponent(token) + '&user=' + encodeURIComponent(user) + '&products=' + encodeURIComponent(products);
+  }
+  const id = localStorage.getItem('discord_id');
+  const name = localStorage.getItem('username');
+  const av = localStorage.getItem('avatar');
+  if (id && name) {
+    user = { id, name, avatar: av };
+    fetch(`${API}/api/license/${id}`).then(r => r.json()).then(d => {
+      if (d.tier) user.tier = d.tier;
+    }).catch(() => {});
+  }
 }
 
-// ── Matrix Rain Background ──
-const matrixCanvas = document.getElementById('matrix-rain');
-if (matrixCanvas) {
-  const ctx = matrixCanvas.getContext('2d');
-  const CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789ΣΩλπφψ'.split('');
+function login() { location.href = `${API}/api/auth/discord`; }
+function logout(e) {
+  e.preventDefault();
+  ['discord_id', 'username', 'avatar'].forEach(k => localStorage.removeItem(k));
+  user = null;
+  renderNav();
+}
+
+// ── CART ──
+
+function saveCart() { localStorage.setItem(CART_KEY, JSON.stringify(cart)); }
+function getCartTotal() { return cart.reduce((s, i) => s + i.price * i.qty, 0); }
+function updateBadge() {
+  const b = document.getElementById('cartBadge');
+  if (!b) return;
+  const n = cart.reduce((s, i) => s + i.qty, 0);
+  b.textContent = n;
+  b.classList.toggle('show', n > 0);
+}
+function addToCart(id, name, price) {
+  const item = cart.find(i => i.id === id);
+  if (item) item.qty++;
+  else cart.push({ id, name, price, qty: 1 });
+  saveCart();
+  updateBadge();
+  openCart();
+}
+function changeQty(id, d) {
+  const item = cart.find(i => i.id === id);
+  if (!item) return;
+  item.qty += d;
+  if (item.qty <= 0) cart = cart.filter(i => i.id !== id);
+  saveCart();
+  renderCart();
+  updateBadge();
+}
+function removeFromCart(id) {
+  cart = cart.filter(i => i.id !== id);
+  saveCart();
+  renderCart();
+  updateBadge();
+}
+function renderCart() {
+  const el = document.getElementById('cartItems');
+  const total = document.getElementById('cartTotal');
+  const btn = document.getElementById('cartCheckout');
+  const foot = document.querySelector('.cart-foot');
+  if (!el) return;
+  if (cart.length === 0) {
+    el.innerHTML = '<div class="cart-empty"><div class="cart-empty-icon">&#128722;</div>Your cart is empty</div>';
+    if (total) total.textContent = '\u20AC0.00';
+    if (btn) btn.disabled = true;
+  } else {
+    el.innerHTML = cart.map(i => `
+      <div class="cart-item">
+        <div class="cart-item-icon">&#9733;</div>
+        <div class="cart-item-info">
+          <div class="cart-item-name">${i.name}</div>
+          <div class="cart-item-price">&euro;${i.price.toFixed(2)}</div>
+        </div>
+        <div class="cart-item-qty">
+          <button onclick="changeQty('${i.id}',-1)">&#8722;</button>
+          <span>${i.qty}</span>
+          <button onclick="changeQty('${i.id}',1)">+</button>
+        </div>
+        <button class="cart-item-remove" onclick="removeFromCart('${i.id}')">&#10005;</button>
+      </div>`).join('');
+    if (btn) btn.disabled = false;
+  }
+  if (foot && !foot.querySelector('.cart-discount')) {
+    const dc = document.createElement('div');
+    dc.className = 'cart-discount';
+    foot.insertBefore(dc, foot.querySelector('.cart-total'));
+  }
+  const dcEl = foot?.querySelector('.cart-discount');
+  if (dcEl) {
+    dcEl.innerHTML = appliedDiscount
+      ? `<div class="cart-discount-applied"><span class="cart-discount-tag">&#10003; ${appliedDiscount.code} (-${appliedDiscount.percent}%)</span><button class="cart-discount-remove" onclick="removeDiscount()">&#10005;</button></div>`
+      : '<div class="cart-discount-input"><input type="text" id="discountInput" placeholder="Discount code" maxlength="20"><button onclick="applyDiscount()">Apply</button></div>';
+  }
+  const sub = getCartTotal();
+  const disc = appliedDiscount ? sub * (appliedDiscount.percent / 100) : 0;
+  if (total) {
+    total.innerHTML = appliedDiscount
+      ? `<span style="text-decoration:line-through;opacity:0.5;margin-right:6px;font-size:0.8em">&euro;${sub.toFixed(2)}</span>&euro;${(sub - disc).toFixed(2)}`
+      : '\u20AC' + sub.toFixed(2);
+  }
+  if (foot && !foot.querySelector('.no-refund')) {
+    const n = document.createElement('div');
+    n.className = 'no-refund';
+    n.innerHTML = '<span style="color:#ff5252;font-size:0.65rem;font-weight:700">&#9888; All sales final &mdash; no refunds.</span>';
+    foot.insertBefore(n, btn);
+  }
+}
+async function applyDiscount() {
+  const input = document.getElementById('discountInput');
+  if (!input?.value.trim()) return;
+  const code = input.value.trim().toUpperCase();
+  try {
+    const r = await fetch(`${API}/api/discount/${code}`);
+    const d = await r.json();
+    if (d.valid) {
+      appliedDiscount = { code: d.code, percent: d.discount };
+      localStorage.setItem(DISCOUNT_KEY, JSON.stringify(appliedDiscount));
+      renderCart();
+    } else { alert(d.error || 'Invalid discount code'); }
+  } catch { alert('Failed to verify discount code'); }
+}
+function removeDiscount() {
+  appliedDiscount = null;
+  localStorage.removeItem(DISCOUNT_KEY);
+  renderCart();
+}
+function openCart() {
+  document.getElementById('cartOverlay')?.classList.add('open');
+  document.getElementById('cartSidebar')?.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeCart() {
+  document.getElementById('cartOverlay')?.classList.remove('open');
+  document.getElementById('cartSidebar')?.classList.remove('open');
+  document.body.style.overflow = '';
+}
+async function checkout() {
+  if (!cart.length) return;
+  let username = localStorage.getItem('username');
+  if (!username) {
+    username = prompt('Enter your Discord username (for delivery):');
+    if (!username) return;
+    localStorage.setItem('username', username);
+  }
+  const btn = document.getElementById('cartCheckout');
+  if (btn) { btn.textContent = 'Redirecting to PayPal...'; btn.disabled = true; }
+  try {
+    const items = cart.map(i => ({ id: i.id, name: i.name, price: i.price, qty: i.qty }));
+    const r = await fetch(`${API}/api/checkout`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ items, discordUsername: username, discountCode: appliedDiscount?.code || null })
+    });
+    const data = await r.json();
+    if (data.url) {
+      localStorage.removeItem(CART_KEY);
+      localStorage.removeItem(DISCOUNT_KEY);
+      appliedDiscount = null;
+      if (data.downloadToken) localStorage.setItem('choatix_download_token', data.downloadToken);
+      location.href = data.url;
+      return;
+    }
+  } catch {}
+  if (btn) { btn.textContent = 'Checkout via PayPal'; btn.disabled = false; }
+  alert('Checkout failed. Try again or contact support on Discord.');
+}
+
+// ── NAVIGATION ──
+
+const ROUTES = [
+  { path: '',              label: 'Home' },
+  { path: 'features',     label: 'Features' },
+  { path: 'tweaks',       label: 'Tweaks' },
+  { path: 'products',     label: 'Products' },
+  { path: 'pricing',      label: 'Pricing' },
+  { path: 'faq',          label: 'FAQ' },
+  { path: 'refund',       label: 'Refund Policy' },
+  { path: 'affiliate',    label: 'Affiliates', cls: 'nav-affiliate' },
+  { path: 'team',         label: 'Team' }
+];
+
+function renderNav() {
+  const hash = location.hash.slice(1).split('?')[0].split('/')[0];
+  const navLinks = ROUTES.map(r => {
+    const active = r.path === hash ? ' class="active"' : r.cls ? ` class="${r.cls}"` : '';
+    return `<a href="#${r.path || ''}"${active}>${r.label}</a>`;
+  }).join('');
+
+  const avatarHTML = user
+    ? `<img class="user-avatar" id="userAvatar" src="${user.avatar ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png` : ''}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+       <div class="user-avatar-fallback" id="userAvatarFallback" style="${user.avatar ? 'display:none' : ''}">${user.name?.charAt(0)?.toUpperCase() || '?'}</div>`
+    : '';
+
+  const tierHTML = user?.tier
+    ? `<span class="user-tier ${user.tier.toLowerCase()}">${user.tier}</span>`
+    : '';
+
+  document.getElementById('app-nav').innerHTML = `
+    <a href="#" class="nav-brand" onclick="navigate('');return false">choatix<span>.</span></a>
+    <button class="hamburger" onclick="document.querySelector('.nav-links').classList.toggle('open')">&#9776;</button>
+    <div class="nav-links">
+      ${navLinks}
+      <a href="${DISCORD_INVITE}" target="_blank">Discord</a>
+      <button class="cart-btn" onclick="openCart()" id="cartBtn">&#128722;<span class="cart-badge" id="cartBadge">0</span></button>
+      ${user ? `
+        <div class="user-menu" id="userMenu">
+          <a href="#" class="user-btn" onclick="toggleDropdown(event)">
+            ${avatarHTML}
+            <span class="user-name" id="userName">${user.name}</span>
+            ${tierHTML}
+          </a>
+          <div class="user-dropdown">
+            <a class="dropdown-item" href="#download"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>Download App</a>
+            <a class="dropdown-item" href="${DISCORD_INVITE}" target="_blank"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Join Discord</a>
+            <div class="dropdown-divider"></div>
+            <a class="dropdown-item danger" href="#" onclick="logout(event)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>Logout</a>
+          </div>
+        </div>` : ''}
+      <a href="#" class="btn btn-secondary" id="loginBtn" onclick="login();return false" ${user ? 'style="display:none"' : ''}>Login</a>
+    </div>`;
+}
+
+function renderCartSidebar() {
+  document.getElementById('app-cart').innerHTML = `
+    <div class="cart-overlay" id="cartOverlay" onclick="closeCart()"></div>
+    <div class="cart-sidebar" id="cartSidebar">
+      <div class="cart-head"><h3>Shopping Cart</h3><button class="cart-close" onclick="closeCart()">&#10005;</button></div>
+      <div class="cart-items" id="cartItems"></div>
+      <div class="cart-foot">
+        <div class="cart-total"><span class="cart-total-label">Total</span><span class="cart-total-price" id="cartTotal">&euro;0.00</span></div>
+        <button class="cart-checkout" id="cartCheckout" onclick="checkout()" disabled>Checkout via PayPal</button>
+      </div>
+    </div>`;
+}
+
+function renderFooter() {
+  document.getElementById('app-footer').innerHTML = `
+    <footer>
+      <div class="footer-links">
+        <a href="#features">Features</a>
+        <a href="#tweaks">Tweaks</a>
+        <a href="#products">Products</a>
+        <a href="#pricing">Pricing</a>
+        <a href="#faq">FAQ</a>
+        <a href="#refund">Refund Policy</a>
+        <a href="#affiliate" class="footer-affiliate">Affiliates</a>
+        <a href="#team">Team</a>
+        <a href="${DISCORD_INVITE}" target="_blank">Discord</a>
+      </div>
+      <p>&copy; 2026 Choatix V2. Built by zylenofficial.</p>
+    </footer>`;
+}
+
+function toggleDropdown(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  document.getElementById('userMenu')?.classList.toggle('open');
+}
+
+function navigate(path) {
+  location.hash = path;
+}
+
+// ── ROUTER ──
+
+function getPage() {
+  const hash = location.hash.slice(1).split('?')[0].split('/')[0];
+  return hash || '';
+}
+
+function router() {
+  const page = getPage();
+  const main = document.getElementById('app-content');
+  const pages = {
+    '':         renderHome,
+    'features': renderFeatures,
+    'tweaks':   renderTweaks,
+    'products': renderProducts,
+    'pricing':  renderPricing,
+    'faq':      renderFAQ,
+    'refund':   renderRefund,
+    'affiliate':renderAffiliate,
+    'team':     renderTeam,
+    'download': renderDownload
+  };
+  const render = pages[page] || render404;
+  main.innerHTML = render();
+  renderNav();
+  renderCart();
+  updateBadge();
+  initPageEffects();
+  window.scrollTo(0, 0);
+}
+
+// ── PAGE: HOME ──
+
+function renderHome() {
+  const statsHTML = [
+    { num: TOTAL_TWEAKS, label: 'System Tweaks' },
+    { num: 20, label: 'Game Presets' },
+    { num: 9, label: 'Optimization Tools' },
+    { num: 100, suffix: '%', label: 'Free to Use' }
+  ].map(s => `<div class="stat-cell"><div class="stat-num" data-count="${s.num}"${s.suffix ? ` data-suffix="${s.suffix}"` : ''}>0</div><div class="stat-txt">${s.label}</div></div>`).join('');
+
+  const stepsHTML = [
+    { icon: '&#128229;', num: 'Step 01', title: 'Download & Install', desc: 'Install takes 10 seconds. No bloatware, no ads, no data collection.' },
+    { icon: '&#128269;', num: 'Step 02', title: 'Scan Your PC', desc: 'Analyze your hardware, OS, and settings to find optimization opportunities.' },
+    { icon: '&#9889;',   num: 'Step 03', title: 'One-Click Optimize', desc: 'Apply all tweaks instantly. Every change is reversible. FPS jumps in seconds.' }
+  ].map((s, i) => `
+    <div class="step-item reveal reveal-d${i + 1}">
+      <div class="step-icon">${s.icon}</div>
+      <div class="step-num">${s.num}</div>
+      <h3>${s.title}</h3>
+      <p>${s.desc}</p>
+    </div>
+    ${i < 2 ? '<div class="step-line"></div>' : ''}`).join('');
+
+  const fpsHTML = FPS_DATA.map(f => `
+    <div class="fps-row">
+      <div class="fps-name">${f.name}</div>
+      <div class="fps-bars">
+        <div class="fps-bar before" data-w="${Math.round(f.before / 320 * 100)}%"><span>${f.before} FPS</span></div>
+        <div class="fps-bar after" data-w="${Math.round(f.after / 320 * 100)}%"><span>${f.after} FPS</span></div>
+      </div>
+      <div class="fps-delta">+${f.pct}%</div>
+    </div>`).join('');
+
+  return `
+    <section class="hero">
+      <div class="hero-content">
+        <div class="hero-badge"><span class="dot"></span>v2.3.0 &bull; ${TOTAL_TWEAKS} System Tweaks</div>
+        <h1><span class="line1">Maximize Your</span><span class="line2">FPS</span></h1>
+        <p class="hero-desc">Optimize your PC for maximum gaming performance. One click. Zero delay. Pure performance.</p>
+        <div class="hero-buttons">
+          <a href="#products" class="btn btn-primary">Download Free</a>
+          <a href="${DISCORD_INVITE}" class="btn btn-discord" target="_blank">Join Discord</a>
+        </div>
+      </div>
+      <div class="hero-scroll"><div class="hero-scroll-line"></div><div class="hero-scroll-text">Scroll</div></div>
+    </section>
+    <div class="stats-row reveal">${statsHTML}</div>
+    <section id="how-it-works">
+      <div class="section-header reveal"><div class="section-label">How It Works</div><h2>Three steps to peak performance</h2></div>
+      <div class="steps-row">${stepsHTML}</div>
+    </section>
+    <section id="fps-compare">
+      <div class="section-header reveal"><div class="section-label">Performance</div><h2>Real FPS Gains</h2><p>Average improvements measured across 6 popular games</p></div>
+      <div class="fps-grid" id="fpsGrid">${fpsHTML}</div>
+      <div class="fps-legend reveal">
+        <div class="fps-legend-item"><span class="fps-dot before"></span> Before</div>
+        <div class="fps-legend-item"><span class="fps-dot after"></span> After Choatix V2</div>
+      </div>
+    </section>
+    <section class="cta-section">
+      <h2 class="reveal">Ready to <span>Boost Your FPS</span>?</h2>
+      <p class="reveal">Join 50,000+ gamers optimizing their PCs with Choatix V2</p>
+      <div class="cta-buttons reveal">
+        <a href="#products" class="btn btn-primary">Download Free</a>
+        <a href="${DISCORD_INVITE}" class="btn btn-discord" target="_blank">Join Discord</a>
+      </div>
+    </section>`;
+}
+
+// ── PAGE: FEATURES ──
+
+function renderFeatures() {
+  const cardsHTML = FEATURES.map((f, i) => `
+    <div class="feature-card reveal reveal-d${(i % 4) + 1}">
+      <div class="feature-icon">${f.icon}</div>
+      <h3>${f.title}</h3>
+      <p>${f.desc}</p>
+    </div>`).join('');
+
+  const lineupHTML = [
+    { id: 'basic',     badge: '&euro;1.99', cls: '' },
+    { id: 'pro',       badge: '&euro;3.99', cls: '' },
+    { id: 'extreme',   badge: '&euro;5.99', cls: 'featured' },
+    { id: 'precision', badge: '&euro;2.99', cls: 'aim' },
+    { id: 'full',      badge: '&euro;9.99', cls: 'save' }
+  ].map(p => {
+    const prod = PRODUCTS[p.id];
+    return `
+      <div class="lineup-card ${p.cls}">
+        <div class="lineup-badge ${p.cls}">${p.badge}</div>
+        <h3>${prod.name}</h3>
+        <p>${prod.tweaks} tweaks &middot; ${prod.desc}</p>
+        <a href="#${p.id === 'full' ? 'products' : p.id}" class="btn ${p.cls === 'featured' ? 'btn-primary' : 'btn-secondary'}">View Details</a>
+      </div>`;
+  }).join('');
+
+  return `
+    <section class="page-hero">
+      <h1><span class="line1">Everything You</span><span class="line2">Need</span></h1>
+      <p>Complete PC optimization suite built for gamers</p>
+    </section>
+    <section id="features-grid">
+      <div class="features-grid">${cardsHTML}</div>
+    </section>
+    <section class="product-lineup-section">
+      <div class="section-header reveal"><div class="section-label">Product Lineup</div><h2>Choose Your Tier</h2><p>Each product is a standalone app with its own tweak set</p></div>
+      <div class="product-lineup-grid reveal">${lineupHTML}</div>
+    </section>
+    <section class="cta-section">
+      <h2 class="reveal">Ready to Boost<br>Your FPS?</h2>
+      <p class="reveal">Join gamers optimizing their PCs with Choatix V2</p>
+      <div class="cta-buttons reveal">
+        <a href="#products" class="btn btn-primary">Download Free</a>
+        <a href="${DISCORD_INVITE}" class="btn btn-discord" target="_blank">Join Discord</a>
+      </div>
+    </section>`;
+}
+
+// ── PAGE: TWEAKS ──
+
+function renderTweaks() {
+  const cardsHTML = TWEAK_CATEGORIES.map(c => `
+    <div class="tweak-card ${c.id === 'core' ? 'tweak-card-core' : ''}" onclick="openTweakModal('${c.id}')">
+      <div class="tweak-card-icon">${c.icon}</div>
+      <h3>${c.name}</h3>
+      <p>${c.count} tweaks</p>
+    </div>`).join('');
+
+  return `
+    <section class="page-hero">
+      <div class="hero-content">
+        <div class="hero-badge"><span class="dot"></span>v2.3.0</div>
+        <h1>${TOTAL_TWEAKS} System Tweaks</h1>
+        <p class="hero-desc">Organized into ${TWEAK_CATEGORIES.length} categories for maximum control</p>
+      </div>
+    </section>
+    <section class="tweaks-section">
+      <div class="tweaks-grid">${cardsHTML}</div>
+    </section>
+    <div class="tweaks-modal-overlay" id="tweaksModal">
+      <div class="tweaks-modal">
+        <div class="tweaks-modal-header"><h2 id="tweaksModalTitle">Category</h2><button class="tweaks-modal-close" onclick="closeTweakModal()">&#10005;</button></div>
+        <div class="tweaks-modal-body" id="tweaksModalBody"></div>
+      </div>
+    </div>`;
+}
+
+function openTweakModal(id) {
+  const cat = TWEAK_CATEGORIES.find(c => c.id === id);
+  if (!cat) return;
+  document.getElementById('tweaksModalTitle').textContent = cat.name;
+  document.getElementById('tweaksModalBody').innerHTML = '<div class="tweaks-modal-items">' +
+    cat.items.map(i => `<div class="tweak-item"><span class="tweak-item-name">${i.name}</span><span class="tweak-item-impact impact-${i.impact}">${i.impact}</span></div>`).join('') + '</div>';
+  document.getElementById('tweaksModal').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+
+function closeTweakModal() {
+  document.getElementById('tweaksModal').style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+// ── PAGE: PRODUCTS ──
+
+function renderProducts() {
+  const order = ['full', 'basic', 'pro', 'extreme', 'precision', 'vibrance'];
+  const cardsHTML = order.map(id => {
+    const p = PRODUCTS[id];
+    const featured = p.id === 'full' ? 'featured' : '';
+    const badgeClass = p.color ? `badge-${p.color}` : '';
+    const isFree = p.price === null;
+    const boxLines = p.name.split(' ');
+    const boxName = boxLines.length > 1 ? boxLines.slice(0, -1).join(' ') + '<br>' + boxLines.slice(-1) : p.name;
+
+    return `
+      <div class="product-card ${featured} ${badgeClass}">
+        ${p.badge ? `<div class="product-badge ${p.color ? 'badge-' + p.color + '-tag' : ''}">${p.badge}</div>` : ''}
+        <div class="product-box">
+          <div class="product-box-brand">Choatix</div>
+          <div class="product-box-name">${boxName}</div>
+          <div class="product-box-sub">${p.subtitle}</div>
+        </div>
+        <div class="product-brand">Choatix</div>
+        <div class="product-name">${p.name}</div>
+        <div class="product-price">${isFree ? 'Coming Soon' : '&euro;' + p.price.toFixed(2)}</div>
+        <div class="product-actions">
+          <a href="#${p.id}" class="product-link">View Details</a>
+          ${isFree
+            ? `<a href="${DISCORD_INVITE}" target="_blank" class="product-link">Join Discord</a>`
+            : `<button class="product-link add-to-cart" data-id="${p.id}" data-name="${p.name}" data-price="${p.price}">Add to Cart</button>`}
+        </div>
+      </div>`;
+  }).join('');
+
+  return `
+    <section class="page-hero">
+      <h1>Our <em>Products</em></h1>
+      <p>Premium optimization packs for every need</p>
+    </section>
+    <section>
+      <div class="products-grid">${cardsHTML}</div>
+    </section>`;
+}
+
+// ── PAGE: PRODUCT DETAIL ──
+
+function renderProductDetail(id) {
+  const p = PRODUCTS[id];
+  if (!p) return render404();
+  const boxLines = p.name.split(' ');
+  const boxName = boxLines.length > 1 ? boxLines.slice(0, -1).join(' ') + '<br>' + boxLines.slice(-1) : p.name;
+  const isFree = p.price === null;
+
+  const tweakGroups = id === 'basic' ? ['deep-clean','network','power','gpu','gaming','windows']
+    : id === 'pro' ? ['deep-clean','network','power','gpu','gaming','windows','storage','audio']
+    : id === 'extreme' ? ['deep-clean','network','power','gpu','gaming','windows','browser','privacy']
+    : id === 'precision' ? ['gpu','timer','network','input']
+    : id === 'full' ? TWEAK_CATEGORIES.map(c => c.id)
+    : [];
+
+  const tweaksHTML = tweakGroups.map(gid => {
+    const cat = TWEAK_CATEGORIES.find(c => c.id === gid);
+    if (!cat) return '';
+    return `<div class="pd-tweak-group"><div class="pd-tweak-icon">${cat.icon}</div><div class="pd-tweak-info"><h3>${cat.name}</h3><p>${cat.items.map(i => i.name).join(', ')}</p></div><div class="pd-tweak-count">${cat.count}</div></div>`;
+  }).join('');
+
+  const featuresHTML = id === 'full' ? [
+    { icon: '&#128293;', title: '461 System Tweaks', desc: 'Every optimization category included' },
+    { icon: '&#127918;', title: 'Game Presets', desc: 'Per-game optimization for 20+ titles' },
+    { icon: '&#128640;', title: 'Quick Boost', desc: 'Instant RAM, process, and GPU boost' },
+    { icon: '&#128260;', title: 'Safe Rollback', desc: 'Every change is reversible' }
+  ] : id === 'precision' ? [
+    { icon: '&#9201;', title: 'Timer Resolution', desc: 'Fix timer for lower input lag' },
+    { icon: '&#127918;', title: 'GPU Low Latency', desc: 'NVIDIA Reflex and low latency mode' },
+    { icon: '&#128187;', title: 'Input Optimization', desc: 'Mouse polling, keyboard repeat rate' },
+    { icon: '&#127760;', title: 'Network for FPS', desc: 'Optimized for competitive online play' }
+  ] : [
+    { icon: '&#128465;', title: 'System Cleanup', desc: 'Remove bloat and temp files' },
+    { icon: '&#127918;', title: 'GPU Optimization', desc: 'NVIDIA settings and power management' },
+    { icon: '&#127760;', title: 'Network Tuning', desc: 'Reduce latency and packet loss' },
+    { icon: '&#9889;', title: 'Power Plan', desc: 'High performance power settings' }
+  ];
+
+  const featCardsHTML = featuresHTML.map(f => `
+    <div class="pd-feature">
+      <div class="pd-feature-icon">${f.icon}</div>
+      <h3>${f.title}</h3>
+      <p>${f.desc}</p>
+    </div>`).join('');
+
+  return `
+    <section class="pd-hero">
+      <div class="pd-box ${id === 'vibrance' ? 'pd-vibrance' : ''}">
+        <div class="pd-box-brand">Choatix</div>
+        <div class="pd-box-name">${boxName}</div>
+        <div class="pd-box-sub">${p.subtitle}</div>
+      </div>
+      <div class="pd-info">
+        ${p.badge ? `<div class="product-badge ${p.color ? 'badge-' + p.color : ''}">${p.badge}</div>` : ''}
+        <h1>${p.name}</h1>
+        <div class="pd-price">${isFree ? 'Coming Soon' : '&euro;' + p.price.toFixed(2)}</div>
+        <p>${p.desc}</p>
+        <div class="pd-actions">
+          ${isFree
+            ? `<a href="${DISCORD_INVITE}" class="btn btn-discord" target="_blank">Join Discord for Updates</a>`
+            : `<button class="btn btn-primary add-to-cart" data-id="${p.id}" data-name="${p.name}" data-price="${p.price}">Add to Cart</button>
+               <a href="#products" class="btn btn-secondary">Back to Products</a>`}
+        </div>
+      </div>
+    </section>
+    <section class="pd-section">
+      <h2>What's Included</h2>
+      <div class="pd-features">${featCardsHTML}</div>
+    </section>
+    <section class="pd-section">
+      <h2>Tweak Categories</h2>
+      <div class="pd-tweak-list">${tweaksHTML}</div>
+    </section>
+    <section class="pd-section">
+      <div class="pd-cta">
+        <h3>Ready to optimize?</h3>
+        <p>${isFree ? 'Join our Discord to get notified when this product launches.' : 'Add to cart and checkout via PayPal. Instant download after purchase.'}</p>
+        ${isFree
+          ? `<a href="${DISCORD_INVITE}" class="btn btn-discord" target="_blank">Join Discord</a>`
+          : `<button class="btn btn-primary add-to-cart" data-id="${p.id}" data-name="${p.name}" data-price="${p.price}">Add to Cart</button>`}
+      </div>
+    </section>`;
+}
+
+// ── PAGE: PRICING ──
+
+function renderPricing() {
+  const tiers = [
+    { name: 'Free', price: '0', period: 'Forever', features: ['System Health Overview', 'Scan PC', 'Quick Boost', 'System Info', 'Process Manager', 'Community Support'], cta: 'Download Free', href: '#products', cls: '' },
+    { name: 'Full', price: '9.99', period: 'One-time', popular: true, features: ['Everything below', TOTAL_TWEAKS + ' System Tweaks', '20 Game Presets', 'Game Library (auto-detect)', 'VBS/HVCI, C-States, Hyper-V', 'NVIDIA Telemetry, Drive Optim', 'Auto Restore Points', 'TrustedInstaller Elevation', 'Everything in Free'], cta: 'Get Full App', href: '#products', cls: 'popular' },
+    { name: 'Pro', price: '3.99', period: 'One-time', features: ['Everything in Free', '291 System Tweaks', 'Game Presets', 'Deep Clean', 'FPS Compare'], cta: 'Get Pro', href: '#products', cls: '' }
+  ];
+
+  const pricingCards = tiers.map((t, i) => `
+    <div class="price-card ${t.popular ? 'featured' : ''} reveal reveal-d${i + 1}">
+      ${t.popular ? '<div class="price-popular">BEST VALUE</div>' : ''}
+      <div class="price-tier">${t.name}</div>
+      <div class="price-amount">&euro;${t.price}</div>
+      <div class="price-period">${t.period} payment</div>
+      <ul class="price-features">${t.features.map(f => `<li><span class="price-check"><svg viewBox="0 0 12 12"><path d="M2 6l3 3 5-5"/></svg></span>${f}</li>`).join('')}</ul>
+      <a href="${t.href}" class="btn ${t.popular ? 'btn-primary' : 'btn-secondary'} price-btn">${t.cta}</a>
+    </div>`).join('');
+
+  const productsHTML = ['full', 'basic', 'pro', 'extreme', 'precision', 'vibrance'].map(id => {
+    const p = PRODUCTS[id];
+    const featured = id === 'full' ? 'featured' : '';
+    const badgeClass = p.color ? `badge-${p.color}` : '';
+    const boxLines = p.name.split(' ');
+    const boxName = boxLines.length > 1 ? boxLines.slice(0, -1).join(' ') + '<br>' + boxLines.slice(-1) : p.name;
+    return `
+      <div class="product-card ${featured} ${badgeClass}">
+        ${p.badge ? `<div class="product-badge ${p.color ? 'badge-' + p.color + '-tag' : ''}">${p.badge}</div>` : ''}
+        <div class="product-box">
+          <div class="product-box-brand">Choatix</div>
+          <div class="product-box-name">${boxName}</div>
+          <div class="product-box-sub">${p.subtitle}</div>
+        </div>
+        <div class="product-brand">Choatix</div>
+        <div class="product-name">${p.name}</div>
+        <div class="product-price">${p.price === null ? 'Coming Soon' : '&euro;' + p.price.toFixed(2)}</div>
+        <div class="product-actions">
+          <a href="#${p.id}" class="product-link">View Details</a>
+          ${p.price ? `<button class="product-link add-to-cart" data-id="${p.id}" data-name="${p.name}" data-price="${p.price}">Add to Cart</button>` : ''}
+        </div>
+      </div>`;
+  }).join('');
+
+  const compareFeatures = [
+    { cat: 'Dashboard', features: ['System Health Overview', 'CPU / RAM / GPU Monitor', 'Ping & Network Stats', 'Optimization Counter & Rollback'] },
+    { cat: 'Scan PC', features: ['Hardware Analysis', 'OS & Settings Scan', 'Optimization Recommendations'] },
+    { cat: 'Optimize', features: ['Basic System Tweaks', TOTAL_TWEAKS + ' System Tweaks', 'CPU / GPU / RAM Optimizer', 'Network Optimizer', 'One-Click Apply All'] },
+    { cat: 'Quick Boost', features: ['Free Up RAM', 'Kill Bloat Processes', 'Boost GPU Priority'] },
+    { cat: '0 Delay', features: ['Timer Resolution Fix', 'Mouse Latency Reduction', 'Input Lag Optimizer', 'Sensitivity Calculator'] },
+    { cat: 'Games', features: ['Game Profiles (12 Games)', 'Per-Game Optimization', 'Game Settings Backup & Restore'] },
+    { cat: 'Leaderboard', features: ['Run Benchmark', 'Global Scores', 'Submit Score & Rank Up'] },
+    { cat: 'System', features: ['System Info', 'Process Manager', 'Power Plan Manager', 'Network Speed Test'] },
+    { cat: 'Extras', features: ['Deep Clean (14 Caches)', 'FPS Compare (Before / After)', 'Priority Support', 'Early Access Features'] }
+  ];
+
+  // free=0, pro=1, premium=2
+  const availability = {
+    'Dashboard': [['System Health Overview',1,1,1], ['CPU / RAM / GPU Monitor',1,1,1], ['Ping & Network Stats',1,1,1], ['Optimization Counter & Rollback',1,1,1]],
+    'Scan PC': [['Hardware Analysis',1,1,1], ['OS & Settings Scan',1,1,1], ['Optimization Recommendations',0,1,1]],
+    'Optimize': [['Basic System Tweaks',1,1,1], [TOTAL_TWEAKS + ' System Tweaks',0,1,1], ['CPU / GPU / RAM Optimizer',0,1,1], ['Network Optimizer',0,1,1], ['One-Click Apply All',0,1,1]],
+    'Quick Boost': [['Free Up RAM',1,1,1], ['Kill Bloat Processes',1,1,1], ['Boost GPU Priority',0,1,1]],
+    '0 Delay': [['Timer Resolution Fix',0,1,1], ['Mouse Latency Reduction',0,1,1], ['Input Lag Optimizer',0,1,1], ['Sensitivity Calculator',0,1,1]],
+    'Games': [['Game Profiles (12 Games)',0,1,1], ['Per-Game Optimization',0,1,1], ['Game Settings Backup & Restore',0,0,1]],
+    'Leaderboard': [['Run Benchmark',0,1,1], ['Global Scores',0,1,1], ['Submit Score & Rank Up',0,1,1]],
+    'System': [['System Info',1,1,1], ['Process Manager',1,1,1], ['Power Plan Manager',0,0,1], ['Network Speed Test',0,0,1]],
+    'Extras': [['Deep Clean (14 Caches)',0,1,1], ['FPS Compare',0,1,1], ['Priority Support',0,0,1], ['Early Access Features',0,0,1]]
+  };
+
+  let tableRows = '';
+  for (const [cat, items] of Object.entries(availability)) {
+    tableRows += `<tr class="cat-row"><td colspan="4">${cat}</td></tr>`;
+    for (const [name, free, pro, prem] of items) {
+      tableRows += `<tr><td>${name}</td><td class="${free ? 'check' : 'cross'}">${free ? '&#10003;' : '&#8212;'}</td><td class="${pro ? 'check' : 'cross'}">${pro ? '&#10003;' : '&#8212;'}</td><td class="${prem ? 'check' : 'cross'}">${prem ? '&#10003;' : '&#8212;'}</td></tr>`;
+    }
+  }
+
+  return `
+    <section class="page-hero">
+      <h1 class="reveal">Simple Pricing</h1>
+      <p class="hero-desc reveal">Start free. Upgrade when you need more.</p>
+    </section>
+    <section class="pricing-section">
+      <div class="pricing-grid">${pricingCards}</div>
+    </section>
+    <section>
+      <div class="section-header reveal"><div class="section-label">Individual Products</div><h2>Pick Only What You Need</h2><p>Buy specific tweak packs instead of the full app</p></div>
+      <div class="products-grid">${productsHTML}</div>
+    </section>
+    <section class="section-compare">
+      <div class="section-header reveal"><div class="section-label">Compare</div><h2>Feature Breakdown</h2><p>Every tool in the app, mapped to each plan</p></div>
+      <table class="compare-table reveal">
+        <thead><tr><th>Feature</th><th>Free</th><th>Pro <span class="compare-badge pop">Popular</span></th><th>Premium</th></tr></thead>
+        <tbody>${tableRows}</tbody>
+      </table>
+      <div class="pricing-note reveal"><p>All plans include the full desktop app. Upgrade via Discord with <code>/redeem</code> or buy directly from the <a href="#products">Products</a> page.</p></div>
+    </section>
+    <section class="cta-section">
+      <h2 class="reveal">Ready to Boost<br>Your FPS?</h2>
+      <p class="reveal">Download free. Upgrade anytime.</p>
+      <div class="cta-buttons reveal">
+        <a href="#products" class="btn btn-primary">Download Free</a>
+        <a href="${DISCORD_INVITE}" class="btn btn-discord" target="_blank">Join Discord</a>
+      </div>
+    </section>`;
+}
+
+// ── PAGE: FAQ ──
+
+function renderFAQ() {
+  const faqHTML = FAQ.map(f => `
+    <div class="faq-item">
+      <button class="faq-q" onclick="this.parentElement.classList.toggle('open')">
+        <span>${f.q}</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+      <div class="faq-a"><p>${f.a}</p></div>
+    </div>`).join('');
+
+  return `
+    <section class="page-hero">
+      <h1>Frequently Asked <em>Questions</em></h1>
+      <p>Everything you need to know about Choatix V2</p>
+    </section>
+    <section>
+      <div class="faq-list reveal">${faqHTML}</div>
+    </section>
+    <section class="cta-section">
+      <h2 class="reveal">Still Have Questions?</h2>
+      <p class="reveal">Join our Discord and ask the community</p>
+      <div class="cta-buttons reveal">
+        <a href="${DISCORD_INVITE}" class="btn btn-discord" target="_blank">Join Discord</a>
+      </div>
+    </section>`;
+}
+
+// ── PAGE: REFUND ──
+
+function renderRefund() {
+  return `
+    <section class="page-hero">
+      <h1>Refund <em>Policy</em></h1>
+      <p>Digital products — all sales final</p>
+    </section>
+    <section>
+      <div class="refund-content">
+        <div class="refund-card">${REFUND_POLICY}</div>
+        <div class="refund-actions">
+          <a href="#products" class="btn btn-primary">Back to Products</a>
+          <a href="${DISCORD_INVITE}" class="btn btn-discord" target="_blank">Contact Support</a>
+        </div>
+      </div>
+    </section>`;
+}
+
+// ── PAGE: AFFILIATE ──
+
+function renderAffiliate() {
+  const commissionRows = [
+    { name: 'Basic Tweaks', price: '1.99', comm: '0.20', tier: 'PRO' },
+    { name: 'Pro Tweaks', price: '3.99', comm: '0.40', tier: 'PRO' },
+    { name: 'Precision Pack', price: '2.99', comm: '0.30', tier: 'PRO' },
+    { name: 'Extreme Tweaks', price: '5.99', comm: '0.60', tier: 'PREMIUM' },
+    { name: 'Full Optimization', price: '9.99', comm: '1.00', tier: 'PREMIUM' }
+  ].map(r => `<tr><td>${r.name}</td><td class="price">&euro;${r.price}</td><td class="commission">&euro;${r.comm}</td><td><span class="tier-badge tier-${r.tier.toLowerCase()}">${r.tier}</span></td></tr>`).join('');
+
+  return `
+    <div id="publicPage">
+      <section class="aff-hero">
+        <div class="aff-badge">Affiliate Program</div>
+        <h1>Earn <span class="green">10%</span><br>On Every Sale</h1>
+        <p class="subtitle">Promote Choatix with your unique referral link. Earn commission on every customer you bring — no limits, no expiration.</p>
+        <div class="aff-metrics">
+          <div class="aff-metric"><div class="val">10%</div><div class="lbl">Commission</div></div>
+          <div class="aff-metric"><div class="val">&euro;5</div><div class="lbl">Min Payout</div></div>
+          <div class="aff-metric"><div class="val">30 Days</div><div class="lbl">Cookie Life</div></div>
+          <div class="aff-metric"><div class="val">5</div><div class="lbl">Products</div></div>
+        </div>
+      </section>
+      <section class="aff-section">
+        <div class="aff-section-title"><h2>How It Works</h2><p>Three simple steps to start earning</p></div>
+        <div class="aff-steps">
+          <div class="aff-step"><div class="step-num">1</div><h3>Sign Up</h3><p>Register with your Discord ID and PayPal email. Instant approval — no waiting.</p></div>
+          <div class="aff-step"><div class="step-num">2</div><h3>Share Your Link</h3><p>Get a unique referral link. Share it on YouTube, Twitter, Discord, or anywhere.</p></div>
+          <div class="aff-step"><div class="step-num">3</div><h3>Get Paid</h3><p>Earn 10% on every sale. Request a payout anytime (min &euro;5). Sent via PayPal.</p></div>
+        </div>
+      </section>
+      <section class="aff-table-section">
+        <div class="aff-section-title"><h2>Commission Rates</h2><p>Earn on every product tier</p></div>
+        <table class="products-table"><thead><tr><th>Product</th><th>Price</th><th>Your Commission</th><th>Tier</th></tr></thead><tbody>${commissionRows}</tbody></table>
+      </section>
+      <section class="register-section" id="registerSection">
+        <div class="register-box">
+          <h2>Start Earning Today</h2>
+          <p class="sub">Fill in your details to get your unique referral link</p>
+          <div class="form-row"><label>Discord ID</label><input type="text" id="regDiscordId" placeholder="Right-click your name in Discord → Copy User ID"><div class="hint">Required to track your referrals</div></div>
+          <div class="form-row"><label>Display Name</label><input type="text" id="regDisplayName" placeholder="Your name or brand"></div>
+          <div class="form-row"><label>PayPal Email</label><input type="email" id="regPaypal" placeholder="you@example.com"><div class="hint">Where we send your commission payments</div></div>
+          <div class="form-row"><label>Custom Referral Code <span>(optional)</span></label><input type="text" id="regCustomCode" placeholder="e.g. MYBRAND" maxlength="20"><div class="hint">Letters, numbers, _ or -. 3-20 characters.</div></div>
+          <button class="btn-register" onclick="registerAffiliate()">Get My Referral Link</button>
+          <p class="reg-error" id="regError"></p>
+        </div>
+      </section>
+    </div>
+    <div id="dashPage" class="dash-section">
+      <div class="dash-head"><div><h1>Affiliate Dashboard</h1><p id="dashWelcome">Welcome back</p></div><div><button class="btn-payout" onclick="requestPayout()">Request Payout</button><button class="btn-newlink" onclick="generateLink()">+ New Link</button></div></div>
+      <div class="dash-stats">
+        <div class="dash-stat green"><div class="num" id="sEarned">&euro;0.00</div><div class="lbl">Total Earned</div></div>
+        <div class="dash-stat orange"><div class="num" id="sPending">&euro;0.00</div><div class="lbl">Pending Payout</div></div>
+        <div class="dash-stat blue"><div class="num" id="sClicks">0</div><div class="lbl">Total Clicks</div></div>
+        <div class="dash-stat"><div class="num" id="sConv">0</div><div class="lbl">Conversions</div></div>
+      </div>
+      <div class="tab-bar">
+        <button class="tab-btn active" onclick="switchTab(this,'links')">Referral Links</button>
+        <button class="tab-btn" onclick="switchTab(this,'sales')">Sales</button>
+        <button class="tab-btn" onclick="switchTab(this,'payouts')">Payouts</button>
+      </div>
+      <div id="panel-links" class="tab-panel active"></div>
+      <div id="panel-sales" class="tab-panel"></div>
+      <div id="panel-payouts" class="tab-panel"></div>
+    </div>`;
+}
+
+let aff = null;
+
+async function registerAffiliate() {
+  const di = document.getElementById('regDiscordId')?.value.trim();
+  const dn = document.getElementById('regDisplayName')?.value.trim();
+  const pp = document.getElementById('regPaypal')?.value.trim();
+  const cc = document.getElementById('regCustomCode')?.value.trim();
+  const err = document.getElementById('regError');
+  if (!di || !dn || !pp) { if (err) { err.textContent = 'All fields are required'; err.style.display = 'block'; } return; }
+  try {
+    const body = { discordId: di, displayName: dn, paypalEmail: pp };
+    if (cc) body.customCode = cc;
+    const r = await fetch(`${API}/api/affiliate/register`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    const d = await r.json();
+    if (d.success) { user = { id: di, name: dn }; checkAffiliate(); }
+    else { if (err) { err.textContent = d.error || 'Failed'; err.style.display = 'block'; } }
+  } catch { if (err) { err.textContent = 'Network error'; err.style.display = 'block'; } }
+}
+
+async function checkAffiliate() {
+  if (!user) return;
+  try {
+    const r = await fetch(`${API}/api/affiliate/${user.id}`);
+    const d = await r.json();
+    if (d.affiliate) { aff = d; showDash(); }
+  } catch {}
+}
+
+function showDash() {
+  document.getElementById('publicPage').style.display = 'none';
+  document.getElementById('dashPage').style.display = 'block';
+  document.getElementById('registerSection').style.display = 'none';
+  document.getElementById('dashWelcome').textContent = 'Welcome, ' + (aff?.affiliate?.display_name || user.name);
+  loadStats();
+}
+
+async function loadStats() {
+  if (!user) return;
+  try {
+    const r = await fetch(`${API}/api/affiliate/${user.id}/stats`);
+    const d = await r.json();
+    document.getElementById('sEarned').textContent = '\u20AC' + (d.totalCommission || 0).toFixed(2);
+    document.getElementById('sPending').textContent = '\u20AC' + (d.pendingCommission || 0).toFixed(2);
+    document.getElementById('sClicks').textContent = d.clicks || 0;
+    document.getElementById('sConv').textContent = d.conversions || 0;
+    const lp = document.getElementById('panel-links');
+    if (aff?.links?.length > 0) {
+      lp.innerHTML = aff.links.map(l => `<div class="link-card"><div class="link-card-head"><span class="link-card-code">${l.code}</span><span class="link-card-stats">${l.clicks || 0} clicks · ${l.conversions || 0} sales</span></div><div class="link-card-url"><input type="text" value="${API}/api/track/${l.code}" readonly id="lk-${l.code}"><button onclick="copyLk('${l.code}')">Copy</button></div></div>`).join('');
+    } else { lp.innerHTML = '<div class="empty-state"><p>No links yet. Click "+ New Link" to get started.</p></div>'; }
+    const sp = document.getElementById('panel-sales');
+    if (d.recentSales?.length > 0) {
+      sp.innerHTML = d.recentSales.map(s => `<div class="sale-row"><div class="sale-date">${new Date(s.created_at).toLocaleDateString()}</div><div class="sale-product">${s.product_id}</div><div class="sale-amount">&euro;${parseFloat(s.sale_amount).toFixed(2)}</div><div class="sale-commission">&euro;${parseFloat(s.commission).toFixed(2)}</div><div class="sale-status"><span class="status-badge status-${s.status}">${s.status}</span></div></div>`).join('');
+    } else { sp.innerHTML = '<div class="empty-state"><p>No sales yet. Share your link to start earning!</p></div>'; }
+    const pp = document.getElementById('panel-payouts');
+    if (d.payouts?.length > 0) {
+      pp.innerHTML = d.payouts.map(p => `<div class="sale-row"><div class="sale-date">${new Date(p.created_at).toLocaleDateString()}</div><div class="sale-product">PayPal: ${p.paypal_email}</div><div class="sale-amount"></div><div class="sale-commission">&euro;${parseFloat(p.amount).toFixed(2)}</div><div class="sale-status"><span class="status-badge status-${p.status}">${p.status}</span></div></div>`).join('');
+    } else { pp.innerHTML = '<div class="empty-state"><p>No payouts yet. Earn at least &euro;5 to request one.</p></div>'; }
+  } catch {}
+}
+
+function copyLk(code) {
+  const el = document.getElementById('lk-' + code);
+  if (el) { navigator.clipboard.writeText(el.value); const b = el.nextElementSibling; b.textContent = 'Copied!'; setTimeout(() => b.textContent = 'Copy', 2000); }
+}
+
+async function generateLink() {
+  if (!user) return;
+  try { await fetch(`${API}/api/affiliate/${user.id}/links`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({}) }); const r = await fetch(`${API}/api/affiliate/${user.id}`); aff = await r.json(); loadStats(); } catch {}
+}
+
+async function requestPayout() {
+  if (!user) return;
+  try { const r = await fetch(`${API}/api/affiliate/${user.id}/payout`, { method: 'POST', headers: { 'Content-Type': 'application/json' } }); const d = await r.json(); if (d.success) { alert('Payout of \u20AC' + d.amount.toFixed(2) + ' requested!'); loadStats(); } else { alert(d.error || 'Failed'); } } catch { alert('Network error'); }
+}
+
+function switchTab(btn, tab) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('panel-' + tab)?.classList.add('active');
+}
+
+// ── PAGE: TEAM ──
+
+function renderTeam() {
+  const teamHTML = TEAM.map(m => `
+    <div class="team-card">
+      <img class="team-avatar" id="avatar-${m.id}" src="" alt="${m.name}">
+      <div class="team-name">${m.name}</div>
+      <div class="team-role ${m.level}">${m.role}</div>
+    </div>`).join('');
+
+  return `
+    <section class="page-hero">
+      <h1>Meet the <em>Crew</em></h1>
+      <p>The people behind Choatix V2</p>
+    </section>
+    <section>
+      <div class="team-grid reveal">${teamHTML}</div>
+    </section>
+    <section class="cta-section">
+      <h2 class="reveal">Want to Join the Team?</h2>
+      <p class="reveal">Apply in our Discord server</p>
+      <div class="cta-buttons reveal">
+        <a href="${DISCORD_INVITE}" class="btn btn-discord" target="_blank">Join Discord</a>
+      </div>
+    </section>`;
+}
+
+// ── PAGE: DOWNLOAD ──
+
+function renderDownload() {
+  const params = new URLSearchParams(location.hash.split('?')[1]);
+  const token = params.get('token');
+  const userName = params.get('user');
+  const products = params.get('products');
+
+  if (!token || !userName || !products) {
+    return `
+      <div class="dl-empty" id="dlEmpty">
+        <div class="dl-box">
+          <h2>No purchases found</h2>
+          <p>You haven't completed a purchase yet.</p>
+          <a href="#products">Browse Products</a>
+        </div>
+      </div>`;
+  }
+
+  const ids = products.split(',');
+  const listHTML = ids.map(id => {
+    const info = DOWNLOADS[id];
+    if (!info) return '';
+    if (info.comingSoon) {
+      return `<div class="dl-item"><div class="dl-item-info"><div class="dl-item-name">${info.name}</div><div class="dl-item-id">${id}</div></div><span style="color:#ffaa00;font-size:0.8rem;font-weight:600;">Coming Soon</span></div>`;
+    }
+    return `<div class="dl-item"><div class="dl-item-info"><div class="dl-item-name">${info.name}</div><div class="dl-item-id">${id}</div></div><a href="${info.url}" target="_blank"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>Download</a></div>`;
+  }).join('');
+
+  return `
+    <div class="dl-page" id="dlPage">
+      <div class="dl-box">
+        <div class="dl-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <h1>Payment Received!</h1>
+        <p>Thank you for your purchase, ${userName}. Your downloads are ready.</p>
+        <div class="dl-list" id="dlList">${listHTML}</div>
+        <div class="dl-alt">Need help? <a href="${DISCORD_INVITE}" target="_blank">Join our Discord</a></div>
+      </div>
+    </div>`;
+}
+
+// ── PAGE: 404 ──
+
+function render404() {
+  return `
+    <section class="page-hero">
+      <h1>404</h1>
+      <p>Page not found</p>
+    </section>
+    <section class="cta-section">
+      <p>You seem lost. Let's get you back.</p>
+      <div class="cta-buttons" style="margin-top:2rem">
+        <a href="#" class="btn btn-primary">Go Home</a>
+        <a href="${DISCORD_INVITE}" class="btn btn-discord" target="_blank">Join Discord</a>
+      </div>
+    </section>`;
+}
+
+// ── EFFECTS ──
+
+function initMatrixRain() {
+  const canvas = document.getElementById('matrix-rain');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789\u03A3\u03A9\u03BB\u03C0\u03C8\u03C8'.split('');
   const FONT_SIZE = 14;
   const CHAR_SPACING = 18;
   let W, H, cols = [];
 
-  function initMatrix() {
-    const dpr = window.devicePixelRatio || 1;
-    W = window.innerWidth;
-    H = window.innerHeight;
-    matrixCanvas.width = W * dpr;
-    matrixCanvas.height = H * dpr;
-    matrixCanvas.style.width = W + 'px';
-    matrixCanvas.style.height = H + 'px';
+  function init() {
+    const dpr = devicePixelRatio || 1;
+    W = innerWidth;
+    H = innerHeight;
+    canvas.width = W * dpr;
+    canvas.height = H * dpr;
+    canvas.style.width = W + 'px';
+    canvas.style.height = H + 'px';
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-
     cols = [];
     const numCols = Math.floor(W / CHAR_SPACING);
     for (let i = 0; i < numCols; i++) {
@@ -34,27 +1189,17 @@ if (matrixCanvas) {
       const dist = Math.abs(i * CHAR_SPACING - centerX) / (W / 2);
       const chance = dist < 0.3 ? 0.9 : dist < 0.6 ? 0.5 : 0.15;
       if (Math.random() > chance) continue;
-
-      const speed = 1.2 + Math.random() * 2.5;
       const trailLen = 8 + Math.floor(Math.random() * 14);
       const chars = [];
-      for (let j = 0; j < trailLen; j++) {
-        chars.push(CHARS[Math.floor(Math.random() * CHARS.length)]);
-      }
-      cols.push({
-        x: i * CHAR_SPACING + CHAR_SPACING / 2,
-        y: Math.random() * H * 1.5 - H * 0.5,
-        speed, chars,
-        flickerTimer: 0,
-        flickerRate: 3 + Math.floor(Math.random() * 5)
-      });
+      for (let j = 0; j < trailLen; j++) chars.push(CHARS[Math.floor(Math.random() * CHARS.length)]);
+      cols.push({ x: i * CHAR_SPACING + CHAR_SPACING / 2, y: Math.random() * H * 1.5 - H * 0.5, speed: 1.2 + Math.random() * 2.5, chars, ft: 0, fr: 3 + Math.floor(Math.random() * 5) });
     }
   }
 
-  initMatrix();
-  window.addEventListener('resize', initMatrix);
+  init();
+  addEventListener('resize', init);
 
-  function drawMatrix() {
+  function draw() {
     ctx.fillStyle = 'rgba(0,0,0,0.35)';
     ctx.fillRect(0, 0, W, H);
     ctx.font = FONT_SIZE + 'px Consolas, "SF Mono", monospace';
@@ -63,365 +1208,117 @@ if (matrixCanvas) {
 
     for (const col of cols) {
       col.y += col.speed;
-      col.flickerTimer++;
-      if (col.flickerTimer >= col.flickerRate) {
-        col.flickerTimer = 0;
-        const idx = Math.floor(Math.random() * col.chars.length);
-        col.chars[idx] = CHARS[Math.floor(Math.random() * CHARS.length)];
-      }
+      col.ft++;
+      if (col.ft >= col.fr) { col.ft = 0; col.chars[Math.floor(Math.random() * col.chars.length)] = CHARS[Math.floor(Math.random() * CHARS.length)]; }
 
       for (let j = 0; j < col.chars.length; j++) {
         const cy = col.y - j * CHAR_SPACING;
         if (cy < -FONT_SIZE || cy > H + FONT_SIZE) continue;
-
-        let alpha;
-        if (j === 0) alpha = 0.95;
-        else if (j < 3) alpha = 0.6 - j * 0.1;
-        else alpha = Math.max(0.02, 0.45 * Math.pow(0.82, j - 2));
-
+        let alpha = j === 0 ? 0.95 : j < 3 ? 0.6 - j * 0.1 : Math.max(0.02, 0.45 * Math.pow(0.82, j - 2));
         if (cy < 80) alpha *= cy / 80;
         if (cy > H - 60) alpha *= (H - cy) / 60;
         alpha = Math.max(0, Math.min(1, alpha));
-
-        if (j === 0) { ctx.shadowColor = 'rgba(255,255,255,0.4)'; ctx.shadowBlur = 6; }
-        else ctx.shadowBlur = 0;
-
-        ctx.fillStyle = 'rgba(255,255,255,' + alpha + ')';
+        if (j === 0) { ctx.shadowColor = 'rgba(255,255,255,0.4)'; ctx.shadowBlur = 6; } else ctx.shadowBlur = 0;
+        ctx.fillStyle = `rgba(255,255,255,${alpha})`;
         ctx.fillText(col.chars[j], col.x, cy);
       }
       ctx.shadowBlur = 0;
-
       if (col.y - col.chars.length * CHAR_SPACING > H) {
         col.y = -CHAR_SPACING * 2;
         col.speed = 1.2 + Math.random() * 2.5;
         col.chars = [];
         const trailLen = 8 + Math.floor(Math.random() * 14);
-        for (let j = 0; j < trailLen; j++) {
-          col.chars.push(CHARS[Math.floor(Math.random() * CHARS.length)]);
+        for (let j = 0; j < trailLen; j++) col.chars.push(CHARS[Math.floor(Math.random() * CHARS.length)]);
+      }
+    }
+    requestAnimationFrame(draw);
+  }
+  draw();
+}
+
+function initScrollEffects() {
+  const nav = document.getElementById('app-nav');
+  const scrollBar = document.getElementById('scrollBar');
+  window.addEventListener('scroll', () => {
+    nav?.classList.toggle('scrolled', scrollY > 50);
+    if (scrollBar) scrollBar.style.width = (scrollY / (document.documentElement.scrollHeight - innerHeight) * 100) + '%';
+  });
+
+  const obs = new IntersectionObserver(e => e.forEach(x => { if (x.isIntersecting) x.target.classList.add('visible'); }), { threshold: 0.1 });
+  document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+
+  const counterObs = new IntersectionObserver(e => e.forEach(x => {
+    if (x.isIntersecting) {
+      x.target.querySelectorAll('.stat-num[data-count]').forEach(el => {
+        if (el.dataset.animated) return;
+        el.dataset.animated = '1';
+        const target = parseInt(el.dataset.count);
+        const suffix = el.dataset.suffix || '';
+        const dur = 1600;
+        const start = performance.now();
+        function tick(now) {
+          const p = Math.min((now - start) / dur, 1);
+          el.textContent = Math.round(target * (1 - Math.pow(1 - p, 3))) + suffix;
+          if (p < 1) requestAnimationFrame(tick);
         }
-      }
+        requestAnimationFrame(tick);
+      });
     }
-    requestAnimationFrame(drawMatrix);
-  }
-  drawMatrix();
-}
+  }), { threshold: 0.3 });
+  const statsRow = document.querySelector('.stats-row');
+  if (statsRow) counterObs.observe(statsRow);
 
-// ── Reveal ──
-const obs = new IntersectionObserver(e => e.forEach(x => { if (x.isIntersecting) x.target.classList.add('visible'); }), { threshold: 0.1 });
-document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
-
-// ── Animated counters ──
-const counterObs = new IntersectionObserver(e => e.forEach(x => {
-  if (x.isIntersecting) {
-    x.target.querySelectorAll('.stat-num[data-count]').forEach(el => {
-      if (el.dataset.animated) return;
-      el.dataset.animated = '1';
-      const target = parseInt(el.dataset.count);
-      const suffix = el.dataset.suffix || '';
-      const duration = 1600;
-      const start = performance.now();
-      function tick(now) {
-        const elapsed = now - start;
-        const progress = Math.min(elapsed / duration, 1);
-        const eased = 1 - Math.pow(1 - progress, 3);
-        el.textContent = Math.round(target * eased) + suffix;
-        if (progress < 1) requestAnimationFrame(tick);
-      }
-      requestAnimationFrame(tick);
-    });
-  }
-}), { threshold: 0.3 });
-const statsRow = document.querySelector('.stats-row');
-if (statsRow) counterObs.observe(statsRow);
-
-// ── FPS bars ──
-const fpsObs = new IntersectionObserver(e => e.forEach(x => {
-  if (x.isIntersecting) {
-    x.target.querySelectorAll('.fps-bar').forEach(b => b.style.width = b.dataset.w);
-    x.target.querySelectorAll('.fps-row').forEach(r => r.classList.add('animated'));
-  }
-}), { threshold: 0.3 });
-const fpsGrid = document.getElementById('fpsGrid');
-if (fpsGrid) fpsObs.observe(fpsGrid);
-
-// ── Feature card mouse ──
-document.querySelectorAll('.feature-card').forEach(c => {
-  c.addEventListener('mousemove', e => { const r = c.getBoundingClientRect(); c.style.setProperty('--mx', ((e.clientX - r.left) / r.width * 100) + '%'); c.style.setProperty('--my', ((e.clientY - r.top) / r.height * 100) + '%'); });
-});
-
-// ── Parallax (removed — matrix rain is the background) ──
-
-// ── Shopping Cart ──
-const CART_KEY = 'choatix_cart';
-const DISCOUNT_KEY = 'choatix_discount';
-let cart = JSON.parse(localStorage.getItem(CART_KEY) || '[]');
-let appliedDiscount = JSON.parse(localStorage.getItem(DISCOUNT_KEY) || 'null');
-
-function saveCart() { localStorage.setItem(CART_KEY, JSON.stringify(cart)); updateCartBadge(); }
-
-function updateCartBadge() {
-  const badge = document.getElementById('cartBadge');
-  if (!badge) return;
-  const count = cart.reduce((a, i) => a + i.qty, 0);
-  badge.textContent = count;
-  badge.classList.toggle('show', count > 0);
-}
-
-function addToCart(id, name, price) {
-  const existing = cart.find(i => i.id === id);
-  if (existing) { existing.qty++; } else { cart.push({ id, name, price, qty: 1 }); }
-  saveCart(); renderCart(); openCart();
-}
-
-function removeFromCart(id) { cart = cart.filter(i => i.id !== id); saveCart(); renderCart(); }
-
-function changeQty(id, delta) {
-  const item = cart.find(i => i.id === id);
-  if (!item) return;
-  item.qty += delta;
-  if (item.qty <= 0) { removeFromCart(id); return; }
-  saveCart(); renderCart();
-}
-
-function getCartTotal() { return cart.reduce((a, i) => a + (i.price * i.qty), 0); }
-
-function renderCart() {
-  const el = document.getElementById('cartItems');
-  const total = document.getElementById('cartTotal');
-  const checkoutBtn = document.getElementById('cartCheckout');
-  const foot = document.querySelector('.cart-foot');
-  if (!el) return;
-  if (cart.length === 0) {
-    el.innerHTML = '<div class="cart-empty"><div class="cart-empty-icon">&#128722;</div>Your cart is empty</div>';
-    if (total) total.innerHTML = '\u20AC0.00';
-    if (checkoutBtn) checkoutBtn.disabled = true;
-  } else {
-    el.innerHTML = cart.map(i => '<div class="cart-item"><div class="cart-item-icon">&#9733;</div><div class="cart-item-info"><div class="cart-item-name">' + i.name + '</div><div class="cart-item-price">&euro;' + i.price.toFixed(2) + '</div></div><div class="cart-item-qty"><button onclick="changeQty(\'' + i.id + '\',-1)">&#8722;</button><span>' + i.qty + '</span><button onclick="changeQty(\'' + i.id + '\',1)">+</button></div><button class="cart-item-remove" onclick="removeFromCart(\'' + i.id + '\')">&#10005;</button></div>').join('');
-    if (checkoutBtn) checkoutBtn.disabled = false;
-  }
-
-  // Discount code in footer
-  if (foot && !foot.querySelector('.cart-discount')) {
-    const dc = document.createElement('div');
-    dc.className = 'cart-discount';
-    foot.insertBefore(dc, foot.querySelector('.cart-total'));
-  }
-  const dcEl = foot?.querySelector('.cart-discount');
-  if (dcEl) {
-    if (appliedDiscount) {
-      dcEl.innerHTML = '<div class="cart-discount-applied"><span class="cart-discount-tag">&#10003; ' + appliedDiscount.code + ' (-' + appliedDiscount.percent + '%)</span><button class="cart-discount-remove" onclick="removeDiscount()">&#10005;</button></div>';
-    } else {
-      dcEl.innerHTML = '<div class="cart-discount-input"><input type="text" id="discountInput" placeholder="Discount code" maxlength="20"><button onclick="applyDiscount()">Apply</button></div>';
+  const fpsObs = new IntersectionObserver(e => e.forEach(x => {
+    if (x.isIntersecting) {
+      x.target.querySelectorAll('.fps-bar').forEach(b => b.style.width = b.dataset.w);
+      x.target.querySelectorAll('.fps-row').forEach(r => r.classList.add('animated'));
     }
-  }
+  }), { threshold: 0.3 });
+  const fpsGrid = document.getElementById('fpsGrid');
+  if (fpsGrid) fpsObs.observe(fpsGrid);
 
-  // Calculate totals
-  const subtotal = getCartTotal();
-  const discountAmt = appliedDiscount ? subtotal * (appliedDiscount.percent / 100) : 0;
-  const finalTotal = subtotal - discountAmt;
+  document.querySelectorAll('.feature-card').forEach(c => {
+    c.addEventListener('mousemove', e => { const r = c.getBoundingClientRect(); c.style.setProperty('--mx', ((e.clientX - r.left) / r.width * 100) + '%'); c.style.setProperty('--my', ((e.clientY - r.top) / r.height * 100) + '%'); });
+  });
 
-  if (total) {
-    if (appliedDiscount) {
-      total.innerHTML = '<span style="text-decoration:line-through;opacity:0.5;margin-right:6px;font-size:0.8em">&euro;' + subtotal.toFixed(2) + '</span>&euro;' + finalTotal.toFixed(2);
-    } else {
-      total.innerHTML = '\u20AC' + subtotal.toFixed(2);
+  TEAM.forEach(m => {
+    const img = document.getElementById('avatar-' + m.id);
+    if (img) fetch(`${API}/api/team/${m.id}`).then(r => r.json()).then(d => { if (d.avatar) img.src = d.avatar; }).catch(() => {});
+  });
+}
+
+function initPageEffects() {
+  setTimeout(() => initScrollEffects(), 10);
+}
+
+// ── INIT ──
+
+function init() {
+  initAuth();
+  renderCartSidebar();
+  renderFooter();
+  initMatrixRain();
+  router();
+
+  addEventListener('hashchange', router);
+
+  addEventListener('keydown', e => {
+    if (e.key === 'Escape') { closeTweakModal(); closeCart(); }
+  });
+
+  addEventListener('click', e => {
+    if (!e.target.closest('.user-menu')) document.getElementById('userMenu')?.classList.remove('open');
+    const btn = e.target.closest('.add-to-cart');
+    if (btn) {
+      e.preventDefault();
+      addToCart(btn.dataset.id, btn.dataset.name, parseFloat(btn.dataset.price));
     }
-  }
+  });
 
-  // Add no-refund notice
-  if (foot && !foot.querySelector('.no-refund')) {
-    const notice = document.createElement('div');
-    notice.className = 'no-refund';
-    notice.innerHTML = '<span style="color:#ff5252;font-size:0.65rem;font-weight:700">&#9888; All sales final &mdash; no refunds. Digital products delivered instantly.</span>';
-    foot.insertBefore(notice, checkoutBtn);
-  }
+  // Escape closes tweak modal
+  document.getElementById('tweaksModal')?.addEventListener('click', function(e) {
+    if (e.target === this) closeTweakModal();
+  });
 }
 
-async function applyDiscount() {
-  const input = document.getElementById('discountInput');
-  if (!input || !input.value.trim()) return;
-  const code = input.value.trim().toUpperCase();
-  try {
-    const r = await fetch('https://choatix-v2.onrender.com/api/discount/' + code);
-    const data = await r.json();
-    if (data.valid) {
-      appliedDiscount = { code: data.code, percent: data.discount };
-      localStorage.setItem(DISCOUNT_KEY, JSON.stringify(appliedDiscount));
-      renderCart();
-    } else {
-      alert(data.error || 'Invalid discount code');
-    }
-  } catch (e) {
-    alert('Failed to verify discount code');
-  }
-}
-
-function removeDiscount() {
-  appliedDiscount = null;
-  localStorage.removeItem(DISCOUNT_KEY);
-  renderCart();
-}
-
-function openCart() {
-  var o = document.getElementById('cartOverlay');
-  var s = document.getElementById('cartSidebar');
-  if (o) o.classList.add('open');
-  if (s) s.classList.add('open');
-  document.body.style.overflow = 'hidden';
-}
-
-function closeCart() {
-  var o = document.getElementById('cartOverlay');
-  var s = document.getElementById('cartSidebar');
-  if (o) o.classList.remove('open');
-  if (s) s.classList.remove('open');
-  document.body.style.overflow = '';
-}
-
-async function checkout() {
-  if (cart.length === 0) return;
-  let username = localStorage.getItem('username');
-  if (!username) {
-    username = prompt('Enter your Discord username (for delivery):');
-    if (!username) return;
-    localStorage.setItem('username', username);
-  }
-  localStorage.setItem('choatix_pending_purchase', JSON.stringify(cart.map(i => ({ id: i.id, name: i.name }))));
-  var btn = document.getElementById('cartCheckout');
-  if (btn) { btn.textContent = 'Redirecting to PayPal...'; btn.disabled = true; }
-  try {
-    const items = cart.map(i => ({ id: i.id, name: i.name, price: i.price, qty: i.qty }));
-    const r = await fetch('https://choatix-v2.onrender.com/api/checkout', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ items, discordUsername: username, discountCode: appliedDiscount ? appliedDiscount.code : null })
-    });
-    const data = await r.json();
-    if (data.url) {
-      localStorage.removeItem(CART_KEY);
-      localStorage.removeItem(DISCOUNT_KEY);
-      appliedDiscount = null;
-      if (data.downloadToken) localStorage.setItem('choatix_download_token', data.downloadToken);
-      window.location.href = data.url;
-      return;
-    }
-  } catch (e) {}
-  if (btn) { btn.textContent = 'Checkout via PayPal'; btn.disabled = false; }
-  alert('Checkout failed. Try again or contact support on Discord.');
-}
-
-updateCartBadge();
-renderCart();
-
-// ── PayPal success ──
-const urlParams = new URLSearchParams(window.location.search);
-if (urlParams.get('checkout') === 'success') {
-  const user = urlParams.get('user') || '';
-  const token = urlParams.get('token') || '';
-  const products = urlParams.get('products') || '';
-  window.history.replaceState({}, '', window.location.pathname);
-  window.location.href = 'download.html?token=' + encodeURIComponent(token) + '&user=' + encodeURIComponent(user) + '&products=' + encodeURIComponent(products);
-}
-
-// ── Discord Login ──
-const params = new URLSearchParams(window.location.search);
-const discordId = params.get('discord_id');
-const username = params.get('username');
-const avatar = params.get('avatar');
-if (discordId) {
-  localStorage.setItem('discord_id', discordId);
-  localStorage.setItem('username', username);
-  localStorage.setItem('avatar', avatar || '');
-  window.history.replaceState({}, '', window.location.pathname);
-}
-
-const savedId = localStorage.getItem('discord_id');
-const savedUser = localStorage.getItem('username');
-const savedAvatar = localStorage.getItem('avatar');
-const loginBtn = document.getElementById('loginBtn');
-const userMenu = document.getElementById('userMenu');
-
-if (savedId && savedUser) {
-  if (loginBtn) loginBtn.style.display = 'none';
-  if (userMenu) {
-    userMenu.style.display = 'block';
-    var un = document.getElementById('userName');
-    if (un) un.textContent = savedUser;
-    var uaf = document.getElementById('userAvatarFallback');
-    if (uaf) uaf.textContent = savedUser.charAt(0).toUpperCase();
-    if (savedAvatar) {
-      var img = document.getElementById('userAvatar');
-      if (img) {
-        img.src = savedAvatar;
-        img.onload = function() { img.style.display = 'block'; var fb = document.getElementById('userAvatarFallback'); if (fb) fb.style.display = 'none'; };
-      }
-    }
-    fetch('https://choatix-v2.onrender.com/api/license/' + savedId).then(r => r.json()).then(d => {
-      if (d.tier) {
-        var tierEl = document.getElementById('userTier');
-        if (tierEl) { tierEl.textContent = d.tier; tierEl.className = 'user-tier ' + d.tier.toLowerCase(); }
-      }
-    }).catch(() => {});
-  }
-} else {
-  if (loginBtn) loginBtn.style.display = '';
-  if (userMenu) userMenu.style.display = 'none';
-}
-
-function handleLogin(e) { e.preventDefault(); window.location.href = 'https://choatix-v2.onrender.com/api/auth/discord'; }
-function handleLogout(e) { e.preventDefault(); localStorage.clear(); window.location.reload(); }
-function toggleDropdown(e) { e.preventDefault(); var m = document.getElementById('userMenu'); if (m) m.classList.toggle('open'); }
-document.addEventListener('click', (e) => { if (!e.target.closest('.user-menu')) { const m = document.getElementById('userMenu'); if (m) m.classList.remove('open'); } });
-
-// ── Team avatars ──
-const TEAM_IDS = ['1014494449809772544','1032970883192606780','398137085430726656','1322475983386837006','1402203036914290764'];
-const API = 'https://choatix-v2.onrender.com/api/team/';
-TEAM_IDS.forEach(async id => {
-  try {
-    const r = await fetch(API + id);
-    const d = await r.json();
-    const img = document.getElementById('avatar-' + id);
-    if (img && d.avatar) { img.src = d.avatar; }
-  } catch {}
-});
-
-// ── Fetch ratings ──
-fetch('https://choatix-v2.onrender.com/api/ratings')
-  .then(r => r.json())
-  .then(data => {
-    document.querySelectorAll('.product-card[data-product]').forEach(card => {
-      const pid = card.dataset.product;
-      const info = data.products && data.products[pid];
-      if (!info) return;
-      const avg = parseFloat(info.avg) || 0;
-      const count = parseInt(info.count) || 0;
-      const starsEl = card.querySelector('.stars');
-      const countEl = card.querySelector('.count');
-      if (starsEl) {
-        const full = Math.floor(avg);
-        let s = '';
-        for (let i = 0; i < 5; i++) { s += i < full ? '\u2605' : '\u2606'; }
-        starsEl.innerHTML = s;
-      }
-      if (countEl) countEl.textContent = '(' + count + ')';
-    });
-  })
-  .catch(() => {});
-
-// ── Escape key ──
-document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeModal(); closeCart(); } });
-function closeModal() { const m = document.getElementById('modal'); if (m) m.classList.remove('active'); document.body.style.overflow = ''; }
-
-// ── Add to Cart handlers ──
-document.addEventListener('click', e => {
-  const btn = e.target.closest('.add-to-cart');
-  if (!btn) return;
-  e.preventDefault();
-  const id = btn.dataset.id;
-  const name = btn.dataset.name;
-  const price = parseFloat(btn.dataset.price);
-  if (id && name && price) {
-    addToCart(id, name, price);
-    openCart();
-  }
-});
+document.addEventListener('DOMContentLoaded', init);

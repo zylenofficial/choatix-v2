@@ -3,12 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Choatix V2 - Gaming Optimization</title>
-  <meta name="description" content="Choatix V2 - Optimize your PC for maximum gaming performance. 460+ tweaks, FPS boost, system optimization.">
+  <title>Choatix V2 — Gaming Optimization</title>
+  <meta name="description" content="Choatix V2 — Optimize your PC for maximum gaming performance. 460+ tweaks, FPS boost, system optimization.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
-  <!-- Analytics -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
@@ -18,226 +17,17 @@
   </script>
 </head>
 <body>
-
   <div class="scroll-bar" id="scrollBar"></div>
   <canvas id="matrix-rain"></canvas>
   <div class="noise"></div>
 
-  <!-- ═══════ Navigation ═══════ -->
-  <nav id="nav">
-    <a href="index.html" class="nav-brand">choatix<span>.</span></a>
-    <button class="hamburger" onclick="document.querySelector('.nav-links').classList.toggle('open')">&#9776;</button>
-    <div class="nav-links">
-      <a href="index.html" class="active">Home</a>
-      <a href="features.html">Features</a>
-      <a href="tweaks.html">Tweaks</a>
-      <a href="products.html">Products</a>
-      <a href="pricing.html">Pricing</a>
-      <a href="faq.html">FAQ</a>
-      <a href="refund-policy.html">Refund Policy</a>
-      <a href="affiliate.html" class="nav-affiliate">Affiliates</a>
-      <a href="team.html">Team</a>
-      <a href="https://discord.gg/AhEK85REhG" target="_blank">Discord</a>
-      <button class="cart-btn" onclick="openCart()" id="cartBtn">&#128722;<span class="cart-badge" id="cartBadge">0</span></button>
-      <div class="user-menu" id="userMenu" style="display:none">
-        <a href="#" class="user-btn" onclick="toggleDropdown(event)">
-          <img class="user-avatar" id="userAvatar" src="" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-          <div class="user-avatar-fallback" id="userAvatarFallback" style="display:none"></div>
-          <span class="user-name" id="userName"></span>
-          <span class="user-tier free" id="userTier">FREE</span>
-        </a>
-        <div class="user-dropdown">
-          <a class="dropdown-item" href="download.html" target="_blank"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>Download App</a>
-          <a class="dropdown-item" href="https://discord.gg/AhEK85REhG" target="_blank"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Join Discord</a>
-          <div class="dropdown-divider"></div>
-          <a class="dropdown-item danger" href="#" onclick="handleLogout(event)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>Logout</a>
-        </div>
-      </div>
-      <a href="#" class="btn btn-secondary" id="loginBtn" onclick="handleLogin(event)">Login</a>
-    </div>
-  </nav>
+  <nav id="app-nav"></nav>
 
-  <!-- ═══════ Hero Section ═══════ -->
-  <section class="hero">
-    <div class="hero-content">
-      <div class="hero-badge">
-        <span class="dot"></span>
-        v2.3.0 &bull; 460+ System Tweaks
-      </div>
-      <h1>
-        <span class="line1">Maximize Your</span>
-        <span class="line2">FPS</span>
-      </h1>
-      <p class="hero-desc">
-        Optimize your PC for maximum gaming performance.
-        One click. Zero delay. Pure performance.
-      </p>
-      <div class="hero-buttons">
-        <a href="products.html" class="btn btn-primary" target="_blank">Download Free</a>
-        <a href="https://discord.gg/AhEK85REhG" class="btn btn-discord" target="_blank">Join Discord</a>
-      </div>
-    </div>
-    <div class="hero-scroll">
-      <div class="hero-scroll-line"></div>
-      <div class="hero-scroll-text">Scroll</div>
-    </div>
-  </section>
+  <main id="app-content"></main>
 
-  <!-- ═══════ Stats ═══════ -->
-  <div class="stats-row reveal">
-    <div class="stat-cell">
-      <div class="stat-num" data-count="165">0</div>
-      <div class="stat-txt">System Tweaks</div>
-    </div>
-    <div class="stat-cell">
-      <div class="stat-num" data-count="20">0</div>
-      <div class="stat-txt">Game Presets</div>
-    </div>
-    <div class="stat-cell">
-      <div class="stat-num" data-count="9">0</div>
-      <div class="stat-txt">Optimization Tools</div>
-    </div>
-    <div class="stat-cell">
-      <div class="stat-num" data-count="100" data-suffix="%">0</div>
-      <div class="stat-txt">Free to Use</div>
-    </div>
-  </div>
+  <div id="app-cart"></div>
 
-  <!-- ═══════ How It Works ═══════ -->
-  <section id="how-it-works">
-    <div class="section-header reveal">
-      <div class="section-label">How It Works</div>
-      <h2>Three steps to peak performance</h2>
-    </div>
-    <div class="steps-row">
-      <div class="step-item reveal reveal-d1">
-        <div class="step-icon">&#128229;</div>
-        <div class="step-num">Step 01</div>
-        <h3>Download & Install</h3>
-        <p>Install takes 10 seconds. No bloatware, no ads, no data collection.</p>
-      </div>
-      <div class="step-line"></div>
-      <div class="step-item reveal reveal-d2">
-        <div class="step-icon">&#128269;</div>
-        <div class="step-num">Step 02</div>
-        <h3>Scan Your PC</h3>
-        <p>Analyze your hardware, OS, and settings to find optimization opportunities.</p>
-      </div>
-      <div class="step-line"></div>
-      <div class="step-item reveal reveal-d3">
-        <div class="step-icon">&#9889;</div>
-        <div class="step-num">Step 03</div>
-        <h3>One-Click Optimize</h3>
-        <p>Apply all tweaks instantly. Every change is reversible. FPS jumps in seconds.</p>
-      </div>
-    </div>
-  </section>
-
-  <!-- ═══════ FPS Comparison ═══════ -->
-  <section id="fps-compare">
-    <div class="section-header reveal">
-      <div class="section-label">Performance</div>
-      <h2>Real FPS Gains</h2>
-      <p>Average improvements measured across 12 popular games</p>
-    </div>
-    <div class="fps-grid" id="fpsGrid">
-      <div class="fps-row">
-        <div class="fps-name">Fortnite</div>
-        <div class="fps-bars">
-          <div class="fps-bar before" data-w="55%"><span>110 FPS</span></div>
-          <div class="fps-bar after" data-w="85%"><span>170 FPS</span></div>
-        </div>
-        <div class="fps-delta">+55%</div>
-      </div>
-      <div class="fps-row">
-        <div class="fps-name">Valorant</div>
-        <div class="fps-bars">
-          <div class="fps-bar before" data-w="50%"><span>200 FPS</span></div>
-          <div class="fps-bar after" data-w="80%"><span>320 FPS</span></div>
-        </div>
-        <div class="fps-delta">+60%</div>
-      </div>
-      <div class="fps-row">
-        <div class="fps-name">CS2</div>
-        <div class="fps-bars">
-          <div class="fps-bar before" data-w="45%"><span>180 FPS</span></div>
-          <div class="fps-bar after" data-w="75%"><span>300 FPS</span></div>
-        </div>
-        <div class="fps-delta">+67%</div>
-      </div>
-      <div class="fps-row">
-        <div class="fps-name">Apex Legends</div>
-        <div class="fps-bars">
-          <div class="fps-bar before" data-w="50%"><span>100 FPS</span></div>
-          <div class="fps-bar after" data-w="80%"><span>160 FPS</span></div>
-        </div>
-        <div class="fps-delta">+60%</div>
-      </div>
-      <div class="fps-row">
-        <div class="fps-name">Minecraft</div>
-        <div class="fps-bars">
-          <div class="fps-bar before" data-w="40%"><span>120 FPS</span></div>
-          <div class="fps-bar after" data-w="85%"><span>260 FPS</span></div>
-        </div>
-        <div class="fps-delta">+117%</div>
-      </div>
-      <div class="fps-row">
-        <div class="fps-name">GTA V</div>
-        <div class="fps-bars">
-          <div class="fps-bar before" data-w="55%"><span>85 FPS</span></div>
-          <div class="fps-bar after" data-w="80%"><span>125 FPS</span></div>
-        </div>
-        <div class="fps-delta">+47%</div>
-      </div>
-    </div>
-    <div class="fps-legend reveal">
-      <div class="fps-legend-item"><span class="fps-dot before"></span> Before</div>
-      <div class="fps-legend-item"><span class="fps-dot after"></span> After Choatix V2</div>
-    </div>
-  </section>
-
-  <!-- ═══════ CTA ═══════ -->
-  <section class="cta-section">
-    <h2 class="reveal">Ready to <span>Boost Your FPS</span>?</h2>
-    <p class="reveal">Join 50,000+ gamers optimizing their PCs with Choatix V2</p>
-    <div class="cta-buttons reveal">
-      <a href="products.html" class="btn btn-primary" target="_blank">Download Free</a>
-      <a href="https://discord.gg/AhEK85REhG" class="btn btn-discord" target="_blank">Join Discord</a>
-    </div>
-  </section>
-
-  <!-- ═══════ Cart Sidebar ═══════ -->
-  <div class="cart-overlay" id="cartOverlay" onclick="closeCart()"></div>
-  <div class="cart-sidebar" id="cartSidebar">
-    <div class="cart-head">
-      <h3>Shopping Cart</h3>
-      <button class="cart-close" onclick="closeCart()">&#10005;</button>
-    </div>
-    <div class="cart-items" id="cartItems"></div>
-    <div class="cart-foot">
-      <div class="cart-total">
-        <span class="cart-total-label">Total</span>
-        <span class="cart-total-price" id="cartTotal">&euro;0.00</span>
-      </div>
-      <button class="cart-checkout" id="cartCheckout" onclick="checkout()" disabled>Checkout via PayPal</button>
-    </div>
-  </div>
-
-  <!-- ═══════ Footer ═══════ -->
-  <footer>
-    <div class="footer-links">
-      <a href="features.html">Features</a>
-      <a href="tweaks.html">Tweaks</a>
-      <a href="products.html">Products</a>
-      <a href="pricing.html">Pricing</a>
-      <a href="faq.html">FAQ</a>
-      <a href="refund-policy.html">Refund Policy</a>
-      <a href="affiliate.html" class="footer-affiliate">Affiliates</a>
-      <a href="team.html">Team</a>
-      <a href="https://discord.gg/AhEK85REhG" target="_blank">Discord</a>
-    </div>
-    <p>&copy; 2026 Choatix V2. Built by zylenofficial.</p>
-  </footer>
+  <div id="app-footer"></div>
 
   <script src="app.js"></script>
 </body>
