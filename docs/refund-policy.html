@@ -20,7 +20,7 @@
 <body>
 
   <div class="scroll-bar" id="scrollBar"></div>
-  <canvas id="particles"></canvas>
+  <canvas id="matrix-rain"></canvas>
   <div class="noise"></div>
 
   <nav id="nav">
@@ -34,7 +34,7 @@
       <a href="pricing.html">Pricing</a>
       <a href="faq.html">FAQ</a>
       <a href="refund-policy.html" class="active">Refund Policy</a>
-      <a href="affiliate.html" style="color:#4ec95e">Affiliates</a>
+      <a href="affiliate.html" class="nav-affiliate">Affiliates</a>
       <a href="team.html">Team</a>
       <a href="https://discord.gg/AhEK85REhG" target="_blank">Discord</a>
       <button class="cart-btn" onclick="openCart()" id="cartBtn">&#128722;<span class="cart-badge" id="cartBadge">0</span></button>
@@ -62,68 +62,68 @@
   </section>
 
   <section>
-    <div style="max-width:700px;margin:0 auto;padding:0 2rem">
-      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:3rem">
-        <h2 style="font-size:1.5rem;font-weight:800;margin-bottom:1.5rem;color:var(--text)">Digital Products</h2>
-        <p style="font-size:1rem;color:var(--text-mid);line-height:1.7;margin-bottom:2rem">Our products are digital downloads that provide immediate access upon purchase. Once accessed, they cannot be returned.</p>
+    <div class="refund-content">
+      <div class="refund-card">
+        <h2>Digital Products</h2>
+        <p>Our products are digital downloads that provide immediate access upon purchase. Once accessed, they cannot be returned.</p>
         
-        <h3 style="font-size:1.25rem;font-weight:800;margin:2rem 0 1rem;color:var(--text)">1. General Policy</h3>
-        <p style="font-size:1rem;color:var(--text-mid);line-height:1.7;margin-bottom:2rem">Choatix V2 operates on a strict no-refund policy. All purchases of our digital products and services are final and non-refundable. This policy applies to all customers regardless of the reason for the refund request.</p>
+        <h3>1. General Policy</h3>
+        <p>Choatix V2 operates on a strict no-refund policy. All purchases of our digital products and services are final and non-refundable. This policy applies to all customers regardless of the reason for the refund request.</p>
         
-        <h3 style="font-size:1.25rem;font-weight:800;margin:2rem 0 1rem;color:var(--text)">2. Why No Refunds?</h3>
-        <ul style="color:var(--text-mid);line-height:1.8;margin-bottom:2rem;padding-left:1.5rem">
+        <h3>2. Why No Refunds?</h3>
+        <ul>
           <li><strong>Digital Nature:</strong> Our products are digital downloads that provide immediate access and cannot be physically returned.</li>
           <li><strong>Immediate Access:</strong> Once purchased, you gain instant access to our optimization tools and cannot "unuse" them.</li>
           <li><strong>Intellectual Property:</strong> Our software contains proprietary technology and trade secrets that cannot be returned.</li>
         </ul>
 
-        <h3 style="font-size:1.25rem;font-weight:800;margin:2rem 0 1rem;color:var(--text)">3. What This Means</h3>
-        <ul style="color:var(--text-mid);line-height:1.8;margin-bottom:2rem;padding-left:1.5rem">
+        <h3>3. What This Means</h3>
+        <ul>
           <li><strong>No Refunds:</strong> We will not process refunds for any reason, including but not limited to: dissatisfaction, change of mind, technical issues, or system incompatibility.</li>
           <li><strong>No Chargebacks:</strong> Attempting to file a chargeback or dispute with your payment provider may result in account suspension and legal action.</li>
           <li><strong>No Exchanges:</strong> We do not offer exchanges for different products or services. Each purchase is final and specific to the product selected.</li>
         </ul>
 
-        <h3 style="font-size:1.25rem;font-weight:800;margin:2rem 0 1rem;color:var(--text)">4. Before You Purchase</h3>
-        <p style="font-size:1rem;color:var(--text-mid);line-height:1.7;margin-bottom:1rem">We strongly encourage all customers to thoroughly research our products before making a purchase. This includes:</p>
-        <ul style="color:var(--text-mid);line-height:1.8;margin-bottom:2rem;padding-left:1.5rem">
+        <h3>4. Before You Purchase</h3>
+        <p>We strongly encourage all customers to thoroughly research our products before making a purchase. This includes:</p>
+        <ul>
           <li>Reading product descriptions and features thoroughly</li>
           <li>Checking system requirements and compatibility</li>
           <li>Reviewing customer testimonials and reviews</li>
           <li>Contacting our support team with any questions</li>
         </ul>
 
-        <h3 style="font-size:1.25rem;font-weight:800;margin:2rem 0 1rem;color:var(--text)">5. Technical Support</h3>
-        <p style="font-size:1rem;color:var(--text-mid);line-height:1.7;margin-bottom:1.5rem">While we don't offer refunds, we do provide comprehensive technical support to ensure you get the most out of your purchase. If you experience any issues:</p>
-        <div style="display:flex;gap:1rem;margin-bottom:2rem">
-          <div style="flex:1;background:rgba(88,101,242,0.08);border:1px solid rgba(88,101,242,0.2);border-radius:12px;padding:1.5rem;text-align:center">
+        <h3>5. Technical Support</h3>
+        <p>While we don't offer refunds, we do provide comprehensive technical support to ensure you get the most out of your purchase. If you experience any issues:</p>
+        <div class="refund-support-grid">
+          <div class="refund-support-card discord">
             <div style="font-size:1.5rem;margin-bottom:0.5rem">&#128172;</div>
             <div style="font-weight:700;color:#fff;margin-bottom:0.4rem;font-size:0.9rem">Discord Support</div>
             <div style="font-size:0.8rem;color:var(--text-dim);margin-bottom:1rem;line-height:1.5">Join our Discord server for instant help and community support</div>
-            <a href="https://discord.gg/AhEK85REhG" target="_blank" class="btn btn-discord" style="width:100%;justify-content:center">Join Discord</a>
+            <a href="https://discord.gg/AhEK85REhG" target="_blank" class="btn btn-discord">Join Discord</a>
           </div>
-          <div style="flex:1;background:rgba(255,255,255,0.03);border:1px solid var(--border2);border-radius:12px;padding:1.5rem;text-align:center">
+          <div class="refund-support-card">
             <div style="font-size:1.5rem;margin-bottom:0.5rem">&#9993;</div>
             <div style="font-weight:700;color:#fff;margin-bottom:0.4rem;font-size:0.9rem">Email Support</div>
             <div style="font-size:0.8rem;color:var(--text-dim);margin-bottom:1rem;line-height:1.5">Send us a detailed email for complex technical issues</div>
-            <a href="mailto:choatixtweaks@gmail.com" class="btn btn-secondary" style="width:100%;justify-content:center">Send Email</a>
+            <a href="mailto:choatixtweaks@gmail.com" class="btn btn-secondary">Send Email</a>
           </div>
         </div>
 
-        <h3 style="font-size:1.25rem;font-weight:800;margin:2rem 0 1rem;color:var(--text)">6. Exceptions</h3>
-        <p style="font-size:1rem;color:var(--text-mid);line-height:1.7;margin-bottom:2rem">The only exception to our no-refund policy is in cases where we are unable to deliver the purchased product due to technical issues on our end. In such rare cases, we will work with you to resolve the issue or provide an alternative solution.</p>
+        <h3>6. Exceptions</h3>
+        <p>The only exception to our no-refund policy is in cases where we are unable to deliver the purchased product due to technical issues on our end. In such rare cases, we will work with you to resolve the issue or provide an alternative solution.</p>
 
-        <h3 style="font-size:1.25rem;font-weight:800;margin:2rem 0 1rem;color:var(--text)">7. Contact Information</h3>
-        <p style="font-size:1rem;color:var(--text-mid);line-height:1.7">If you have any questions about this refund policy, please contact us at <a href="mailto:choatixtweaks@gmail.com" style="color:var(--green)">choatixtweaks@gmail.com</a> or join our <a href="https://discord.gg/AhEK85REhG" target="_blank" style="color:var(--green)">Discord server</a> for immediate assistance.</p>
+        <h3>7. Contact Information</h3>
+        <p>If you have any questions about this refund policy, please contact us at <a href="mailto:choatixtweaks@gmail.com" style="color:var(--green)">choatixtweaks@gmail.com</a> or join our <a href="https://discord.gg/AhEK85REhG" target="_blank" style="color:var(--green)">Discord server</a> for immediate assistance.</p>
 
-        <div style="background:rgba(255,82,82,0.1);border:1px solid rgba(255,82,82,0.2);border-radius:10px;padding:1.5rem;margin-top:2rem">
-          <p style="color:#ff5252;font-weight:600;margin:0"><strong>By completing a purchase, you agree to this policy.</strong> If you do not agree, do not purchase.</p>
+        <div class="refund-warning">
+          <p><strong>By completing a purchase, you agree to this policy.</strong> If you do not agree, do not purchase.</p>
         </div>
       </div>
 
-      <div style="text-align:center;margin-top:2rem">
+      <div class="refund-actions">
         <a href="products.html" class="btn btn-primary">Back to Products</a>
-        <a href="https://discord.gg/AhEK85REhG" class="btn btn-discord" target="_blank" style="margin-left:1rem">Contact Support</a>
+        <a href="https://discord.gg/AhEK85REhG" class="btn btn-discord" target="_blank">Contact Support</a>
       </div>
     </div>
   </section>
@@ -136,7 +136,7 @@
       <a href="pricing.html">Pricing</a>
       <a href="faq.html">FAQ</a>
       <a href="refund-policy.html">Refund Policy</a>
-      <a href="affiliate.html" style="color:#4ec95e">Affiliates</a>
+      <a href="affiliate.html" class="footer-affiliate">Affiliates</a>
       <a href="team.html">Team</a>
       <a href="https://discord.gg/AhEK85REhG" target="_blank">Discord</a>
     </div>

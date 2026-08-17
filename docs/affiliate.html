@@ -8,122 +8,12 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
-  <style>
-    .aff-hero{padding:140px 20px 80px;text-align:center;position:relative;overflow:hidden}
-    .aff-hero::before{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:600px;height:600px;background:radial-gradient(circle,rgba(78,201,94,0.08) 0%,transparent 70%);pointer-events:none}
-    .aff-badge{display:inline-block;padding:6px 16px;border:1px solid rgba(78,201,94,0.2);border-radius:100px;font-size:0.75rem;font-weight:600;color:#4ec95e;margin-bottom:24px;letter-spacing:0.05em;background:rgba(78,201,94,0.05)}
-    .aff-hero h1{font-size:clamp(2.5rem,6vw,4rem);font-weight:900;line-height:1.1;margin-bottom:20px;letter-spacing:-0.03em}
-    .aff-hero h1 .green{color:#4ec95e}
-    .aff-hero .subtitle{color:#8395a7;font-size:1.15rem;max-width:520px;margin:0 auto 40px;line-height:1.6}
-    .aff-metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.06);border-radius:16px;overflow:hidden;max-width:700px;margin:0 auto}
-    .aff-metric{background:#111;padding:28px 20px;text-align:center}
-    .aff-metric .val{font-size:2rem;font-weight:900;color:#fff;margin-bottom:4px}
-    .aff-metric .lbl{font-size:0.7rem;color:#576574;text-transform:uppercase;letter-spacing:0.08em;font-weight:600}
 
-    .aff-section{max-width:960px;margin:0 auto;padding:80px 20px}
-    .aff-section-title{text-align:center;margin-bottom:48px}
-    .aff-section-title h2{font-size:2rem;font-weight:800;margin-bottom:8px}
-    .aff-section-title p{color:#8395a7;font-size:1rem}
-
-    .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
-    .step{background:#111;border:1px solid rgba(255,255,255,0.06);border-radius:16px;padding:36px 28px;text-align:center;position:relative;transition:border-color 0.3s}
-    .step:hover{border-color:rgba(78,201,94,0.2)}
-    .step-num{width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#4ec95e,#2ea043);color:#000;display:flex;align-items:center;justify-content:center;font-size:1.3rem;font-weight:900;margin:0 auto 20px;box-shadow:0 4px 20px rgba(78,201,94,0.25)}
-    .step h3{font-size:1.1rem;font-weight:700;margin-bottom:8px}
-    .step p{color:#8395a7;font-size:0.9rem;line-height:1.6}
-
-    .products-table{width:100%;border-collapse:collapse;background:#111;border:1px solid rgba(255,255,255,0.06);border-radius:16px;overflow:hidden}
-    .products-table thead{background:rgba(255,255,255,0.03)}
-    .products-table th{text-align:left;padding:16px 24px;font-size:0.7rem;font-weight:700;color:#576574;text-transform:uppercase;letter-spacing:0.08em;border-bottom:1px solid rgba(255,255,255,0.06)}
-    .products-table td{padding:16px 24px;border-bottom:1px solid rgba(255,255,255,0.03);font-size:0.9rem}
-    .products-table tr:last-child td{border-bottom:none}
-    .products-table .price{color:#fff;font-weight:700}
-    .products-table .commission{color:#4ec95e;font-weight:700;font-size:1rem}
-    .products-table .tier-badge{display:inline-block;padding:3px 10px;border-radius:6px;font-size:0.7rem;font-weight:700}
-    .tier-pro{background:rgba(78,201,94,0.1);color:#4ec95e}
-    .tier-premium{background:rgba(168,85,247,0.1);color:#a855f7}
-
-    .faq-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
-    .faq-item{background:#111;border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:24px}
-    .faq-item h4{font-size:0.95rem;font-weight:700;margin-bottom:8px;color:#fff}
-    .faq-item p{color:#8395a7;font-size:0.85rem;line-height:1.6}
-
-    .register-section{background:#0a0a0a;border-top:1px solid rgba(255,255,255,0.06);padding:80px 20px}
-    .register-box{max-width:520px;margin:0 auto;background:#111;border:1px solid rgba(255,255,255,0.06);border-radius:20px;padding:48px 40px}
-    .register-box h2{font-size:1.6rem;font-weight:800;margin-bottom:6px;text-align:center}
-    .register-box .sub{color:#8395a7;text-align:center;margin-bottom:32px;font-size:0.9rem}
-    .form-row{margin-bottom:20px}
-    .form-row label{display:block;font-weight:600;margin-bottom:8px;font-size:0.85rem;color:#ccc}
-    .form-row input{width:100%;padding:14px 16px;background:#1a1a1a;border:1px solid rgba(255,255,255,0.08);border-radius:10px;color:#fff;font-size:0.95rem;font-family:inherit;transition:border-color 0.2s}
-    .form-row input:focus{outline:none;border-color:#4ec95e}
-    .form-row input::placeholder{color:#444}
-    .form-row .hint{font-size:0.75rem;color:#576574;margin-top:6px}
-    .btn-register{width:100%;padding:16px;background:linear-gradient(135deg,#4ec95e,#2ea043);color:#000;border:none;border-radius:10px;font-weight:800;font-size:1rem;cursor:pointer;font-family:inherit;transition:all 0.2s;margin-top:8px}
-    .btn-register:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(78,201,94,0.3)}
-    .btn-register:active{transform:scale(0.98)}
-    .reg-error{color:#ff6b6b;font-size:0.85rem;text-align:center;margin-top:12px;display:none}
-
-    .dash-section{display:none;max-width:960px;margin:0 auto;padding:100px 20px 60px}
-    .dash-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:32px;flex-wrap:wrap;gap:16px}
-    .dash-head h1{font-size:1.8rem;font-weight:800}
-    .dash-head p{color:#8395a7;font-size:0.9rem}
-    .dash-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:32px}
-    .dash-stat{background:#111;border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:24px}
-    .dash-stat .num{font-size:1.8rem;font-weight:800;margin-bottom:2px}
-    .dash-stat .lbl{color:#576574;font-size:0.7rem;text-transform:uppercase;letter-spacing:0.06em;font-weight:600}
-    .dash-stat.green .num{color:#4ec95e}
-    .dash-stat.orange .num{color:#ffa502}
-    .dash-stat.blue .num{color:#54a0ff}
-
-    .link-card{background:#111;border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:20px;margin-bottom:12px}
-    .link-card-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
-    .link-card-code{font-family:monospace;font-weight:700;font-size:0.95rem;color:#fff}
-    .link-card-stats{font-size:0.8rem;color:#576574}
-    .link-card-url{display:flex;gap:8px}
-    .link-card-url input{flex:1;padding:10px 14px;background:#1a1a1a;border:1px solid rgba(255,255,255,0.08);border-radius:8px;color:#ccc;font-family:monospace;font-size:0.8rem}
-    .link-card-url button{padding:10px 20px;background:#4ec95e;color:#000;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-family:inherit;font-size:0.85rem;white-space:nowrap;transition:all 0.15s}
-    .link-card-url button:hover{background:#45b553}
-
-    .btn-payout{padding:12px 24px;background:transparent;border:1px solid rgba(255,255,255,0.1);color:#ccc;border-radius:8px;font-weight:600;cursor:pointer;font-family:inherit;font-size:0.85rem;transition:all 0.2s}
-    .btn-payout:hover{border-color:#4ec95e;color:#4ec95e}
-    .btn-newlink{padding:12px 24px;background:#4ec95e;color:#000;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-family:inherit;font-size:0.85rem;transition:all 0.2s}
-    .btn-newlink:hover{background:#45b553}
-
-    .tab-bar{display:flex;gap:4px;margin-bottom:24px;border-bottom:1px solid rgba(255,255,255,0.06);padding-bottom:0}
-    .tab-btn{padding:12px 20px;background:transparent;border:none;border-bottom:2px solid transparent;color:#576574;font-weight:600;cursor:pointer;font-family:inherit;font-size:0.85rem;transition:all 0.2s}
-    .tab-btn.active{color:#4ec95e;border-bottom-color:#4ec95e}
-    .tab-btn:hover{color:#ccc}
-    .tab-panel{display:none}
-    .tab-panel.active{display:block}
-
-    .sale-row{display:flex;align-items:center;padding:14px 0;border-bottom:1px solid rgba(255,255,255,0.03);font-size:0.9rem}
-    .sale-row:last-child{border-bottom:none}
-    .sale-date{width:120px;color:#576574}
-    .sale-product{flex:1;font-weight:600}
-    .sale-amount{width:80px;text-align:right;color:#ccc}
-    .sale-commission{width:80px;text-align:right;color:#4ec95e;font-weight:700}
-    .sale-status{width:80px;text-align:right}
-    .status-badge{display:inline-block;padding:3px 10px;border-radius:6px;font-size:0.7rem;font-weight:700}
-    .status-pending{background:rgba(255,165,2,0.1);color:#ffa502}
-    .status-paid{background:rgba(78,201,94,0.1);color:#4ec95e}
-
-    .empty-state{text-align:center;padding:48px 20px;color:#576574}
-    .empty-state p{font-size:0.9rem}
-
-    @media(max-width:768px){
-      .aff-metrics{grid-template-columns:repeat(2,1fr)}
-      .steps{grid-template-columns:1fr}
-      .faq-grid{grid-template-columns:1fr}
-      .dash-stats{grid-template-columns:repeat(2,1fr)}
-      .register-box{padding:32px 24px}
-      .sale-row{flex-wrap:wrap;gap:4px}
-    }
-  </style>
 </head>
 <body>
 
   <div class="scroll-bar" id="scrollBar"></div>
-  <canvas id="particles"></canvas>
+  <canvas id="matrix-rain"></canvas>
   <div class="noise"></div>
 
   <nav id="nav">
@@ -137,7 +27,7 @@
       <a href="pricing.html">Pricing</a>
       <a href="faq.html">FAQ</a>
       <a href="refund-policy.html">Refund Policy</a>
-      <a href="affiliate.html" class="active" style="color:#4ec95e">Affiliates</a>
+      <a href="affiliate.html" class="active nav-affiliate">Affiliates</a>
       <a href="team.html">Team</a>
       <a href="https://discord.gg/AhEK85REhG" target="_blank">Discord</a>
       <button class="cart-btn" onclick="openCart()" id="cartBtn">&#128722;<span class="cart-badge" id="cartBadge">0</span></button>
@@ -178,18 +68,18 @@
         <h2>How It Works</h2>
         <p>Three simple steps to start earning</p>
       </div>
-      <div class="steps">
-        <div class="step">
+      <div class="aff-steps">
+        <div class="aff-step">
           <div class="step-num">1</div>
           <h3>Sign Up</h3>
           <p>Register with your Discord ID and PayPal email. Instant approval - no waiting.</p>
         </div>
-        <div class="step">
+        <div class="aff-step">
           <div class="step-num">2</div>
           <h3>Share Your Link</h3>
           <p>Get a unique referral link. Share it on YouTube, Twitter, Discord, or anywhere.</p>
         </div>
-        <div class="step">
+        <div class="aff-step">
           <div class="step-num">3</div>
           <h3>Get Paid</h3>
           <p>Earn 10% on every sale. Request a payout anytime (min €5). Sent via PayPal.</p>
@@ -197,7 +87,7 @@
       </div>
     </section>
 
-    <section class="aff-section" style="padding-top:0">
+    <section class="aff-table-section">
       <div class="aff-section-title">
         <h2>Commission Rates</h2>
         <p>Earn on every product tier</p>
@@ -209,7 +99,7 @@
           <tr><td>Pro Tweaks</td><td class="price">€3.99</td><td class="commission">€0.40</td><td><span class="tier-badge tier-pro">PRO</span></td></tr>
           <tr><td>Precision Tweaks</td><td class="price">€2.99</td><td class="commission">€0.30</td><td><span class="tier-badge tier-pro">PRO</span></td></tr>
           <tr><td>Extreme Tweaks</td><td class="price">€5.99</td><td class="commission">€0.60</td><td><span class="tier-badge tier-premium">PREMIUM</span></td></tr>
-          <tr><td>Vibrance Controller</td><td class="price">Coming Soon</td><td class="commission">&mdash;</td><td><span class="tier-badge" style="background:rgba(255,170,0,0.15);color:#ffaa00;">Coming Soon</span></td></tr>
+          <tr><td>Vibrance Controller</td><td class="price">Coming Soon</td><td class="commission">&mdash;</td><td><span class="tier-badge">Coming Soon</span></td></tr>
         </tbody>
       </table>
     </section>
@@ -233,8 +123,8 @@
           <div class="hint">Where we send your commission payments</div>
         </div>
         <div class="form-row">
-          <label>Custom Referral Code <span style="color:var(--text-muted);font-weight:400;font-size:0.8rem">(optional)</span></label>
-          <input type="text" id="regCustomCode" placeholder="e.g. MYBRAND" maxlength="20" style="text-transform:uppercase">
+          <label>Custom Referral Code <span>(optional)</span></label>
+          <input type="text" id="regCustomCode" placeholder="e.g. MYBRAND" maxlength="20">
           <div class="hint">Letters, numbers, _ or -. 3-20 characters. Leave blank for auto-generated.</div>
         </div>
         <button class="btn-register" onclick="registerAffiliate()">Get My Referral Link</button>
@@ -250,7 +140,7 @@
         <h1>Affiliate Dashboard</h1>
         <p id="dashWelcome">Welcome back</p>
       </div>
-      <div style="display:flex;gap:8px">
+      <div>
         <button class="btn-payout" onclick="requestPayout()">Request Payout</button>
         <button class="btn-newlink" onclick="generateLink()">+ New Link</button>
       </div>
@@ -289,7 +179,7 @@
       <a href="pricing.html">Pricing</a>
       <a href="faq.html">FAQ</a>
       <a href="refund-policy.html">Refund Policy</a>
-      <a href="affiliate.html" style="color:#4ec95e">Affiliates</a>
+      <a href="affiliate.html" class="footer-affiliate">Affiliates</a>
       <a href="team.html">Team</a>
       <a href="https://discord.gg/AhEK85REhG" target="_blank">Discord</a>
     </div>

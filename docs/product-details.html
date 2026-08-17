@@ -8,60 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
-  <style>
-    .detail-section{padding:3rem 2rem;max-width:900px;margin:0 auto}
-    .detail-card{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:3rem;margin-bottom:3rem;position:relative}
-    .detail-card.featured{border-color:rgba(0,230,118,0.25)}
-    .detail-card.featured::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--green);border-radius:16px 16px 0 0}
-    .detail-badge{display:inline-block;font-size:0.55rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;padding:0.2rem 0.6rem;border-radius:4px;margin-bottom:1rem}
-    .detail-badge.pop{background:var(--green);color:#000}
-    .detail-badge.new{background:#3b82f6;color:#fff}
-    .detail-badge.aim{background:#a855f7;color:#fff}
-    .detail-badge.save{background:#f59e0b;color:#000}
-    .detail-badge.extreme{background:#ef4444;color:#fff}
-    .detail-name{font-size:2rem;font-weight:900;letter-spacing:-0.04em;margin-bottom:0.15rem}
-    .detail-name span{color:var(--green)}
-    .detail-subtitle{font-size:0.75rem;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-dim);margin-bottom:1.5rem}
-    .detail-desc{font-size:0.9rem;color:var(--text-mid);line-height:1.7;margin-bottom:1.5rem;max-width:680px}
-    .detail-desc strong{color:var(--text);font-weight:600}
-    .detail-bullets{list-style:none;margin-bottom:1.5rem}
-    .detail-bullets li{font-size:0.85rem;color:var(--text-mid);padding:0.3rem 0;padding-left:1.25rem;position:relative}
-    .detail-bullets li::before{content:'\2022';position:absolute;left:0;color:var(--green);font-weight:700}
-    .detail-bullets li strong{color:var(--text);font-weight:600}
-    .detail-perks{margin-bottom:2rem;padding:1.25rem 1.5rem;background:rgba(255,255,255,0.01);border:1px solid var(--border);border-radius:10px}
-    .detail-perks-title{font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--green);margin-bottom:0.75rem}
-    .detail-perks ul{list-style:none;margin:0;padding:0}
-    .detail-perks li{font-size:0.8rem;color:var(--text-mid);padding:0.25rem 0;padding-left:1rem;position:relative}
-    .detail-perks li::before{content:'\2713';position:absolute;left:0;color:var(--green);font-size:0.7rem}
-    .detail-whats{margin-bottom:2rem}
-    .detail-whats-title{font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-dim);margin-bottom:1rem;display:flex;align-items:center;gap:0.5rem}
-    .detail-whats-title::before{content:'';width:5px;height:5px;border-radius:2px;background:var(--green);opacity:0.6}
-    .detail-whats-list{column-count:2;column-gap:1.5rem}
-    .detail-whats-list li{font-size:0.8rem;color:var(--text-mid);padding:0.3rem 0;padding-left:1.1rem;position:relative;break-inside:avoid;line-height:1.5}
-    .detail-whats-list li::before{content:'\2713';position:absolute;left:0;color:var(--green);font-size:0.7rem}
-    .detail-whats-list li.highlight{color:var(--text);font-weight:600}
-    .detail-perfect{margin-bottom:2rem;padding:1.25rem 1.5rem;background:rgba(0,230,118,0.02);border:1px solid rgba(0,230,118,0.06);border-radius:10px}
-    .detail-perfect-title{font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--green);margin-bottom:0.5rem}
-    .detail-perfect p{font-size:0.82rem;color:var(--text-mid);line-height:1.6;margin:0}
-    .detail-cta{display:flex;align-items:center;gap:1rem;margin-top:1.5rem;padding-top:1.5rem;border-top:1px solid var(--border)}
-    .detail-price-big{font-size:1.75rem;font-weight:900;color:var(--text);letter-spacing:-0.03em}
-    .detail-price-big .from{font-size:0.6rem;font-weight:500;color:var(--text-dim);display:block;margin-bottom:-4px}
-    .detail-addons{margin-top:2rem;padding:1.25rem 1.5rem;background:rgba(255,255,255,0.01);border:1px solid var(--border);border-radius:10px}
-    .detail-addons-title{font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-dim);margin-bottom:0.75rem}
-    .addon-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:0.5rem}
-    .addon-item{display:flex;align-items:center;gap:0.5rem;padding:0.5rem 0.75rem;background:rgba(0,230,118,0.03);border:1px solid rgba(0,230,118,0.08);border-radius:8px;font-size:0.75rem;color:var(--text-mid)}
-    .addon-item .check{color:var(--green);font-size:0.7rem}
-    .detail-nav{position:sticky;top:72px;z-index:100;background:rgba(2,2,2,0.9);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:0.75rem 2rem;margin-bottom:0}
-    .detail-nav-inner{display:flex;gap:0.5rem;overflow-x:auto;max-width:900px;margin:0 auto;scrollbar-width:none}
-    .detail-nav-inner::-webkit-scrollbar{display:none}
-    .detail-nav a{padding:0.5rem 1rem;border-radius:8px;font-size:0.75rem;font-weight:600;color:var(--text-dim);white-space:nowrap;text-decoration:none;transition:all 0.2s;border:1px solid transparent}
-    .detail-nav a:hover{color:var(--text);background:rgba(255,255,255,0.03)}
-    .detail-nav a.active{color:var(--green);background:rgba(0,230,118,0.05);border-color:rgba(0,230,118,0.1)}
-    .detail-nav a.nav-feat{color:var(--green);border-color:rgba(0,230,118,0.15)}
-    .detail-count{display:inline-flex;align-items:center;gap:0.3rem;font-size:0.65rem;font-weight:600;color:var(--text-dim);background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:6px;padding:0.2rem 0.6rem;margin-top:0.75rem}
-    .detail-count em{color:var(--green);font-style:normal}
-    @media(max-width:768px){.detail-card{padding:2rem 1.5rem}.detail-whats-list{column-count:1}.addon-grid{grid-template-columns:1fr}.detail-cta{flex-direction:column;align-items:flex-start}}
-  </style>
+
   <!-- Analytics -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
   <script>
@@ -74,11 +21,14 @@
 <body>
 
   <div class="scroll-bar" id="scrollBar"></div>
-  <canvas id="particles"></canvas>
+  <canvas id="matrix-rain"></canvas>
   <div class="noise"></div>
 
   <nav id="nav">
     <a href="index.html" class="nav-brand">choatix<span>.</span></a>
+    <button class="hamburger" id="hamburger" onclick="toggleNav()">
+      <span></span><span></span><span></span>
+    </button>
     <div class="nav-links">
       <a href="index.html">Home</a>
       <a href="features.html">Features</a>
@@ -87,7 +37,7 @@
       <a href="products.html" class="active">Details</a>
       <a href="pricing.html">Pricing</a>
       <a href="faq.html">FAQ</a>      <a href="refund-policy.html">Refund Policy</a>
-      <a href="affiliate.html" style="color:#4ec95e">Affiliates</a>
+      <a href="affiliate.html" class="nav-affiliate">Affiliates</a>
       <a href="team.html">Team</a>
       <a href="https://discord.gg/AhEK85REhG" target="_blank">Discord</a>
       <button class="cart-btn" onclick="openCart()" id="cartBtn">&#128722;<span class="cart-badge" id="cartBadge">0</span></button>
@@ -129,7 +79,7 @@
 
     <!-- BASIC -->
     <div class="detail-card" id="basic">
-      <div class="detail-badge" style="background:rgba(255,255,255,0.06);color:var(--text-dim)">STARTER</div>
+      <div class="detail-badge">STARTER</div>
       <div class="detail-name">Basic <span>Tweaks</span></div>
       <div class="detail-subtitle">69 ADJUSTMENTS &middot; ESSENTIAL OPTIMIZATION PANEL</div>
 
@@ -253,7 +203,7 @@
         <li><strong>Lower ping</strong> and reduced packet loss</li>
       </ul>
 
-      <p class="detail-desc" style="margin-top:0.5rem">Whether you're gaming or just want your PC to run like butter, this tool delivers elite performance.</p>
+      <p class="detail-desc">Whether you're gaming or just want your PC to run like butter, this tool delivers elite performance.</p>
 
       <div class="detail-perks">
         <div class="detail-perks-title">Perks:</div>
@@ -516,7 +466,7 @@
       <a href="products.html">Products</a>
       <a href="pricing.html">Pricing</a>
       <a href="faq.html">FAQ</a>      <a href="refund-policy.html">Refund Policy</a>
-      <a href="affiliate.html" style="color:#4ec95e">Affiliates</a>
+      <a href="affiliate.html" class="footer-affiliate">Affiliates</a>
       <a href="team.html">Team</a>
       <a href="https://discord.gg/AhEK85REhG" target="_blank">Discord</a>
     </div>
