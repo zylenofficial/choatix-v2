@@ -97,15 +97,15 @@
         <p>While we don't offer refunds, we do provide comprehensive technical support to ensure you get the most out of your purchase. If you experience any issues:</p>
         <div class="refund-support-grid">
           <div class="refund-support-card discord">
-            <div style="font-size:1.5rem;margin-bottom:0.5rem">&#128172;</div>
-            <div style="font-weight:700;color:#fff;margin-bottom:0.4rem;font-size:0.9rem">Discord Support</div>
-            <div style="font-size:0.8rem;color:var(--text-dim);margin-bottom:1rem;line-height:1.5">Join our Discord server for instant help and community support</div>
+            <div class="refund-support-icon">&#128172;</div>
+            <div class="refund-support-title">Discord Support</div>
+            <div class="refund-support-desc">Join our Discord server for instant help and community support</div>
             <a href="https://discord.gg/AhEK85REhG" target="_blank" class="btn btn-discord">Join Discord</a>
           </div>
           <div class="refund-support-card">
-            <div style="font-size:1.5rem;margin-bottom:0.5rem">&#9993;</div>
-            <div style="font-weight:700;color:#fff;margin-bottom:0.4rem;font-size:0.9rem">Email Support</div>
-            <div style="font-size:0.8rem;color:var(--text-dim);margin-bottom:1rem;line-height:1.5">Send us a detailed email for complex technical issues</div>
+            <div class="refund-support-icon">&#9993;</div>
+            <div class="refund-support-title">Email Support</div>
+            <div class="refund-support-desc">Send us a detailed email for complex technical issues</div>
             <a href="mailto:choatixtweaks@gmail.com" class="btn btn-secondary">Send Email</a>
           </div>
         </div>
@@ -114,7 +114,7 @@
         <p>The only exception to our no-refund policy is in cases where we are unable to deliver the purchased product due to technical issues on our end. In such rare cases, we will work with you to resolve the issue or provide an alternative solution.</p>
 
         <h3>7. Contact Information</h3>
-        <p>If you have any questions about this refund policy, please contact us at <a href="mailto:choatixtweaks@gmail.com" style="color:var(--green)">choatixtweaks@gmail.com</a> or join our <a href="https://discord.gg/AhEK85REhG" target="_blank" style="color:var(--green)">Discord server</a> for immediate assistance.</p>
+        <p>If you have any questions about this refund policy, please contact us at <a href="mailto:choatixtweaks@gmail.com">choatixtweaks@gmail.com</a> or join our <a href="https://discord.gg/AhEK85REhG" target="_blank">Discord server</a> for immediate assistance.</p>
 
         <div class="refund-warning">
           <p><strong>By completing a purchase, you agree to this policy.</strong> If you do not agree, do not purchase.</p>
@@ -127,6 +127,13 @@
       </div>
     </div>
   </section>
+
+  <div class="cart-overlay" id="cartOverlay" onclick="closeCart()"></div>
+  <div class="cart-sidebar" id="cartSidebar">
+    <div class="cart-head"><h3>Shopping Cart</h3><button class="cart-close" onclick="closeCart()">&#10005;</button></div>
+    <div class="cart-items" id="cartItems"></div>
+    <div class="cart-foot"><div class="cart-total"><span class="cart-total-label">Total</span><span class="cart-total-price" id="cartTotal">&euro;0.00</span></div><button class="cart-checkout" id="cartCheckout" onclick="checkout()" disabled>Checkout via PayPal</button></div>
+  </div>
 
   <footer>
     <div class="footer-links">
