@@ -1283,8 +1283,14 @@ function initScrollEffects() {
   const fpsGrid = document.getElementById('fpsGrid');
   if (fpsGrid) fpsObs.observe(fpsGrid);
 
-  document.querySelectorAll('.feature-card').forEach(c => {
+  document.querySelectorAll('.feature-card, .product-card').forEach(c => {
     c.addEventListener('mousemove', e => { const r = c.getBoundingClientRect(); c.style.setProperty('--mx', ((e.clientX - r.left) / r.width * 100) + '%'); c.style.setProperty('--my', ((e.clientY - r.top) / r.height * 100) + '%'); });
+  });
+
+  document.querySelectorAll('.nav-links a').forEach(link => {
+    link.addEventListener('click', () => {
+      document.querySelector('.nav-links')?.classList.remove('open');
+    });
   });
 
   TEAM.forEach(m => {
