@@ -718,7 +718,7 @@ function renderProductDetail(id) {
   const tweakGroups = id === 'basic' ? ['deep-clean','network','power','gpu','gaming','windows']
     : id === 'pro' ? ['deep-clean','network','power','gpu','gaming','windows','storage','audio']
     : id === 'extreme' ? ['deep-clean','network','power','gpu','gaming','windows','browser','privacy']
-    : id === 'precision' ? ['gpu','timer','network','input']
+    : id === 'precision' ? ['gpu','timer','network','core']
     : id === 'full' ? TWEAK_CATEGORIES.map(c => c.id)
     : [];
 

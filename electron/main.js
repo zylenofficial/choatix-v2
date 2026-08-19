@@ -1991,6 +1991,7 @@ const AUDITED_TWEAKS = {
     apply: `$ErrorActionPreference='Stop'; New-Item -Path 'HKCU:\Software\Microsoft\GameBar' -Force | Out-Null; Set-ItemProperty -Path 'HKCU:\Software\Microsoft\GameBar' -Name AllowAutoGameMode -Type DWord -Value 1; if((Get-ItemPropertyValue -Path 'HKCU:\Software\Microsoft\GameBar' -Name AllowAutoGameMode) -ne 1){throw 'Game Mode verification failed'}`,
     restore: `$ErrorActionPreference='Stop'; Set-ItemProperty -Path 'HKCU:\Software\Microsoft\GameBar' -Name AllowAutoGameMode -Type DWord -Value 0; if((Get-ItemPropertyValue -Path 'HKCU:\Software\Microsoft\GameBar' -Name AllowAutoGameMode) -ne 0){throw 'Game Mode restore verification failed'}`,
   },
+  'game-disable-dvr': {
     apply: `$ErrorActionPreference='Stop'; New-Item -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\GameDVR','HKCU:\System\GameConfigStore' -Force | Out-Null; Set-ItemProperty -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\GameDVR' -Name AppCaptureEnabled -Type DWord -Value 0; Set-ItemProperty -Path 'HKCU:\System\GameConfigStore' -Name GameDVR_Enabled -Type DWord -Value 0; if((Get-ItemPropertyValue 'HKCU:\Software\Microsoft\Windows\CurrentVersion\GameDVR' AppCaptureEnabled) -ne 0 -or (Get-ItemPropertyValue 'HKCU:\System\GameConfigStore' GameDVR_Enabled) -ne 0){throw 'Game Bar capture verification failed'}`,
     restore: `$ErrorActionPreference='Stop'; Set-ItemProperty -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\GameDVR' -Name AppCaptureEnabled -Type DWord -Value 1; Set-ItemProperty -Path 'HKCU:\System\GameConfigStore' -Name GameDVR_Enabled -Type DWord -Value 1; if((Get-ItemPropertyValue 'HKCU:\Software\Microsoft\Windows\CurrentVersion\GameDVR' AppCaptureEnabled) -ne 1){throw 'Game Bar restore verification failed'}`,
   },
@@ -2002,12 +2003,13 @@ const AUDITED_TWEAKS = {
     apply: `$ErrorActionPreference='Stop'; powercfg /setacvalueindex SCHEME_CURRENT SUB_PROCESSOR CPMINCORES 100; powercfg /setactive SCHEME_CURRENT; if(-not ((powercfg /query SCHEME_CURRENT SUB_PROCESSOR CPMINCORES) -match '0x00000064')){throw 'Core-parking setting verification failed'}`,
     restore: `$ErrorActionPreference='Stop'; powercfg /setacvalueindex SCHEME_CURRENT SUB_PROCESSOR CPMINCORES 10; powercfg /setactive SCHEME_CURRENT; if(-not ((powercfg /query SCHEME_CURRENT SUB_PROCESSOR CPMINCORES) -match '0x0000000a')){throw 'Core-parking restore verification failed'}`,
   },
+  'power-disable-hibernate': {
     apply: `$ErrorActionPreference='Stop'; powercfg /hibernate off; if(Test-Path "$env:SystemDrive\hiberfil.sys"){throw 'Hibernation file still exists'}`,
     restore: `$ErrorActionPreference='Stop'; powercfg /hibernate on; if(-not (Test-Path "$env:SystemDrive\hiberfil.sys")){throw 'Hibernation file was not restored'}`,
   },
   'storage-ssd-optimization': {
     apply: `$ErrorActionPreference='Stop'; fsutil behavior set disablelastaccess 1; if(-not ((fsutil behavior query disablelastaccess) -match '1')){throw 'Last-access setting verification failed'}`,
-    restore: `$ErrorActionPreference='Stop'; fsutil behavior set disablelastaccess 2; if(-not ((fsutil behavior query disablelastaccess) -match '2')){throw 'Last-access restore verification failed'}`,
+    restore: `$ErrorActionPreference='Stop'; fsutil behavior set disablelastaccess 0; if(-not ((fsutil behavior query disablelastaccess) -match '0')){throw 'Last-access restore verification failed'}`,
   },
   'storage-trim-optimization': {
     apply: `$ErrorActionPreference='Stop'; Optimize-Volume -DriveLetter $env:SystemDrive.TrimEnd(':') -ReTrim -Verbose`,
@@ -2038,17 +2040,17 @@ ipcMain.handle("restore-category", async (_event, category) => {
   const categoryTweaks = Object.keys(TWEAK_COMMANDS).filter(id => {
     // Map tweak IDs to categories
     const categories = {
-      'sys-high-performance': 'system', 'sys-enable-game-mode': 'system'
+      'sys-high-performance': 'system', 'sys-enable-game-mode': 'system',
       'sys-disk-cleanup': 'system', 'sys-cpu-priority': 'system', 'cpu-core-parking-disable': 'system',
       'memory-working-set': 'system',
-      'nv-disable-vsync': 'nvidia', 'nv-low-latency': 'nvidia'
+      'nv-disable-vsync': 'nvidia', 'nv-low-latency': 'nvidia',
       'net-optimize-dns': 'network', 'net-reduce-congestion': 'network',
       'mouse-disable-acceleration': 'mouse',
       'storage-ssd-optimization': 'storage', 'storage-trim-optimization': 'storage',
-      'storage-nvme-optimization': 'storage'
+      'storage-nvme-optimization': 'storage',
       'windows-explorer-optimization': 'windows',
       'audio-disable-enhancements': 'audio', 'audio-usb-optimization': 'audio',
-      'keyboard-disable-filter': 'keyboard'
+      'keyboard-disable-filter': 'keyboard',
       'sys-disable-vbs': 'fps',
       'sys-reduce-background': 'fps',
       'sys-enable-modern-memory': 'fps',
@@ -2192,7 +2194,6 @@ ipcMain.handle("restore-category", async (_event, category) => {
       'game-valorant-cfg-optimize': 'gaming',
       'game-cs2-cfg-optimize': 'gaming',
       'game-apex-cfg-optimize': 'gaming',
-      'input-gaming-mode': 'input',
       // ── NEW CATEGORIES ──
       'wu-disable-auto-update': 'windows', 'wu-disable-restart-reminder': 'windows', 'wu-pause-updates-30days': 'windows',
       'wu-disable-drivers-update': 'windows', 'wu-disable-office-updates': 'windows',
@@ -2204,28 +2205,27 @@ ipcMain.handle("restore-category", async (_event, category) => {
       'svc-disable-tablet-input': 'input', 'svc-disable-bluetooth-av': 'system', 'svc-disable-windows-error': 'system',
       'svc-disable-print-spooler': 'system', 'svc-disable-remote-registry': 'privacy', 'svc-disable-xbox-live': 'debloat',
       'svc-disable-phone-link': 'debloat',
-      'gpu-disable-ulps': 'gpu', 'gpu-set-power-limit-max': 'gpu'
+      'gpu-disable-ulps': 'gpu', 'gpu-set-power-limit-max': 'gpu',
       'gpu-enable-hw-scheduler': 'gpu', 'gpu-optimize-shader-cache': 'gpu', 'gpu-disable-preemption': 'gpu',
       'gpu-optimize-render-schedule': 'gpu', 'gpu-disable-mpo': 'gpu',
-      'reg-mmcss-priority': 'system'
+      'reg-mmcss-priority': 'system',
       'bt-disable-pairing-reminder': 'system', 'bt-disable-auto-reconnect': 'system',
-      'vis-disable-transparency': 'system', 'vis-dark-mode': 'system'
+      'vis-disable-transparency': 'system', 'vis-dark-mode': 'system',
       'vis-disable-animations': 'system', 'vis-minimize-maximize': 'system', 'vis-disable-fade': 'system',
       'vis-start-menu-clean': 'windows', 'vis-context-menu-classic': 'windows',
       'sec-disable-smartscreen': 'privacy', 'sec-disable-realtime-protection': 'privacy',
       'sec-disable-defender-scheduled': 'privacy', 'sec-disable-sample-submission': 'privacy',
       'sec-disable-network-protection': 'privacy',
-      'net-disable-rsc': 'network', 'net-optimize-rss': 'network', 'net-disable-ecnc': 'network',
-      'net-disable-task-offload': 'network', 'net-optimize-tcp-window': 'network', 'net-disable-netbios': 'network',
+      'net-disable-rsc': 'network', 'net-disable-ecnc': 'network',
+      'net-disable-task-offload': 'network',
       'net-disable-llmnr': 'network', 'net-disable-wsd': 'network', 'net-optimize-adapter': 'network',
-      'net-disable-flow-control': 'network',
-      'game-dvr-disable': 'gaming','game-gameconfigstore': 'gaming'
-      'game-dwm-priority': 'gaming','game-fullscreen-trick': 'gaming'
+      'game-dvr-disable': 'gaming','game-gameconfigstore': 'gaming',
+      'game-dwm-priority': 'gaming','game-fullscreen-trick': 'gaming',
       'startup-disable-edge-updater': 'debloat', 'startup-disable-adobe-updater': 'debloat',
       'startup-disable-discord-startup': 'debloat', 'startup-disable-epic-games': 'debloat',
       'startup-disable-steam': 'debloat', 'startup-disable-spotify': 'debloat', 'startup-disable-widgets': 'debloat',
-      'mem-optimize-pagefile': 'system', 'mem-large-system-cache': 'system'
-      'mem-deoptimize-standby': 'system','mem-clean-standby': 'system'
+      'mem-optimize-pagefile': 'system', 'mem-large-system-cache': 'system',
+      'mem-deoptimize-standby': 'system','mem-clean-standby': 'system',
       'debloat-remove-copilot': 'debloat', 'debloat-remove-clipchamp': 'debloat', 'debloat-remove-solitaire': 'debloat',
       'debloat-remove-3dviewer': 'debloat', 'debloat-remove-alarms': 'debloat', 'debloat-remove-camera': 'debloat',
       'debloat-remove-feedback': 'debloat', 'debloat-remove-yourphone': 'debloat', 'debloat-remove-tips': 'debloat',
@@ -2246,17 +2246,17 @@ ipcMain.handle("restore-category", async (_event, category) => {
       'dx-shader-cache-enable': 'directx', 'dx-disable-debug-layer': 'directx', 'dx-optimize-agility-sdk': 'directx',
       'dx-force-hw-d3d': 'directx', 'dx-disable-d3d-debug': 'directx', 'dx-optimize-texture-format': 'directx',
       'dx-enable-variable-shading': 'directx', 'dx-optimize-present-params': 'directx',
-      'lat-disable-synthetic': 'latency', 'lat-optimize-interrupts': 'latency'
+      'lat-disable-synthetic': 'latency', 'lat-optimize-interrupts': 'latency',
       'atd-disable-fade': 'alttab', 'atd-disable-switch-delay': 'alttab', 'atd-optimize-dwm': 'alttab',
       'atd-disable-thumbnail': 'alttab', 'atd-force-classic': 'alttab', 'atd-prioritize-game': 'alttab',
       'atd-disable-snap': 'alttab', 'atd-optimize-peek': 'alttab',
       'appdb-chrome-disable-hw': 'debloat', 'appdb-chrome-disable-extensions': 'debloat', 'appdb-chrome-priority': 'debloat',
-      'appdb-discord-disable-hw': 'debloat','appdb-discord-optimize': 'debloat'
+      'appdb-discord-disable-hw': 'debloat','appdb-discord-optimize': 'debloat',
       'appdb-epic-disable-telemetry': 'debloat', 'appdb-epic-disable-hw': 'debloat', 'appdb-epic-preload': 'debloat',
       'appdb-steam-disable-hw': 'debloat', 'appdb-steam-disable-popup': 'debloat', 'appdb-teams-disable-background': 'debloat',
-      'appdb-edge-disable-service': 'debloat'
+      'appdb-edge-disable-service': 'debloat',
       'explorer-disable-details-pane': 'explorer', 'explorer-optimize-views': 'explorer', 'explorer-disable-network-discovery': 'explorer',
-      'explorer-hide-extensions': 'explorer','explorer-optimize-preview': 'explorer'
+      'explorer-hide-extensions': 'explorer','explorer-optimize-preview': 'explorer',
       'explorer-disable-gadgets': 'explorer',
       // ── DEEP CLEAN ──
       'clean-dns-cache': 'system', 'clean-font-cache': 'system', 'clean-icon-cache': 'system',
