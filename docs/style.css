@@ -164,7 +164,7 @@ footer p{font-size:0.72rem;color:var(--text-dim)}
    USER MENU
    ══════════════════════════════════════════ */
 .user-menu{position:relative}
-.user-btn{display:flex;align-items:center;gap:0.5rem;padding:0.35rem 0.8rem 0.35rem 0.35rem;background:rgba(88,101,242,0.08);border:1px solid rgba(88,101,242,0.15);border-radius:100px;transition:all 0.3s var(--ease);text-decoration:none}
+.user-btn{display:flex;align-items:center;gap:0.5rem;padding:0.35rem 0.8rem 0.35rem 0.35rem;background:rgba(88,101,242,0.08);border:1px solid rgba(88,101,242,0.15);border-radius:100px;transition:all 0.3s var(--ease);text-decoration:none;overflow:hidden}
 .user-btn:hover{background:rgba(88,101,242,0.12);border-color:rgba(88,101,242,0.25)}
 .user-avatar{width:28px;height:28px;border-radius:50%;object-fit:cover;border:1px solid rgba(255,255,255,0.08)}
 .user-avatar-fallback{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,rgba(88,101,242,0.3),rgba(124,77,255,0.3));display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;color:#fff}
