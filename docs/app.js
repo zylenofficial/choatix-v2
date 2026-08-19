@@ -199,6 +199,7 @@ function initAuth() {
     user = { id, name, avatar: av };
     fetch(`${API}/api/license/${id}`).then(r => r.json()).then(d => {
       if (d.tier) user.tier = d.tier;
+      renderNav();
     }).catch(() => {});
   }
 }
@@ -381,8 +382,8 @@ function renderNav() {
   const avatarHTML = user
     ? (() => {
         const av = user.avatar;
-        const ext = av && av.startsWith('a_') ? 'gif' : 'webp';
-        const src = av ? `https://cdn.discordapp.com/avatars/${user.id}/${av}.${ext}?size=128` : '';
+        const isUrl = av && av.startsWith('http');
+        const src = isUrl ? av : (av ? `https://cdn.discordapp.com/avatars/${user.id}/${av}.${av.startsWith('a_') ? 'gif' : 'webp'}?size=128` : '');
         return `<img class="user-avatar" id="userAvatar" src="${src}" crossorigin="anonymous" referrerpolicy="no-referrer" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
        <div class="user-avatar-fallback" id="userAvatarFallback" style="${av ? 'display:none' : ''}">${user.name?.charAt(0)?.toUpperCase() || '?'}</div>`;
       })()
