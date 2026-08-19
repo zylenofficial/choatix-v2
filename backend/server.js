@@ -670,6 +670,25 @@ app.get('/api/admin/users', async (req, res) => {
   }
 });
 
+// ─── Admin: Update user tier ─────────────────────────────────
+app.patch('/api/admin/users/:discordId/tier', async (req, res) => {
+  const adminSecret = req.headers['x-admin-secret'];
+  if (adminSecret !== 'choatix-admin-2024') return res.status(403).json({ error: 'Unauthorized' });
+
+  const { tier } = req.body;
+  if (!['FREE', 'PRO', 'PREMIUM'].includes(tier)) {
+    return res.status(400).json({ error: 'Invalid tier. Use FREE, PRO, or PREMIUM' });
+  }
+
+  const discordId = req.params.discordId;
+  if (app.locals.pool) {
+    await app.locals.pool.query('UPDATE users_table SET tier = $1 WHERE discord_id = $2', [tier, discordId]);
+  } else {
+    if (memUsers[discordId]) memUsers[discordId].tier = tier;
+  }
+  res.json({ success: true, message: `Updated ${discordId} to ${tier}` });
+});
+
 // ── Admin: Affiliate Management ──
 app.get('/api/admin/affiliates', async (req, res) => {
   const adminSecret = req.headers['x-admin-secret'];
