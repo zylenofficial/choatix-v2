@@ -1334,3 +1334,296 @@ function init() {
 }
 
 document.addEventListener('DOMContentLoaded', init);
+
+// ════════════════════════════════════════════════════════════════
+// CHATBOT — Purchase Advisor
+// ════════════════════════════════════════════════════════════════
+
+const CHATBOT_FAB_KEY = 'choatix_chatbot_seen';
+
+const CHAT_FLOWS = {
+  start: {
+    messages: [
+      "Hey there! I'm the Choatix assistant. I'll help you pick the right optimization pack for your PC.",
+      "Let me ask you a few quick questions."
+    ],
+    quickReplies: [
+      { label: "Let's go!", next: 'usecase' }
+    ]
+  },
+  usecase: {
+    messages: ["What's your main use case?"],
+    quickReplies: [
+      { label: "Competitive FPS", next: 'fps' },
+      { label: "General Gaming", next: 'gaming' },
+      { label: "Just Windows cleanup", next: 'cleanup' },
+      { label: "Everything", next: 'everything' }
+    ]
+  },
+  fps: {
+    messages: ["Competitive FPS — got it. Input lag and latency matter most to you."],
+    quickReplies: [
+      { label: "Yes, low latency is everything", next: 'rec_precision' },
+      { label: "I also want general optimization", next: 'fps_plus' }
+    ]
+  },
+  fps_plus: {
+    messages: ["You want low latency + full system optimization. That's our most popular combo."],
+    quickReplies: [
+      { label: "What do you recommend?", next: 'rec_extreme' },
+      { label: "What's the cheapest option?", next: 'rec_basic' }
+    ]
+  },
+  gaming: {
+    messages: ["General gaming — nice. You want better FPS across all your games."],
+    quickReplies: [
+      { label: "On a budget", next: 'rec_basic' },
+      { label: "Want the best results", next: 'rec_pro' },
+      { label: "Maximum everything", next: 'rec_extreme' }
+    ]
+  },
+  cleanup: {
+    messages: ["Just Windows cleanup and essential tweaks. Smart choice to start small."],
+    quickReplies: [
+      { label: "Show me Basic", next: 'rec_basic' }
+    ]
+  },
+  everything: {
+    messages: ["You want it all — every single tweak we have. That's the Full Optimization pack."],
+    quickReplies: [
+      { label: "Tell me more", next: 'rec_full' },
+      { label: "That's too expensive", next: 'budget' }
+    ]
+  },
+  budget: {
+    messages: ["No worries. Let's find the best value for you."],
+    quickReplies: [
+      { label: "Under \u20ac10", next: 'budget_under10' },
+      { label: "Under \u20ac15", next: 'budget_under15' },
+      { label: "Cheapest possible", next: 'rec_basic' }
+    ]
+  },
+  budget_under10: {
+    messages: ["Under \u20ac10 — you've got two great options:"],
+    quickReplies: [
+      { label: "Precision (\u20ac5.99) — FPS focused", next: 'rec_precision' },
+      { label: "Basic (\u20ac4.99) — All-round", next: 'rec_basic' }
+    ]
+  },
+  budget_under15: {
+    messages: ["Under \u20ac15 — Extreme is the sweet spot. 283 tweaks for \u20ac14.99."],
+    quickReplies: [
+      { label: "Sounds good", next: 'rec_extreme' },
+      { label: "Cheaper options?", next: 'budget_under10' }
+    ]
+  },
+  rec_basic: {
+    messages: [
+      "I recommend <strong>Basic Tweaks</strong> (\u20ac4.99).",
+      "220 tweaks covering Windows debloat, GPU, network, and power optimization. Perfect starting point."
+    ],
+    product: 'basic',
+    quickReplies: [
+      { label: "Add to Cart", next: 'done', action: 'add_basic' },
+      { label: "Tell me about other options", next: 'usecase' }
+    ]
+  },
+  rec_precision: {
+    messages: [
+      "I recommend <strong>Precision Pack</strong> (\u20ac5.99).",
+      "128 tweaks focused on input lag, mouse/keyboard optimization, GPU low latency, and network for competitive FPS."
+    ],
+    product: 'precision',
+    quickReplies: [
+      { label: "Add to Cart", next: 'done', action: 'add_precision' },
+      { label: "Tell me about other options", next: 'usecase' }
+    ]
+  },
+  rec_pro: {
+    messages: [
+      "I recommend <strong>Pro Tweaks</strong> (\u20ac9.99).",
+      "291 tweaks. Everything in Basic plus BCD boot tweaks, RAM optimization, USB tuning, and deep cleanup."
+    ],
+    product: 'pro',
+    quickReplies: [
+      { label: "Add to Cart", next: 'done', action: 'add_pro' },
+      { label: "Tell me about other options", next: 'usecase' }
+    ]
+  },
+  rec_extreme: {
+    messages: [
+      "I recommend <strong>Extreme Tweaks</strong> (\u20ac14.99).",
+      "283 tweaks. Full debloat, DirectX optimization, buffer bloat fix, and registry tuning. Our Best Seller."
+    ],
+    product: 'extreme',
+    quickReplies: [
+      { label: "Add to Cart", next: 'done', action: 'add_extreme' },
+      { label: "Tell me about other options", next: 'usecase' }
+    ]
+  },
+  rec_full: {
+    messages: [
+      "I recommend <strong>Full Optimization</strong> (\u20ac24.99).",
+      "All 461 tweaks combined. Every optimization category. The complete suite."
+    ],
+    product: 'full',
+    quickReplies: [
+      { label: "Add to Cart", next: 'done', action: 'add_full' },
+      { label: "Show cheaper options", next: 'budget' }
+    ]
+  },
+  done: {
+    messages: ["Great choice! You can complete your purchase in the cart. Need anything else?"],
+    quickReplies: [
+      { label: "Start over", next: 'start' },
+      { label: "I'm good, thanks!", next: 'bye' }
+    ]
+  },
+  bye: {
+    messages: ["Awesome, enjoy your optimized PC! Remember, every tweak is reversible. See you in the Discord!"],
+    quickReplies: [
+      { label: "Start over", next: 'start' }
+    ]
+  }
+};
+
+const CHAT_PRODUCT_MAP = {
+  add_basic:     'basic',
+  add_precision: 'precision',
+  add_pro:       'pro',
+  add_extreme:   'extreme',
+  add_full:      'full'
+};
+
+let chatbotOpen = false;
+let chatbotMsgCount = 0;
+let chatbotBadgeShown = false;
+
+function toggleChatbot() {
+  chatbotOpen = !chatbotOpen;
+  const win = document.getElementById('chatbotWindow');
+  const fab = document.getElementById('chatbotFab');
+  const badge = document.getElementById('chatbotBadge');
+
+  if (chatbotOpen) {
+    win.classList.add('open');
+    fab.classList.add('open');
+    badge.classList.remove('show');
+    chatbotBadgeShown = true;
+    localStorage.setItem(CHATBOT_FAB_KEY, '1');
+
+    if (chatbotMsgCount === 0) {
+      runChatFlow('start');
+    }
+    setTimeout(() => document.getElementById('chatbotInput')?.focus(), 400);
+  } else {
+    win.classList.remove('open');
+    fab.classList.remove('open');
+  }
+}
+
+function showChatbotBadge() {
+  if (chatbotOpen || chatbotBadgeShown || localStorage.getItem(CHATBOT_FAB_KEY)) return;
+  const badge = document.getElementById('chatbotBadge');
+  if (badge) { badge.classList.add('show'); chatbotBadgeShown = true; }
+}
+
+function runChatFlow(flowId) {
+  const flow = CHAT_FLOWS[flowId];
+  if (!flow) return;
+
+  let delay = 0;
+  flow.messages.forEach((msg, i) => {
+    setTimeout(() => addChatBotMessage(msg, flow.product), delay);
+    delay += 500 + Math.random() * 400;
+  });
+
+  setTimeout(() => {
+    renderChatQuickReplies(flow.quickReplies || []);
+  }, delay);
+}
+
+function addChatBotMessage(html, product) {
+  const el = document.getElementById('chatbotMessages');
+  if (!el) return;
+
+  let productTag = '';
+  if (product) {
+    const p = PRODUCTS[product];
+    if (p) {
+      const tagClass = product === 'extreme' ? 'best' : 'recommended';
+      productTag = `<div class="chat-product-tag ${tagClass}">${p.name} \u2014 \u20ac${p.price?.toFixed(2) || 'TBA'}</div>`;
+    }
+  }
+
+  const msgEl = document.createElement('div');
+  msgEl.className = 'chat-msg bot';
+  msgEl.innerHTML = `<div class="chat-msg-avatar">&#128161;</div><div class="chat-msg-bubble">${html}${productTag}</div>`;
+  el.appendChild(msgEl);
+  el.scrollTop = el.scrollHeight;
+  chatbotMsgCount++;
+}
+
+function addChatUserMessage(text) {
+  const el = document.getElementById('chatbotMessages');
+  if (!el) return;
+  const msgEl = document.createElement('div');
+  msgEl.className = 'chat-msg user';
+  msgEl.innerHTML = `<div class="chat-msg-avatar">Y</div><div class="chat-msg-bubble">${escapeHTML(text)}</div>`;
+  el.appendChild(msgEl);
+  el.scrollTop = el.scrollHeight;
+}
+
+function renderChatQuickReplies(replies) {
+  const el = document.getElementById('chatbotQuickReplies');
+  if (!el) return;
+  el.innerHTML = replies.map(r =>
+    `<button class="chat-quick-btn${r.next?.startsWith('rec_') ? ' primary' : ''}" onclick="handleChatReply('${r.next}','${r.action || ''}','${escapeHTML(r.label)}')">${r.label}</button>`
+  ).join('');
+}
+
+function handleChatReply(next, action, label) {
+  addChatUserMessage(label);
+  renderChatQuickReplies([]);
+
+  if (action && CHAT_PRODUCT_MAP[action]) {
+    const pid = CHAT_PRODUCT_MAP[action];
+    const p = PRODUCTS[pid];
+    if (p && p.price) addToCart(p.id, p.name, p.price);
+  }
+
+  setTimeout(() => runChatFlow(next), 300);
+}
+
+function sendChatUserMessage() {
+  const input = document.getElementById('chatbotInput');
+  if (!input || !input.value.trim()) return;
+  const text = input.value.trim();
+  input.value = '';
+  addChatUserMessage(text);
+  renderChatQuickReplies([]);
+
+  const lower = text.toLowerCase();
+  let next = 'usecase';
+
+  if (lower.match(/fps|competitive|input lag|latency|mouse|keyboard|aim/)) next = 'fps';
+  else if (lower.match(/cleanup|clean|debloat|bloat/)) next = 'cleanup';
+  else if (lower.match(/everything|all|full|complete|maximum/)) next = 'everything';
+  else if (lower.match(/budget|cheap|afford|price/)) next = 'budget';
+  else if (lower.match(/basic/)) next = 'rec_basic';
+  else if (lower.match(/precision|precision pack/)) next = 'rec_precision';
+  else if (lower.match(/pro tweaks/)) next = 'rec_pro';
+  else if (lower.match(/extreme/)) next = 'rec_extreme';
+  else if (lower.match(/full optimization/)) next = 'rec_full';
+  else if (lower.match(/thank|bye|good|done/)) next = 'bye';
+
+  setTimeout(() => runChatFlow(next), 400);
+}
+
+function escapeHTML(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+setTimeout(() => showChatbotBadge(), 5000);
