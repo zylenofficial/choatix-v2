@@ -1336,168 +1336,23 @@ function init() {
 document.addEventListener('DOMContentLoaded', init);
 
 // ════════════════════════════════════════════════════════════════
-// CHATBOT — Purchase Advisor
+// CHATBOT — Conversational Purchase Advisor
 // ════════════════════════════════════════════════════════════════
 
 const CHATBOT_FAB_KEY = 'choatix_chatbot_seen';
 
-const CHAT_FLOWS = {
-  start: {
-    messages: [
-      "Hey there! I'm the Choatix assistant. I'll help you pick the right optimization pack for your PC.",
-      "Let me ask you a few quick questions."
-    ],
-    quickReplies: [
-      { label: "Let's go!", next: 'usecase' }
-    ]
-  },
-  usecase: {
-    messages: ["What's your main use case?"],
-    quickReplies: [
-      { label: "Competitive FPS", next: 'fps' },
-      { label: "General Gaming", next: 'gaming' },
-      { label: "Just Windows cleanup", next: 'cleanup' },
-      { label: "Everything", next: 'everything' }
-    ]
-  },
-  fps: {
-    messages: ["Competitive FPS — got it. Input lag and latency matter most to you."],
-    quickReplies: [
-      { label: "Yes, low latency is everything", next: 'rec_precision' },
-      { label: "I also want general optimization", next: 'fps_plus' }
-    ]
-  },
-  fps_plus: {
-    messages: ["You want low latency + full system optimization. That's our most popular combo."],
-    quickReplies: [
-      { label: "What do you recommend?", next: 'rec_extreme' },
-      { label: "What's the cheapest option?", next: 'rec_basic' }
-    ]
-  },
-  gaming: {
-    messages: ["General gaming — nice. You want better FPS across all your games."],
-    quickReplies: [
-      { label: "On a budget", next: 'rec_basic' },
-      { label: "Want the best results", next: 'rec_pro' },
-      { label: "Maximum everything", next: 'rec_extreme' }
-    ]
-  },
-  cleanup: {
-    messages: ["Just Windows cleanup and essential tweaks. Smart choice to start small."],
-    quickReplies: [
-      { label: "Show me Basic", next: 'rec_basic' }
-    ]
-  },
-  everything: {
-    messages: ["You want it all — every single tweak we have. That's the Full Optimization pack."],
-    quickReplies: [
-      { label: "Tell me more", next: 'rec_full' },
-      { label: "That's too expensive", next: 'budget' }
-    ]
-  },
-  budget: {
-    messages: ["No worries. Let's find the best value for you."],
-    quickReplies: [
-      { label: "Under \u20ac10", next: 'budget_under10' },
-      { label: "Under \u20ac15", next: 'budget_under15' },
-      { label: "Cheapest possible", next: 'rec_basic' }
-    ]
-  },
-  budget_under10: {
-    messages: ["Under \u20ac10 — you've got two great options:"],
-    quickReplies: [
-      { label: "Precision (\u20ac5.99) — FPS focused", next: 'rec_precision' },
-      { label: "Basic (\u20ac4.99) — All-round", next: 'rec_basic' }
-    ]
-  },
-  budget_under15: {
-    messages: ["Under \u20ac15 — Extreme is the sweet spot. 283 tweaks for \u20ac14.99."],
-    quickReplies: [
-      { label: "Sounds good", next: 'rec_extreme' },
-      { label: "Cheaper options?", next: 'budget_under10' }
-    ]
-  },
-  rec_basic: {
-    messages: [
-      "I recommend <strong>Basic Tweaks</strong> (\u20ac4.99).",
-      "220 tweaks covering Windows debloat, GPU, network, and power optimization. Perfect starting point."
-    ],
-    product: 'basic',
-    quickReplies: [
-      { label: "Add to Cart", next: 'done', action: 'add_basic' },
-      { label: "Tell me about other options", next: 'usecase' }
-    ]
-  },
-  rec_precision: {
-    messages: [
-      "I recommend <strong>Precision Pack</strong> (\u20ac5.99).",
-      "128 tweaks focused on input lag, mouse/keyboard optimization, GPU low latency, and network for competitive FPS."
-    ],
-    product: 'precision',
-    quickReplies: [
-      { label: "Add to Cart", next: 'done', action: 'add_precision' },
-      { label: "Tell me about other options", next: 'usecase' }
-    ]
-  },
-  rec_pro: {
-    messages: [
-      "I recommend <strong>Pro Tweaks</strong> (\u20ac9.99).",
-      "291 tweaks. Everything in Basic plus BCD boot tweaks, RAM optimization, USB tuning, and deep cleanup."
-    ],
-    product: 'pro',
-    quickReplies: [
-      { label: "Add to Cart", next: 'done', action: 'add_pro' },
-      { label: "Tell me about other options", next: 'usecase' }
-    ]
-  },
-  rec_extreme: {
-    messages: [
-      "I recommend <strong>Extreme Tweaks</strong> (\u20ac14.99).",
-      "283 tweaks. Full debloat, DirectX optimization, buffer bloat fix, and registry tuning. Our Best Seller."
-    ],
-    product: 'extreme',
-    quickReplies: [
-      { label: "Add to Cart", next: 'done', action: 'add_extreme' },
-      { label: "Tell me about other options", next: 'usecase' }
-    ]
-  },
-  rec_full: {
-    messages: [
-      "I recommend <strong>Full Optimization</strong> (\u20ac24.99).",
-      "All 461 tweaks combined. Every optimization category. The complete suite."
-    ],
-    product: 'full',
-    quickReplies: [
-      { label: "Add to Cart", next: 'done', action: 'add_full' },
-      { label: "Show cheaper options", next: 'budget' }
-    ]
-  },
-  done: {
-    messages: ["Great choice! You can complete your purchase in the cart. Need anything else?"],
-    quickReplies: [
-      { label: "Start over", next: 'start' },
-      { label: "I'm good, thanks!", next: 'bye' }
-    ]
-  },
-  bye: {
-    messages: ["Awesome, enjoy your optimized PC! Remember, every tweak is reversible. See you in the Discord!"],
-    quickReplies: [
-      { label: "Start over", next: 'start' }
-    ]
-  }
-};
-
-const CHAT_PRODUCT_MAP = {
-  add_basic:     'basic',
-  add_precision: 'precision',
-  add_pro:       'pro',
-  add_extreme:   'extreme',
-  add_full:      'full'
+const CHAT_PRODUCTS = {
+  basic:     { name: 'Basic Tweaks',      price: 4.99,  tweaks: 220, desc: 'Windows debloat, essential settings, GPU, network, power', best: 'Budget-friendly all-rounder' },
+  pro:       { name: 'Pro Tweaks',        price: 9.99,  tweaks: 291, desc: 'Basic + BCD boot tweaks, RAM optimization, USB tuning, deep cleanup', best: 'Best value for most gamers' },
+  extreme:   { name: 'Extreme Tweaks',    price: 14.99, tweaks: 283, desc: 'Full debloat, DirectX, buffer bloat, registry tuning', best: 'Best Seller' },
+  precision: { name: 'Precision Pack',    price: 5.99,  tweaks: 128, desc: 'Input lag, mouse/keyboard optimization, GPU low latency, network', best: 'Competitive FPS players' },
+  full:      { name: 'Full Optimization', price: 24.99, tweaks: 461, desc: 'Everything combined — the complete optimization suite', best: 'Maximum performance' }
 };
 
 let chatbotOpen = false;
 let chatbotMsgCount = 0;
 let chatbotBadgeShown = false;
+let chatContext = { topic: null, lastProduct: null };
 
 function toggleChatbot() {
   chatbotOpen = !chatbotOpen;
@@ -1513,7 +1368,10 @@ function toggleChatbot() {
     localStorage.setItem(CHATBOT_FAB_KEY, '1');
 
     if (chatbotMsgCount === 0) {
-      runChatFlow('start');
+      setTimeout(() => {
+        botSay("Hey! I'm the Choatix assistant. I can help you pick the right optimization pack, answer questions about our products, or compare options. What can I help with?");
+        showSuggestions(["What should I buy?", "Compare products", "How much FPS will I gain?", "Is it safe?"]);
+      }, 400);
     }
     setTimeout(() => document.getElementById('chatbotInput')?.focus(), 400);
   } else {
@@ -1528,31 +1386,16 @@ function showChatbotBadge() {
   if (badge) { badge.classList.add('show'); chatbotBadgeShown = true; }
 }
 
-function runChatFlow(flowId) {
-  const flow = CHAT_FLOWS[flowId];
-  if (!flow) return;
-
-  let delay = 0;
-  flow.messages.forEach((msg, i) => {
-    setTimeout(() => addChatBotMessage(msg, flow.product), delay);
-    delay += 500 + Math.random() * 400;
-  });
-
-  setTimeout(() => {
-    renderChatQuickReplies(flow.quickReplies || []);
-  }, delay);
-}
-
-function addChatBotMessage(html, product) {
+function botSay(html, product) {
   const el = document.getElementById('chatbotMessages');
   if (!el) return;
 
   let productTag = '';
   if (product) {
-    const p = PRODUCTS[product];
+    const p = CHAT_PRODUCTS[product];
     if (p) {
       const tagClass = product === 'extreme' ? 'best' : 'recommended';
-      productTag = `<div class="chat-product-tag ${tagClass}">${p.name} \u2014 \u20ac${p.price?.toFixed(2) || 'TBA'}</div>`;
+      productTag = `<div class="chat-product-tag ${tagClass}">${p.name} \u2014 \u20ac${p.price.toFixed(2)}</div>`;
     }
   }
 
@@ -1564,7 +1407,7 @@ function addChatBotMessage(html, product) {
   chatbotMsgCount++;
 }
 
-function addChatUserMessage(text) {
+function userSay(text) {
   const el = document.getElementById('chatbotMessages');
   if (!el) return;
   const msgEl = document.createElement('div');
@@ -1574,25 +1417,24 @@ function addChatUserMessage(text) {
   el.scrollTop = el.scrollHeight;
 }
 
-function renderChatQuickReplies(replies) {
+function showSuggestions(labels) {
   const el = document.getElementById('chatbotQuickReplies');
   if (!el) return;
-  el.innerHTML = replies.map(r =>
-    `<button class="chat-quick-btn${r.next?.startsWith('rec_') ? ' primary' : ''}" onclick="handleChatReply('${r.next}','${r.action || ''}','${escapeHTML(r.label)}')">${r.label}</button>`
-  ).join('');
+  el.innerHTML = labels.map((label, i) => {
+    const isProduct = Object.keys(CHAT_PRODUCTS).some(k => label.toLowerCase().includes(k));
+    return `<button class="chat-quick-btn${isProduct ? ' primary' : ''}" onclick="handleSuggestion('${escapeHTML(label)}')">${label}</button>`;
+  }).join('');
 }
 
-function handleChatReply(next, action, label) {
-  addChatUserMessage(label);
-  renderChatQuickReplies([]);
+function clearSuggestions() {
+  const el = document.getElementById('chatbotQuickReplies');
+  if (el) el.innerHTML = '';
+}
 
-  if (action && CHAT_PRODUCT_MAP[action]) {
-    const pid = CHAT_PRODUCT_MAP[action];
-    const p = PRODUCTS[pid];
-    if (p && p.price) addToCart(p.id, p.name, p.price);
-  }
-
-  setTimeout(() => runChatFlow(next), 300);
+function handleSuggestion(label) {
+  userSay(label);
+  clearSuggestions();
+  setTimeout(() => processInput(label), 300);
 }
 
 function sendChatUserMessage() {
@@ -1600,24 +1442,238 @@ function sendChatUserMessage() {
   if (!input || !input.value.trim()) return;
   const text = input.value.trim();
   input.value = '';
-  addChatUserMessage(text);
-  renderChatQuickReplies([]);
+  userSay(text);
+  clearSuggestions();
+  setTimeout(() => processInput(text), 400);
+}
 
-  const lower = text.toLowerCase();
-  let next = 'usecase';
+function processInput(text) {
+  const lower = text.toLowerCase().trim();
 
-  if (lower.match(/fps|competitive|input lag|latency|mouse|keyboard|aim/)) next = 'fps';
-  else if (lower.match(/cleanup|clean|debloat|bloat/)) next = 'cleanup';
-  else if (lower.match(/everything|all|full|complete|maximum/)) next = 'everything';
-  else if (lower.match(/budget|cheap|afford|price/)) next = 'budget';
-  else if (lower.match(/basic/)) next = 'rec_basic';
-  else if (lower.match(/precision|precision pack/)) next = 'rec_precision';
-  else if (lower.match(/pro tweaks/)) next = 'rec_pro';
-  else if (lower.match(/extreme/)) next = 'rec_extreme';
-  else if (lower.match(/full optimization/)) next = 'rec_full';
-  else if (lower.match(/thank|bye|good|done/)) next = 'bye';
+  // ── Greetings ──
+  if (lower.match(/^(hi|hello|hey|yo|sup|hola|howdy|good\s*(morning|afternoon|evening))/)) {
+    botSay("Hey! Welcome to Choatix. What brings you here \u2014 looking to optimize your PC?");
+    showSuggestions(["Yes, help me choose", "Just browsing", "What is Choatix?"]);
+    return;
+  }
 
-  setTimeout(() => runChatFlow(next), 400);
+  // ── What is Choatix ──
+  if (lower.match(/what is|what's|tell me about|how does it work|what do you/)) {
+    if (lower.match(/choatix|product|you|your/)) {
+      botSay("Choatix V2 is a Windows PC optimization tool. We apply 220\u2013461 system tweaks (depending on the pack) to boost your FPS, reduce input lag, and clean up Windows. Every change is reversible with one click.");
+      showSuggestions(["What should I buy?", "How much FPS?", "Is it safe?", "Compare products"]);
+      return;
+    }
+  }
+
+  // ── Safety / reversibility ──
+  if (lower.match(/safe|security|virus|malware|revert|undo|rollback|reverse|restore/)) {
+    botSay("Absolutely safe. Every single tweak has a revert command \u2014 you can undo any change instantly from the app. We never modify critical system files, and nothing we do can brick your PC. If anything feels off, just hit Revert All.");
+    showSuggestions(["What should I buy?", "Compare products", "What games does it support?"]);
+    return;
+  }
+
+  // ── FPS gains ──
+  if (lower.match(/fps|frame|performance|boost|gain|improve/)) {
+    botSay("Most users see <strong>15\u201360% FPS improvement</strong> depending on hardware and game. Here are some real averages:");
+    setTimeout(() => {
+      botSay("\u2022 <strong>Fortnite:</strong> 110 \u2192 170 FPS (+55%)<br>\u2022 <strong>Valorant:</strong> 200 \u2192 320 FPS (+60%)<br>\u2022 <strong>CS2:</strong> 180 \u2192 300 FPS (+67%)<br>\u2022 <strong>Apex:</strong> 100 \u2192 160 FPS (+60%)<br>\u2022 <strong>Minecraft:</strong> 120 \u2192 260 FPS (+117%)");
+      showSuggestions(["Which pack gives the most FPS?", "What about input lag?", "Compare products"]);
+    }, 600);
+    return;
+  }
+
+  // ── Input lag / latency ──
+  if (lower.match(/input lag|latency|delay|response time|mouse.*lag|stutter|frame time/)) {
+    botSay("For input lag, our <strong>Precision Pack</strong> (\u20ac5.99) is specifically designed for that \u2014 it optimizes timer resolution, mouse polling, keyboard repeat rate, and GPU low latency mode. If you also want general system optimization, <strong>Extreme</strong> or <strong>Pro</strong> include those tweaks too.");
+    chatContext.lastProduct = 'precision';
+    showSuggestions(["Tell me about Precision", "Precision vs Extreme", "Add Precision to cart"]);
+    return;
+  }
+
+  // ── Games support ──
+  if (lower.match(/game|fortnite|valorant|cs2|apex|minecraft|gta|pubg|overwatch|warzone/)) {
+    botSay("Choatix works with <strong>all games</strong> \u2014 it optimizes your system-level settings, not individual games. But we have specific FPS benchmarks for Fortnite, Valorant, CS2, Apex Legends, Minecraft, and GTA V. The tweaks affect GPU priority, CPU scheduling, network latency, and memory management which benefit every game.");
+    showSuggestions(["How much FPS in [game]?", "What should I buy?", "Is it safe?"]);
+    return;
+  }
+
+  // ── Compare products ──
+  if (lower.match(/compar|difference|versus|vs|which.*better|what.*choose|which.*one/)) {
+    botSay("Here's a quick breakdown:");
+    setTimeout(() => {
+      botSay("\u2022 <strong>Basic</strong> (\u20ac4.99) \u2014 220 tweaks. Essential Windows + GPU + network<br>\u2022 <strong>Pro</strong> (\u20ac9.99) \u2014 291 tweaks. Basic + BCD + RAM + USB<br>\u2022 <strong>Extreme</strong> (\u20ac14.99) \u2014 283 tweaks. Full debloat + DirectX + registry<br>\u2022 <strong>Precision</strong> (\u20ac5.99) \u2014 128 tweaks. Input lag + mouse + latency<br>\u2022 <strong>Full</strong> (\u20ac24.99) \u2014 461 tweaks. Everything combined");
+      showSuggestions(["I play competitive FPS", "I want best value", "I want everything", "I'm on a budget"]);
+    }, 500);
+    return;
+  }
+
+  // ── Budget / price ──
+  if (lower.match(/budget|cheap|afford|price|cost|expensive|worth|money|pay/)) {
+    botSay("We've got options for every budget:");
+    setTimeout(() => {
+      botSay("\u2022 <strong>Cheapest:</strong> Basic at \u20ac4.99 (220 tweaks)<br>\u2022 <strong>Best value:</strong> Pro at \u20ac9.99 (291 tweaks)<br>\u2022 <strong>Most popular:</strong> Extreme at \u20ac14.99 (283 tweaks)<br>\u2022 <strong>Everything:</strong> Full at \u20ac24.99 (461 tweaks)");
+      showSuggestions(["Under \u20ac10 options", "Under \u20ac15 options", "Full details"]);
+    }, 500);
+    return;
+  }
+
+  // ── Recommendations based on context ──
+  if (lower.match(/recommend|suggest|should i|what.*buy|which.*get|which.*pack|which.*product/)) {
+    if (lower.match(/fps|competitive|aim|shoot/)) {
+      recommendProduct('precision');
+    } else if (lower.match(/everything|all|complete|max|ultimate/)) {
+      recommendProduct('full');
+    } else if (lower.match(/cheap|budget|broke|afford/)) {
+      recommendProduct('basic');
+    } else if (lower.match(/best|popular|most/)) {
+      recommendProduct('extreme');
+    } else {
+      botSay("To give you the best recommendation, tell me a bit about yourself:");
+      showSuggestions(["I play competitive FPS", "I want best value", "I want everything", "I'm on a budget"]);
+    }
+    return;
+  }
+
+  // ── Specific product questions ──
+  if (lower.match(/basic/)) {
+    if (lower.match(/add|cart|buy|purchase/)) { addToCart('basic', 'Choatix Basic Tweaks', 4.99); botSay("Added <strong>Basic Tweaks</strong> (\u20ac4.99) to your cart!"); showSuggestions(["Checkout", "Compare other options"]); return; }
+    if (lower.match(/include|contain|what|feature|tweak/)) { showProductDetails('basic'); return; }
+    recommendProduct('basic');
+    return;
+  }
+
+  if (lower.match(/pro/)) {
+    if (lower.match(/add|cart|buy|purchase/)) { addToCart('pro', 'Choatix Pro Tweaks', 9.99); botSay("Added <strong>Pro Tweaks</strong> (\u20ac9.99) to your cart!"); showSuggestions(["Checkout", "Compare other options"]); return; }
+    if (lower.match(/include|contain|what|feature|tweak/)) { showProductDetails('pro'); return; }
+    recommendProduct('pro');
+    return;
+  }
+
+  if (lower.match(/extreme/)) {
+    if (lower.match(/add|cart|buy|purchase/)) { addToCart('extreme', 'Choatix Extreme Tweaks', 14.99); botSay("Added <strong>Extreme Tweaks</strong> (\u20ac14.99) to your cart!"); showSuggestions(["Checkout", "Compare other options"]); return; }
+    if (lower.match(/include|contain|what|feature|tweak/)) { showProductDetails('extreme'); return; }
+    recommendProduct('extreme');
+    return;
+  }
+
+  if (lower.match(/precision/)) {
+    if (lower.match(/add|cart|buy|purchase/)) { addToCart('precision', 'Choatix Precision Pack', 5.99); botSay("Added <strong>Precision Pack</strong> (\u20ac5.99) to your cart!"); showSuggestions(["Checkout", "Compare other options"]); return; }
+    if (lower.match(/include|contain|what|feature|tweak/)) { showProductDetails('precision'); return; }
+    recommendProduct('precision');
+    return;
+  }
+
+  if (lower.match(/full|everything|all.*tweak|complete/)) {
+    if (lower.match(/add|cart|buy|purchase/)) { addToCart('full', 'Choatix Full Optimization', 24.99); botSay("Added <strong>Full Optimization</strong> (\u20ac24.99) to your cart!"); showSuggestions(["Checkout", "Compare other options"]); return; }
+    if (lower.match(/include|contain|what|feature|tweak/)) { showProductDetails('full'); return; }
+    recommendProduct('full');
+    return;
+  }
+
+  // ── Cart / checkout ──
+  if (lower.match(/cart|checkout|pay|purchase/)) {
+    if (cart.length > 0) {
+      botSay(`You have ${cart.length} item(s) in your cart totaling <strong>\u20ac${getCartTotal().toFixed(2)}</strong>. Click the cart icon in the top right to checkout!`);
+    } else {
+      botSay("Your cart is empty. Let me help you pick something!");
+      showSuggestions(["What should I buy?", "Compare products", "I'm on a budget"]);
+    }
+    return;
+  }
+
+  // ── Refund ──
+  if (lower.match(/refund|return|money back/)) {
+    botSay("All sales are final \u2014 no refunds. Our products are digital downloads that provide immediate access. However, every tweak is fully reversible, and we offer free support on Discord if anything doesn't work as expected.");
+    showSuggestions(["Is it safe?", "What should I buy?", "Join Discord"]);
+    return;
+  }
+
+  // ── Windows version ──
+  if (lower.match(/windows (10|11)|win(10|11)/)) {
+    botSay("Yes! Choatix V2 fully supports both <strong>Windows 10</strong> and <strong>Windows 11</strong>. All tweaks are compatible with the latest updates on both versions.");
+    showSuggestions(["What should I buy?", "Is it safe?", "How much FPS?"]);
+    return;
+  }
+
+  // ── Discord / support ──
+  if (lower.match(/discord|support|help|contact|join/)) {
+    botSay("Join our Discord for support, updates, and community: <a href='https://discord.gg/AhEK85REhG' target='_blank' style='color:var(--green)'>discord.gg/AhEK85REhG</a>");
+    showSuggestions(["What should I buy?", "Compare products"]);
+    return;
+  }
+
+  // ── Thank you / bye ──
+  if (lower.match(/thank|thanks|bye|goodbye|see you|that's all|done|great|awesome|perfect/)) {
+    botSay("Glad I could help! If you need anything else, just open this chat again. Happy fragging!");
+    showSuggestions(["Start over"]);
+    return;
+  }
+
+  // ── Competitive / FPS player ──
+  if (lower.match(/competitive|fps|valorant|cs2|apex|shoot|aim|pro.*player|esport/)) {
+    botSay("For competitive FPS, you want low input lag and maximum frame rates. Here's what I'd suggest:");
+    setTimeout(() => {
+      botSay("\u2022 <strong>Precision Pack</strong> (\u20ac5.99) \u2014 pure input lag focus<br>\u2022 <strong>Extreme</strong> (\u20ac14.99) \u2014 input lag + full system optimization<br>\u2022 <strong>Full</strong> (\u20ac24.99) \u2014 everything combined");
+      showSuggestions(["Precision (\u20ac5.99)", "Extreme (\u20ac14.99)", "Full (\u20ac24.99)", "Compare Precision vs Extreme"]);
+    }, 500);
+    return;
+  }
+
+  // ── Under 10 / under 15 ──
+  if (lower.match(/under.*10|less than.*10|below.*10/)) {
+    botSay("Under \u20ac10 you have two solid options:");
+    setTimeout(() => {
+      botSay("\u2022 <strong>Basic</strong> (\u20ac4.99) \u2014 220 tweaks, essential optimization<br>\u2022 <strong>Precision</strong> (\u20ac5.99) \u2014 128 tweaks, input lag focus");
+      showSuggestions(["Basic (\u20ac4.99)", "Precision (\u20ac5.99)", "Which one for me?"]);
+    }, 500);
+    return;
+  }
+
+  if (lower.match(/under.*15|less than.*15|below.*15/)) {
+    botSay("Under \u20ac15, <strong>Extreme</strong> (\u20ac14.99) is the sweet spot \u2014 283 tweaks including full debloat and DirectX optimization. It's our Best Seller.");
+    showSuggestions(["Extreme (\u20ac14.99)", "Add to cart", "Show me cheaper options"]);
+    return;
+  }
+
+  // ── Admin / admin area ──
+  if (lower.match(/admin|panel|dashboard/)) {
+    botSay("Sorry, I can't help with admin stuff. Talk to zylen on Discord for that!");
+    showSuggestions(["Join Discord", "What should I buy?"]);
+    return;
+  }
+
+  // ── Default: try to be helpful ──
+  const responses = [
+    "I'm not sure I understood that. Could you rephrase? I can help with product recommendations, pricing, features, or safety questions.",
+    "Hmm, I didn't quite get that. Try asking about our products, pricing, or which pack is best for you.",
+    "I'm not sure what you mean. Try asking something like \"What should I buy?\" or \"How much FPS will I gain?\""
+  ];
+  botSay(responses[Math.floor(Math.random() * responses.length)]);
+  showSuggestions(["What should I buy?", "Compare products", "How much FPS?", "Is it safe?"]);
+}
+
+function recommendProduct(id) {
+  const p = CHAT_PRODUCTS[id];
+  if (!p) return;
+  chatContext.lastProduct = id;
+  botSay(`Based on what you've told me, I'd recommend <strong>${p.name}</strong> (\u20ac${p.price.toFixed(2)}).<br><br>${p.desc}.<br><em>${p.best}.</em>`, id);
+  showSuggestions([`Add ${p.name} to cart`, `Tell me more about ${p.name}`, "Compare with other options"]);
+}
+
+function showProductDetails(id) {
+  const p = CHAT_PRODUCTS[id];
+  if (!p) return;
+  chatContext.lastProduct = id;
+  const detailMap = {
+    basic: "\u2022 Windows debloat<br>\u2022 GPU optimization<br>\u2022 Network tuning<br>\u2022 Power plan<br>\u2022 Deep clean (14 caches)<br>\u2022 Gaming settings",
+    pro: "Everything in Basic plus:<br>\u2022 BCD boot tweaks<br>\u2022 RAM optimization<br>\u2022 USB tuning<br>\u2022 Storage optimization<br>\u2022 Audio tweaks",
+    extreme: "\u2022 Full Windows debloat<br>\u2022 DirectX optimization<br>\u2022 Buffer bloat fix<br>\u2022 Registry tuning<br>\u2022 Browser optimization<br>\u2022 Privacy tweaks",
+    precision: "\u2022 Timer resolution fix<br>\u2022 Mouse polling optimization<br>\u2022 Keyboard repeat rate<br>\u2022 GPU low latency mode<br>\u2022 Network for competitive",
+    full: "Everything in all packs combined:<br>\u2022 461 system tweaks<br>\u2022 Every optimization category<br>\u2022 Game presets for 20+ titles<br>\u2022 Quick Boost<br>\u2022 Safe rollback"
+  };
+  botSay(`<strong>${p.name}</strong> (\u20ac${p.price.toFixed(2)}) \u2014 ${p.tweaks} tweaks:<br><br>${detailMap[id]}`, id);
+  showSuggestions([`Add ${p.name} to cart`, "Compare with others", "What should I buy?"]);
 }
 
 function escapeHTML(str) {
