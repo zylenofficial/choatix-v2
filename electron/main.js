@@ -2024,10 +2024,10 @@ const AUDITED_TWEAKS = {
   'privacy-disable-ad-id': { apply: `$ErrorActionPreference='Stop'; $p='HKCU:\Software\Microsoft\Windows\CurrentVersion\AdvertisingInfo'; Set-ItemProperty $p Enabled -Type DWord -Value 0; if((Get-ItemPropertyValue $p Enabled) -ne 0){throw 'Advertising ID verification failed'}`, restore: `$ErrorActionPreference='Stop'; Set-ItemProperty 'HKCU:\Software\Microsoft\Windows\CurrentVersion\AdvertisingInfo' Enabled -Type DWord -Value 1` },
 };
 
-// Overlay audited tweaks with verifiedPowerShell wrapper (optional hardening)
+// Overlay audited tweaks directly into TWEAK_COMMANDS/RESTORE
 for (const [id, definition] of Object.entries(AUDITED_TWEAKS)) {
-  TWEAK_COMMANDS[id] = verifiedPowerShell(definition.apply);
-  if (definition.restore) TWEAK_RESTORE_COMMANDS[id] = verifiedPowerShell(definition.restore);
+  TWEAK_COMMANDS[id] = `powershell -NoProfile -Command "${definition.apply.replace(/"/g, '\\"')}"`;
+  if (definition.restore) TWEAK_RESTORE_COMMANDS[id] = `powershell -NoProfile -Command "${definition.restore.replace(/"/g, '\\"')}"`;
 }
 
 ipcMain.handle("restore-tweak", async (_event, tweakId) => {
