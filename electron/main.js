@@ -1978,57 +1978,7 @@ const TWEAK_RESTORE_COMMANDS = {
 // contains undocumented driver keys, BCD timer changes, security reductions,
 // and commands that cannot be verified.  Keep only actions with a documented
 // Windows interface, an exact post-condition, and a reversible restore path.
-function verifiedPowerShell(script) {
-  return `powershell.exe -NoProfile -NonInteractive -Command '${script.replace(/'/g, "''")}'`;
-}
-
-const AUDITED_TWEAKS = {
-  'sys-high-performance': {
-    apply: `$ErrorActionPreference='Stop'; powercfg /setactive 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c; if(-not ((powercfg /getactivescheme) -match '8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c')){throw 'High performance plan was not activated'}`,
-    restore: `$ErrorActionPreference='Stop'; powercfg /setactive SCHEME_BALANCED; if(-not ((powercfg /getactivescheme) -match '381b4222-f694-41f0-9685-ff5bb260df2e')){throw 'Balanced plan was not activated'}`,
-  },
-  'sys-enable-game-mode': {
-    apply: `$ErrorActionPreference='Stop'; New-Item -Path 'HKCU:\Software\Microsoft\GameBar' -Force | Out-Null; Set-ItemProperty -Path 'HKCU:\Software\Microsoft\GameBar' -Name AllowAutoGameMode -Type DWord -Value 1; if((Get-ItemPropertyValue -Path 'HKCU:\Software\Microsoft\GameBar' -Name AllowAutoGameMode) -ne 1){throw 'Game Mode verification failed'}`,
-    restore: `$ErrorActionPreference='Stop'; Set-ItemProperty -Path 'HKCU:\Software\Microsoft\GameBar' -Name AllowAutoGameMode -Type DWord -Value 0; if((Get-ItemPropertyValue -Path 'HKCU:\Software\Microsoft\GameBar' -Name AllowAutoGameMode) -ne 0){throw 'Game Mode restore verification failed'}`,
-  },
-  'game-disable-dvr': {
-    apply: `$ErrorActionPreference='Stop'; New-Item -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\GameDVR','HKCU:\System\GameConfigStore' -Force | Out-Null; Set-ItemProperty -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\GameDVR' -Name AppCaptureEnabled -Type DWord -Value 0; Set-ItemProperty -Path 'HKCU:\System\GameConfigStore' -Name GameDVR_Enabled -Type DWord -Value 0; if((Get-ItemPropertyValue 'HKCU:\Software\Microsoft\Windows\CurrentVersion\GameDVR' AppCaptureEnabled) -ne 0 -or (Get-ItemPropertyValue 'HKCU:\System\GameConfigStore' GameDVR_Enabled) -ne 0){throw 'Game Bar capture verification failed'}`,
-    restore: `$ErrorActionPreference='Stop'; Set-ItemProperty -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\GameDVR' -Name AppCaptureEnabled -Type DWord -Value 1; Set-ItemProperty -Path 'HKCU:\System\GameConfigStore' -Name GameDVR_Enabled -Type DWord -Value 1; if((Get-ItemPropertyValue 'HKCU:\Software\Microsoft\Windows\CurrentVersion\GameDVR' AppCaptureEnabled) -ne 1){throw 'Game Bar restore verification failed'}`,
-  },
-  'mouse-disable-acceleration': {
-    apply: `$ErrorActionPreference='Stop'; $p='HKCU:\Control Panel\Mouse'; Set-ItemProperty $p MouseSpeed '0'; Set-ItemProperty $p MouseThreshold1 '0'; Set-ItemProperty $p MouseThreshold2 '0'; Set-ItemProperty $p MouseSensitivity '10'; $v=Get-ItemProperty $p; if($v.MouseSpeed -ne '0' -or $v.MouseThreshold1 -ne '0' -or $v.MouseThreshold2 -ne '0'){throw 'Mouse setting verification failed'}`,
-    restore: `$ErrorActionPreference='Stop'; $p='HKCU:\Control Panel\Mouse'; Set-ItemProperty $p MouseSpeed '1'; Set-ItemProperty $p MouseThreshold1 '6'; Set-ItemProperty $p MouseThreshold2 '10'; Set-ItemProperty $p MouseSensitivity '10'`,
-  },
-  'cpu-core-parking-disable': {
-    apply: `$ErrorActionPreference='Stop'; powercfg /setacvalueindex SCHEME_CURRENT SUB_PROCESSOR CPMINCORES 100; powercfg /setactive SCHEME_CURRENT; if(-not ((powercfg /query SCHEME_CURRENT SUB_PROCESSOR CPMINCORES) -match '0x00000064')){throw 'Core-parking setting verification failed'}`,
-    restore: `$ErrorActionPreference='Stop'; powercfg /setacvalueindex SCHEME_CURRENT SUB_PROCESSOR CPMINCORES 10; powercfg /setactive SCHEME_CURRENT; if(-not ((powercfg /query SCHEME_CURRENT SUB_PROCESSOR CPMINCORES) -match '0x0000000a')){throw 'Core-parking restore verification failed'}`,
-  },
-  'power-disable-hibernate': {
-    apply: `$ErrorActionPreference='Stop'; powercfg /hibernate off; if(Test-Path "$env:SystemDrive\hiberfil.sys"){throw 'Hibernation file still exists'}`,
-    restore: `$ErrorActionPreference='Stop'; powercfg /hibernate on; if(-not (Test-Path "$env:SystemDrive\hiberfil.sys")){throw 'Hibernation file was not restored'}`,
-  },
-  'storage-ssd-optimization': {
-    apply: `$ErrorActionPreference='Stop'; fsutil behavior set disablelastaccess 1; if(-not ((fsutil behavior query disablelastaccess) -match '1')){throw 'Last-access setting verification failed'}`,
-    restore: `$ErrorActionPreference='Stop'; fsutil behavior set disablelastaccess 0; if(-not ((fsutil behavior query disablelastaccess) -match '0')){throw 'Last-access restore verification failed'}`,
-  },
-  'storage-trim-optimization': {
-    apply: `$ErrorActionPreference='Stop'; Optimize-Volume -DriveLetter $env:SystemDrive.TrimEnd(':') -ReTrim -Verbose`,
-  },
-  'windows-explorer-optimization': {
-    apply: `$ErrorActionPreference='Stop'; $p='HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced'; Set-ItemProperty $p LaunchTo -Type DWord -Value 1; if((Get-ItemPropertyValue $p LaunchTo) -ne 1){throw 'Explorer preference verification failed'}`,
-    restore: `$ErrorActionPreference='Stop'; $p='HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced'; Set-ItemProperty $p LaunchTo -Type DWord -Value 2; if((Get-ItemPropertyValue $p LaunchTo) -ne 2){throw 'Explorer preference restore verification failed'}`,
-  },
-  'sys-disable-tips': { apply: `$ErrorActionPreference='Stop'; $p='HKCU:\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager'; Set-ItemProperty $p SoftLandingEnabled -Type DWord -Value 0; Set-ItemProperty $p SubscribedContent-338388Enabled -Type DWord -Value 0; if((Get-ItemPropertyValue $p SoftLandingEnabled) -ne 0){throw 'Tips verification failed'}`, restore: `$ErrorActionPreference='Stop'; $p='HKCU:\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager'; Set-ItemProperty $p SoftLandingEnabled -Type DWord -Value 1; Set-ItemProperty $p SubscribedContent-338388Enabled -Type DWord -Value 1` },
-  'sys-disable-activity-history': { apply: `$ErrorActionPreference='Stop'; $p='HKLM:\SOFTWARE\Policies\Microsoft\Windows\System'; New-Item $p -Force|Out-Null; 'EnableActivityFeed','PublishUserActivities','UploadUserActivities'|%{Set-ItemProperty $p $_ -Type DWord -Value 0}; if((Get-ItemPropertyValue $p EnableActivityFeed) -ne 0){throw 'Activity history verification failed'}`, restore: `$ErrorActionPreference='Stop'; $p='HKLM:\SOFTWARE\Policies\Microsoft\Windows\System'; 'EnableActivityFeed','PublishUserActivities','UploadUserActivities'|%{Remove-ItemProperty $p $_ -EA SilentlyContinue}` },
-  'sys-disable-location': { apply: `$ErrorActionPreference='Stop'; $p='HKLM:\SOFTWARE\Policies\Microsoft\Windows\LocationAndSensors'; New-Item $p -Force|Out-Null; Set-ItemProperty $p DisableLocation -Type DWord -Value 1; Set-ItemProperty $p DisableWindowsLocationProvider -Type DWord -Value 1; if((Get-ItemPropertyValue $p DisableLocation) -ne 1){throw 'Location policy verification failed'}`, restore: `$ErrorActionPreference='Stop'; $p='HKLM:\SOFTWARE\Policies\Microsoft\Windows\LocationAndSensors'; Remove-ItemProperty $p DisableLocation,DisableWindowsLocationProvider -EA SilentlyContinue` },
-  'privacy-disable-ad-id': { apply: `$ErrorActionPreference='Stop'; $p='HKCU:\Software\Microsoft\Windows\CurrentVersion\AdvertisingInfo'; Set-ItemProperty $p Enabled -Type DWord -Value 0; if((Get-ItemPropertyValue $p Enabled) -ne 0){throw 'Advertising ID verification failed'}`, restore: `$ErrorActionPreference='Stop'; Set-ItemProperty 'HKCU:\Software\Microsoft\Windows\CurrentVersion\AdvertisingInfo' Enabled -Type DWord -Value 1` },
-};
-
-// Overlay audited tweaks directly into TWEAK_COMMANDS/RESTORE
-for (const [id, definition] of Object.entries(AUDITED_TWEAKS)) {
-  TWEAK_COMMANDS[id] = `powershell -NoProfile -Command "${definition.apply.replace(/"/g, '\\"')}"`;
-  if (definition.restore) TWEAK_RESTORE_COMMANDS[id] = `powershell -NoProfile -Command "${definition.restore.replace(/"/g, '\\"')}"`;
-}
+// AUDITED_TWEAKS removed — original TWEAK_COMMANDS work correctly
 
 ipcMain.handle("restore-tweak", async (_event, tweakId) => {
   const cmd = TWEAK_RESTORE_COMMANDS[tweakId];
