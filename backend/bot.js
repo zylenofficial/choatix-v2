@@ -6,7 +6,7 @@ const CLIENT_ID = process.env.DISCORD_CLIENT_ID || 'YOUR_CLIENT_ID_HERE';
 const API_URL = process.env.BACKEND_URL || `http://localhost:${process.env.PORT || 3001}`;
 const PRO_ROLE_ID = process.env.PRO_ROLE_ID || '1517719772702314616';
 const PREMIUM_ROLE_ID = process.env.PREMIUM_ROLE_ID || '1517719827580452994';
-const ADMIN_SECRET = 'choatix-admin-2024';
+const ADMIN_SECRET = 'phantom-admin-2024';
 const MAX_RETRIES = 10;
 const RETRY_DELAY = 5000;
 
@@ -26,7 +26,7 @@ function hashCode(str) {
 function generateKeyLocal(tier) {
   const nonce = Math.random().toString(36).substring(2, 6).toUpperCase();
   const expiry = new Date(Date.now() + 365 * 86400000).toISOString().split('T')[0];
-  const SECRET = 'choatix-secret-key-2024';
+  const SECRET = 'phantom-secret-key-2024';
   const hash = hashCode(`${tier}:${expiry}:${nonce}:${SECRET}`);
   const checksum = hash.toString(36).toUpperCase().padStart(4, '0');
   return `CHTX-${tier.substring(0, 4)}-${nonce}-${checksum}`;
@@ -63,23 +63,23 @@ function apiRequest(method, path, body) {
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers],
   rest: { timeout: 30000 },
-  presence: { activities: [{ name: 'Choatix V2', type: 3 }], status: 'online' },
+  presence: { activities: [{ name: 'Phantom V2', type: 3 }], status: 'online' },
 });
 
 async function registerCommands() {
   const commands = [
     new SlashCommandBuilder()
       .setName('redeem')
-      .setDescription('Redeem a Choatix license key')
+      .setDescription('Redeem a Phantom license key')
       .addStringOption(option =>
         option.setName('key').setDescription('Your license key (CHTX-XXXX-XXXX-XXXX)').setRequired(true)
       ),
     new SlashCommandBuilder()
       .setName('status')
-      .setDescription('Check your Choatix license status'),
+      .setDescription('Check your Phantom license status'),
     new SlashCommandBuilder()
       .setName('unlink')
-      .setDescription('Unlink your Choatix license'),
+      .setDescription('Unlink your Phantom license'),
     new SlashCommandBuilder()
       .setName('refer')
       .setDescription('Get your referral code or create a custom one')
@@ -127,16 +127,16 @@ async function registerCommands() {
       .setDescription('Get the Discord server invite link'),
     new SlashCommandBuilder()
       .setName('download')
-      .setDescription('Get the Choatix V2 download link'),
+      .setDescription('Get the Phantom V2 download link'),
     new SlashCommandBuilder()
       .setName('ping')
       .setDescription('Check bot latency'),
     new SlashCommandBuilder()
       .setName('profile')
-      .setDescription('View your Choatix profile'),
+      .setDescription('View your Phantom profile'),
     new SlashCommandBuilder()
       .setName('changelog')
-      .setDescription('View latest Choatix V2 updates'),
+      .setDescription('View latest Phantom V2 updates'),
     new SlashCommandBuilder()
       .setName('revoke')
       .setDescription('Revoke a license key (admin only)')
@@ -181,7 +181,7 @@ async function registerCommands() {
       .setDescription('View the coins leaderboard'),
     new SlashCommandBuilder()
       .setName('rate')
-      .setDescription('Rate a Choatix product (1-5 stars)')
+      .setDescription('Rate a Phantom product (1-5 stars)')
       .addStringOption(option =>
         option.setName('product').setDescription('Product to rate').setRequired(true)
           .addChoices(
@@ -247,7 +247,7 @@ async function registerCommands() {
       ),
     new SlashCommandBuilder()
       .setName('affiliate-register')
-      .setDescription('Register as a Choatix affiliate'),
+      .setDescription('Register as a Phantom affiliate'),
     new SlashCommandBuilder()
       .setName('affiliate')
       .setDescription('View your affiliate dashboard'),
@@ -316,7 +316,7 @@ client.on('interactionCreate', async (interaction) => {
         }
 
         await interaction.editReply({
-          content: `✅ **License Activated!**\n\nPlan: **${result.tier}**${roleMsg}\n\nYou can now use all ${result.tier} features in Choatix V2!`,
+          content: `✅ **License Activated!**\n\nPlan: **${result.tier}**${roleMsg}\n\nYou can now use all ${result.tier} features in Phantom V2!`,
         });
       } else {
         await interaction.editReply({
@@ -453,7 +453,7 @@ client.on('interactionCreate', async (interaction) => {
         }
 
         await interaction.editReply({
-          content: `✅ **Referral Redeemed!**\n\nYou got: **${result.refereeReward}**${roleMsg}\nThe referrer got: **${result.referrerReward}**\n\nEnjoy Choatix V2!`,
+          content: `✅ **Referral Redeemed!**\n\nYou got: **${result.refereeReward}**${roleMsg}\nThe referrer got: **${result.referrerReward}**\n\nEnjoy Phantom V2!`,
         });
       } else {
         await interaction.editReply({
@@ -541,8 +541,8 @@ client.on('interactionCreate', async (interaction) => {
         const winner = interaction.guild.members.cache.get(winnerId);
         if (winner) {
           const dmText = wonKey
-            ? `🎉 You won a **${tier}** Choatix license key!\n\nYour key: \`${wonKey}\`\n\nRun \`/redeem key:${wonKey}\` in the server to activate!`
-            : `🎉 You won a **${tier}** Choatix license key!\n\n⚠️ Key generation failed. Please contact an admin.`;
+            ? `🎉 You won a **${tier}** Phantom license key!\n\nYour key: \`${wonKey}\`\n\nRun \`/redeem key:${wonKey}\` in the server to activate!`
+            : `🎉 You won a **${tier}** Phantom license key!\n\n⚠️ Key generation failed. Please contact an admin.`;
           await winner.send(dmText);
         }
       } catch {}
@@ -601,7 +601,7 @@ client.on('interactionCreate', async (interaction) => {
   // ─── /help ────────────────────────────────────────────────
   if (interaction.isChatInputCommand() && interaction.commandName === 'help') {
     const embed = new EmbedBuilder()
-      .setTitle('📖 Choatix V2 — Commands')
+      .setTitle('📖 Phantom V2 — Commands')
       .setDescription('All available bot commands')
       .addFields(
         { name: '🔑 License', value: '`/redeem` — Redeem a license key\n`/status` — Check your license\n`/unlink` — Unlink your license', inline: false },
@@ -611,11 +611,11 @@ client.on('interactionCreate', async (interaction) => {
         { name: '⭐ Ratings', value: '`/rate` — Rate a product\n`/ratings` — View product ratings', inline: false },
         { name: '🤝 Affiliate', value: '`/affiliate-register` — Become an affiliate\n`/affiliate` — View your dashboard\n`/claim` — Claim your key after website purchase', inline: false },
         { name: '🎉 Fun', value: '`/giveaway` — Start a giveaway (admin)\n`/profile` — View your profile', inline: false },
-        { name: 'ℹ️ Info', value: '`/help` — This message\n`/ping` — Bot latency\n`/invite` — Server invite\n`/download` — Download Choatix V2\n`/changelog` — Latest updates', inline: false },
+        { name: 'ℹ️ Info', value: '`/help` — This message\n`/ping` — Bot latency\n`/invite` — Server invite\n`/download` — Download Phantom V2\n`/changelog` — Latest updates', inline: false },
         { name: '🛠️ Admin', value: '`/generate-key` — Generate keys\n`/deliver` — Deliver key after PayPal payment\n`/revoke` — Revoke a key\n`/announce` — Send announcement\n`/stats` — Server statistics\n`/broadcast` — DM all users\n`/partner-add` — Add a partner\n`/partner-remove` — Remove a partner', inline: false },
       )
       .setColor(0xffffff)
-      .setFooter({ text: 'Choatix V2 — Gaming Optimization' });
+      .setFooter({ text: 'Phantom V2 — Gaming Optimization' });
 
     await interaction.reply({ embeds: [embed] });
   }
@@ -624,7 +624,7 @@ client.on('interactionCreate', async (interaction) => {
   if (interaction.isChatInputCommand() && interaction.commandName === 'invite') {
     const embed = new EmbedBuilder()
       .setTitle('🔗 Join Our Server')
-      .setDescription('[Click here to join Choatix Discord](https://discord.gg/AhEK85REhG)')
+      .setDescription('[Click here to join Phantom Discord](https://discord.gg/AhEK85REhG)')
       .setColor(0xffffff);
 
     await interaction.reply({ embeds: [embed] });
@@ -633,7 +633,7 @@ client.on('interactionCreate', async (interaction) => {
   // ─── /download ────────────────────────────────────────────
   if (interaction.isChatInputCommand() && interaction.commandName === 'download') {
     const embed = new EmbedBuilder()
-      .setTitle('⬇️ Download Choatix V2')
+      .setTitle('⬇️ Download Phantom V2')
       .setDescription('[Click here to download](https://github.com/zylenofficial/choatix-v2/releases/latest)\n\nChoose the latest `Setup.exe` from Assets.')
       .setColor(0xffffff);
 
@@ -685,7 +685,7 @@ client.on('interactionCreate', async (interaction) => {
   // ─── /changelog ───────────────────────────────────────────
   if (interaction.isChatInputCommand() && interaction.commandName === 'changelog') {
     const embed = new EmbedBuilder()
-      .setTitle('📋 Choatix V2 — Changelog')
+      .setTitle('📋 Phantom V2 — Changelog')
       .setDescription('Latest updates and improvements')
       .addFields(
         { name: 'v2.3.0', value: '• 48 new tweaks (461 total)\n• Power Plan Manager\n• Game Settings Backup/Restore\n• Deep Clean one-click\n• Network Speed Test', inline: false },
@@ -753,7 +753,7 @@ client.on('interactionCreate', async (interaction) => {
     try {
       const result = await apiRequest('GET', '/api/admin/stats');
       const embed = new EmbedBuilder()
-        .setTitle('📊 Choatix V2 — Statistics')
+        .setTitle('📊 Phantom V2 — Statistics')
         .addFields(
           { name: 'Total Keys', value: String(result.totalKeys || 0), inline: true },
           { name: 'Redeemed', value: String(result.redeemedKeys || 0), inline: true },
@@ -796,7 +796,7 @@ client.on('interactionCreate', async (interaction) => {
         try {
           const member = await interaction.guild.members.fetch(user.discord_id);
           if (member) {
-            await member.send(`📢 **Choatix Announcement**\n\n${message}`);
+            await member.send(`📢 **Phantom Announcement**\n\n${message}`);
             sent++;
           }
         } catch {
@@ -1311,7 +1311,7 @@ client.on('interactionCreate', async (interaction) => {
       );
       const embed = new EmbedBuilder()
         .setTitle('🤝 Affiliate Registration')
-        .setDescription('You are now a Choatix affiliate!\n\nUse `/affiliate` to view your dashboard and generate tracking links.')
+        .setDescription('You are now a Phantom affiliate!\n\nUse `/affiliate` to view your dashboard and generate tracking links.')
         .setColor(0x4ec95e);
       await interaction.editReply({ embeds: [embed] });
     } catch (err) {

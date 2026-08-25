@@ -1,4 +1,4 @@
-const SECRET = 'choatix-v2-secret-2024'
+const SECRET = 'phantom-v2-secret-2024'
 const PREFIX = 'CHTX'
 
 function hashCode(str) {

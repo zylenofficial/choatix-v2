@@ -1,7 +1,7 @@
 {
-  "name": "choatix-v2",
+  "name": "phantom-v2",
   "version": "2.3.1",
-  "description": "Choatix V2 - Advanced Gaming Optimization Suite",
+  "description": "Phantom V2 - Advanced Gaming Optimization Suite",
   "author": "zylenofficial",
   "main": "electron/main.js",
   "private": true,
@@ -45,8 +45,8 @@
     "zustand": "^4.5.0"
   },
   "build": {
-    "appId": "com.choatix.v2",
-    "productName": "Choatix V2",
+    "appId": "com.phantom.v2",
+    "productName": "Phantom V2",
     "publish": {
       "provider": "github",
       "owner": "zylenofficial",
@@ -82,7 +82,7 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "Choatix V2",
+      "shortcutName": "Phantom V2",
       "deleteAppDataOnUninstall": true,
       "installerIcon": "assets/icon.ico",
       "uninstallerIcon": "assets/icon.ico",

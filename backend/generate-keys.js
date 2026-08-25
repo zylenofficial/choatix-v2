@@ -13,7 +13,7 @@ function hashCode(str) {
 function generateKey(tier) {
   const expiry = new Date(Date.now() + 365 * 86400000).toISOString().split('T')[0];
   const nonce = Math.random().toString(36).substring(2, 6).toUpperCase();
-  const SECRET = 'choatix-secret-key-2024';
+  const SECRET = 'phantom-secret-key-2024';
   const hash = hashCode(`${tier}:${expiry}:${nonce}:${SECRET}`);
   const checksum = hash.toString(36).toUpperCase().padStart(4, '0').substring(0, 4);
   return `CHTX-${tier.substring(0, 4)}-${nonce}-${checksum}`;

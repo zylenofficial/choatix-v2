@@ -208,6 +208,16 @@ export const useStore = create<AppState>()(
     }),
     {
       name: 'choatix-v2-storage',
+      // Audit v2 invalidated every previous “applied” and rollback record:
+      // old commands are no longer executable or safe to describe as applied.
+      version: 2,
+      migrate: (persistedState, version) => {
+        const state = persistedState as Partial<AppState>
+        if (version < 2) {
+          return { ...state, appliedTweaks: [], rollbackEntries: [] } as AppState
+        }
+        return state as AppState
+      },
     }
   )
 )

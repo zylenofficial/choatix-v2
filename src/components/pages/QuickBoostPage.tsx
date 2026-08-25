@@ -1,27 +1,27 @@
 'use client'
 
 import { useState, useCallback, useMemo } from 'react'
-import { Zap, Mouse, Wifi, Target, Trash2, MemoryStick, Loader2, CheckCircle2, Monitor, Gauge, Shield, Clock, Cpu, Paintbrush, Sparkles, ArrowUp } from 'lucide-react'
+import { Zap, Mouse, Loader2, CheckCircle2, Gauge, Shield, Sparkles, ArrowUp, Cpu, Monitor, Wifi, Timer, Volume2, Settings, Crosshair } from 'lucide-react'
 
 const MODULES = [
-  { id: 'fps-boost', tweakId: 'game-dvr-disable', name: 'FPS Boost', desc: 'Disables Game DVR, Game Bar, and hardware GPU scheduling', icon: Zap, color: '#4ade80', tag: 'Performance', impact: '+10-25% FPS' },
-  { id: 'ultimate-perf', tweakId: 'sys-enable-ultimate-performance', name: 'Ultimate Performance', desc: 'Unlocks Windows Ultimate Performance power plan', icon: Gauge, color: '#f87171', tag: 'Performance', impact: 'Max CPU/GPU power' },
-  { id: 'disable-vbs', tweakId: 'sys-disable-vbs', name: 'Disable VBS & Hyper-V', desc: 'Turns off virtualization security for major FPS gain', icon: Shield, color: '#fb923c', tag: 'Performance', impact: '+5-15% FPS' },
-  { id: 'cpu-priority', tweakId: 'sys-cpu-priority', name: 'CPU Priority Boost', desc: 'Optimizes CPU scheduling for foreground games', icon: Cpu, color: '#a78bfa', tag: 'CPU', impact: 'Faster game response' },
-  { id: 'core-parking', tweakId: 'cpu-core-parking-disable', name: 'Disable Core Parking', desc: 'Keeps all CPU cores active, no park/unpark latency', icon: Cpu, color: '#60a5fa', tag: 'CPU', impact: 'All cores active' },
-  { id: 'input-delay', tweakId: 'mouse-acceleration-disable', name: 'Input Delay Fix', desc: 'Disables mouse acceleration and optimizes timer resolution', icon: Mouse, color: '#fb923c', tag: 'Input', impact: '30% less input lag' },
-  { id: 'aim-stabilizer', tweakId: 'pointer-precision-disable', name: 'Aim Stabilizer', desc: 'Disables pointer precision for raw mouse input', icon: Target, color: '#a78bfa', tag: 'Aim', impact: 'Consistent aim' },
-  { id: 'ping-optimizer', tweakId: 'dns-optimization', name: 'Ping Optimizer', desc: 'DNS optimization, network throttling off, TCP stack optimization', icon: Wifi, color: '#60a5fa', tag: 'Network', impact: '-10-30ms ping' },
-  { id: 'gpu-performance', tweakId: 'nv-optimize-performance', name: 'GPU Performance Mode', desc: 'NVIDIA power management to max performance, texture filtering optimized', icon: Monitor, color: '#4ade80', tag: 'GPU', impact: 'Stable GPU clocks' },
-  { id: 'disable-animations', tweakId: 'sys-disable-animations', name: 'Disable Animations', desc: 'Turns off Windows animations for snappier UI response', icon: Paintbrush, color: '#fbbf24', tag: 'System', impact: 'Snappier UI' },
-  { id: 'disable-fullscreen', tweakId: 'sys-disable-fullscreen-opt', name: 'Disable Fullscreen Opt', desc: 'Removes fullscreen overlay for lower input lag', icon: Monitor, color: '#60a5fa', tag: 'Gaming', impact: 'Lower input lag' },
-  { id: 'game-mode', tweakId: 'sys-enable-game-mode', name: 'Enable Game Mode', desc: 'Windows prioritizes gaming resources, reduces background interference', icon: Zap, color: '#4ade80', tag: 'Gaming', impact: 'Less background lag' },
-  { id: 'memory-boost', tweakId: 'memory-working-set', name: 'Memory Boost', desc: 'Optimizes working set and memory management', icon: MemoryStick, color: '#fbbf24', tag: 'Memory', impact: 'More free RAM' },
-  { id: 'audio-latency', tweakId: 'audio-disable-enhancements', name: 'Audio Latency Fix', desc: 'Disables audio enhancements for lower sound latency', icon: Zap, color: '#a78bfa', tag: 'Audio', impact: 'Lower audio delay' },
-  { id: 'ssd-optimization', tweakId: 'storage-ssd-optimization', name: 'SSD Optimization', desc: 'Optimizes SSD settings for faster load times', icon: Gauge, color: '#60a5fa', tag: 'Storage', impact: 'Faster game loads' },
-  { id: 'disable-background', tweakId: 'sys-reduce-background', name: 'Kill Background Apps', desc: 'Reduces background process CPU usage', icon: Trash2, color: '#f87171', tag: 'System', impact: 'Free CPU resources' },
-  { id: 'debloat', tweakId: 'sys-disable-cortana', name: 'System Debloat', desc: 'Disables Cortana, widgets, and unnecessary services', icon: Trash2, color: '#f87171', tag: 'Cleanup', impact: 'Free resources' },
-  { id: 'msi-optimization', tweakId: 'sys-optimize-msi', name: 'MSI Mode Optimize', desc: 'Optimizes Message Signal Interrupts for GPU and devices', icon: Gauge, color: '#4ade80', tag: 'Hardware', impact: 'Lower device latency' },
+  { id: 'high-performance', tweakId: 'sys-high-performance', name: 'High Performance Plan', desc: 'Activates the Windows High performance power plan. It can increase heat and battery use.', icon: Gauge, color: '#60a5fa', tag: 'Situational', impact: 'May improve consistency' },
+  { id: 'game-mode', tweakId: 'sys-enable-game-mode', name: 'Enable Game Mode', desc: 'Enables the Windows Game Mode preference for the current user.', icon: Zap, color: '#4ade80', tag: 'Low impact', impact: 'Workload-dependent' },
+  { id: 'gamebar-capture', tweakId: 'sys-disable-gamebar', name: 'Disable Game Bar Capture', desc: 'Turns off Game Bar capture and background recording. Keep it enabled if you use capture.', icon: Shield, color: '#fb923c', tag: 'Situational', impact: 'Avoids capture overhead' },
+  { id: 'core-parking', tweakId: 'cpu-core-parking-disable', name: 'AC Core Parking Minimum', desc: 'Keeps cores active on AC power. This can increase idle power and is not universally beneficial.', icon: Cpu, color: '#a78bfa', tag: 'Situational', impact: 'Hardware-dependent' },
+  { id: 'mouse-mapping', tweakId: 'mouse-disable-acceleration', name: 'Consistent Mouse Mapping', desc: 'Disables Enhance Pointer Precision. It changes mouse feel; it does not change USB latency.', icon: Mouse, color: '#fb923c', tag: 'Input preference', impact: 'Consistent pointer mapping' },
+  { id: 'ssd-last-access', tweakId: 'storage-ssd-optimization', name: 'NTFS Last-Access Preference', desc: 'Disables last-access updates, a low-impact filesystem preference that modern Windows commonly already uses.', icon: Gauge, color: '#60a5fa', tag: 'Low impact', impact: 'No FPS claim' },
+  { id: 'disable-vbs', tweakId: 'sys-disable-vbs', name: 'Disable VBS & Hyper-V', desc: 'Turns off virtualization-based security. This can significantly improve performance in games.', icon: Shield, color: '#f87171', tag: 'High impact', impact: 'Significant FPS gain' },
+  { id: 'disable-mitigations', tweakId: 'sys-disable-mitigations', name: 'Disable Mitigations', desc: 'Turns off Windows security mitigations (Spectre/Meltdown). Higher performance but lower security.', icon: Shield, color: '#ef4444', tag: 'High risk', impact: 'Up to 15% CPU gain' },
+  { id: 'optimize-fps', tweakId: 'sys-optimize-fps', name: 'Optimize FPS & Input Lag', desc: 'Applies gaming, input, scheduling, timer, and priority tweaks to reduce latency.', icon: Crosshair, color: '#22d3ee', tag: 'Comprehensive', impact: 'Latency + FPS optimization' },
+  { id: 'gpu-performance', tweakId: 'gpu-max-performance-mode', name: 'GPU Maximum Performance', desc: 'Sets GPU power management to maximum performance, preventing clock speed drops during gaming.', icon: Monitor, color: '#a78bfa', tag: 'High impact', impact: 'Consistent GPU clocks' },
+  { id: 'gpu-power-gating', tweakId: 'gpu-disable-power-gating', name: 'Disable GPU Power Gating', desc: 'Prevents GPU from entering power gating states that cause latency spikes when waking up.', icon: Zap, color: '#fbbf24', tag: 'Situational', impact: 'No GPU wake-up latency' },
+  { id: 'network-perf', tweakId: 'net-optimize-performance', name: 'Optimize Network Performance', desc: 'Tunes Windows networking, adapter behavior, offloading, QoS, and TCP settings to reduce lag.', icon: Wifi, color: '#34d399', tag: 'High impact', impact: 'Lower ping, stable connections' },
+  { id: 'power-throttling', tweakId: 'sys-disable-power-throttling', name: 'Disable Power Throttling', desc: 'Disables Windows Power Throttling that limits CPU performance of background and foreground processes.', icon: Cpu, color: '#f59e0b', tag: 'High impact', impact: 'No CPU throttling' },
+  { id: 'timer-resolution', tweakId: 'sys-set-timer-resolution', name: 'Force High-Resolution Timer', desc: 'Forces the Windows system timer to 0.5ms resolution for the smoothest frame timing.', icon: Timer, color: '#8b5cf6', tag: 'High impact', impact: 'Smoothest frame pacing' },
+  { id: 'game-scheduler', tweakId: 'game-optimize-scheduler', name: 'Optimize Game Scheduler', desc: 'Configures Windows thread scheduler for optimal gaming by prioritizing foreground threads.', icon: Settings, color: '#06b6d4', tag: 'High impact', impact: 'Fewer micro-stutters' },
+  { id: 'audio-enhancements', tweakId: 'audio-disable-enhancements', name: 'Disable Audio Enhancements', desc: 'Disables Windows audio processing enhancements for lower audio latency.', icon: Volume2, color: '#10b981', tag: 'Medium impact', impact: 'Lower audio latency' },
+  { id: 'dpc-latency', tweakId: 'sys-optimize-dpc-latency', name: 'Optimize DPC Latency', desc: 'Reduces Deferred Procedure Call latency for smoother audio and input handling.', icon: Zap, color: '#ec4899', tag: 'High impact', impact: 'No audio crackling' },
+  { id: 'directx-optimize', tweakId: 'game-optimize-directx', name: 'Optimize DirectX Settings', desc: 'Configures DirectX for lowest latency with forced hardware acceleration and disabled debug layers.', icon: Monitor, color: '#8b5cf6', tag: 'High impact', impact: 'Lower rendering latency' },
 ]
 
 export function QuickBoostPage() {
@@ -33,7 +33,7 @@ export function QuickBoostPage() {
     setApplying(moduleId)
     try {
       const result = await (window.electronAPI as any)?.applyTweak?.(tweakId)
-      if (result?.success !== false) {
+      if (result?.success === true) {
         setApplied(prev => new Set(prev).add(moduleId))
       }
     } catch {}
@@ -46,8 +46,10 @@ export function QuickBoostPage() {
     for (const mod of MODULES) {
       if (!applied.has(mod.id)) {
         setApplying(mod.id)
-        try { await api?.applyTweak?.(mod.tweakId) } catch {}
-        setApplied(prev => new Set(prev).add(mod.id))
+        try {
+          const result = await api?.applyTweak?.(mod.tweakId)
+          if (result?.success === true) setApplied(prev => new Set(prev).add(mod.id))
+        } catch {}
         await new Promise(r => setTimeout(r, 120))
       }
     }
@@ -98,7 +100,7 @@ export function QuickBoostPage() {
                 <span className="text-[13px]" style={{ color: 'rgba(255,255,255,0.3)' }}>/ {MODULES.length} modules</span>
               </div>
               <p className="text-[12px] max-w-xs leading-relaxed" style={{ color: 'rgba(255,255,255,0.3)' }}>
-                One-click optimization for maximum gaming performance. Boost your FPS, reduce input lag, and optimize your system.
+                A short list of verified Windows preferences. These do not promise a universal FPS or ping increase.
               </p>
             </div>
 

@@ -3,270 +3,309 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Choatix V2</title>
+<title>Phantom V2</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  :root {
-    --bg: #000; --bg2: #080808; --bg3: #111; --bg4: #181818; --bg5: #1e1e1e; --bg6: #252525;
-    --b1: rgba(255,255,255,0.06); --b2: rgba(255,255,255,0.10); --b3: rgba(255,255,255,0.18);
-    --b-white: rgba(255,255,255,0.15); --b-white-dim: rgba(255,255,255,0.08);
-    --t1: #f5f5f5; --t2: rgba(255,255,255,0.55); --t3: rgba(255,255,255,0.32); --t4: rgba(255,255,255,0.18);
-    --accent: #fff; --accent-dim: rgba(255,255,255,0.07);
-    --green: #fff; --green-dim: #e0e0e0; --green-faint: rgba(255,255,255,0.04);
-    --success: #fff; --warning: #e0e0e0; --danger: #ff5252;
-    --r1: 8px; --r2: 10px; --r3: 14px; --r4: 20px;
+
+  /* ── Reset & Variables ── */
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --bg:#000;--bg2:#080808;--bg3:#111;--bg4:#181818;--bg5:#1e1e1e;--bg6:#252525;
+    --b1:rgba(255,255,255,0.06);--b2:rgba(255,255,255,0.10);--b3:rgba(255,255,255,0.18);
+    --t1:#f5f5f5;--t2:rgba(255,255,255,0.55);--t3:rgba(255,255,255,0.32);--t4:rgba(255,255,255,0.18);
+    --green:#fff;--green-dim:#e0e0e0;--green-faint:rgba(255,255,255,0.04);
+    --success:#fff;--warning:#e0e0e0;--danger:#ff5252;
+    --r1:8px;--r2:10px;--r3:14px;--r4:20px;
   }
-  body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: var(--t1); overflow: hidden; height: 100vh; -webkit-font-smoothing: antialiased; letter-spacing: -0.011em; }
-  ::-webkit-scrollbar { width: 5px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.06); border-radius: 4px; }
+  body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var(--t1);overflow:hidden;height:100vh;-webkit-font-smoothing:antialiased;letter-spacing:-0.011em}
+  ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.06);border-radius:4px}
 
-  /* Layout */
-  .app { display: flex; flex-direction: column; height: 100vh; }
-  .titlebar { height: 36px; display: flex; align-items: center; justify-content: space-between; padding: 0 12px; border-bottom: 1px solid var(--b1); -webkit-app-region: drag; flex-shrink: 0; background: rgba(0,0,0,0.3); }
-  .titlebar .brand { font-size: 10px; font-weight: 700; letter-spacing: 0.15em; color: var(--t3); }
-  .titlebar .controls { display: flex; gap: 2px; -webkit-app-region: no-drag; }
-  .titlebar .controls button { width: 32px; height: 32px; border: none; background: transparent; color: var(--t3); border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; transition: all 0.15s; }
-  .titlebar .controls button:hover { background: rgba(255,255,255,0.04); color: var(--t1); }
-  .main { display: flex; flex: 1; overflow: hidden; }
+  /* ── Matrix Rain Background ── */
+  #rain{position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:0;pointer-events:none}
 
-  /* Sidebar */
-  .sidebar { width: 224px; background: rgba(8,8,8,0.92); backdrop-filter: blur(20px); border-right: 1px solid var(--b1); display: flex; flex-direction: column; flex-shrink: 0; position: relative; }
-  .sidebar .logo { height: 56px; display: flex; align-items: center; padding: 0 20px; border-bottom: 1px solid var(--b1); }
-  .sidebar .logo span { font-size: 14px; font-weight: 900; letter-spacing: 0.2em; color: var(--t1); display: flex; align-items: center; gap: 6px; }
-  .sidebar .logo span .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); box-shadow: 0 0 8px rgba(255,255,255,0.4); }
-  .sidebar .logo small { font-size: 8px; font-weight: 500; letter-spacing: 0.1em; color: var(--t3); margin-left: 8px; }
-  .sidebar .sep { height: 1px; margin: 0 16px; background: linear-gradient(90deg, transparent, var(--b1), transparent); }
-  .sidebar nav { flex: 1; padding: 16px; display: flex; flex-direction: column; gap: 3px; }
-  .sidebar nav button { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: none; background: transparent; color: var(--t2); font-size: 11px; font-weight: 500; border-radius: 8px; cursor: pointer; transition: all 0.2s cubic-bezier(0.4,0,0.2,1); position: relative; width: 100%; text-align: left; }
-  .sidebar nav button:hover { background: var(--bg5); color: var(--t1); transform: translateX(1px); }
-  .sidebar nav button.active { background: var(--green-faint); color: var(--green); box-shadow: 0 0 12px rgba(255,255,255,0.08); }
-  .sidebar nav button.active::before { content: ''; position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 2px; height: 18px; border-radius: 0 4px 4px 0; background: var(--green); box-shadow: 0 0 8px rgba(255,255,255,0.3); }
-  .sidebar nav button svg { width: 15px; height: 15px; flex-shrink: 0; }
-  .sidebar .upgrade { padding: 16px; border-top: 1px solid var(--b1); margin-top: auto; }
-  .sidebar .upgrade-card { padding: 14px; border-radius: var(--r3); background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02)); border: 1px solid rgba(255,255,255,0.1); position: relative; overflow: hidden; }
-  .sidebar .upgrade-card .label { font-size: 8px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--t3); margin-bottom: 6px; display: flex; align-items: center; gap: 4px; }
-  .sidebar .upgrade-card .label::before { content: ''; width: 4px; height: 4px; border-radius: 50%; background: var(--green); }
-  .sidebar .upgrade-card .desc { font-size: 9px; color: var(--t2); margin-bottom: 10px; }
-  .sidebar .upgrade-card button { width: 100%; height: 28px; border: none; border-radius: 8px; background: var(--green); color: #000; font-size: 9px; font-weight: 700; letter-spacing: 0.05em; cursor: pointer; transition: all 0.2s; box-shadow: 0 2px 8px rgba(255,255,255,0.2); }
-  .sidebar .upgrade-card button:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(255,255,255,0.3); }
+  /* ── Layout ── */
+  .app{display:flex;flex-direction:column;height:100vh;position:relative;z-index:1}
+  .titlebar{height:36px;display:flex;align-items:center;justify-content:space-between;padding:0 12px;border-bottom:1px solid var(--b1);-webkit-app-region:drag;flex-shrink:0;background:rgba(0,0,0,0.3);backdrop-filter:blur(20px)}
+  .titlebar .brand{font-size:10px;font-weight:700;letter-spacing:0.15em;color:var(--t3)}
+  .titlebar .controls{display:flex;gap:2px;-webkit-app-region:no-drag}
+  .titlebar .controls button{width:32px;height:32px;border:none;background:transparent;color:var(--t3);border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;transition:all 0.15s}
+  .titlebar .controls button:hover{background:rgba(255,255,255,0.04);color:var(--t1)}
+  .main{display:flex;flex:1;overflow:hidden}
 
-  /* Content */
-  .content { flex: 1; overflow-y: auto; padding: 24px; }
+  /* ── Sidebar ── */
+  .sidebar{width:224px;background:rgba(8,8,8,0.92);backdrop-filter:blur(20px);border-right:1px solid var(--b1);display:flex;flex-direction:column;flex-shrink:0;position:relative}
+  .sidebar .logo{height:56px;display:flex;align-items:center;padding:0 20px;border-bottom:1px solid var(--b1)}
+  .sidebar .logo span{font-size:14px;font-weight:900;letter-spacing:0.2em;color:var(--t1);display:flex;align-items:center;gap:6px}
+  .sidebar .logo .dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 8px rgba(255,255,255,0.4)}
+  .sidebar .logo small{font-size:8px;font-weight:500;letter-spacing:0.1em;color:var(--t3);margin-left:8px}
+  .sidebar .sep{height:1px;margin:0 16px;background:linear-gradient(90deg,transparent,var(--b1),transparent)}
+  .sidebar nav{flex:1;padding:16px;display:flex;flex-direction:column;gap:3px}
+  .sidebar nav button{display:flex;align-items:center;gap:10px;padding:10px 12px;border:none;background:transparent;color:var(--t2);font-size:11px;font-weight:500;border-radius:8px;cursor:pointer;transition:all 0.2s cubic-bezier(0.4,0,0.2,1);position:relative;width:100%;text-align:left}
+  .sidebar nav button:hover{background:var(--bg5);color:var(--t1);transform:translateX(1px)}
+  .sidebar nav button.active{background:var(--green-faint);color:var(--green);box-shadow:0 0 12px rgba(255,255,255,0.08)}
+  .sidebar nav button.active::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:2px;height:18px;border-radius:0 4px 4px 0;background:var(--green);box-shadow:0 0 8px rgba(255,255,255,0.3)}
+  .sidebar nav button svg{width:15px;height:15px;flex-shrink:0}
+  .sidebar .upgrade{padding:16px;border-top:1px solid var(--b1);margin-top:auto}
+  .sidebar .upgrade-card{padding:14px;border-radius:var(--r3);background:linear-gradient(135deg,rgba(255,255,255,0.05),rgba(255,255,255,0.02));border:1px solid rgba(255,255,255,0.1);position:relative;overflow:hidden}
+  .sidebar .upgrade-card .label{font-size:8px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:var(--t3);margin-bottom:6px;display:flex;align-items:center;gap:4px}
+  .sidebar .upgrade-card .label::before{content:'';width:4px;height:4px;border-radius:50%;background:var(--green)}
+  .sidebar .upgrade-card .desc{font-size:9px;color:var(--t2);margin-bottom:10px}
+  .sidebar .upgrade-card button{width:100%;height:28px;border:none;border-radius:8px;background:var(--green);color:#000;font-size:9px;font-weight:700;letter-spacing:0.05em;cursor:pointer;transition:all 0.2s;box-shadow:2px 8px rgba(255,255,255,0.2)}
+  .sidebar .upgrade-card button:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(255,255,255,0.3)}
 
-  /* Cards */
-  .card { background: var(--bg2); border: 1px solid var(--b1); border-radius: var(--r3); transition: all 0.2s cubic-bezier(0.4,0,0.2,1); }
-  .card:hover { border-color: rgba(255,255,255,0.1); background: var(--bg3); box-shadow: 0 0 0 1px rgba(255,255,255,0.03), 0 4px 24px rgba(255,255,255,0.04); }
-  .card-glow { box-shadow: 0 0 20px rgba(255,255,255,0.01), inset 0 1px 0 rgba(255,255,255,0.02); }
+  /* ── Content ── */
+  .content{flex:1;overflow-y:auto;padding:24px}
 
-  /* Page header */
-  .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
-  .page-header h1 { font-size: 17px; font-weight: 700; letter-spacing: -0.01em; display: flex; align-items: center; gap: 8px; }
-  .page-header h1 .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); box-shadow: 0 0 6px rgba(255,255,255,0.4); }
-  .page-header p { font-size: 10px; color: var(--t3); margin-top: 2px; display: flex; align-items: center; gap: 6px; }
-  .page-header p .refresh-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--green); }
-  .live-dot { display: flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 999px; background: var(--bg3); border: 1px solid var(--b1); }
-  .live-dot::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; box-shadow: 0 0 8px rgba(255,255,255,0.4); }
+  /* ── Cards ── */
+  .card{background:var(--bg2);border:1px solid var(--b1);border-radius:var(--r3);transition:all 0.2s cubic-bezier(0.4,0,0.2,1)}
+  .card:hover{border-color:rgba(255,255,255,0.1);background:var(--bg3);box-shadow:0 0 0 1px rgba(255,255,255,0.03),0 4px 24px rgba(255,255,255,0.04)}
+  .card-glow{box-shadow:0 0 20px rgba(255,255,255,0.01),inset 0 1px 0 rgba(255,255,255,0.02)}
+  .card-padding{padding:16px}
 
-  /* Gauge */
-  .gauge { position: relative; display: inline-flex; align-items: center; justify-content: center; }
-  .gauge svg { transform: rotate(-90deg); }
-  .gauge .val { position: absolute; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-  .gauge .val .num { font-size: 18px; font-weight: 700; line-height: 1; }
-  .gauge .val .lbl { font-size: 8px; color: var(--t3); margin-top: 2px; }
+  /* ── Page Header ── */
+  .page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
+  .page-header h1{font-size:17px;font-weight:700;letter-spacing:-0.01em;display:flex;align-items:center;gap:8px}
+  .page-header h1 .dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 6px rgba(255,255,255,0.4)}
+  .page-header p{font-size:10px;color:var(--t3);margin-top:2px;display:flex;align-items:center;gap:6px}
+  .page-header p .refresh-dot{width:4px;height:4px;border-radius:50%;background:var(--green)}
+  .live-dot{display:flex;align-items:center;gap:6px;padding:5px 12px;border-radius:999px;background:var(--bg3);border:1px solid var(--b1)}
+  .live-dot::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;box-shadow:0 0 8px rgba(255,255,255,0.4)}
 
-  /* Stats row */
-  .stat-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--b1); }
-  .stat-row:last-child { border-bottom: none; }
-  .stat-row .label { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--t3); }
-  .stat-row .label svg { width: 14px; height: 14px; flex-shrink: 0; }
-  .stat-row .value { font-size: 11px; font-weight: 500; color: var(--t2); }
+  /* ── Gauges ── */
+  .gauge{position:relative;display:inline-flex;align-items:center;justify-content:center}
+  .gauge svg{transform:rotate(-90deg)}
+  .gauge .val{position:absolute;display:flex;flex-direction:column;align-items:center;justify-content:center}
+  .gauge .val .num{font-size:18px;font-weight:700;line-height:1}
+  .gauge .val .lbl{font-size:8px;color:var(--t3);margin-top:2px}
+  .health-card{padding:24px;display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:170px}
+  .health-card .gauge svg circle{stroke:rgba(255,255,255,0.1)}
+  .health-card .gauge svg circle:last-child{filter:drop-shadow(0 0 8px rgba(255,255,255,0.3))}
+  .gauge-sm{width:80px;height:80px}
+  .gauge-sm svg{width:80px;height:80px}
+  .gauge-sm .val .num{font-size:16px}
+  .gauge-lg{width:130px;height:130px}
+  .gauge-lg svg{width:130px;height:130px}
 
-  /* Charts */
-  .chart-area { height: 110px; position: relative; overflow: hidden; border-radius: 8px; }
-  .chart-area canvas { width: 100% !important; height: 100% !important; }
+  /* ── Stat Rows ── */
+  .stat-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--b1)}
+  .stat-row:last-child{border-bottom:none}
+  .stat-row .label{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--t3)}
+  .stat-row .label svg{width:14px;height:14px;flex-shrink:0}
+  .stat-row .value{font-size:11px;font-weight:500;color:var(--t2)}
 
-  /* Scan page */
-  .scan-center { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; }
-  .scan-icon { width: 128px; height: 128px; border-radius: 24px; display: flex; align-items: center; justify-content: center; background: var(--bg3); border: 1px solid var(--b2); margin-bottom: 32px; position: relative; box-shadow: inset 0 1px 0 rgba(255,255,255,0.03); }
-  .scan-icon svg { width: 56px; height: 56px; color: var(--green); filter: drop-shadow(0 0 20px rgba(255,255,255,0.3)); }
-  .scan-icon .badge { position: absolute; bottom: -6px; right: -6px; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--bg2); border: 1px solid var(--b2); box-shadow: 0 0 12px rgba(255,255,255,0.2); }
-  .scan-icon .badge svg { width: 14px; height: 14px; stroke: var(--green); }
+  /* ── Grid Layouts ── */
+  .grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+  .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .flex-wrap{display:flex;flex-wrap:wrap;gap:16px}
+  .gauge-card{padding:16px;display:flex;flex-direction:column;align-items:center}
+  .gauge-card .stats{margin-top:12px;width:100%;display:flex;flex-direction:column;gap:6px}
 
-  .btn-primary { background: var(--green); color: #000; border: none; font-weight: 600; border-radius: 8px; cursor: pointer; transition: all 0.2s cubic-bezier(0.4,0,0.2,1); box-shadow: 0 2px 12px rgba(255,255,255,0.2); }
-  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 20px rgba(255,255,255,0.3); }
-  .btn-primary:active { transform: translateY(0); }
+  /* ── Charts ── */
+  .chart-area{height:110px;position:relative;overflow:hidden;border-radius:8px}
+  .chart-area canvas{width:100%!important;height:100%!important}
+  .chart-header{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+  .chart-header svg{width:14px;height:14px}
+  .chart-label{font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--t3)}
 
-  /* Progress */
-  .progress { height: 3px; border-radius: 2px; background: var(--bg6); overflow: hidden; position: relative; }
-  .progress .fill { height: 100%; border-radius: 2px; background: var(--green); transition: width 0.6s cubic-bezier(0.4,0,0.2,1); position: relative; box-shadow: 0 0 8px rgba(255,255,255,0.4); }
-  .progress .fill::after { content: ''; position: absolute; top: 0; right: 0; width: 40px; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3)); border-radius: 2px; }
+  /* ── Quick Action Buttons ── */
+  .action-btn{width:100%;display:flex;align-items:center;gap:12px;padding:14px;border:1px solid var(--b1);cursor:pointer;border-radius:var(--r3);transition:all 0.2s;background:transparent;color:var(--t1);font-family:inherit}
+  .action-btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,0.3)}
+  .action-btn .icon-wrap{width:36px;height:36px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.2);flex-shrink:0}
+  .action-btn .icon-wrap.warn{background:rgba(255,193,7,0.08);border-color:rgba(255,193,7,0.2)}
+  .action-btn .icon-wrap svg{width:16px;height:16px}
+  .action-btn .action-text{text-align:left}
+  .action-btn .action-text .action-title{font-size:11px;font-weight:600}
+  .action-btn .action-text .action-desc{font-size:9px;color:var(--t3)}
+  .action-btn + .action-btn{margin-top:8px}
 
-  /* Optimizer list */
-  .tweak-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: var(--r3); }
-  .tweak-item .dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; box-shadow: 0 0 4px var(--t4); }
-  .tweak-item .info { flex: 1; min-width: 0; }
-  .tweak-item .info .name { font-size: 12px; font-weight: 600; }
-  .tweak-item .info .desc { font-size: 10px; color: var(--t3); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .tweak-item .cat { font-size: 7px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; padding: 3px 8px; border-radius: 4px; background: var(--bg6); color: var(--t4); flex-shrink: 0; }
-  .tweak-item .apply-btn { height: 28px; padding: 0 12px; border: none; border-radius: 8px; background: var(--green); color: #000; font-size: 9px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 4px; flex-shrink: 0; transition: all 0.2s; box-shadow: 0 2px 8px rgba(255,255,255,0.15); }
-  .tweak-item .apply-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(255,255,255,0.25); }
+  /* ── Progress Bar ── */
+  .progress{height:3px;border-radius:2px;background:var(--bg6);overflow:hidden;position:relative}
+  .progress .fill{height:100%;border-radius:2px;background:var(--green);transition:width 0.6s cubic-bezier(0.4,0,0.2,1);position:relative;box-shadow:0 0 8px rgba(255,255,255,0.4)}
+  .progress .fill::after{content:'';position:absolute;top:0;right:0;width:40px;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.3));border-radius:2px}
+  .progress-lg{width:320px}
 
-  /* Category grid */
-  .cat-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 8px; margin-bottom: 20px; }
-  .cat-pill { padding: 12px; border-radius: var(--r3); text-align: center; background: var(--bg2); border: 1px solid var(--b1); transition: all 0.25s; }
-  .cat-pill:hover { border-color: rgba(255,255,255,0.15); background: var(--bg3); transform: translateY(-2px); }
-  .cat-pill .icon { width: 32px; height: 32px; border-radius: 10px; margin: 0 auto 6px; display: flex; align-items: center; justify-content: center; }
-  .cat-pill .icon .dot { width: 10px; height: 10px; border-radius: 50%; }
-  .cat-pill .name { font-size: 7px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--t3); margin-bottom: 2px; }
-  .cat-pill .count { font-size: 13px; font-weight: 700; color: var(--t1); }
+  /* ── Scan ── */
+  .scan-center{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;text-align:center}
+  .scan-icon{width:128px;height:128px;border-radius:24px;display:flex;align-items:center;justify-content:center;background:var(--bg3);border:1px solid var(--b2);margin-bottom:32px;position:relative;box-shadow:inset 0 1px 0 rgba(255,255,255,0.03)}
+  .scan-icon svg{width:56px;height:56px;color:var(--green);filter:drop-shadow(0 0 20px rgba(255,255,255,0.3))}
+  .scan-icon .badge{position:absolute;bottom:-6px;right:-6px;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--bg2);border:1px solid var(--b2);box-shadow:0 0 12px rgba(255,255,255,0.2)}
+  .scan-icon .badge svg{width:14px;height:14px;stroke:var(--green)}
+  .scan-dots{display:flex;gap:12px;margin-top:24px}
+  .scan-dot{display:flex;align-items:center;gap:4px;font-size:9px;color:var(--t3)}
+  .scan-dot::before{content:'';width:4px;height:4px;border-radius:50%;background:var(--green)}
 
-  /* Upgrade modal */
-  .modal-overlay { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; background: rgba(0,0,0,0.85); z-index: 100; overflow: auto; padding: 20px; }
-  .modal-overlay.show { display: flex; }
-  .modal { width: 100%; max-width: 560px; background: var(--bg2); border: 1px solid var(--b1); border-radius: var(--r4); overflow: hidden; box-shadow: 0 24px 80px rgba(0,0,0,0.5); }
-  .modal-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; border-bottom: 1px solid var(--b1); }
-  .modal-header h2 { font-size: 12px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--t3); }
-  .modal-header p { font-size: 10px; color: var(--t2); margin-top: 2px; }
-  .modal-header button { width: 28px; height: 28px; border: none; background: transparent; color: var(--t3); border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s; font-size: 14px; }
-  .modal-header button:hover { background: rgba(255,255,255,0.04); color: var(--t1); }
-  .plan-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 20px; }
-  .plan-card { padding: 16px; border-radius: var(--r3); background: var(--bg); border: 1px solid var(--b1); position: relative; transition: all 0.3s; cursor: pointer; }
-  .plan-card:hover { transform: translateY(-4px); border-color: rgba(255,255,255,0.15); }
-  .plan-card.recommended { border: 2px solid var(--green); background: linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02)); box-shadow: 0 0 30px rgba(255,255,255,0.06); }
-  .plan-card.recommended:hover { box-shadow: 0 0 40px rgba(255,255,255,0.12); }
-  .plan-card .badge { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); font-size: 8px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; padding: 2px 10px; border-radius: 999px; background: var(--green); color: #000; white-space: nowrap; box-shadow: 0 0 10px rgba(255,255,255,0.3); }
-  .plan-card .tier { font-size: 9px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--t3); margin-bottom: 6px; }
-  .plan-card.recommended .tier { color: var(--green); }
-  .plan-card .price { font-size: 20px; font-weight: 700; margin-bottom: 2px; }
-  .plan-card.recommended .price { color: var(--green); }
-  .plan-card .sub { font-size: 10px; color: var(--t3); margin-bottom: 12px; }
-  .plan-card .features { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
-  .plan-card .features li { list-style: none; font-size: 10px; color: var(--t2); display: flex; align-items: center; gap: 6px; line-height: 1.4; }
-  .plan-card .features li::before { content: ''; width: 12px; height: 12px; border-radius: 50%; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); flex-shrink: 0; display: flex; align-items: center; justify-content: center; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.6)' stroke-width='3'%3E%3Cpath d='M20 6L9 17l-5-5'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: center; }
-  .plan-card .features li.disabled { color: var(--t4); opacity: 0.5; }
-  .plan-card .features li.disabled::before { background-image: none; background: rgba(255,255,255,0.03); border-color: var(--b2); }
-  .plan-card .tweak-count { font-size: 9px; font-weight: 600; color: var(--t3); letter-spacing: 0.1em; padding: 6px 0; border-top: 1px solid var(--b1); margin-bottom: 10px; }
-  .plan-card .tweak-count b { color: var(--t1); font-weight: 700; }
-  .plan-card button { width: 100%; height: 30px; border: none; border-radius: 8px; font-size: 9px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
-  .plan-card button.primary { background: var(--green); color: #000; box-shadow: 0 2px 12px rgba(255,255,255,0.2); }
-  .plan-card button.primary:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(255,255,255,0.3); }
-  .plan-card button.secondary { background: var(--bg3); color: var(--t2); border: 1px solid var(--b2); }
-  .modal-footer { padding: 12px 20px 16px; text-align: center; font-size: 10px; color: var(--t3); }
-  .modal-footer b { color: var(--t2); font-weight: 500; }
+  /* ── Buttons ── */
+  .btn-primary{background:var(--green);color:#000;border:none;font-weight:600;border-radius:8px;cursor:pointer;transition:all 0.2s cubic-bezier(0.4,0,0.2,1);box-shadow:0 2px 12px rgba(255,255,255,0.2)}
+  .btn-primary:hover{transform:translateY(-1px);box-shadow:0 4px 20px rgba(255,255,255,0.3)}
+  .btn-primary:active{transform:translateY(0)}
+  .btn-header{height:32px;padding:0 16px;font-size:10px;font-weight:700;display:flex;align-items:center;gap:6px}
 
-  /* Health score */
-  .health-card { padding: 24px; display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 170px; }
-  .health-card .gauge svg circle { stroke: rgba(255,255,255,0.1); }
-  .health-card .gauge svg circle:last-child { filter: drop-shadow(0 0 8px rgba(255,255,255,0.3)); }
+  /* ── Category Grid ── */
+  .cat-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:8px;margin-bottom:20px}
+  .cat-pill{padding:12px;border-radius:var(--r3);text-align:center;background:var(--bg2);border:1px solid var(--b1);transition:all 0.25s}
+  .cat-pill:hover{border-color:rgba(255,255,255,0.15);background:var(--bg3);transform:translateY(-2px)}
+  .cat-pill .icon{width:32px;height:32px;border-radius:10px;margin:0 auto 6px;display:flex;align-items:center;justify-content:center}
+  .cat-pill .icon .dot{width:10px;height:10px;border-radius:50%}
+  .cat-pill .name{font-size:7px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--t3);margin-bottom:2px}
+  .cat-pill .count{font-size:13px;font-weight:700;color:var(--t1)}
+  .section-label{font-size:9px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--t3);margin-bottom:12px}
 
-  /* Animations */
-  @keyframes pulse { 0%,100% { opacity: 0.4; transform: scale(1); } 50% { opacity: 1; transform: scale(1.05); } }
-  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-  @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-  @keyframes slideDown { from { transform: translateY(0); } to { transform: translateY(100%); } }
-  @keyframes btnPulse { 0% { box-shadow: 0 0 0 0 rgba(255,255,255,0.4); } 70% { box-shadow: 0 0 0 10px rgba(255,255,255,0); } 100% { box-shadow: 0 0 0 0 rgba(255,255,255,0); } }
-  @keyframes optSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-  @keyframes checkPop { 0% { transform: scale(0); opacity: 0; } 60% { transform: scale(1.2); } 100% { transform: scale(1); opacity: 1; } }
-  .fade-in { animation: fadeIn 0.4s cubic-bezier(0.4,0,0.2,1) forwards; opacity: 0; }
-  .stagger > * { opacity: 0; animation: fadeIn 0.35s cubic-bezier(0.4,0,0.2,1) forwards; }
-  .stagger > *:nth-child(1) { animation-delay: 0ms; }
-  .stagger > *:nth-child(2) { animation-delay: 35ms; }
-  .stagger > *:nth-child(3) { animation-delay: 70ms; }
-  .stagger > *:nth-child(4) { animation-delay: 105ms; }
-  .stagger > *:nth-child(5) { animation-delay: 140ms; }
-  .stagger > *:nth-child(6) { animation-delay: 175ms; }
-  .stagger > *:nth-child(7) { animation-delay: 210ms; }
-  .stagger > *:nth-child(8) { animation-delay: 245ms; }
-  .stagger > *:nth-child(n+9) { animation-delay: 280ms; }
+  /* ── Tweak List ── */
+  .tweak-list{display:flex;flex-direction:column;gap:6px}
+  .tweak-item{display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:var(--r3)}
+  .tweak-item .dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;box-shadow:0 0 4px var(--t4)}
+  .tweak-item .info{flex:1;min-width:0}
+  .tweak-item .info .name{font-size:12px;font-weight:600}
+  .tweak-item .info .desc{font-size:10px;color:var(--t3);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .tweak-item .cat{font-size:7px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;padding:3px 8px;border-radius:4px;background:var(--bg6);color:var(--t4);flex-shrink:0}
+  .tweak-item .apply-btn{height:28px;padding:0 12px;border:none;border-radius:8px;background:var(--green);color:#000;font-size:9px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:4px;flex-shrink:0;transition:all 0.2s;box-shadow:0 2px 8px rgba(255,255,255,0.15)}
+  .tweak-item .apply-btn:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(255,255,255,0.25)}
 
   /* ── Game Library ── */
-  .game-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 14px; }
-  .game-card { position: relative; border-radius: var(--r3); overflow: hidden; background: var(--bg2); border: 1px solid var(--b1); cursor: default; transition: all 0.2s cubic-bezier(0.4,0,0.2,1); aspect-ratio: 0.72; display: flex; flex-direction: column; }
-  .game-card:hover { border-color: var(--b2); transform: translateY(-3px); box-shadow: 0 8px 32px rgba(0,0,0,0.5); }
-  .game-card-img { flex: 1; position: relative; overflow: hidden; background: var(--bg3); }
-  .game-card-img img { width: 100%; height: 100%; object-fit: cover; display: block; filter: grayscale(0.15); opacity: 0.85; transition: filter 0.3s, transform 0.4s, opacity 0.3s; }
-  .game-card:hover .game-card-img img { filter: grayscale(0); opacity: 1; transform: scale(1.04); }
-  .game-card-img .tag { position: absolute; top: 8px; left: 8px; font-size: 6px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; padding: 2px 6px; border-radius: 3px; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); color: var(--t3); border: 1px solid rgba(255,255,255,0.06); }
-  .game-card-img .tag.competitive { color: #fff; background: rgba(255,255,255,0.15); border-color: rgba(255,255,255,0.2); }
-  .game-card-img .tag.story { color: #ccc; }
-  .game-card-img .tag.multiplayer { color: #aaa; }
+  .game-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px}
+  .game-card{position:relative;border-radius:var(--r3);overflow:hidden;background:var(--bg2);border:1px solid var(--b1);cursor:default;transition:all 0.2s cubic-bezier(0.4,0,0.2,1);aspect-ratio:0.72;display:flex;flex-direction:column}
+  .game-card:hover{border-color:var(--b2);transform:translateY(-3px);box-shadow:0 8px 32px rgba(0,0,0,0.5)}
+  .game-card-img{flex:1;position:relative;overflow:hidden;background:var(--bg3)}
+  .game-card-img img{width:100%;height:100%;object-fit:cover;display:block;filter:grayscale(0.15);opacity:0.85;transition:filter 0.3s,transform 0.4s,opacity 0.3s}
+  .game-card:hover .game-card-img img{filter:grayscale(0);opacity:1;transform:scale(1.04)}
+  .game-card-img .tag{position:absolute;top:8px;left:8px;font-size:6px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;padding:2px 6px;border-radius:3px;background:rgba(0,0,0,0.6);backdrop-filter:blur(8px);color:var(--t3);border:1px solid rgba(255,255,255,0.06)}
+  .game-card-img .tag.competitive{color:#fff;background:rgba(255,255,255,0.15);border-color:rgba(255,255,255,0.2)}
+  .game-card-img .tag.story{color:#ccc}
+  .game-card-img .tag.multiplayer{color:#aaa}
+  .game-card-info{padding:10px 12px}
+  .game-card-info .title{font-size:11px;font-weight:700;color:var(--t1);margin-bottom:2px}
+  .game-card-info .sub{font-size:9px;color:var(--t3)}
 
-  /* Circular Optimize button (Roblox lightning style) */
-  .opt-btn { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 44px; height: 44px; border-radius: 50%; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; background: #000; border: 1px solid rgba(255,255,255,0.12); z-index: 5; transition: all 0.25s cubic-bezier(0.4,0,0.2,1); box-shadow: 0 0 16px rgba(255,255,255,0.04), 0 0 24px rgba(255,255,255,0.02); }
-  .opt-btn svg { width: 18px; height: 18px; fill: none; stroke: #fff; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 0 3px rgba(255,255,255,0.4)); transition: all 0.3s; }
-  .game-card:hover .opt-btn { border-color: rgba(255,255,255,0.25); box-shadow: 0 0 20px rgba(255,255,255,0.08), 0 0 40px rgba(255,255,255,0.05); transform: translate(-50%, -50%) scale(1.05); }
-  .game-card:hover .opt-btn svg { filter: drop-shadow(0 0 6px rgba(255,255,255,0.6)); }
-  .opt-btn:active { transform: translate(-50%, -50%) scale(0.92); }
-  .opt-btn.clicked { animation: btnPulse 0.5s ease-out; }
-  .opt-btn.optimizing { pointer-events: none; }
-  .opt-btn.optimizing svg { animation: optSpin 1s linear infinite; stroke: #fff; filter: drop-shadow(0 0 6px rgba(255,255,255,0.3)); }
+  /* ── Optimize Button ── */
+  .opt-btn{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:44px;height:44px;border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;background:#000;border:1px solid rgba(255,255,255,0.12);z-index:5;transition:all 0.25s cubic-bezier(0.4,0,0.2,1);box-shadow:0 0 16px rgba(255,255,255,0.04),0 0 24px rgba(255,255,255,0.02)}
+  .opt-btn svg{width:18px;height:18px;fill:none;stroke:#fff;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 3px rgba(255,255,255,0.4));transition:all 0.3s}
+  .game-card:hover .opt-btn{border-color:rgba(255,255,255,0.25);box-shadow:0 0 20px rgba(255,255,255,0.08),0 0 40px rgba(255,255,255,0.05);transform:translate(-50%,-50%) scale(1.05)}
+  .game-card:hover .opt-btn svg{filter:drop-shadow(0 0 6px rgba(255,255,255,0.6))}
+  .opt-btn:active{transform:translate(-50%,-50%) scale(0.92)}
+  .opt-btn.clicked{animation:btnPulse 0.5s ease-out}
+  .opt-btn.optimizing{pointer-events:none}
+  .opt-btn.optimizing svg{animation:optSpin 1s linear infinite;stroke:#fff;filter:drop-shadow(0 0 6px rgba(255,255,255,0.3))}
+  .game-card .optimized-badge{position:absolute;top:8px;right:8px;width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);display:flex;align-items:center;justify-content:center;z-index:6;animation:checkPop 0.4s cubic-bezier(0.4,0,0.2,1);box-shadow:0 0 8px rgba(255,255,255,0.06)}
+  .game-card .optimized-badge svg{width:12px;height:12px;stroke:#fff;fill:none;stroke-width:2.5}
 
-  /* Game card info */
-  .game-card-info { padding: 10px 12px; }
-  .game-card-info .title { font-size: 11px; font-weight: 700; color: var(--t1); margin-bottom: 2px; }
-  .game-card-info .sub { font-size: 9px; color: var(--t3); }
+  /* ── Bottom Sheet ── */
+  .sheet-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;opacity:0;pointer-events:none;transition:opacity 0.3s}
+  .sheet-overlay.show{opacity:1;pointer-events:all}
+  .bottom-sheet{position:fixed;bottom:0;left:0;right:0;z-index:201;background:var(--bg2);border-top:1px solid var(--b1);border-radius:var(--r4) var(--r4) 0 0;padding:0;transform:translateY(100%);transition:transform 0.35s cubic-bezier(0.4,0,0.2,1);max-height:70vh;box-shadow:0 -24px 80px rgba(0,0,0,0.5)}
+  .bottom-sheet.show{transform:translateY(0)}
+  .sheet-handle{width:36px;height:4px;border-radius:2px;background:var(--bg6);margin:12px auto 0}
+  .sheet-header{padding:16px 24px 0;display:flex;align-items:center;justify-content:space-between}
+  .sheet-header h3{font-size:14px;font-weight:700;display:flex;align-items:center;gap:6px}
+  .sheet-header h3 .dot{width:6px;height:6px;border-radius:50%;background:#fff;box-shadow:0 0 6px rgba(255,255,255,0.3)}
+  .sheet-header .close-sheet{width:28px;height:28px;border-radius:8px;border:none;background:var(--bg4);color:var(--t3);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:all 0.15s}
+  .sheet-header .close-sheet:hover{background:var(--bg5);color:var(--t1)}
+  .sheet-game{padding:12px 24px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--b1)}
+  .sheet-game-img{width:48px;height:48px;border-radius:8px;overflow:hidden;background:var(--bg3);flex-shrink:0}
+  .sheet-game-img img{width:100%;height:100%;object-fit:cover}
+  .sheet-game-info .name{font-size:13px;font-weight:700}
+  .sheet-game-info .cat{font-size:9px;color:var(--t3);margin-top:2px;text-transform:uppercase;letter-spacing:0.1em}
+  .sheet-plans{padding:16px 24px 24px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  .sheet-plan{padding:16px;border-radius:var(--r3);background:var(--bg);border:1px solid var(--b1);cursor:pointer;transition:all 0.25s cubic-bezier(0.4,0,0.2,1);text-align:center;position:relative}
+  .sheet-plan:hover{border-color:var(--b3);background:var(--bg3);transform:translateY(-2px);box-shadow:0 6px 24px rgba(0,0,0,0.3)}
+  .sheet-plan.selected{border-color:#fff;background:rgba(255,255,255,0.03);box-shadow:0 0 16px rgba(255,255,255,0.05)}
+  .sheet-plan .plan-label{font-size:8px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:var(--t3);margin-bottom:6px}
+  .sheet-plan .plan-tweaks{font-size:22px;font-weight:800;color:var(--t1);line-height:1;margin-bottom:4px}
+  .sheet-plan .plan-sub{font-size:9px;color:var(--t3)}
+  .sheet-plan .plan-icon{width:28px;height:28px;border-radius:8px;background:var(--bg3);border:1px solid var(--b1);display:flex;align-items:center;justify-content:center;margin:0 auto 10px}
+  .sheet-plan .plan-icon svg{width:14px;height:14px;stroke:var(--t2);fill:none;stroke-width:1.5}
+  .sheet-plan.recommended .plan-label{color:#fff}
+  .sheet-plan.recommended::after{content:'BEST';position:absolute;top:-8px;right:-4px;font-size:6px;font-weight:800;letter-spacing:0.12em;padding:2px 6px;border-radius:4px;background:#fff;color:#000;box-shadow:0 0 6px rgba(255,255,255,0.2)}
 
-  /* Optimized badge */
-  .game-card .optimized-badge { position: absolute; top: 8px; right: 8px; width: 22px; height: 22px; border-radius: 50%; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); display: flex; align-items: center; justify-content: center; z-index: 6; animation: checkPop 0.4s cubic-bezier(0.4,0,0.2,1); box-shadow: 0 0 8px rgba(255,255,255,0.06); }
-  .game-card .optimized-badge svg { width: 12px; height: 12px; stroke: #fff; fill: none; stroke-width: 2.5; }
+  /* ── Optimize Progress ── */
+  .opt-progress{padding:0 24px 24px;display:none}
+  .opt-progress.active{display:block}
+  .opt-progress-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+  .opt-progress-header .label{font-size:11px;font-weight:600;color:var(--t2)}
+  .opt-progress-header .pct{font-size:11px;font-weight:700;color:#fff}
+  .opt-progress-bar{height:3px;border-radius:2px;background:var(--bg5);overflow:hidden;margin-bottom:8px;box-shadow:inset 0 1px 0 rgba(255,255,255,0.03)}
+  .opt-progress-fill{height:100%;border-radius:2px;background:#fff;width:0%;transition:width 0.4s cubic-bezier(0.4,0,0.2,1);position:relative;box-shadow:0 0 8px rgba(255,255,255,0.1)}
+  .opt-progress-fill::after{content:'';position:absolute;top:0;right:0;width:30px;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.3))}
+  .opt-steps{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+  .opt-step{display:flex;align-items:center;gap:8px;font-size:10px;color:var(--t3)}
+  .opt-step.done{color:var(--t2)}
+  .opt-step.active{color:#fff}
+  .opt-step .dot{width:5px;height:5px;border-radius:50%;background:var(--bg6);flex-shrink:0}
+  .opt-step.done .dot{background:#fff;box-shadow:0 0 4px rgba(255,255,255,0.3)}
+  .opt-step.active .dot{background:#fff;animation:pulse 1s infinite;box-shadow:0 0 6px rgba(255,255,255,0.4)}
+  .opt-complete{text-align:center;padding:20px 24px 28px;display:none}
+  .opt-complete.active{display:block}
+  .opt-complete .check{width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;animation:checkPop 0.5s cubic-bezier(0.4,0,0.2,1);box-shadow:0 0 12px rgba(255,255,255,0.08)}
+  .opt-complete .check svg{width:22px;height:22px;stroke:#fff;fill:none;stroke-width:3}
+  .opt-complete h4{font-size:13px;font-weight:700;margin-bottom:4px}
+  .opt-complete p{font-size:10px;color:var(--t3)}
 
-  /* Bottom Sheet */
-  .sheet-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 200; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
-  .sheet-overlay.show { opacity: 1; pointer-events: all; }
-  .bottom-sheet { position: fixed; bottom: 0; left: 0; right: 0; z-index: 201; background: var(--bg2); border-top: 1px solid var(--b1); border-radius: var(--r4) var(--r4) 0 0; padding: 0; transform: translateY(100%); transition: transform 0.35s cubic-bezier(0.4,0,0.2,1); max-height: 70vh; box-shadow: 0 -24px 80px rgba(0,0,0,0.5); }
-  .bottom-sheet.show { transform: translateY(0); }
-  .sheet-handle { width: 36px; height: 4px; border-radius: 2px; background: var(--bg6); margin: 12px auto 0; }
-  .sheet-header { padding: 16px 24px 0; display: flex; align-items: center; justify-content: space-between; }
-  .sheet-header h3 { font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
-  .sheet-header h3 .dot { width: 6px; height: 6px; border-radius: 50%; background: #fff; box-shadow: 0 0 6px rgba(255,255,255,0.3); }
-  .sheet-header .close-sheet { width: 28px; height: 28px; border-radius: 8px; border: none; background: var(--bg4); color: var(--t3); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; transition: all 0.15s; }
-  .sheet-header .close-sheet:hover { background: var(--bg5); color: var(--t1); }
-  .sheet-game { padding: 12px 24px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--b1); }
-  .sheet-game-img { width: 48px; height: 48px; border-radius: 8px; overflow: hidden; background: var(--bg3); flex-shrink: 0; }
-  .sheet-game-img img { width: 100%; height: 100%; object-fit: cover; }
-  .sheet-game-info .name { font-size: 13px; font-weight: 700; }
-  .sheet-game-info .cat { font-size: 9px; color: var(--t3); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.1em; }
-  .sheet-plans { padding: 16px 24px 24px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-  .sheet-plan { padding: 16px; border-radius: var(--r3); background: var(--bg); border: 1px solid var(--b1); cursor: pointer; transition: all 0.25s cubic-bezier(0.4,0,0.2,1); text-align: center; position: relative; }
-  .sheet-plan:hover { border-color: var(--b3); background: var(--bg3); transform: translateY(-2px); box-shadow: 0 6px 24px rgba(0,0,0,0.3); }
-  .sheet-plan.selected { border-color: #fff; background: rgba(255,255,255,0.03); box-shadow: 0 0 16px rgba(255,255,255,0.05); }
-  .sheet-plan .plan-label { font-size: 8px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--t3); margin-bottom: 6px; }
-  .sheet-plan .plan-tweaks { font-size: 22px; font-weight: 800; color: var(--t1); line-height: 1; margin-bottom: 4px; }
-  .sheet-plan .plan-sub { font-size: 9px; color: var(--t3); }
-  .sheet-plan .plan-icon { width: 28px; height: 28px; border-radius: 8px; background: var(--bg3); border: 1px solid var(--b1); display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; }
-  .sheet-plan .plan-icon svg { width: 14px; height: 14px; stroke: var(--t2); fill: none; stroke-width: 1.5; }
-  .sheet-plan.recommended .plan-label { color: #fff; }
-  .sheet-plan.recommended::after { content: 'BEST'; position: absolute; top: -8px; right: -4px; font-size: 6px; font-weight: 800; letter-spacing: 0.12em; padding: 2px 6px; border-radius: 4px; background: #fff; color: #000; box-shadow: 0 0 6px rgba(255,255,255,0.2); }
+  /* ── Upgrade Modal ── */
+  .modal-overlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,0.85);z-index:100;overflow:auto;padding:20px}
+  .modal-overlay.show{display:flex}
+  .modal{width:100%;max-width:560px;background:var(--bg2);border:1px solid var(--b1);border-radius:var(--r4);overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,0.5)}
+  .modal-header{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--b1)}
+  .modal-header h2{font-size:12px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--t3)}
+  .modal-header p{font-size:10px;color:var(--t2);margin-top:2px}
+  .modal-header button{width:28px;height:28px;border:none;background:transparent;color:var(--t3);border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.15s;font-size:14px}
+  .modal-header button:hover{background:rgba(255,255,255,0.04);color:var(--t1)}
+  .plan-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:20px}
+  .plan-card{padding:16px;border-radius:var(--r3);background:var(--bg);border:1px solid var(--b1);position:relative;transition:all 0.3s;cursor:pointer}
+  .plan-card:hover{transform:translateY(-4px);border-color:rgba(255,255,255,0.15)}
+  .plan-card.recommended{border:2px solid var(--green);background:linear-gradient(135deg,rgba(255,255,255,0.06),rgba(255,255,255,0.02));box-shadow:0 0 30px rgba(255,255,255,0.06)}
+  .plan-card.recommended:hover{box-shadow:0 0 40px rgba(255,255,255,0.12)}
+  .plan-card .badge{position:absolute;top:-10px;left:50%;transform:translateX(-50%);font-size:8px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;padding:2px 10px;border-radius:999px;background:var(--green);color:#000;white-space:nowrap;box-shadow:0 0 10px rgba(255,255,255,0.3)}
+  .plan-card .tier{font-size:9px;font-weight:700;letter-spacing:0.15em;text-transform:uppercase;color:var(--t3);margin-bottom:6px}
+  .plan-card.recommended .tier{color:var(--green)}
+  .plan-card .price{font-size:20px;font-weight:700;margin-bottom:2px}
+  .plan-card.recommended .price{color:var(--green)}
+  .plan-card .sub{font-size:10px;color:var(--t3);margin-bottom:12px}
+  .plan-card .features{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+  .plan-card .features li{list-style:none;font-size:10px;color:var(--t2);display:flex;align-items:center;gap:6px;line-height:1.4}
+  .plan-card .features li::before{content:'';width:12px;height:12px;border-radius:50%;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);flex-shrink:0;display:flex;align-items:center;justify-content:center;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.6)' stroke-width='3'%3E%3Cpath d='M20 6L9 17l-5-5'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:center}
+  .plan-card .features li.disabled{color:var(--t4);opacity:0.5}
+  .plan-card .features li.disabled::before{background-image:none;background:rgba(255,255,255,0.03);border-color:var(--b2)}
+  .plan-card .tweak-count{font-size:9px;font-weight:600;color:var(--t3);letter-spacing:0.1em;padding:6px 0;border-top:1px solid var(--b1);margin-bottom:10px}
+  .plan-card .tweak-count b{color:var(--t1);font-weight:700}
+  .plan-card button{width:100%;height:30px;border:none;border-radius:8px;font-size:9px;font-weight:600;cursor:pointer;transition:all 0.2s}
+  .plan-card button.primary{background:var(--green);color:#000;box-shadow:0 2px 12px rgba(255,255,255,0.2)}
+  .plan-card button.primary:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(255,255,255,0.3)}
+  .plan-card button.secondary{background:var(--bg3);color:var(--t2);border:1px solid var(--b2)}
+  .modal-footer{padding:12px 20px 16px;text-align:center;font-size:10px;color:var(--t3)}
+  .modal-footer b{color:var(--t2);font-weight:500}
 
-  /* Optimization progress */
-  .opt-progress { padding: 0 24px 24px; display: none; }
-  .opt-progress.active { display: block; }
-  .opt-progress-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
-  .opt-progress-header .label { font-size: 11px; font-weight: 600; color: var(--t2); }
-  .opt-progress-header .pct { font-size: 11px; font-weight: 700; color: #fff; }
-  .opt-progress-bar { height: 3px; border-radius: 2px; background: var(--bg5); overflow: hidden; margin-bottom: 8px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.03); }
-  .opt-progress-fill { height: 100%; border-radius: 2px; background: #fff; width: 0%; transition: width 0.4s cubic-bezier(0.4,0,0.2,1); position: relative; box-shadow: 0 0 8px rgba(255,255,255,0.1); }
-  .opt-progress-fill::after { content: ''; position: absolute; top: 0; right: 0; width: 30px; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3)); }
-  .opt-steps { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
-  .opt-step { display: flex; align-items: center; gap: 8px; font-size: 10px; color: var(--t3); }
-  .opt-step.done { color: var(--t2); }
-  .opt-step.active { color: #fff; }
-  .opt-step .dot { width: 5px; height: 5px; border-radius: 50%; background: var(--bg6); flex-shrink: 0; }
-  .opt-step.done .dot { background: #fff; box-shadow: 0 0 4px rgba(255,255,255,0.3); }
-  .opt-step.active .dot { background: #fff; animation: pulse 1s infinite; box-shadow: 0 0 6px rgba(255,255,255,0.4); }
-  .opt-complete { text-align: center; padding: 20px 24px 28px; display: none; }
-  .opt-complete.active { display: block; }
-  .opt-complete .check { width: 48px; height: 48px; border-radius: 50%; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.15); display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; animation: checkPop 0.5s cubic-bezier(0.4,0,0.2,1); box-shadow: 0 0 12px rgba(255,255,255,0.08); }
-  .opt-complete .check svg { width: 22px; height: 22px; stroke: #fff; fill: none; stroke-width: 3; }
-  .opt-complete h4 { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
-  .opt-complete p { font-size: 10px; color: var(--t3); }
+  /* ── Utility ── */
+  .gap-16{gap:16px}
+  .mb-20{margin-bottom:20px}
+  .mb-12{margin-bottom:12px}
+
+  /* ── Animations ── */
+  @keyframes pulse{0%,100%{opacity:0.4;transform:scale(1)}50%{opacity:1;transform:scale(1.05)}}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes btnPulse{0%{box-shadow:0 0 0 0 rgba(255,255,255,0.4)}70%{box-shadow:0 0 0 10px rgba(255,255,255,0)}100%{box-shadow:0 0 0 0 rgba(255,255,255,0)}}
+  @keyframes optSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+  @keyframes checkPop{0%{transform:scale(0);opacity:0}60%{transform:scale(1.2)}100%{transform:scale(1);opacity:1}}
+  .fade-in{animation:fadeIn 0.4s cubic-bezier(0.4,0,0.2,1) forwards;opacity:0}
+  .stagger>*{opacity:0;animation:fadeIn 0.35s cubic-bezier(0.4,0,0.2,1) forwards}
+  .stagger>*:nth-child(1){animation-delay:0ms}
+  .stagger>*:nth-child(2){animation-delay:35ms}
+  .stagger>*:nth-child(3){animation-delay:70ms}
+  .stagger>*:nth-child(4){animation-delay:105ms}
+  .stagger>*:nth-child(5){animation-delay:140ms}
+  .stagger>*:nth-child(6){animation-delay:175ms}
+  .stagger>*:nth-child(7){animation-delay:210ms}
+  .stagger>*:nth-child(8){animation-delay:245ms}
+  .stagger>*:nth-child(n+9){animation-delay:280ms}
 </style>
 </head>
 <body>
+
+<!-- Matrix Rain Background -->
+<canvas id="rain"></canvas>
+
 <div class="app">
-  <!-- Title Bar -->
+  <!-- Titlebar -->
   <div class="titlebar">
-    <div class="brand">CHOATIX</div>
+    <div class="brand">PHANTOM</div>
     <div class="controls">
       <button>&#x2212;</button>
       <button>&#9633;</button>
@@ -277,7 +316,7 @@
   <div class="main">
     <!-- Sidebar -->
     <aside class="sidebar">
-      <div class="logo"><span>CHOATIX<span class="dot"></span></span><small>v2.3</small></div>
+      <div class="logo"><span>PHANTOM<span class="dot"></span></span><small>v2.3</small></div>
       <div class="sep"></div>
       <nav id="nav">
         <button class="active" data-page="dashboard">
@@ -315,7 +354,9 @@
       </div>
     </aside>
 
+    <!-- ═══════════════════════════════════════════ -->
     <!-- Dashboard Page -->
+    <!-- ═══════════════════════════════════════════ -->
     <div class="content" id="page-dashboard">
       <div class="page-header">
         <div>
@@ -325,10 +366,10 @@
         <div class="live-dot">LIVE</div>
       </div>
 
-      <!-- Health + Gauges -->
-      <div style="display:flex;gap:16px;margin-bottom:20px;flex-wrap:wrap">
+      <!-- Health + Gauges Row -->
+      <div class="flex-wrap mb-20">
         <div class="card card-glow health-card" style="flex-shrink:0">
-          <div class="gauge" style="width:130px;height:130px">
+          <div class="gauge gauge-lg">
             <svg width="130" height="130">
               <circle cx="65" cy="65" r="56" fill="none" stroke="var(--bg6)" stroke-width="7"/>
               <circle cx="65" cy="65" r="56" fill="none" stroke="var(--green)" stroke-width="7" stroke-linecap="round"
@@ -341,49 +382,53 @@
           <div style="font-size:10px;color:var(--green)">Excellent</div>
         </div>
 
-        <div style="flex:1;display:grid;grid-template-columns:repeat(4,1fr);gap:12px;flex-wrap:wrap" class="stagger">
-          <div class="card card-glow" style="padding:16px;display:flex;flex-direction:column;align-items:center">
-            <div class="gauge" style="width:80px;height:80px">
+        <div class="grid-4 stagger" style="flex:1">
+          <!-- CPU -->
+          <div class="card card-glow gauge-card">
+            <div class="gauge gauge-sm">
               <svg width="80" height="80"><circle cx="40" cy="40" r="34" fill="none" stroke="var(--bg6)" stroke-width="5"/><circle cx="40" cy="40" r="34" fill="none" stroke="var(--green)" stroke-width="5" stroke-linecap="round" stroke-dasharray="213.63" stroke-dashoffset="42.73" style="filter:drop-shadow(0 0 6px rgba(255,255,255,0.3))"/></svg>
               <div class="val"><span class="num" style="font-size:16px;color:var(--green)">32%</span><span class="lbl">CPU</span></div>
             </div>
-            <div style="margin-top:12px;width:100%;display:flex;flex-direction:column;gap:6px">
+            <div class="stats">
               <div class="stat-row"><span class="label">Temp</span><span class="value">58°C</span></div>
               <div class="stat-row"><span class="label">Cores</span><span class="value">8C / 16T</span></div>
               <div class="stat-row"><span class="label">Clock</span><span class="value">4.5 GHz</span></div>
             </div>
           </div>
 
-          <div class="card card-glow" style="padding:16px;display:flex;flex-direction:column;align-items:center">
-            <div class="gauge" style="width:80px;height:80px">
+          <!-- RAM -->
+          <div class="card card-glow gauge-card">
+            <div class="gauge gauge-sm">
               <svg width="80" height="80"><circle cx="40" cy="40" r="34" fill="none" stroke="var(--bg6)" stroke-width="5"/><circle cx="40" cy="40" r="34" fill="none" stroke="var(--green)" stroke-width="5" stroke-linecap="round" stroke-dasharray="213.63" stroke-dashoffset="85.45" style="filter:drop-shadow(0 0 6px rgba(255,255,255,0.3))"/></svg>
               <div class="val"><span class="num" style="font-size:16px;color:var(--green)">60%</span><span class="lbl">RAM</span></div>
             </div>
-            <div style="margin-top:12px;width:100%;display:flex;flex-direction:column;gap:6px">
+            <div class="stats">
               <div class="stat-row"><span class="label">Used</span><span class="value">9.6 GB</span></div>
               <div class="stat-row"><span class="label">Total</span><span class="value">16 GB</span></div>
               <div class="stat-row"><span class="label">Free</span><span class="value">6.4 GB</span></div>
             </div>
           </div>
 
-          <div class="card card-glow" style="padding:16px;display:flex;flex-direction:column;align-items:center">
-            <div class="gauge" style="width:80px;height:80px">
+          <!-- GPU -->
+          <div class="card card-glow gauge-card">
+            <div class="gauge gauge-sm">
               <svg width="80" height="80"><circle cx="40" cy="40" r="34" fill="none" stroke="var(--bg6)" stroke-width="5"/><circle cx="40" cy="40" r="34" fill="none" stroke="var(--warning)" stroke-width="5" stroke-linecap="round" stroke-dasharray="213.63" stroke-dashoffset="42.73" style="filter:drop-shadow(0 0 6px rgba(255,193,7,0.3))"/></svg>
               <div class="val"><span class="num" style="font-size:16px;color:var(--warning)">65%</span><span class="lbl">GPU</span></div>
             </div>
-            <div style="margin-top:12px;width:100%;display:flex;flex-direction:column;gap:6px">
+            <div class="stats">
               <div class="stat-row"><span class="label">Temp</span><span class="value">62°C</span></div>
               <div class="stat-row"><span class="label">VRAM</span><span class="value">8192 MB</span></div>
               <div class="stat-row"><span class="label">Model</span><span class="value">RTX 4070</span></div>
             </div>
           </div>
 
-          <div class="card card-glow" style="padding:16px;display:flex;flex-direction:column;align-items:center">
-            <div class="gauge" style="width:80px;height:80px">
+          <!-- Disk -->
+          <div class="card card-glow gauge-card">
+            <div class="gauge gauge-sm">
               <svg width="80" height="80"><circle cx="40" cy="40" r="34" fill="none" stroke="var(--bg6)" stroke-width="5"/><circle cx="40" cy="40" r="34" fill="none" stroke="var(--green)" stroke-width="5" stroke-linecap="round" stroke-dasharray="213.63" stroke-dashoffset="64.09" style="filter:drop-shadow(0 0 6px rgba(255,255,255,0.3))"/></svg>
               <div class="val"><span class="num" style="font-size:16px;color:var(--green)">45%</span><span class="lbl">C:</span></div>
             </div>
-            <div style="margin-top:12px;width:100%;display:flex;flex-direction:column;gap:6px">
+            <div class="stats">
               <div class="stat-row"><span class="label">Used</span><span class="value">225 GB</span></div>
               <div class="stat-row"><span class="label">Free</span><span class="value">275 GB</span></div>
               <div class="stat-row"><span class="label">Total</span><span class="value">500 GB</span></div>
@@ -393,36 +438,37 @@
       </div>
 
       <!-- Charts -->
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px">
-        <div class="card card-glow" style="padding:16px">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+      <div class="grid-3 mb-20">
+        <div class="card card-glow card-padding">
+          <div class="chart-header">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="1.5"><path d="M12 20V4M4 12h16"/></svg>
-            <span style="font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--t3)">CPU Usage</span>
+            <span class="chart-label">CPU Usage</span>
           </div>
           <div class="chart-area"><canvas id="cpuChart"></canvas></div>
         </div>
-        <div class="card card-glow" style="padding:16px">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+        <div class="card card-glow card-padding">
+          <div class="chart-header">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="1.5"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
-            <span style="font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--t3)">RAM Usage</span>
+            <span class="chart-label">RAM Usage</span>
           </div>
           <div class="chart-area"><canvas id="ramChart"></canvas></div>
         </div>
-        <div class="card card-glow" style="padding:16px">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+        <div class="card card-glow card-padding">
+          <div class="chart-header">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
-            <span style="font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--t3)">GPU Usage</span>
+            <span class="chart-label">GPU Usage</span>
           </div>
           <div class="chart-area"><canvas id="gpuChart"></canvas></div>
         </div>
       </div>
 
       <!-- System Info / Network / Quick Actions -->
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
-        <div class="card card-glow" style="padding:16px">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+      <div class="grid-3">
+        <!-- System Info -->
+        <div class="card card-glow card-padding">
+          <div class="chart-header">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-            <span style="font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--t3)">System Info</span>
+            <span class="chart-label">System Info</span>
           </div>
           <div class="stat-row"><span class="label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg> Power Plan</span><span class="value">High Performance</span></div>
           <div class="stat-row"><span class="label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 12h3l3-9 4 18 3-9h3"/></svg> Game Mode</span><span class="value" style="color:var(--green)">Enabled</span></div>
@@ -430,77 +476,82 @@
           <div class="stat-row"><span class="label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg> Uptime</span><span class="value">3d 14h 22m</span></div>
         </div>
 
-        <div class="card card-glow" style="padding:16px">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="1.5"><path d="M5 12.55a11 11 0 0 1 14.08 0c.55-.3 1.1-.67 1.6-1.12a15.5 15.5 0 0 0-20.76 0c.5 1.86 1.43 3.56 2.68 4.95"/><line x1="12" y1="19" x2="12" y2="19"/><line x1="12" y1="12" x2="12" y2="19"/>"></circle></svg>
-            <span style="font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--t3)">Network</span>
+        <!-- Network -->
+        <div class="card card-glow card-padding">
+          <div class="chart-header">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="1.5"><path d="M5 12.55a11 11 0 0 1 14.08 0M8.53 16.11a6 6 0 0 1 6.95 0M12 20h.01"/></svg>
+            <span class="chart-label">Network</span>
           </div>
           <div class="stat-row"><span class="label">Download</span><span class="value" style="color:var(--green)">24.5 MB/s</span></div>
           <div class="stat-row"><span class="label">Upload</span><span class="value">8.2 MB/s</span></div>
           <div class="stat-row"><span class="label">Adapter</span><span class="value">Wi-Fi 6</span></div>
         </div>
 
-        <div class="card card-glow" style="padding:16px">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+        <!-- Quick Actions -->
+        <div class="card card-glow card-padding">
+          <div class="chart-header">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--warning)" stroke-width="1.5"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-            <span style="font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--t3)">Quick Actions</span>
+            <span class="chart-label">Quick Actions</span>
           </div>
-          <button class="card" style="width:100%;display:flex;align-items:center;gap:12px;padding:14px;border:1px solid var(--b1);cursor:pointer;margin-bottom:8px;transition:all 0.2s" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 24px rgba(0,0,0,0.3)'" onmouseout="this.style.transform='';this.style.boxShadow=''">
-            <div style="width:36px;height:36px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.2);flex-shrink:0"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div>
-            <div style="text-align:left"><div style="font-size:11px;font-weight:600">Scan System</div><div style="font-size:9px;color:var(--t3)">Detect performance issues</div></div>
+          <button class="action-btn">
+            <div class="icon-wrap"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div>
+            <div class="action-text"><div class="action-title">Scan System</div><div class="action-desc">Detect performance issues</div></div>
           </button>
-          <button class="card" style="width:100%;display:flex;align-items:center;gap:12px;padding:14px;border:1px solid var(--b1);cursor:pointer;margin-bottom:8px;transition:all 0.2s" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 24px rgba(0,0,0,0.3)'" onmouseout="this.style.transform='';this.style.boxShadow=''">
-            <div style="width:36px;height:36px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.2);flex-shrink:0"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="1.5"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg></div>
-            <div style="text-align:left"><div style="font-size:11px;font-weight:600">Optimize All</div><div style="font-size:9px;color:var(--t3)">Apply recommended fixes</div></div>
+          <button class="action-btn">
+            <div class="icon-wrap"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="1.5"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg></div>
+            <div class="action-text"><div class="action-title">Optimize All</div><div class="action-desc">Apply recommended fixes</div></div>
           </button>
-          <button class="card" style="width:100%;display:flex;align-items:center;gap:12px;padding:14px;border:1px solid var(--b1);cursor:pointer;transition:all 0.2s" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 24px rgba(0,0,0,0.3)'" onmouseout="this.style.transform='';this.style.boxShadow=''">
-            <div style="width:36px;height:36px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:rgba(255,193,7,0.08);border:1px solid rgba(255,193,7,0.2);flex-shrink:0"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--warning)" stroke-width="1.5"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></div>
-            <div style="text-align:left"><div style="font-size:11px;font-weight:600">Clear Cache</div><div style="font-size:9px;color:var(--t3)">Remove temporary files</div></div>
+          <button class="action-btn">
+            <div class="icon-wrap warn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--warning)" stroke-width="1.5"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></div>
+            <div class="action-text"><div class="action-title">Clear Cache</div><div class="action-desc">Remove temporary files</div></div>
           </button>
         </div>
       </div>
     </div>
 
+    <!-- ═══════════════════════════════════════════ -->
     <!-- Scan Page -->
+    <!-- ═══════════════════════════════════════════ -->
     <div class="content" id="page-scan" style="display:none">
       <div class="scan-center">
         <div class="scan-icon" style="animation:pulse 2s infinite">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:56px;height:56px">
-            <circle cx="11" cy="11" r="8"/>
-            <path d="m21 21-4.35-4.35"/>
-          </svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:56px;height:56px"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
           <div class="badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg></div>
         </div>
         <h2 style="font-size:20px;font-weight:700;margin-bottom:6px">Analyzing Your System</h2>
         <p style="font-size:12px;color:var(--t2);margin-bottom:32px;line-height:1.5" id="scanLabel">Scanning CPU and memory...</p>
-        <div style="width:320px" class="progress"><div class="fill" id="scanBar" style="width:0%"></div></div>
-        <div style="display:flex;gap:12px;margin-top:24px">
-          <div style="display:flex;align-items:center;gap:4px;font-size:9px;color:var(--t3)"><div style="width:4px;height:4px;border-radius:50%;background:var(--green)"></div>CPU</div>
-          <div style="display:flex;align-items:center;gap:4px;font-size:9px;color:var(--t3)"><div style="width:4px;height:4px;border-radius:50%;background:var(--green)"></div>RAM</div>
-          <div style="display:flex;align-items:center;gap:4px;font-size:9px;color:var(--t3)"><div style="width:4px;height:4px;border-radius:50%;background:var(--green)"></div>GPU</div>
-          <div style="display:flex;align-items:center;gap:4px;font-size:9px;color:var(--t3)"><div style="width:4px;height:4px;border-radius:50%;background:var(--green)"></div>Disk</div>
+        <div class="progress progress-lg"><div class="fill" id="scanBar" style="width:0%"></div></div>
+        <div class="scan-dots">
+          <div class="scan-dot">CPU</div>
+          <div class="scan-dot">RAM</div>
+          <div class="scan-dot">GPU</div>
+          <div class="scan-dot">Disk</div>
         </div>
       </div>
     </div>
 
+    <!-- ═══════════════════════════════════════════ -->
     <!-- Optimizer Page -->
+    <!-- ═══════════════════════════════════════════ -->
     <div class="content" id="page-optimizer" style="display:none">
       <div class="page-header">
         <div>
           <h1><span class="dot"></span> Optimizer</h1>
           <p>82 optimizations available</p>
         </div>
-        <button class="btn-primary" style="height:32px;padding:0 16px;font-size:10px;font-weight:700;display:flex;align-items:center;gap:6px">
+        <button class="btn-primary btn-header">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
           Optimize All
         </button>
       </div>
       <div class="cat-grid stagger" id="catGrid"></div>
-      <div style="font-size:9px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--t3);margin-bottom:12px">All Optimizations</div>
-      <div id="tweakList" style="display:flex;flex-direction:column;gap:6px"></div>
+      <div class="section-label">All Optimizations</div>
+      <div class="tweak-list" id="tweakList"></div>
     </div>
 
+    <!-- ═══════════════════════════════════════════ -->
     <!-- AutoPilot / Game Library Page -->
+    <!-- ═══════════════════════════════════════════ -->
     <div class="content" id="page-autopilot" style="display:none">
       <div class="page-header">
         <div>
@@ -508,7 +559,7 @@
           <p>Select a game to optimize</p>
         </div>
         <div style="display:flex;gap:8px">
-          <button class="btn-primary" style="height:32px;padding:0 16px;font-size:10px;font-weight:600;display:flex;align-items:center;gap:6px" onclick="refreshGames()">
+          <button class="btn-primary btn-header" onclick="refreshGames()">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
             Refresh
           </button>
@@ -517,9 +568,25 @@
       <div class="game-grid stagger" id="gameGrid"></div>
     </div>
 
-    <div class="content" id="page-performance" style="display:none"><div class="scan-center"><h2 style="font-size:17px;font-weight:700">Performance</h2><p style="font-size:12px;color:var(--t3);margin-top:8px">Real-time system monitoring</p></div></div>
+    <!-- ═══════════════════════════════════════════ -->
+    <!-- Performance Page -->
+    <!-- ═══════════════════════════════════════════ -->
+    <div class="content" id="page-performance" style="display:none">
+      <div class="scan-center">
+        <h2 style="font-size:17px;font-weight:700">Performance</h2>
+        <p style="font-size:12px;color:var(--t3);margin-top:8px">Real-time system monitoring</p>
+      </div>
+    </div>
 
-    <div class="content" id="page-rollback" style="display:none"><div class="scan-center"><h2 style="font-size:17px;font-weight:700">Rollback</h2><p style="font-size:12px;color:var(--t3);margin-top:8px">Undo applied optimizations</p></div></div>
+    <!-- ═══════════════════════════════════════════ -->
+    <!-- Rollback Page -->
+    <!-- ═══════════════════════════════════════════ -->
+    <div class="content" id="page-rollback" style="display:none">
+      <div class="scan-center">
+        <h2 style="font-size:17px;font-weight:700">Rollback</h2>
+        <p style="font-size:12px;color:var(--t3);margin-top:8px">Undo applied optimizations</p>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -527,7 +594,7 @@
 <div class="modal-overlay" id="upgradeModal">
   <div class="modal">
     <div class="modal-header">
-      <div><h2>Choose Your Plan</h2><p>Unlock the full power of Choatix</p></div>
+      <div><h2>Choose Your Plan</h2><p>Unlock the full power of Phantom</p></div>
       <button onclick="closeModal()">&#10005;</button>
     </div>
     <div class="plan-grid">
@@ -577,7 +644,7 @@
         <button class="primary">Get PREMIUM</button>
       </div>
     </div>
-    <div class="modal-footer">Join the <b>CHOATIX</b> Discord to purchase</div>
+    <div class="modal-footer">Join the <b>PHANTOM</b> Discord to purchase</div>
   </div>
 </div>
 
@@ -586,7 +653,7 @@
 <div class="bottom-sheet" id="bottomSheet">
   <div class="sheet-handle"></div>
   <div class="sheet-header">
-    <h3><span class="dot"></span> Optimize Game</h3>
+    <h3 id="sheetTitle"><span class="dot"></span> Optimize Game</h3>
     <button class="close-sheet" onclick="closeSheet()">&#10005;</button>
   </div>
   <div class="sheet-game" id="sheetGame">
@@ -608,11 +675,6 @@
       <div class="plan-label">Pro</div>
       <div class="plan-tweaks">26</div>
       <div class="plan-sub">tweaks</div>
-      <ul class="features" style="display:none">
-        <li>BCD boot tweaks</li>
-        <li>RAM optimization</li>
-        <li>USB tuning</li>
-      </ul>
     </div>
     <div class="sheet-plan" data-tier="premium" onclick="selectPlan(this)">
       <div class="plan-icon"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div>
@@ -637,33 +699,136 @@
 </div>
 
 <script>
+// ── Matrix Rain Background ──
+(function(){
+  const canvas = document.getElementById('rain');
+  const ctx = canvas.getContext('2d');
+  const CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789ΣΩλπφψ'.split('');
+  const FONT_SIZE = 14;
+  const CHAR_SPACING = 18;
+  let W, H, cols = [];
+
+  function init(){
+    const dpr = window.devicePixelRatio || 1;
+    W = window.innerWidth;
+    H = window.innerHeight;
+    canvas.width = W * dpr;
+    canvas.height = H * dpr;
+    canvas.style.width = W + 'px';
+    canvas.style.height = H + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    cols = [];
+    const numCols = Math.floor(W / CHAR_SPACING);
+    for(let i = 0; i < numCols; i++){
+      const cx = W / 2;
+      const dist = Math.abs(i * CHAR_SPACING - cx) / (W / 2);
+      const chance = dist < 0.3 ? 0.9 : dist < 0.6 ? 0.5 : 0.15;
+      if(Math.random() > chance) continue;
+
+      const speed = 1.2 + Math.random() * 2.5;
+      const trailLen = 8 + Math.floor(Math.random() * 14);
+      const chars = [];
+      for(let j = 0; j < trailLen; j++) chars.push(CHARS[Math.floor(Math.random() * CHARS.length)]);
+      cols.push({
+        x: i * CHAR_SPACING + CHAR_SPACING / 2,
+        y: Math.random() * H * 1.5 - H * 0.5,
+        speed, chars,
+        flickerTimer: 0,
+        flickerRate: 3 + Math.floor(Math.random() * 5)
+      });
+    }
+  }
+  init();
+  window.addEventListener('resize', init);
+
+  function draw(){
+    ctx.fillStyle = 'rgba(0,0,0,0.35)';
+    ctx.fillRect(0, 0, W, H);
+    ctx.font = FONT_SIZE + 'px Consolas, "SF Mono", monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+
+    for(const col of cols){
+      col.y += col.speed;
+      col.flickerTimer++;
+      if(col.flickerTimer >= col.flickerRate){
+        col.flickerTimer = 0;
+        const idx = Math.floor(Math.random() * col.chars.length);
+        col.chars[idx] = CHARS[Math.floor(Math.random() * CHARS.length)];
+      }
+      for(let j = 0; j < col.chars.length; j++){
+        const cy = col.y - j * CHAR_SPACING;
+        if(cy < -FONT_SIZE || cy > H + FONT_SIZE) continue;
+        let alpha;
+        if(j === 0) alpha = 0.95;
+        else if(j < 3) alpha = 0.6 - j * 0.1;
+        else alpha = Math.max(0.02, 0.45 * Math.pow(0.82, j - 2));
+        if(cy < 80) alpha *= cy / 80;
+        if(cy > H - 60) alpha *= (H - cy) / 60;
+        alpha = Math.max(0, Math.min(1, alpha));
+        if(j === 0){ ctx.shadowColor = 'rgba(255,255,255,0.4)'; ctx.shadowBlur = 6; }
+        else ctx.shadowBlur = 0;
+        ctx.fillStyle = `rgba(255,255,255,${alpha})`;
+        ctx.fillText(col.chars[j], col.x, cy);
+      }
+      ctx.shadowBlur = 0;
+      if(col.y - col.chars.length * CHAR_SPACING > H){
+        col.y = -CHAR_SPACING * 2;
+        col.speed = 1.2 + Math.random() * 2.5;
+        col.chars = [];
+        const trailLen = 8 + Math.floor(Math.random() * 14);
+        for(let j = 0; j < trailLen; j++) col.chars.push(CHARS[Math.floor(Math.random() * CHARS.length)]);
+      }
+    }
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+// ── Navigation ──
+const pages = document.querySelectorAll('[data-page]');
+pages.forEach(btn => {
+  btn.addEventListener('click', () => {
+    pages.forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.content').forEach(p => p.style.display = 'none');
+    const target = document.getElementById('page-' + btn.dataset.page);
+    if(target) target.style.display = '';
+  });
+});
+
+// ── Modal ──
+function openModal(){ document.getElementById('upgradeModal').classList.add('show'); }
+function closeModal(){ document.getElementById('upgradeModal').classList.remove('show'); }
+
 // ── Game Library ──
 const games = [
-  { name: 'Fortnite', cat: 'Battle Royale', tag: 'competitive', img: 'https://cdn2.unrealengine.com/Fortnite+KeyArt+1920x1080-6e23e3b76494.jpg' },
-  { name: 'Valorant', cat: 'Tactical Shooter', tag: 'competitive', img: 'https://images.contentstack.io/v3/assets/bltb38ef9d644277dc7/blt4b1a59e08b09abc6/5f423b3a1e1a3f73d8c6b0a8/valorant-calibrating-sensitivity.jpg' },
-  { name: 'CS2', cat: 'FPS', tag: 'competitive', img: 'https://cdn.akamai.steamstatic.com/apps/csgo/images/csgo_react/social/share.jpg' },
-  { name: 'Apex Legends', cat: 'Battle Royale', tag: 'multiplayer', img: 'https://media.contentapi.ea.com/content/dam/apex-legends/common/apex-lp-new-base-tiles.jpg' },
-  { name: 'Warzone', cat: 'Battle Royale', tag: 'competitive', img: 'https://www.callofduty.com/content/dam/atvi/callofduty/cod-keyart/thumbnails/WZ2-KEYART_TOUT.jpg' },
-  { name: 'Minecraft', cat: 'Sandbox', tag: 'story', img: 'https://www.minecraft.net/content/dam/games/minecraft/key-art/Games_Subnav_702x400.jpg' },
-  { name: 'GTA V', cat: 'Open World', tag: 'story', img: 'https://media.rockstargames.com/rockstargames-newsite/uploads/gtav/downloads/images/GTAV_702x400.jpg' },
-  { name: 'League of Legends', cat: 'MOBA', tag: 'competitive', img: 'https://ddragon.leagueoflegends.com/cdn/img/champion-splash/Ahri_0.jpg' },
-  { name: 'Overwatch 2', cat: 'Hero Shooter', tag: 'competitive', img: 'https://bnetcmsus-a.akamaihd.net/cms/blog_header/cn/CN5BHJHVP0WY1616647507407.jpg' },
-  { name: 'PUBG', cat: 'Battle Royale', tag: 'multiplayer', img: 'https://cdn.akamai.steamstatic.com/steam/apps/578080/header.jpg' },
-  { name: 'Rust', cat: 'Survival', tag: 'multiplayer', img: 'https://cdn.akamai.steamstatic.com/steam/apps/252490/header.jpg' },
-  { name: 'Rocket League', cat: 'Sports', tag: 'competitive', img: 'https://cdn.akamai.steamstatic.com/steam/apps/252950/header.jpg' },
+  { name:'Fortnite', cat:'Battle Royale', tag:'competitive', img:'https://cdn2.unrealengine.com/Fortnite+KeyArt+1920x1080-6e23e3b76494.jpg' },
+  { name:'Valorant', cat:'Tactical Shooter', tag:'competitive', img:'https://images.contentstack.io/v3/assets/bltb38ef9d644277dc7/blt4b1a59e08b09abc6/5f423b3a1e1a3f73d8c6b0a8/valorant-calibrating-sensitivity.jpg' },
+  { name:'CS2', cat:'FPS', tag:'competitive', img:'https://cdn.akamai.steamstatic.com/apps/csgo/images/csgo_react/social/share.jpg' },
+  { name:'Apex Legends', cat:'Battle Royale', tag:'multiplayer', img:'https://media.contentapi.ea.com/content/dam/apex-legends/common/apex-lp-new-base-tiles.jpg' },
+  { name:'Warzone', cat:'Battle Royale', tag:'competitive', img:'https://www.callofduty.com/content/dam/atvi/callofduty/cod-keyart/thumbnails/WZ2-KEYART_TOUT.jpg' },
+  { name:'Minecraft', cat:'Sandbox', tag:'story', img:'https://www.minecraft.net/content/dam/games/minecraft/key-art/Games_Subnav_702x400.jpg' },
+  { name:'GTA V', cat:'Open World', tag:'story', img:'https://media.rockstargames.com/rockstargames-newsite/uploads/gtav/downloads/images/GTAV_702x400.jpg' },
+  { name:'League of Legends', cat:'MOBA', tag:'competitive', img:'https://ddragon.leagueoflegends.com/cdn/img/champion-splash/Ahri_0.jpg' },
+  { name:'Overwatch 2', cat:'Hero Shooter', tag:'competitive', img:'https://bnetcmsus-a.akamaihd.net/cms/blog_header/cn/CN5BHJHVP0WY1616647507407.jpg' },
+  { name:'PUBG', cat:'Battle Royale', tag:'multiplayer', img:'https://cdn.akamai.steamstatic.com/steam/apps/578080/header.jpg' },
+  { name:'Rust', cat:'Survival', tag:'multiplayer', img:'https://cdn.akamai.steamstatic.com/steam/apps/252490/header.jpg' },
+  { name:'Rocket League', cat:'Sports', tag:'competitive', img:'https://cdn.akamai.steamstatic.com/steam/apps/252950/header.jpg' },
 ];
 
 const gameGrid = document.getElementById('gameGrid');
 let currentGame = null;
 let selectedTier = null;
 
-function renderGames() {
+function renderGames(){
   gameGrid.innerHTML = '';
   games.forEach((g, i) => {
     const card = document.createElement('div');
     card.className = 'game-card';
     card.innerHTML = `
-      <div class="game-card-img" style="background:linear-gradient(135deg,${g.tag==='competitive'?'rgba(255,255,255,0.15)':'g.tag==='story'?'rgba(124,77,255,0.15)':'rgba(41,121,255,0.15)'},transparent)">
+      <div class="game-card-img" style="background:linear-gradient(135deg,${g.tag==='competitive'?'rgba(255,255,255,0.15)':g.tag==='story'?'rgba(124,77,255,0.15)':'rgba(41,121,255,0.15)'},transparent)">
         <img src="${g.img}" alt="${g.name}" loading="lazy" onerror="this.style.display='none'">
         <span class="tag ${g.tag}">${g.tag}</span>
         <button class="opt-btn" onclick="event.stopPropagation();openSheet(${i})" title="Optimize ${g.name}">
@@ -673,23 +838,19 @@ function renderGames() {
       <div class="game-card-info">
         <div class="title">${g.name}</div>
         <div class="sub">${g.cat}</div>
-      </div>
-    `;
+      </div>`;
     gameGrid.appendChild(card);
   });
 }
 renderGames();
 
-function refreshGames() {
-  gameGrid.innerHTML = '';
-  setTimeout(renderGames, 300);
-}
+function refreshGames(){ gameGrid.innerHTML = ''; setTimeout(renderGames, 300); }
 
 // ── Bottom Sheet ──
-function openSheet(idx) {
+function openSheet(idx){
   currentGame = games[idx];
   selectedTier = null;
-  document.getElementById('sheetTitle').textContent = 'Optimize Game';
+  document.getElementById('sheetTitle').innerHTML = '<span class="dot"></span> Optimize Game';
   document.getElementById('sheetGameImg').src = currentGame.img;
   document.getElementById('sheetGameName').textContent = currentGame.name;
   document.getElementById('sheetGameCat').textContent = currentGame.cat;
@@ -700,13 +861,11 @@ function openSheet(idx) {
   document.getElementById('sheetOverlay').classList.add('show');
   document.getElementById('bottomSheet').classList.add('show');
 }
-
-function closeSheet() {
+function closeSheet(){
   document.getElementById('bottomSheet').classList.remove('show');
   document.getElementById('sheetOverlay').classList.remove('show');
 }
-
-function selectPlan(el) {
+function selectPlan(el){
   document.querySelectorAll('.sheet-plan').forEach(p => p.classList.remove('selected'));
   el.classList.add('selected');
   selectedTier = el.dataset.tier;
@@ -720,25 +879,24 @@ const tweakSteps = {
   premium: ['Disabling unnecessary services','Optimizing power plan','Clearing shader cache','Enabling Game Mode','Optimizing network stack','Tuning GPU settings','Disabling fullscreen optimizations','Configuring memory management','Optimizing disk I/O','Tuning TCP/IP stack','Disabling telemetry','Disabling mouse acceleration','Optimizing CPU priority','Configuring interrupt affinity','Disabling HPET','Optimizing storage TRIM','Tuning NVIDIA settings','Applying registry tweaks','Creating restore point','Finalizing...']
 };
 
-function startOptimization() {
-  if (!selectedTier) return;
+function startOptimization(){
+  if(!selectedTier) return;
   const steps = tweakSteps[selectedTier];
   document.getElementById('sheetPlans').style.display = 'none';
   document.getElementById('optProgress').classList.add('active');
   document.getElementById('optLabel').textContent = 'Optimizing...';
   document.getElementById('optPct').textContent = '0%';
   document.getElementById('optFill').style.width = '0%';
-
   const stepsEl = document.getElementById('optSteps');
   stepsEl.innerHTML = steps.map((s, i) => `<div class="opt-step" id="optStep${i}"><div class="dot"></div>${s}</div>`).join('');
 
   let i = 0;
   const iv = setInterval(() => {
-    if (i > 0) {
+    if(i > 0){
       document.getElementById('optStep' + (i - 1)).classList.remove('active');
       document.getElementById('optStep' + (i - 1)).classList.add('done');
     }
-    if (i < steps.length) {
+    if(i < steps.length){
       document.getElementById('optStep' + i).classList.add('active');
       const pct = Math.round(((i + 1) / steps.length) * 100);
       document.getElementById('optPct').textContent = pct + '%';
@@ -757,10 +915,9 @@ function startOptimization() {
         const tierLabel = selectedTier.charAt(0).toUpperCase() + selectedTier.slice(1);
         const tweakCount = { free: 17, pro: 26, premium: 42 }[selectedTier];
         document.getElementById('optCompleteSub').textContent = tierLabel + ' · ' + tweakCount + ' tweaks applied';
-        // Add optimized badge to game card
         const cardIndex = games.findIndex(g => g.name === currentGame.name);
         const cards = document.querySelectorAll('.game-card');
-        if (cards[cardIndex]) {
+        if(cards[cardIndex]){
           const badge = document.createElement('div');
           badge.className = 'optimized-badge';
           badge.innerHTML = '<svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4 12 14.01l-3-3"/></svg>';
@@ -771,41 +928,25 @@ function startOptimization() {
   }, 350);
 }
 
-// ── Navigation ──
-const pages = document.querySelectorAll('[data-page]');
-pages.forEach(btn => {
-  btn.addEventListener('click', () => {
-    pages.forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    document.querySelectorAll('.content').forEach(p => p.style.display = 'none');
-    const target = document.getElementById('page-' + btn.dataset.page);
-    if (target) target.style.display = '';
-  });
-});
-
-// ── Modal ──
-function openModal() { document.getElementById('upgradeModal').classList.add('show'); }
-function closeModal() { document.getElementById('upgradeModal').classList.remove('show'); }
-
 // ── Scan ──
-function startScan() {
+function startScan(){
   const scan = document.getElementById('page-scan');
   scan.innerHTML = `<div class="scan-center">
     <div class="scan-icon" style="animation:pulse 2s infinite"><svg viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="1.5" style="width:56px;height:56px"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></div>
     <h2 style="font-size:18px;font-weight:700;margin-bottom:4px">Analyzing System</h2>
     <p style="font-size:12px;color:var(--green);margin-bottom:32px" id="scanLabel">CPU analysis...</p>
-    <div style="width:320px" class="progress"><div class="fill" id="scanBar" style="width:0%"></div></div>
-    <div style="display:flex;gap:16px;margin-top:24px">
-      <div style="display:flex;align-items:center;gap:4px;font-size:9px;color:var(--t3)"><div style="width:4px;height:4px;border-radius:50%;background:var(--green)"></div>CPU</div>
-      <div style="display:flex;align-items:center;gap:4px;font-size:9px;color:var(--t3)"><div style="width:4px;height:4px;border-radius:50%;background:var(--green)"></div>RAM</div>
-      <div style="display:flex;align-items:center;gap:4px;font-size:9px;color:var(--t3)"><div style="width:4px;height:4px;border-radius:50%;background:var(--green)"></div>GPU</div>
-      <div style="display:flex;align-items:center;gap:4px;font-size:9px;color:var(--t3)"><div style="width:4px;height:4px;border-radius:50%;background:var(--green)"></div>Disk</div>
+    <div class="progress progress-lg"><div class="fill" id="scanBar" style="width:0%"></div></div>
+    <div class="scan-dots">
+      <div class="scan-dot">CPU</div>
+      <div class="scan-dot">RAM</div>
+      <div class="scan-dot">GPU</div>
+      <div class="scan-dot">Disk</div>
     </div>
   </div>`;
   const steps = ['CPU analysis','Memory scan','Disk check','GPU detection','Network test','Power plan review'];
   let i = 0;
   const iv = setInterval(() => {
-    if (i >= steps.length) {
+    if(i >= steps.length){
       clearInterval(iv);
       setTimeout(() => {
         scan.innerHTML = `<div class="scan-center"><div style="width:48px;height:48px;margin-bottom:16px"><svg viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" style="width:48px;height:48px"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4 12 14.01l-3-3"/></svg></div><h2 style="font-size:18px;font-weight:700;margin-bottom:4px">Scan Complete</h2><p style="font-size:12px;color:var(--t3)">Score: 85/100 · 3 issues found</p></div>`;
@@ -818,42 +959,45 @@ function startScan() {
   }, 400);
 }
 
-// Charts
-function drawChart(canvasId, color, data) {
+// ── Charts ──
+function drawChart(canvasId, color, data){
   const c = document.getElementById(canvasId);
-  if (!c) return;
+  if(!c) return;
   const ctx = c.getContext('2d');
   const w = c.parentElement.clientWidth, h = c.parentElement.clientHeight;
   c.width = w; c.height = h;
   const max = Math.max(...data, 100);
-  ctx.clearRect(0,0,w,h);
+  ctx.clearRect(0, 0, w, h);
   ctx.beginPath();
   ctx.moveTo(0, h);
-  data.forEach((v,i) => { ctx.lineTo(i*(w/(data.length-1)), h - (v/max)*h); });
+  data.forEach((v, i) => ctx.lineTo(i * (w / (data.length - 1)), h - (v / max) * h));
   ctx.lineTo(w, h);
-  const grad = ctx.createLinearGradient(0,0,0,h);
-  grad.addColorStop(0, color.replace(')',',0.15)').replace('rgb','rgba'));
-  grad.addColorStop(1, color.replace(')',',0)').replace('rgb','rgba'));
+  const grad = ctx.createLinearGradient(0, 0, 0, h);
+  grad.addColorStop(0, color.replace(')', ',0.15)').replace('rgb', 'rgba'));
+  grad.addColorStop(1, color.replace(')', ',0)').replace('rgb', 'rgba'));
   ctx.fillStyle = grad;
   ctx.fill();
   ctx.beginPath();
-  data.forEach((v,i) => { const x=i*(w/(data.length-1)), y=h-(v/max)*h; i===0?ctx.moveTo(x,y):ctx.lineTo(x,y); });
+  data.forEach((v, i) => {
+    const x = i * (w / (data.length - 1)), y = h - (v / max) * h;
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  });
   ctx.strokeStyle = color; ctx.lineWidth = 1.5; ctx.stroke();
 }
 const cpuData = [32,28,45,52,38,25,42,55,48,35,28,40,52,60,45,32,28,35,42,48];
 const ramData = [58,60,62,61,59,63,65,64,62,60,58,56,58,60,62,64,63,61,59,60];
 const gpuData = [45,52,65,72,58,42,55,68,75,60,48,52,58,62,65,60,55,50,48,45];
 setTimeout(() => {
-  drawChart('cpuChart','rgb(0,230,118)',cpuData);
-  drawChart('ramChart','rgb(0,200,100)',ramData);
-  drawChart('gpuChart','rgb(255,193,7)',gpuData);
+  drawChart('cpuChart', 'rgb(0,230,118)', cpuData);
+  drawChart('ramChart', 'rgb(0,200,100)', ramData);
+  drawChart('gpuChart', 'rgb(255,193,7)', gpuData);
 }, 100);
 
-// Categories & Tweaks
+// ── Categories & Tweaks ──
 const cats = [
   {id:'system',label:'System',color:'var(--green)',count:6},
   {id:'nvidia',label:'NVIDIA',color:'#fff',count:6},
-  {id:'network',label:'Network',color:#2979ff',count:5},
+  {id:'network',label:'Network',color:'#2979ff',count:5},
   {id:'debloat',label:'Debloat',color:'#fff',count:6},
   {id:'mouse',label:'Mouse',color:'#fff',count:4},
   {id:'keyboard',label:'Keyboard',color:'#fff',count:5},
@@ -881,11 +1025,11 @@ const tweaks = [
 ];
 const tweakList = document.getElementById('tweakList');
 tweaks.forEach(t => {
-  const catColor = cats.find(c=>c.id===t.cat)?.color || 'var(--t4)';
+  const catColor = cats.find(c => c.id === t.cat)?.color || 'var(--t4)';
   tweakList.innerHTML += `<div class="card card-glow tweak-item">
     <div class="dot" style="background:${catColor}"></div>
     <div class="info"><div class="name">${t.name}</div><div class="desc">${t.desc}</div></div>
-    <div class="cat">${cats.find(c=>c.id===t.cat)?.label||t.cat}</div>
+    <div class="cat">${cats.find(c => c.id === t.cat)?.label || t.cat}</div>
     <button class="apply-btn" onclick="this.innerHTML='✓ Applied';this.style.background='var(--bg6)';this.style.color='var(--green)';this.style.boxShadow='none';this.disabled=true">Apply</button>
   </div>`;
 });

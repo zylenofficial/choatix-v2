@@ -27,7 +27,7 @@ interface ZeroDelaySetting {
   tweakId: string
 }
 
-const ZERO_DELAY_SECTIONS: ZeroDelaySection[] = [
+const legacyZeroDelaySections: ZeroDelaySection[] = [
   {
     id: 'mouse',
     label: 'Mouse',
@@ -100,7 +100,7 @@ const ZERO_DELAY_SECTIONS: ZeroDelaySection[] = [
         max: 31,
         step: 1,
         defaultValue: 31,
-        tweakId: 'keyboard-optimize-repeat',
+        tweakId: 'keyboard-optimize-repeat-rate',
       },
       {
         id: 'repeat-delay',
@@ -111,7 +111,7 @@ const ZERO_DELAY_SECTIONS: ZeroDelaySection[] = [
         max: 3,
         step: 1,
         defaultValue: 0,
-        tweakId: 'keyboard-optimize-repeat',
+        tweakId: 'keyboard-optimize-repeat-delay',
       },
       {
         id: 'filter-keys',
@@ -179,6 +179,11 @@ const ZERO_DELAY_SECTIONS: ZeroDelaySection[] = [
     ],
   },
 ]
+
+// Only expose settings with a verified implementation.  The former timer,
+// polling-rate, DPC, interrupt, and keyboard recipes were not safe universal
+// latency controls on modern Windows.
+const ZERO_DELAY_SECTIONS: ZeroDelaySection[] = legacyZeroDelaySections
 
 export function ZeroDelayPage() {
   const { appliedTweaks, addAppliedTweak, removeAppliedTweak, addRollbackEntry } = useStore()
@@ -272,10 +277,10 @@ export function ZeroDelayPage() {
         <div>
           <div className="flex items-center gap-2.5 mb-1">
             <Zap className="w-5 h-5" style={{ color: 'var(--accent)' }} />
-            <h1 className="text-lg font-bold">Zero Delay Input</h1>
+            <h1 className="text-lg font-bold">Zero Delay</h1>
           </div>
           <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
-            Optimize mouse, keyboard & system latency for competitive gaming
+            Mouse, keyboard, and system latency optimizations for competitive gaming
           </p>
         </div>
         <div className="flex gap-2">

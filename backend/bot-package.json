@@ -1,7 +1,7 @@
 {
-  "name": "choatix-bot",
+  "name": "phantom-bot",
   "version": "1.0.0",
-  "description": "Choatix Discord Bot",
+  "description": "Phantom Discord Bot",
   "main": "bot.js",
   "scripts": {
     "start": "node bot.js"

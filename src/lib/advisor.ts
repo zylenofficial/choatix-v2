@@ -72,22 +72,6 @@ export function generateRecommendations(info: SystemInfo, tier: LicenseTier): Ad
   // --- MOUSE ---
   analyzeMouse(info, issues)
 
-  // --- NVIDIA ---
-  analyzeNvidiaBasic(info, issues)
-  if (tier === LicenseTier.PRO || tier === LicenseTier.PREMIUM) {
-    analyzeNvidiaAdvanced(info, tier, issues)
-  }
-
-  // --- NETWORK (advanced) ---
-  if (tier === LicenseTier.PRO || tier === LicenseTier.PREMIUM) {
-    analyzeNetworkAdvanced(info, tier, issues)
-  }
-
-  // --- DEBLOAT (advanced) ---
-  if (tier === LicenseTier.PRO || tier === LicenseTier.PREMIUM) {
-    analyzeTelemetry(info, tier, issues)
-  }
-
   return issues
 }
 
@@ -96,9 +80,9 @@ function analyzePowerPlan(info: SystemInfo, issues: AdvisorIssue[]) {
     issues.push({
       id: 'advisor-power-plan',
       title: `Power plan: "${info.powerPlan}"`,
-      description: 'Your system is not on a performance power plan. Windows limits CPU clock speed and throughput on Balanced or Power Saver modes.',
-      gamingImpact: 'Unlocks maximum CPU frequency and eliminates power throttling',
-      severity: 'high',
+      description: 'Your system is using a balanced power plan. High performance can reduce aggressive power saving, but increases heat and power use.',
+      gamingImpact: 'Situational: may improve consistency on some systems.',
+      severity: 'low',
       category: 'system',
       tweakId: 'sys-high-performance',
       requiredTier: LicenseTier.FREE,
@@ -112,9 +96,9 @@ function analyzeGameMode(info: SystemInfo, issues: AdvisorIssue[]) {
     issues.push({
       id: 'advisor-game-mode',
       title: 'Windows Game Mode is disabled',
-      description: 'Game Mode reduces background interference during gaming sessions. It prioritizes game processes and prevents Windows Update from triggering restarts.',
-      gamingImpact: 'Fewer frame drops, no surprise update popups',
-      severity: 'medium',
+      description: 'Game Mode is a Windows gaming preference. Its effect is workload-dependent and it is safe to leave disabled if you prefer.',
+      gamingImpact: 'Low-impact, workload-dependent preference.',
+      severity: 'low',
       category: 'system',
       tweakId: 'sys-enable-game-mode',
       requiredTier: LicenseTier.FREE,

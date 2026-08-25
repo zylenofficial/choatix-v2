@@ -1,5 +1,5 @@
 // ════════════════════════════════════════════════════════════════
-// CHOATIX V2 — Complete App
+// PHANTOM V2 — Complete App
 // Single file: data + state + router + components + pages + effects
 // ════════════════════════════════════════════════════════════════
 
@@ -18,12 +18,12 @@ const PRODUCTS = {
 };
 
 const DOWNLOADS = {
-  full:      { name: 'Choatix Full Optimization',   url: 'https://drive.google.com/uc?export=download&id=1nQQuwAsU7zN3NZjVbhAVnW25fHkEqH5D' },
-  basic:     { name: 'Choatix Basic Tweaks',        url: 'https://drive.google.com/uc?export=download&id=1nQQuwAsU7zN3NZjVbhAVnW25fHkEqH5D' },
-  pro:       { name: 'Choatix Pro Tweaks',          url: 'https://drive.google.com/uc?export=download&id=1mjhxk5tHmwcQbBzgJOczbMdO8mLa9UZ8' },
-  extreme:   { name: 'Choatix Extreme Tweaks',      url: 'https://drive.google.com/uc?export=download&id=17BQS4j3yaqaRWiRm_pNfj_coJRr9TdYo' },
-  precision: { name: 'Choatix Precision Pack',      url: 'https://drive.google.com/uc?export=download&id=1TqpIVFWW6WNRZUpDCG2kZiVsHCGG1FGf' },
-  vibrance:  { name: 'Choatix Vibrance Controller', url: null, comingSoon: true }
+  full:      { name: 'Phantom Full Optimization',   url: 'https://drive.google.com/uc?export=download&id=1nQQuwAsU7zN3NZjVbhAVnW25fHkEqH5D' },
+  basic:     { name: 'Phantom Basic Tweaks',        url: 'https://drive.google.com/uc?export=download&id=1nQQuwAsU7zN3NZjVbhAVnW25fHkEqH5D' },
+  pro:       { name: 'Phantom Pro Tweaks',          url: 'https://drive.google.com/uc?export=download&id=1mjhxk5tHmwcQbBzgJOczbMdO8mLa9UZ8' },
+  extreme:   { name: 'Phantom Extreme Tweaks',      url: 'https://drive.google.com/uc?export=download&id=17BQS4j3yaqaRWiRm_pNfj_coJRr9TdYo' },
+  precision: { name: 'Phantom Precision Pack',      url: 'https://drive.google.com/uc?export=download&id=1TqpIVFWW6WNRZUpDCG2kZiVsHCGG1FGf' },
+  vibrance:  { name: 'Phantom Vibrance Controller', url: null, comingSoon: true }
 };
 
 const TWEAK_CATEGORIES = [
@@ -90,12 +90,12 @@ const TEAM = [
 ];
 
 const FAQ = [
-  { q: 'Is Choatix V2 safe to use?', a: 'Yes. Every tweak is reversible with one click. Choatix never modifies critical system files and all changes can be rolled back from the Settings page.' },
+  { q: 'Is Phantom V2 safe to use?', a: 'Yes. Every tweak is reversible with one click. Phantom never modifies critical system files and all changes can be rolled back from the Settings page.' },
   { q: 'How much FPS will I gain?', a: 'Results vary by hardware and game. Most users see 15-60% FPS improvement. Check the FPS Comparison section for average gains across popular games.' },
   { q: 'What\'s the difference between the products?', a: '<strong>Full Optimization (&euro;24.99)</strong> — 461 tweaks: Everything combined. <strong>Basic (&euro;4.99)</strong> — 220 tweaks: Windows debloat, essential settings, GPU/network/power. <strong>Pro (&euro;9.99)</strong> — 291 tweaks: Basic + BCD, RAM, USB, deep cleanup. <strong>Extreme (&euro;14.99)</strong> — 283 tweaks: Full debloat, DirectX, buffer bloat, registry. <strong>Precision (&euro;5.99)</strong> — 128 tweaks: Input lag, mouse/keyboard, GPU latency for FPS games.' },
-  { q: 'Do I need to restart my PC after optimizing?', a: 'Some tweaks take effect immediately, others require a restart. Choatix will notify you when a restart is needed. Quick Boost works instantly without restart.' },
+  { q: 'Do I need to restart my PC after optimizing?', a: 'Some tweaks take effect immediately, others require a restart. Phantom will notify you when a restart is needed. Quick Boost works instantly without restart.' },
   { q: 'How do I buy a product?', a: 'Go to the Products page, add items to cart, and checkout via PayPal. After payment, you\'ll be redirected to a download page with your .exe installer.' },
-  { q: 'Does it work on Windows 11?', a: 'Yes. Choatix V2 supports Windows 10 and Windows 11. All tweaks are compatible with the latest updates.' },
+  { q: 'Does it work on Windows 11?', a: 'Yes. Phantom V2 supports Windows 10 and Windows 11. All tweaks are compatible with the latest updates.' },
   { q: 'Do I need to run as Administrator?', a: 'Yes. System-level tweaks (registry HKLM, services, power plans, bcdedit) require Administrator privileges. The app will warn you if not running as admin.' },
   { q: 'Can I revert changes?', a: 'Yes. Every tweak has a revert command. Use "Revert All" or click the checkmark next to any category to undo everything safely.' },
   { q: 'What if I lose my download link?', a: 'Your purchase is tied to your Discord username. Contact support in our Discord server with your username and we\'ll resend the download link.' },
@@ -106,7 +106,7 @@ const REFUND_POLICY = `
   <h2>Digital Products</h2>
   <p>Our products are digital downloads that provide immediate access upon purchase. Once accessed, they cannot be returned.</p>
   <h3>1. General Policy</h3>
-  <p>Choatix V2 operates on a strict no-refund policy. All purchases of our digital products and services are final and non-refundable.</p>
+  <p>Phantom V2 operates on a strict no-refund policy. All purchases of our digital products and services are final and non-refundable.</p>
   <h3>2. Why No Refunds?</h3>
   <ul>
     <li><strong>Digital Nature:</strong> Our products are digital downloads that provide immediate access and cannot be physically returned.</li>
@@ -445,7 +445,7 @@ function renderFooter() {
         <a href="#team">Team</a>
         <a href="${DISCORD_INVITE}" target="_blank">Discord</a>
       </div>
-      <p>&copy; 2026 Choatix V2. Built by zylenofficial.</p>
+      <p>&copy; 2026 Phantom V2. Built by zylenofficial.</p>
     </footer>`;
 }
 
@@ -552,12 +552,12 @@ function renderHome() {
       <div class="fps-grid" id="fpsGrid">${fpsHTML}</div>
       <div class="fps-legend reveal">
         <div class="fps-legend-item"><span class="fps-dot before"></span> Before</div>
-        <div class="fps-legend-item"><span class="fps-dot after"></span> After Choatix V2</div>
+        <div class="fps-legend-item"><span class="fps-dot after"></span> After Phantom V2</div>
       </div>
     </section>
     <section class="cta-section">
       <h2 class="reveal">Ready to <span>Boost Your FPS</span>?</h2>
-      <p class="reveal">Join 50,000+ gamers optimizing their PCs with Choatix V2</p>
+      <p class="reveal">Join 50,000+ gamers optimizing their PCs with Phantom V2</p>
       <div class="cta-buttons reveal">
         <a href="#products" class="btn btn-primary">Download Free</a>
         <a href="${DISCORD_INVITE}" class="btn btn-discord" target="_blank">Join Discord</a>
@@ -606,7 +606,7 @@ function renderFeatures() {
     </section>
     <section class="cta-section">
       <h2 class="reveal">Ready to Boost<br>Your FPS?</h2>
-      <p class="reveal">Join gamers optimizing their PCs with Choatix V2</p>
+      <p class="reveal">Join gamers optimizing their PCs with Phantom V2</p>
       <div class="cta-buttons reveal">
         <a href="#products" class="btn btn-primary">Download Free</a>
         <a href="${DISCORD_INVITE}" class="btn btn-discord" target="_blank">Join Discord</a>
@@ -674,11 +674,11 @@ function renderProducts() {
       <div class="product-card ${featured} ${badgeClass}">
         ${p.badge ? `<div class="product-badge ${p.color ? 'badge-' + p.color + '-tag' : ''}">${p.badge}</div>` : ''}
         <div class="product-box">
-          <div class="product-box-brand">Choatix</div>
+          <div class="product-box-brand">Phantom</div>
           <div class="product-box-name">${boxName}</div>
           <div class="product-box-sub">${p.subtitle}</div>
         </div>
-        <div class="product-brand">Choatix</div>
+        <div class="product-brand">Phantom</div>
         <div class="product-name">${p.name}</div>
         <div class="product-price">${isFree ? 'Coming Soon' : '&euro;' + p.price.toFixed(2)}</div>
         <div class="product-actions">
@@ -754,7 +754,7 @@ function renderProductDetail(id) {
   return `
     <section class="pd-hero">
       <div class="pd-box ${id === 'vibrance' ? 'pd-vibrance' : ''}">
-        <div class="pd-box-brand">Choatix</div>
+        <div class="pd-box-brand">Phantom</div>
         <div class="pd-box-name">${boxName}</div>
         <div class="pd-box-sub">${p.subtitle}</div>
       </div>
@@ -819,11 +819,11 @@ function renderPricing() {
       <div class="product-card ${featured} ${badgeClass}">
         ${p.badge ? `<div class="product-badge ${p.color ? 'badge-' + p.color + '-tag' : ''}">${p.badge}</div>` : ''}
         <div class="product-box">
-          <div class="product-box-brand">Choatix</div>
+          <div class="product-box-brand">Phantom</div>
           <div class="product-box-name">${boxName}</div>
           <div class="product-box-sub">${p.subtitle}</div>
         </div>
-        <div class="product-brand">Choatix</div>
+        <div class="product-brand">Phantom</div>
         <div class="product-name">${p.name}</div>
         <div class="product-price">${p.price === null ? 'Coming Soon' : '&euro;' + p.price.toFixed(2)}</div>
         <div class="product-actions">
@@ -911,7 +911,7 @@ function renderFAQ() {
   return `
     <section class="page-hero">
       <h1>Frequently Asked <em>Questions</em></h1>
-      <p>Everything you need to know about Choatix V2</p>
+      <p>Everything you need to know about Phantom V2</p>
     </section>
     <section>
       <div class="faq-list reveal">${faqHTML}</div>
@@ -960,7 +960,7 @@ function renderAffiliate() {
       <section class="aff-hero">
         <div class="aff-badge">Affiliate Program</div>
         <h1>Earn <span class="green">10%</span><br>On Every Sale</h1>
-        <p class="subtitle">Promote Choatix with your unique referral link. Earn commission on every customer you bring — no limits, no expiration.</p>
+        <p class="subtitle">Promote Phantom with your unique referral link. Earn commission on every customer you bring — no limits, no expiration.</p>
         <div class="aff-metrics">
           <div class="aff-metric"><div class="val">10%</div><div class="lbl">Commission</div></div>
           <div class="aff-metric"><div class="val">&euro;5</div><div class="lbl">Min Payout</div></div>
@@ -1107,7 +1107,7 @@ function renderTeam() {
   return `
     <section class="page-hero">
       <h1>Meet the <em>Crew</em></h1>
-      <p>The people behind Choatix V2</p>
+      <p>The people behind Phantom V2</p>
     </section>
     <section>
       <div class="team-grid reveal">${teamHTML}</div>
@@ -1380,7 +1380,7 @@ function toggleChatbot() {
 
     if (chatbotMsgCount === 0) {
       setTimeout(() => {
-        botSay("Hey! I'm the Choatix assistant. I can help you pick the right optimization pack, answer questions about our products, or compare options. What can I help with?");
+        botSay("Hey! I'm the Phantom assistant. I can help you pick the right optimization pack, answer questions about our products, or compare options. What can I help with?");
         showSuggestions(["What should I buy?", "Compare products", "How much FPS will I gain?", "Is it safe?"]);
       }, 400);
     }
@@ -1463,15 +1463,15 @@ function processInput(text) {
 
   // ── Greetings ──
   if (lower.match(/^(hi|hello|hey|yo|sup|hola|howdy|good\s*(morning|afternoon|evening))/)) {
-    botSay("Hey! Welcome to Choatix. What brings you here \u2014 looking to optimize your PC?");
-    showSuggestions(["Yes, help me choose", "Just browsing", "What is Choatix?"]);
+    botSay("Hey! Welcome to Phantom. What brings you here \u2014 looking to optimize your PC?");
+    showSuggestions(["Yes, help me choose", "Just browsing", "What is Phantom?"]);
     return;
   }
 
-  // ── What is Choatix ──
+  // ── What is Phantom ──
   if (lower.match(/what is|what's|tell me about|how does it work|what do you/)) {
     if (lower.match(/choatix|product|you|your/)) {
-      botSay("Choatix V2 is a Windows PC optimization tool. We apply 220\u2013461 system tweaks (depending on the pack) to boost your FPS, reduce input lag, and clean up Windows. Every change is reversible with one click.");
+      botSay("Phantom V2 is a Windows PC optimization tool. We apply 220\u2013461 system tweaks (depending on the pack) to boost your FPS, reduce input lag, and clean up Windows. Every change is reversible with one click.");
       showSuggestions(["What should I buy?", "How much FPS?", "Is it safe?", "Compare products"]);
       return;
     }
@@ -1504,7 +1504,7 @@ function processInput(text) {
 
   // ── Games support ──
   if (lower.match(/game|fortnite|valorant|cs2|apex|minecraft|gta|pubg|overwatch|warzone/)) {
-    botSay("Choatix works with <strong>all games</strong> \u2014 it optimizes your system-level settings, not individual games. But we have specific FPS benchmarks for Fortnite, Valorant, CS2, Apex Legends, Minecraft, and GTA V. The tweaks affect GPU priority, CPU scheduling, network latency, and memory management which benefit every game.");
+    botSay("Phantom works with <strong>all games</strong> \u2014 it optimizes your system-level settings, not individual games. But we have specific FPS benchmarks for Fortnite, Valorant, CS2, Apex Legends, Minecraft, and GTA V. The tweaks affect GPU priority, CPU scheduling, network latency, and memory management which benefit every game.");
     showSuggestions(["How much FPS in [game]?", "What should I buy?", "Is it safe?"]);
     return;
   }
@@ -1548,35 +1548,35 @@ function processInput(text) {
 
   // ── Specific product questions ──
   if (lower.match(/basic/)) {
-    if (lower.match(/add|cart|buy|purchase/)) { addToCart('basic', 'Choatix Basic Tweaks', 4.99); botSay("Added <strong>Basic Tweaks</strong> (\u20ac4.99) to your cart!"); showSuggestions(["Checkout", "Compare other options"]); return; }
+    if (lower.match(/add|cart|buy|purchase/)) { addToCart('basic', 'Phantom Basic Tweaks', 4.99); botSay("Added <strong>Basic Tweaks</strong> (\u20ac4.99) to your cart!"); showSuggestions(["Checkout", "Compare other options"]); return; }
     if (lower.match(/include|contain|what|feature|tweak/)) { showProductDetails('basic'); return; }
     recommendProduct('basic');
     return;
   }
 
   if (lower.match(/pro/)) {
-    if (lower.match(/add|cart|buy|purchase/)) { addToCart('pro', 'Choatix Pro Tweaks', 9.99); botSay("Added <strong>Pro Tweaks</strong> (\u20ac9.99) to your cart!"); showSuggestions(["Checkout", "Compare other options"]); return; }
+    if (lower.match(/add|cart|buy|purchase/)) { addToCart('pro', 'Phantom Pro Tweaks', 9.99); botSay("Added <strong>Pro Tweaks</strong> (\u20ac9.99) to your cart!"); showSuggestions(["Checkout", "Compare other options"]); return; }
     if (lower.match(/include|contain|what|feature|tweak/)) { showProductDetails('pro'); return; }
     recommendProduct('pro');
     return;
   }
 
   if (lower.match(/extreme/)) {
-    if (lower.match(/add|cart|buy|purchase/)) { addToCart('extreme', 'Choatix Extreme Tweaks', 14.99); botSay("Added <strong>Extreme Tweaks</strong> (\u20ac14.99) to your cart!"); showSuggestions(["Checkout", "Compare other options"]); return; }
+    if (lower.match(/add|cart|buy|purchase/)) { addToCart('extreme', 'Phantom Extreme Tweaks', 14.99); botSay("Added <strong>Extreme Tweaks</strong> (\u20ac14.99) to your cart!"); showSuggestions(["Checkout", "Compare other options"]); return; }
     if (lower.match(/include|contain|what|feature|tweak/)) { showProductDetails('extreme'); return; }
     recommendProduct('extreme');
     return;
   }
 
   if (lower.match(/precision/)) {
-    if (lower.match(/add|cart|buy|purchase/)) { addToCart('precision', 'Choatix Precision Pack', 5.99); botSay("Added <strong>Precision Pack</strong> (\u20ac5.99) to your cart!"); showSuggestions(["Checkout", "Compare other options"]); return; }
+    if (lower.match(/add|cart|buy|purchase/)) { addToCart('precision', 'Phantom Precision Pack', 5.99); botSay("Added <strong>Precision Pack</strong> (\u20ac5.99) to your cart!"); showSuggestions(["Checkout", "Compare other options"]); return; }
     if (lower.match(/include|contain|what|feature|tweak/)) { showProductDetails('precision'); return; }
     recommendProduct('precision');
     return;
   }
 
   if (lower.match(/full|everything|all.*tweak|complete/)) {
-    if (lower.match(/add|cart|buy|purchase/)) { addToCart('full', 'Choatix Full Optimization', 24.99); botSay("Added <strong>Full Optimization</strong> (\u20ac24.99) to your cart!"); showSuggestions(["Checkout", "Compare other options"]); return; }
+    if (lower.match(/add|cart|buy|purchase/)) { addToCart('full', 'Phantom Full Optimization', 24.99); botSay("Added <strong>Full Optimization</strong> (\u20ac24.99) to your cart!"); showSuggestions(["Checkout", "Compare other options"]); return; }
     if (lower.match(/include|contain|what|feature|tweak/)) { showProductDetails('full'); return; }
     recommendProduct('full');
     return;
@@ -1602,7 +1602,7 @@ function processInput(text) {
 
   // ── Windows version ──
   if (lower.match(/windows (10|11)|win(10|11)/)) {
-    botSay("Yes! Choatix V2 fully supports both <strong>Windows 10</strong> and <strong>Windows 11</strong>. All tweaks are compatible with the latest updates on both versions.");
+    botSay("Yes! Phantom V2 fully supports both <strong>Windows 10</strong> and <strong>Windows 11</strong>. All tweaks are compatible with the latest updates on both versions.");
     showSuggestions(["What should I buy?", "Is it safe?", "How much FPS?"]);
     return;
   }

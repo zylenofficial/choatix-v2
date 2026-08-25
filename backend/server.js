@@ -22,7 +22,7 @@ app.use((req, res, next) => {
 });
 
 const DB_URL = process.env.DATABASE_URL;
-const SECRET = process.env.KEY_SECRET || 'choatix-secret-key-2024';
+const SECRET = process.env.KEY_SECRET || 'phantom-secret-key-2024';
 let memKeys = {};
 let memUsers = {};
 let memReferrals = {};
@@ -370,7 +370,7 @@ app.get('/api/health', (req, res) => {
 // ─── Key Generation (admin + partner) ──────────────────────────
 app.post('/api/generate', async (req, res) => {
   const { tier, count = 1, adminSecret } = req.body;
-  if (adminSecret !== 'choatix-admin-2024') {
+  if (adminSecret !== 'phantom-admin-2024') {
     return res.status(403).json({ error: 'Invalid admin secret' });
   }
   if (!['PRO', 'PREMIUM'].includes(tier)) {
@@ -409,7 +409,7 @@ app.post('/api/partner/generate', async (req, res) => {
 // ─── Partner management (admin) ───────────────────────────────
 app.post('/api/partner/add', async (req, res) => {
   const { discordId, name, adminSecret } = req.body;
-  if (adminSecret !== 'choatix-admin-2024') return res.status(403).json({ error: 'Unauthorized' });
+  if (adminSecret !== 'phantom-admin-2024') return res.status(403).json({ error: 'Unauthorized' });
   if (!discordId || !name) return res.status(400).json({ error: 'Discord ID and name required' });
 
   await savePartner(discordId, { name, tier: 'PARTNER', createdAt: new Date().toISOString() });
@@ -418,7 +418,7 @@ app.post('/api/partner/add', async (req, res) => {
 
 app.post('/api/partner/remove', async (req, res) => {
   const { discordId, adminSecret } = req.body;
-  if (adminSecret !== 'choatix-admin-2024') return res.status(403).json({ error: 'Unauthorized' });
+  if (adminSecret !== 'phantom-admin-2024') return res.status(403).json({ error: 'Unauthorized' });
 
   await deletePartner(discordId);
   res.json({ success: true });
@@ -587,7 +587,7 @@ app.post('/api/license/unlink', async (req, res) => {
 // ─── Admin ────────────────────────────────────────────────────
 app.get('/api/admin/keys', async (req, res) => {
   const adminSecret = req.headers['x-admin-secret'];
-  if (adminSecret !== 'choatix-admin-2024') {
+  if (adminSecret !== 'phantom-admin-2024') {
     return res.status(403).json({ error: 'Unauthorized' });
   }
   if (app.locals.pool) {
@@ -604,7 +604,7 @@ app.get('/api/admin/keys', async (req, res) => {
 // ─── Admin: Revoke key ──────────────────────────────────────
 app.post('/api/admin/revoke', async (req, res) => {
   const { key, adminSecret } = req.body;
-  if (adminSecret !== 'choatix-admin-2024') return res.status(403).json({ error: 'Unauthorized' });
+  if (adminSecret !== 'phantom-admin-2024') return res.status(403).json({ error: 'Unauthorized' });
   if (!key) return res.status(400).json({ error: 'Key required' });
 
   const cleaned = key.trim().toUpperCase();
@@ -621,7 +621,7 @@ app.post('/api/admin/revoke', async (req, res) => {
 // ─── Admin: Stats ────────────────────────────────────────────
 app.get('/api/admin/stats', async (req, res) => {
   const adminSecret = req.headers['x-admin-secret'];
-  if (adminSecret !== 'choatix-admin-2024') return res.status(403).json({ error: 'Unauthorized' });
+  if (adminSecret !== 'phantom-admin-2024') return res.status(403).json({ error: 'Unauthorized' });
 
   if (app.locals.pool) {
     const totalKeys = await app.locals.pool.query('SELECT COUNT(*) as count FROM keys_table');
@@ -659,7 +659,7 @@ app.get('/api/admin/stats', async (req, res) => {
 // ─── Admin: All licensed users ───────────────────────────────
 app.get('/api/admin/users', async (req, res) => {
   const adminSecret = req.headers['x-admin-secret'];
-  if (adminSecret !== 'choatix-admin-2024') return res.status(403).json({ error: 'Unauthorized' });
+  if (adminSecret !== 'phantom-admin-2024') return res.status(403).json({ error: 'Unauthorized' });
 
   if (app.locals.pool) {
     const r = await app.locals.pool.query('SELECT discord_id, tier, activated_at, username FROM users_table');
@@ -670,29 +670,10 @@ app.get('/api/admin/users', async (req, res) => {
   }
 });
 
-// ─── Admin: Update user tier ─────────────────────────────────
-app.patch('/api/admin/users/:discordId/tier', async (req, res) => {
-  const adminSecret = req.headers['x-admin-secret'];
-  if (adminSecret !== 'choatix-admin-2024') return res.status(403).json({ error: 'Unauthorized' });
-
-  const { tier } = req.body;
-  if (!['FREE', 'PRO', 'PREMIUM'].includes(tier)) {
-    return res.status(400).json({ error: 'Invalid tier. Use FREE, PRO, or PREMIUM' });
-  }
-
-  const discordId = req.params.discordId;
-  if (app.locals.pool) {
-    await app.locals.pool.query('UPDATE users_table SET tier = $1 WHERE discord_id = $2', [tier, discordId]);
-  } else {
-    if (memUsers[discordId]) memUsers[discordId].tier = tier;
-  }
-  res.json({ success: true, message: `Updated ${discordId} to ${tier}` });
-});
-
 // ── Admin: Affiliate Management ──
 app.get('/api/admin/affiliates', async (req, res) => {
   const adminSecret = req.headers['x-admin-secret'];
-  if (adminSecret !== 'choatix-admin-2024') return res.status(403).json({ error: 'Unauthorized' });
+  if (adminSecret !== 'phantom-admin-2024') return res.status(403).json({ error: 'Unauthorized' });
   const pool = app.locals.pool;
   if (!pool) return res.status(500).json({ error: 'No database' });
   try {
@@ -707,7 +688,7 @@ app.get('/api/admin/affiliates', async (req, res) => {
 
 app.post('/api/admin/affiliate/payout', async (req, res) => {
   const { affiliateId, amount, adminSecret } = req.body;
-  if (adminSecret !== 'choatix-admin-2024') return res.status(403).json({ error: 'Unauthorized' });
+  if (adminSecret !== 'phantom-admin-2024') return res.status(403).json({ error: 'Unauthorized' });
   const pool = app.locals.pool;
   if (!pool) return res.status(500).json({ error: 'No database' });
   try {
@@ -729,7 +710,7 @@ app.post('/api/admin/affiliate/payout', async (req, res) => {
 
 app.post('/api/admin/affiliate/approve', async (req, res) => {
   const { affiliateId, status, adminSecret } = req.body;
-  if (adminSecret !== 'choatix-admin-2024') return res.status(403).json({ error: 'Unauthorized' });
+  if (adminSecret !== 'phantom-admin-2024') return res.status(403).json({ error: 'Unauthorized' });
   const pool = app.locals.pool;
   if (!pool) return res.status(500).json({ error: 'No database' });
   try {
@@ -1335,12 +1316,12 @@ app.delete('/api/admin/discount/:code', async (req, res) => {
 
 // ── PayPal Checkout ──
 const PRODUCTS = {
-  basic:     { name: 'Choatix Basic Tweaks',       price: '1.99',  tier: 'PRO' },
-  pro:       { name: 'Choatix Pro Tweaks',          price: '3.99',  tier: 'PRO' },
-  extreme:   { name: 'Choatix Extreme Tweaks',      price: '5.99',  tier: 'PREMIUM' },
-  precision: { name: 'Choatix Precision Tweaks',    price: '2.99',  tier: 'PRO' },
-  power:     { name: 'Choatix Premium Power Plan',  price: '3.99',  tier: 'PRO' },
-  full:      { name: 'Choatix Full Optimization',   price: '9.99',  tier: 'PREMIUM' },
+  basic:     { name: 'Phantom Basic Tweaks',       price: '1.99',  tier: 'PRO' },
+  pro:       { name: 'Phantom Pro Tweaks',          price: '3.99',  tier: 'PRO' },
+  extreme:   { name: 'Phantom Extreme Tweaks',      price: '5.99',  tier: 'PREMIUM' },
+  precision: { name: 'Phantom Precision Tweaks',    price: '2.99',  tier: 'PRO' },
+  power:     { name: 'Phantom Premium Power Plan',  price: '3.99',  tier: 'PRO' },
+  full:      { name: 'Phantom Full Optimization',   price: '9.99',  tier: 'PREMIUM' },
 };
 
 app.post('/api/checkout', async (req, res) => {
@@ -1404,7 +1385,7 @@ app.post('/api/checkout', async (req, res) => {
   const productIds = orderItems.map(i => i.id).join(',');
 
   const successUrl = `${req.headers.origin || 'https://zylenofficial.github.io/choatix-v2'}/?checkout=success&user=${encodeURIComponent(discordUsername)}&token=${downloadToken}&products=${encodeURIComponent(productIds)}`;
-  const note = encodeURIComponent(`Choatix - ${names} (${discordUsername})${discountCodeStr ? ' [' + discountCodeStr + ' -' + discountPercent + '%]' : ''}`);
+  const note = encodeURIComponent(`Phantom - ${names} (${discordUsername})${discountCodeStr ? ' [' + discountCodeStr + ' -' + discountPercent + '%]' : ''}`);
   const paypalUrl = `https://paypal.me/${paypalEmail}/${totalStr}?currencyCode=EUR&note=${note}`;
 
   // Record affiliate sale if tracking cookie exists
@@ -1538,14 +1519,14 @@ app.post('/api/admin/deliver', async (req, res) => {
 
 initDB().then(() => {
   app.listen(PORT, () => {
-    console.log(`Choatix License Server running on port ${PORT} (${DB_URL ? 'PostgreSQL' : 'in-memory'})`);
+    console.log(`Phantom License Server running on port ${PORT} (${DB_URL ? 'PostgreSQL' : 'in-memory'})`);
     const bot = require('./bot.js');
     bot.start(app, app.locals.pool);
   });
 }).catch((err) => {
   console.error('Failed to init DB, falling back to memory:', err.message);
   app.listen(PORT, () => {
-    console.log(`Choatix License Server running on port ${PORT} (in-memory fallback)`);
+    console.log(`Phantom License Server running on port ${PORT} (in-memory fallback)`);
     const bot = require('./bot.js');
     bot.start(app, app.locals.pool);
   });

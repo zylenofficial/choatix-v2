@@ -1,4 +1,4 @@
-# Deploy Choatix License Backend (Free)
+# Deploy Phantom License Backend (Free)
 
 ## Step 1: Create Neon Database (2 min)
 

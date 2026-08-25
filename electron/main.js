@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, shell, Notification } = require("electron");
+const { app, BrowserWindow, ipcMain, shell, Notification, dialog } = require("electron");
 const path = require("path");
 const http = require("http");
 const https = require("https");
@@ -8,17 +8,40 @@ const { execSync, exec, spawn } = require("child_process");
 const { promisify } = require("util");
 const execAsync = promisify(exec);
 
+let si = null;
+try { si = require("systeminformation"); } catch { si = null; }
+
+let STATE_FILE = "";
+let SETTINGS_FILE = "";
+let elevated = false;
+
+function initUserDataPaths() {
+  STATE_FILE = path.join(app.getPath("userData"), "choatix-state.json");
+  SETTINGS_FILE = path.join(app.getPath("userData"), "choatix-settings.json");
+}
+
 function isAdmin() {
   try { execSync('net session', { windowsHide: true, stdio: 'ignore' }); return true; } catch { return false; }
 }
 
-// Auto-elevate to admin if not already
-if (!isAdmin()) {
+const isDevEarly = !app.isPackaged;
+elevated = isAdmin();
+
+// Production: request elevation. Do not exit if the user declines UAC —
+// the app still runs with reduced capability and the UI can warn.
+if (!isDevEarly && !elevated) {
   try {
-    const { execSync: sync } = require('child_process');
-    sync(`powershell -NoProfile -Command "Start-Process -FilePath '${process.execPath}' -Verb RunAs"`, { timeout: 10000 });
-  } catch {}
-  process.exit(0);
+    const exe = process.execPath.replace(/'/g, "''");
+    execSync(`powershell -NoProfile -Command "Start-Process -FilePath '${exe}' -Verb RunAs"`, { timeout: 20000, windowsHide: true });
+    process.exit(0);
+  } catch {
+    elevated = false;
+  }
+}
+
+const gotLock = app.requestSingleInstanceLock();
+if (!gotLock) {
+  app.quit();
 }
 
 // Disable GPU acceleration to reduce memory/CPU/processes
@@ -56,7 +79,6 @@ if (!UPDATE_WEBHOOK) {
   } catch {}
 }
 
-const SETTINGS_FILE = path.join(app.getPath("userData"), "choatix-settings.json");
 let prevNetBytes = { received: 0, sent: 0, timestamp: 0 };
 let cpuInfoCache = null;
 let cpuInfoCacheTime = 0;
@@ -142,8 +164,30 @@ function createWindow(port) {
   mainWindow.on("close", (e) => {
     if (mainWindow && !mainWindow.isDestroyed()) {
       e.preventDefault();
-      mainWindow.webContents.send("save-state-request");
-      setTimeout(() => { try { mainWindow.destroy(); } catch {} }, 500);
+      try {
+        mainWindow.webContents.executeJavaScript(
+          "localStorage.getItem('choatix-v2-storage')"
+        ).then((raw) => {
+          if (raw) {
+            try {
+              const parsed = JSON.parse(raw);
+              const state = parsed?.state || parsed;
+              const out = {
+                license: state.license,
+                selectedGames: state.selectedGames,
+                scheduledScans: state.scheduledScans,
+                autopilotEnabled: state.autopilotEnabled,
+                discordId: state.discordId,
+                appliedTweaks: state.appliedTweaks,
+                rollbackEntries: state.rollbackEntries,
+                tweakCatalogueVersion: 2,
+              };
+              fs.writeFileSync(STATE_FILE, JSON.stringify(out, null, 2));
+            } catch {}
+          }
+          try { mainWindow.destroy(); } catch {}
+        }).catch(() => { try { mainWindow.destroy(); } catch {} });
+      } catch { try { mainWindow.destroy(); } catch {} }
     }
   });
 }
@@ -168,7 +212,7 @@ async function getCPU() {
   const usageRaw = await psAsync("(Get-CimInstance Win32_Processor -EA SilentlyContinue|Select-Object -First 1).LoadPercentage");
   const cpuRaw = await psAsync("$p=Get-CimInstance Win32_Processor|Select-Object -First 1; Write-Output ('CPUINFO|'+$p.Name+'|'+$p.NumberOfCores+'|'+$p.NumberOfLogicalProcessors+'|'+$p.MaxClockSpeed)");
   const parts = (cpuRaw || "").split("|");
-  return { model: parts[0] || "Unavailable", cores: parseInt(parts[1]) || 0, threads: parseInt(parts[2]) || 0, usage: parseFloat(usageRaw) || 0, maxClockMhz: parseInt(parts[3]) || 0 };
+  return { model: parts[1] || "Unavailable", cores: parseInt(parts[2]) || 0, threads: parseInt(parts[3]) || 0, usage: parseFloat(usageRaw) || 0, maxClockMhz: parseInt(parts[4]) || 0 };
 }
 
 // ── GPU ──
@@ -189,10 +233,10 @@ async function getGPU() {
 
 // ── RAM ──
 async function getRAM() {
-  const osInfo = await psAsync("$os = Get-CimInstance Win32_OperatingSystem; [math]::Round($os.TotalVisibleMemorySize/1MB,2).ToString()+','+[math]::Round($os.FreePhysicalMemory/1MB,2).ToString()");
-  const [total, free] = (osInfo || "").split(",").map(Number);
-  const t = Math.round((total || 0) * 1024);
-  const f = Math.round((free || 0) * 1024);
+  const osInfo = await psAsync("$os = Get-CimInstance Win32_OperatingSystem; Write-Output $os.TotalVisibleMemorySize; Write-Output $os.FreePhysicalMemory");
+  const lines = (osInfo || "").split(/\r?\n/).map(s => parseInt(s.trim()) || 0);
+  const t = Math.round((lines[0] || 0) / 1024);
+  const f = Math.round((lines[1] || 0) / 1024);
   return { total: t, used: t - f, available: f };
 }
 
@@ -241,7 +285,7 @@ async function getUptime() {
 // ── Network ──
 async function getNetwork() {
   const [adapter, pingRaw] = await Promise.all([
-    psAsync("(Get-NetAdapter | Where-Object {$_.Status==='Up'} | Select-Object -First 1).Name"),
+    psAsync("(Get-NetAdapter | Where-Object {$_.Status -eq 'Up'} | Select-Object -First 1).Name"),
     psAsync("$r=ping -n 1 -w 1000 8.8.8.8 | Select-String 'time='; if($r){ ($r -split 'time=')[1] -replace 'ms','' } else { '' }"),
   ]);
   let latencyMs = null;
@@ -410,7 +454,7 @@ function getAllDrives() {
 
 // ── Network Stats ──
 function getNetworkStats() {
-  const adapterRaw = ps("(Get-NetAdapter | Where-Object {$_.Status==='Up'} | Select-Object -First 1).Name");
+  const adapterRaw = ps("(Get-NetAdapter | Where-Object {$_.Status -eq 'Up'} | Select-Object -First 1).Name");
   const adapter = adapterRaw || "Unavailable";
   let downloadSpeed = 0;
   let uploadSpeed = 0;
@@ -551,7 +595,7 @@ async function getRealtimeStatsAsync() {
     // Run all PowerShell batches in parallel (non-blocking)
     const [batch1Raw, adapterRaw] = await Promise.all([
       // Fast batch: CPU (lightweight WMI), temp (multiple sources), GPU temp, RAM, uptime, processes
-      psAsync("$cpu=(Get-CimInstance Win32_Processor -EA SilentlyContinue|Select-Object -First 1).LoadPercentage; if($null -eq $cpu){$cpu=0}; $temp=$null; $lhm=(Get-CimInstance -Namespace root/LibreHardwareMonitor -ClassName Sensor -EA SilentlyContinue|Where-Object{$_.SensorType -eq 'Temperature' -and $_.Parent -like '*CPU*' -and $_.Name -like '*Core*'}|Select-Object -First 1); if($lhm){$temp=$lhm.Value}; if($null -eq $temp){$t=(Get-CimInstance -Namespace root/WMI -ClassName MSAcpi_ThermalZoneTemperature -EA SilentlyContinue|Select-Object -First 1); if($t -and $t.CurrentTemperature){$temp=[math]::Round(($t.CurrentTemperature-2732)/10,1)}}; $gpu=$null; $graw=(nvidia-smi --query-gpu=temperature.gpu --format=csv,noheader,nounits 2>$null); if($graw){$gpu=[math]::Round([double]$graw.Trim(),1)}; $os=Get-CimInstance Win32_OperatingSystem; $ramTotal=[math]::Round($os.TotalVisibleMemorySize/1MB,2); $ramFree=[math]::Round($os.FreePhysicalMemory/1MB,2); $uptime=(Get-CimInstance Win32_OperatingSystem).LastBootUpTime; $pc=(Get-Process).Count; Write-Output ('FAST|'+$cpu+'|'+$temp+'|'+$ramTotal+'|'+$ramFree+'|'+$uptime+'|'+$pc+'|GPU|'+$gpu)", 8000),
+      psAsync("$cpu=(Get-CimInstance Win32_Processor -EA SilentlyContinue|Select-Object -First 1).LoadPercentage; if($null -eq $cpu){$cpu=0}; $temp=$null; $lhm=(Get-CimInstance -Namespace root/LibreHardwareMonitor -ClassName Sensor -EA SilentlyContinue|Where-Object{$_.SensorType -eq 'Temperature' -and $_.Parent -like '*CPU*' -and $_.Name -like '*Core*'}|Select-Object -First 1); if($lhm){$temp=$lhm.Value}; if($null -eq $temp){$t=(Get-CimInstance -Namespace root/WMI -ClassName MSAcpi_ThermalZoneTemperature -EA SilentlyContinue|Select-Object -First 1); if($t -and $t.CurrentTemperature){$temp=[math]::Round(($t.CurrentTemperature-2732)/10,1)}}; $gpu=$null; $graw=(nvidia-smi --query-gpu=temperature.gpu --format=csv,noheader,nounits 2>$null); if($graw){$gpu=[math]::Round([double]$graw.Trim(),1)}; $os=Get-CimInstance Win32_OperatingSystem; $ramTotal=$os.TotalVisibleMemorySize; $ramFree=$os.FreePhysicalMemory; $uptime=(Get-CimInstance Win32_OperatingSystem).LastBootUpTime; $pc=(Get-Process).Count; Write-Output ('FAST|'+$cpu+'|'+$temp+'|'+$ramTotal+'|'+$ramFree+'|'+$uptime+'|'+$pc+'|GPU|'+$gpu)", 8000),
       // Network adapter name - fallback to Get-NetIPConfiguration
       psAsync("(Get-NetIPConfiguration | Where-Object {$_.IPv4DefaultGateway -and $_.NetAdapter.Status -eq 'Up'} | Select-Object -First 1).InterfaceAlias"),
     ]);
@@ -565,8 +609,8 @@ async function getRealtimeStatsAsync() {
       cpuUsage = Math.min(100, parseInt((p[1] || "").trim()) || 0);
       const t = parseFloat((p[2] || "").trim());
       cpuTemp = (!isNaN(t) && t > 0) ? t : null;
-      ramTotal = Math.round((parseFloat(p[3]) || 0) * 1024);
-      ramAvailable = Math.round((parseFloat(p[4]) || 0) * 1024);
+      ramTotal = Math.round((parseFloat(p[3]) || 0) / 1024);
+      ramAvailable = Math.round((parseFloat(p[4]) || 0) / 1024);
       ramUsed = ramTotal - ramAvailable;
       const bootTime = new Date(p[5]);
       if (!isNaN(bootTime.getTime())) {
@@ -895,7 +939,7 @@ async function autoOptScan() {
           mainWindow.webContents.send("autopilot-event", {
             type: "game-detected", game: game.name, pid: proc.id, tier: game.tier, applied
           });
-          new Notification({ title: "Choatix Auto-Optimize", body: `${game.name} detected — ${applied} tweaks applied` }).show();
+          new Notification({ title: "Phantom Auto-Optimize", body: `${game.name} detected — ${applied} tweaks applied` }).show();
         }
       }
     } else if (procs.length === 0 && autoOpt.currentGame) {
@@ -914,7 +958,7 @@ async function autoOptScan() {
         mainWindow.webContents.send("autopilot-event", {
           type: "game-closed", game: name, restored
         });
-        new Notification({ title: "Choatix Auto-Optimize", body: `${name} closed — ${restored} tweaks restored` }).show();
+        new Notification({ title: "Phantom Auto-Optimize", body: `${name} closed — ${restored} tweaks restored` }).show();
       }
       autoOpt.currentGame = null;
       autoOpt.appliedTweaks = [];
@@ -1007,7 +1051,7 @@ function startScanScheduler() {
             if (mainWindow) mainWindow.webContents.send("autopilot-event", { type: "scheduled-benchmark", game: "auto" });
           }
           if (mainWindow) {
-            new Notification({ title: "Choatix Scheduled Scan", body: `Completed: ${scan.name || scan.type}` }).show();
+            new Notification({ title: "Phantom Scheduled Scan", body: `Completed: ${scan.name || scan.type}` }).show();
           }
         } catch {}
       }
@@ -1200,6 +1244,7 @@ const TWEAK_COMMANDS = {
   'sys-clear-system-cache': "powershell -NoProfile -Command '[System.GC]::Collect(); [System.GC]::WaitForPendingFinalizers()'",
   'sys-optimize-dpc-latency': "powershell -NoProfile -Command 'reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\0000\" /v RMHwGpuPstateControlEnabled /t REG_DWORD /d 0 /f'",
   'mouse-optimize-polling': "powershell -NoProfile -Command 'reg add \"HKCU\\Control Panel\\Mouse\" /v MouseSamplingRate /t REG_DWORD /d 1 /f'",
+  'input-optimize-mouse': "powershell -NoProfile -Command 'reg add \"HKCU\\Control Panel\\Mouse\" /v MouseSpeed /t REG_SZ /d \"0\" /f; reg add \"HKCU\\Control Panel\\Mouse\" /v MouseThreshold1 /t REG_SZ /d \"0\" /f; reg add \"HKCU\\Control Panel\\Mouse\" /v MouseThreshold2 /t REG_SZ /d \"0\" /f; reg add \"HKCU\\Control Panel\\Mouse\" /v MouseSensitivity /t REG_SZ /d \"10\" /f'",
   'input-gaming-mode': "powershell -NoProfile -Command 'reg add \"HKCU\\Control Panel\\Keyboard\" /v KeyboardDelay /t REG_SZ /d \"0\" /f; reg add \"HKCU\\Control Panel\\Keyboard\" /v KeyboardSpeed /t REG_SZ /d \"31\" /f; reg add \"HKCU\\Control Panel\\Mouse\" /v MouseSpeed /t REG_SZ /d \"0\" /f; reg add \"HKCU\\Control Panel\\Mouse\" /v MouseThreshold1 /t REG_SZ /d \"0\" /f; reg add \"HKCU\\Control Panel\\Mouse\" /v MouseThreshold2 /t REG_SZ /d \"0\" /f; reg add \"HKCU\\Control Panel\\Mouse\" /v MouseTrails /t REG_SZ /d \"0\" /f; reg add \"HKCU\\Control Panel\\Mouse\" /v MouseSensitivity /t REG_SZ /d \"10\" /f; reg add \"HKCU\\Accessibility\\StickyKeys\" /v Flags /t REG_SZ /d \"506\" /f; reg add \"HKCU\\Accessibility\\ToggleKeys\" /v Flags /t REG_SZ /d \"58\" /f; reg add \"HKCU\\Accessibility\\Keyboard Response\" /v Flags /t REG_SZ /d \"122\" /f'",
   'audio-disable-low-latency': "powershell -NoProfile -Command 'reg add \"HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Audio\" /v DisableLowLatencySupport /t REG_DWORD /d 1 /f'",
   'audio-optimize-sample-rate': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Microsoft\\Audio\\Settings\" /v SampleRate /t REG_DWORD /d 48000 /f'",
@@ -1850,6 +1895,7 @@ const TWEAK_RESTORE_COMMANDS = {
   'sys-clear-system-cache': 'echo "System cache cleared"',
   'sys-optimize-dpc-latency': "powershell -NoProfile -Command 'reg delete \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Class\\{4d36e968-e325-11ce-bfc1-08002be10318}\\0000\" /v RMHwGpuPstateControlEnabled /f'",
   'mouse-optimize-polling': "powershell -NoProfile -Command 'reg delete \"HKCU\\Control Panel\\Mouse\" /v MouseSamplingRate /f'",
+  'input-optimize-mouse': "powershell -NoProfile -Command 'reg add \"HKCU\\Control Panel\\Mouse\" /v MouseSpeed /t REG_SZ /d \"1\" /f; reg add \"HKCU\\Control Panel\\Mouse\" /v MouseThreshold1 /t REG_SZ /d \"6\" /f; reg add \"HKCU\\Control Panel\\Mouse\" /v MouseThreshold2 /t REG_SZ /d \"10\" /f; reg add \"HKCU\\Control Panel\\Mouse\" /v MouseSensitivity /t REG_SZ /d \"10\" /f'",
   'input-gaming-mode': "powershell -NoProfile -Command 'reg add \"HKCU\\Control Panel\\Keyboard\" /v KeyboardDelay /t REG_SZ /d \"1\" /f; reg add \"HKCU\\Control Panel\\Keyboard\" /v KeyboardSpeed /t REG_SZ /d \"31\" /f; reg add \"HKCU\\Control Panel\\Mouse\" /v MouseSpeed /t REG_SZ /d \"1\" /f; reg add \"HKCU\\Control Panel\\Mouse\" /v MouseThreshold1 /t REG_SZ /d \"6\" /f; reg add \"HKCU\\Control Panel\\Mouse\" /v MouseThreshold2 /t REG_SZ /d \"10\" /f; reg add \"HKCU\\Accessibility\\StickyKeys\" /v Flags /t REG_SZ /d \"510\" /f; reg add \"HKCU\\Accessibility\\ToggleKeys\" /v Flags /t REG_SZ /d \"58\" /f; reg add \"HKCU\\Accessibility\\Keyboard Response\" /v Flags /t REG_SZ /d \"122\" /f'",
   'audio-disable-low-latency': "powershell -NoProfile -Command 'reg delete \"HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Audio\" /v DisableLowLatencySupport /f'",
   'audio-optimize-sample-rate': "powershell -NoProfile -Command 'reg add \"HKCU\\Software\\Microsoft\\Audio\\Settings\" /v SampleRate /t REG_DWORD /d 44100 /f'",
@@ -2241,7 +2287,7 @@ ipcMain.handle("restore-category", async (_event, category) => {
       'memory-working-set': 'system',
       'nv-disable-vsync': 'nvidia', 'nv-low-latency': 'nvidia',
       'net-optimize-dns': 'network', 'net-reduce-congestion': 'network',
-      'mouse-disable-acceleration': 'mouse',
+      'mouse-disable-acceleration': 'mouse', 'input-optimize-mouse': 'mouse',
       'storage-ssd-optimization': 'storage', 'storage-trim-optimization': 'storage',
       'storage-nvme-optimization': 'storage',
       'windows-explorer-optimization': 'windows',
@@ -2585,25 +2631,19 @@ function runTweakCommand(cmd, timeout = 15000) {
   return new Promise((resolve) => {
     const handleResult = (stdout, stderr) => {
       const errMsg = stderr?.trim() || '';
-      const outMsg = stdout?.trim() || '';
-      const combined = (errMsg + ' ' + outMsg).toLowerCase();
-      const isRealError = combined.length > 0 && (
-        combined.includes('error') ||
-        combined.includes('access denied') ||
-        combined.includes('permission') ||
-        combined.includes('not found') ||
-        combined.includes('not recognized') ||
-        combined.includes('does not exist') ||
-        combined.includes('cannot find') ||
-        combined.includes('failed') ||
-        combined.includes('invalid') ||
-        combined.includes('unable')
-      );
-      if (isRealError) {
-        resolve({ success: false, error: errMsg || outMsg });
-      } else {
-        resolve({ success: true });
+      if (errMsg.length > 0) {
+        const errLower = errMsg.toLowerCase();
+        const isRealError = errLower.includes('access denied') ||
+          errLower.includes('permission denied') ||
+          errLower.includes('not recognized') ||
+          errLower.includes('does not exist') ||
+          errLower.includes('cannot find') ||
+          errLower.includes('failed to') ||
+          errLower.includes('unable to') ||
+          (errLower.includes('error') && !errLower.includes('the operation completed'));
+        if (isRealError) return resolve({ success: false, error: errMsg });
       }
+      resolve({ success: true });
     };
 
     const trimmed = cmd.trim();
@@ -2694,7 +2734,7 @@ ipcMain.handle("get-leaderboard", async (_e, { hardwareHash } = {}) => {
       ? `https://choatix-v2.onrender.com/api/leaderboard/hardware/${hardwareHash}`
       : "https://choatix-v2.onrender.com/api/leaderboard";
     return await new Promise((resolve, reject) => {
-      https.get(url, { headers: { "User-Agent": "Choatix-Desktop" } }, (res) => {
+      https.get(url, { headers: { "User-Agent": "Phantom-Desktop" } }, (res) => {
         let body = ""; res.on("data", c => body += c);
         res.on("end", () => { try { resolve(JSON.parse(body)); } catch { resolve({ entries: [] }); } });
       }).on("error", () => resolve({ entries: [] }));
@@ -2708,7 +2748,7 @@ ipcMain.handle("get-user-rank", async (_e, { discordId }) => {
   try {
     const https = require("https");
     return await new Promise((resolve, reject) => {
-      https.get(`https://choatix-v2.onrender.com/api/leaderboard/user/${discordId}`, { headers: { "User-Agent": "Choatix-Desktop" } }, (res) => {
+      https.get(`https://choatix-v2.onrender.com/api/leaderboard/user/${discordId}`, { headers: { "User-Agent": "Phantom-Desktop" } }, (res) => {
         let body = ""; res.on("data", c => body += c);
         res.on("end", () => { try { resolve(JSON.parse(body)); } catch { resolve({ entries: [] }); } });
       }).on("error", () => resolve({ entries: [] }));
@@ -2725,7 +2765,7 @@ const CURRENT_VERSION = app.getVersion();
 ipcMain.handle("check-for-updates", async () => {
   try {
     const data = await new Promise((resolve, reject) => {
-      https.get("https://api.github.com/repos/zylenofficial/choatix-v2/releases/latest", { headers: { "User-Agent": "Choatix-Desktop" } }, (res) => {
+      https.get("https://api.github.com/repos/zylenofficial/choatix-v2/releases/latest", { headers: { "User-Agent": "Phantom-Desktop" } }, (res) => {
         let body = ""; res.on("data", c => body += c);
         res.on("end", () => { try { resolve(JSON.parse(body)); } catch { reject(new Error("Invalid JSON")); } });
       }).on("error", reject);
@@ -2765,11 +2805,11 @@ ipcMain.handle("send-update-notification", async (_e, { version, changes }) => {
     var changeLines = (changes || []).map(function(c) { return "> " + c; }).join("\n");
 
     var payload = JSON.stringify({
-      username: "Choatix",
+      username: "Phantom",
       avatar_url: "https://cdn-icons-png.flaticon.com/512/190/190411.png",
       embeds: [{
         color: 0x5865F2,
-        title: "Choatix V2 Updated",
+        title: "Phantom V2 Updated",
         description: "A new version has been released with the following improvements:",
         fields: [
           { name: "Version", value: "`" + version + "`", inline: true },
@@ -2779,7 +2819,7 @@ ipcMain.handle("send-update-notification", async (_e, { version, changes }) => {
         ],
         timestamp: now.toISOString(),
         footer: {
-          text: "Choatix V2 • Auto-Update",
+          text: "Phantom V2 • Auto-Update",
           icon_url: "https://cdn-icons-png.flaticon.com/512/190/190411.png"
         },
       }],
@@ -2810,7 +2850,7 @@ ipcMain.handle("send-update-notification", async (_e, { version, changes }) => {
 ipcMain.handle("report-crash", async (_e, { error, stack, context }) => {
   if (!DISCORD_WEBHOOK) return { success: false };
   try {
-    const payload = JSON.stringify({ embeds: [{ title: "Choatix Crash", color: 0xFF0000, fields: [
+    const payload = JSON.stringify({ embeds: [{ title: "Phantom Crash", color: 0xFF0000, fields: [
       { name: "Version", value: CURRENT_VERSION, inline: true },
       { name: "Platform", value: `${os.platform()} ${os.release()}`, inline: true },
       { name: "Error", value: (error || "Unknown").substring(0, 1000) },
@@ -2845,7 +2885,7 @@ ipcMain.handle("save-settings-to-file", async () => {
     const { dialog } = require("electron");
     const storePath = path.join(app.getPath("userData"), "choatix-v2-storage.json");
     const data = fs.existsSync(storePath) ? fs.readFileSync(storePath, "utf-8") : "{}";
-    const result = await dialog.showSaveDialog(mainWindow, { title: "Export Choatix Settings", defaultPath: `choatix-settings-${new Date().toISOString().split("T")[0]}.json`, filters: [{ name: "JSON", extensions: ["json"] }] });
+    const result = await dialog.showSaveDialog(mainWindow, { title: "Export Phantom Settings", defaultPath: `choatix-settings-${new Date().toISOString().split("T")[0]}.json`, filters: [{ name: "JSON", extensions: ["json"] }] });
     if (!result.canceled && result.filePath) { fs.writeFileSync(result.filePath, data); return { success: true }; }
     return { success: false };
   } catch (e) { return { success: false, error: e.message }; }
@@ -2853,7 +2893,7 @@ ipcMain.handle("save-settings-to-file", async () => {
 ipcMain.handle("load-settings-from-file", async () => {
   try {
     const { dialog } = require("electron");
-    const result = await dialog.showOpenDialog(mainWindow, { title: "Import Choatix Settings", filters: [{ name: "JSON", extensions: ["json"] }], properties: ["openFile"] });
+    const result = await dialog.showOpenDialog(mainWindow, { title: "Import Phantom Settings", filters: [{ name: "JSON", extensions: ["json"] }], properties: ["openFile"] });
     if (!result.canceled && result.filePaths.length > 0) {
       const data = fs.readFileSync(result.filePaths[0], "utf-8"); JSON.parse(data);
       fs.writeFileSync(path.join(app.getPath("userData"), "choatix-v2-storage.json"), data);
@@ -2866,7 +2906,6 @@ ipcMain.handle("load-settings-from-file", async () => {
 // ═══════════════════════════════════════════
 // ── State Persistence IPC ──
 // ═══════════════════════════════════════════
-const STATE_FILE = path.join(app.getPath("userData"), "choatix-state.json");
 ipcMain.handle("save-app-state", (_e, state) => {
   try { fs.writeFileSync(STATE_FILE, JSON.stringify(state, null, 2)); return { success: true }; } catch { return { success: false }; }
 });
@@ -2937,7 +2976,7 @@ ipcMain.handle("send-feedback", async (_e, feedback) => {
     }
 
     var payload = JSON.stringify({
-      username: "Choatix",
+      username: "Phantom",
       avatar_url: "https://cdn-icons-png.flaticon.com/512/190/190411.png",
       embeds: [{
         color: typeColor,
@@ -2946,7 +2985,7 @@ ipcMain.handle("send-feedback", async (_e, feedback) => {
         fields: fields,
         timestamp: now.toISOString(),
         footer: {
-          text: "Choatix v" + CURRENT_VERSION,
+          text: "Phantom v" + CURRENT_VERSION,
           icon_url: "https://cdn-icons-png.flaticon.com/512/190/190411.png"
         },
       }],
@@ -3702,7 +3741,7 @@ ipcMain.handle("quick-action", async (_event, action) => {
         break;
       }
       case 'create-restore': {
-        await psAsync("Checkpoint-Computer -Description 'Choatix Restore Point' -RestorePointType 'MODIFY_SETTINGS' -EA SilentlyContinue", 30000);
+        await psAsync("Checkpoint-Computer -Description 'Phantom Restore Point' -RestorePointType 'MODIFY_SETTINGS' -EA SilentlyContinue", 30000);
         result.message = 'Restore point created';
         break;
       }
@@ -4094,7 +4133,7 @@ ipcMain.handle("network-speed-test", async () => {
     const result = await new Promise((resolve, reject) => {
       const req = https.request("https://www.speedtest.net/api/js/speedtest?ping=true&download=true&upload=true&servers=false&ecmp=true", {
         method: "GET",
-        headers: { "User-Agent": "Choatix-SpeedTest/1.0" },
+        headers: { "User-Agent": "Phantom-SpeedTest/1.0" },
         timeout: 30000
       }, (res) => {
         let body = "";
