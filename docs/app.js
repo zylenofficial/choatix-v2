@@ -803,8 +803,8 @@ function renderPricing() {
     <div class="price-card ${t.popular ? 'featured' : ''} reveal reveal-d${i + 1}">
       ${t.popular ? '<div class="price-popular">BEST VALUE</div>' : ''}
       <div class="price-tier">${t.name}</div>
-      <div class="price-amount">&euro;${t.price}</div>
-      <div class="price-period">${t.period} payment</div>
+      <div class="price-amount">${t.price === '0' ? '&euro;0' : t.price === 'Coming Soon' ? 'Coming Soon' : '&euro;' + t.price}</div>
+      <div class="price-period">${t.period ? t.period + ' payment' : ''}</div>
       <ul class="price-features">${t.features.map(f => `<li><span class="price-check"><svg viewBox="0 0 12 12"><path d="M2 6l3 3 5-5"/></svg></span>${f}</li>`).join('')}</ul>
       <a href="${t.href}" class="btn ${t.popular ? 'btn-primary' : 'btn-secondary'} price-btn">${t.cta}</a>
     </div>`).join('');
