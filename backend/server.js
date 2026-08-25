@@ -1316,11 +1316,11 @@ app.delete('/api/admin/discount/:code', async (req, res) => {
 
 // ── PayPal Checkout ──
 const PRODUCTS = {
-  basic:     { name: 'Phantom Basic Tweaks',       price: '4.99',  tier: 'PRO' },
-  pro:       { name: 'Phantom Pro Tweaks',          price: '9.99',  tier: 'PRO' },
-  extreme:   { name: 'Phantom Extreme Tweaks',      price: '14.99', tier: 'PREMIUM' },
-  precision: { name: 'Phantom Precision Pack',      price: '5.99',  tier: 'PRO' },
-  full:      { name: 'Phantom Full Optimization',   price: '24.99', tier: 'PREMIUM' },
+  basic:     { name: 'Phantom Basic Tweaks',       price: null,  tier: 'PRO' },
+  pro:       { name: 'Phantom Pro Tweaks',          price: null,  tier: 'PRO' },
+  extreme:   { name: 'Phantom Extreme Tweaks',      price: null,  tier: 'PREMIUM' },
+  precision: { name: 'Phantom Precision Pack',      price: null,  tier: 'PRO' },
+  full:      { name: 'Phantom Full Optimization',   price: null,  tier: 'PREMIUM' },
 };
 
 app.post('/api/checkout', async (req, res) => {
