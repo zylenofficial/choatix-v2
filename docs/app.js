@@ -9,11 +9,11 @@ const API = 'https://choatix-v2.onrender.com';
 const DISCORD_INVITE = 'https://discord.gg/AhEK85REhG';
 
 const PRODUCTS = {
-  basic:     { id: 'basic',     name: 'Basic Tweaks',         price: 4.99,  tier: 'pro',     subtitle: 'Essential',  desc: 'Windows debloat, essential settings, GPU, network, and power optimization.', tweaks: 220, badge: '',      color: '' },
-  pro:       { id: 'pro',       name: 'Pro Tweaks',           price: 9.99,  tier: 'pro',     subtitle: 'Advanced',   desc: 'Everything in Basic plus BCD boot tweaks, RAM optimization, USB tuning, and deep cleanup.', tweaks: 291, badge: '',      color: '' },
-  extreme:   { id: 'extreme',   name: 'Extreme Tweaks',       price: 14.99, tier: 'premium', subtitle: 'Maximum',    desc: 'Full debloat, buffer bloat fix, DirectX optimization, registry tuning, and process optimization.', tweaks: 283, badge: 'Best Seller', color: '' },
-  full:      { id: 'full',      name: 'Full Optimization',    price: 24.99, tier: 'premium', subtitle: 'Everything', desc: 'All 461 tweaks combined — the complete optimization suite with every category included.', tweaks: 461, badge: 'Main Product', color: '' },
-  precision: { id: 'precision', name: 'Precision Pack',       price: 5.99,  tier: 'pro',     subtitle: 'Input',      desc: 'Input lag fix, mouse/keyboard optimization, GPU low latency, and network tweaks for competitive FPS.', tweaks: 128, badge: '',      color: 'aim' },
+  basic:     { id: 'basic',     name: 'Basic Tweaks',         price: null,  tier: 'pro',     subtitle: 'Essential',  desc: 'Windows debloat, essential settings, GPU, network, and power optimization.', tweaks: 220, badge: 'Coming Soon', color: 'soon' },
+  pro:       { id: 'pro',       name: 'Pro Tweaks',           price: null,  tier: 'pro',     subtitle: 'Advanced',   desc: 'Everything in Basic plus BCD boot tweaks, RAM optimization, USB tuning, and deep cleanup.', tweaks: 291, badge: 'Coming Soon', color: 'soon' },
+  extreme:   { id: 'extreme',   name: 'Extreme Tweaks',       price: null,  tier: 'premium', subtitle: 'Maximum',    desc: 'Full debloat, buffer bloat fix, DirectX optimization, registry tuning, and process optimization.', tweaks: 283, badge: 'Coming Soon', color: 'soon' },
+  full:      { id: 'full',      name: 'Full Optimization',    price: null,  tier: 'premium', subtitle: 'Everything', desc: 'All 461 tweaks combined — the complete optimization suite with every category included.', tweaks: 461, badge: 'Coming Soon', color: 'soon' },
+  precision: { id: 'precision', name: 'Precision Pack',       price: null,  tier: 'pro',     subtitle: 'Input',      desc: 'Input lag fix, mouse/keyboard optimization, GPU low latency, and network tweaks for competitive FPS.', tweaks: 128, badge: 'Coming Soon', color: 'soon' },
   vibrance:  { id: 'vibrance',  name: 'Vibrance Controller',  price: null,  tier: null,      subtitle: 'Display',    desc: 'Digital vibrance control with per-game profiles and auto-detection.', tweaks: 0, badge: 'Coming Soon', color: 'soon' }
 };
 
@@ -795,8 +795,8 @@ function renderProductDetail(id) {
 function renderPricing() {
   const tiers = [
     { name: 'Free', price: '0', period: 'Forever', features: ['System Health Overview', 'Scan PC', 'Quick Boost', 'System Info', 'Process Manager', 'Community Support'], cta: 'Download Free', href: '#products', cls: '' },
-    { name: 'Full', price: '24.99', period: 'One-time', popular: true, features: ['Everything below', TOTAL_TWEAKS + ' System Tweaks', '20 Game Presets', 'Game Library (auto-detect)', 'VBS/HVCI, C-States, Hyper-V', 'NVIDIA Telemetry, Drive Optim', 'Auto Restore Points', 'TrustedInstaller Elevation', 'Everything in Free'], cta: 'Get Full App', href: '#products', cls: 'popular' },
-    { name: 'Pro', price: '9.99', period: 'One-time', features: ['Everything in Free', '291 System Tweaks', 'Game Presets', 'Deep Clean', 'FPS Compare'], cta: 'Get Pro', href: '#products', cls: '' }
+    { name: 'Full', price: 'Coming Soon', period: '', popular: true, features: ['Everything below', TOTAL_TWEAKS + ' System Tweaks', '20 Game Presets', 'Game Library (auto-detect)', 'VBS/HVCI, C-States, Hyper-V', 'NVIDIA Telemetry, Drive Optim', 'Auto Restore Points', 'TrustedInstaller Elevation', 'Everything in Free'], cta: 'Coming Soon', href: '#products', cls: 'popular' },
+    { name: 'Pro', price: 'Coming Soon', period: '', features: ['Everything in Free', '291 System Tweaks', 'Game Presets', 'Deep Clean', 'FPS Compare'], cta: 'Coming Soon', href: '#products', cls: '' }
   ];
 
   const pricingCards = tiers.map((t, i) => `
@@ -948,12 +948,12 @@ function renderRefund() {
 
 function renderAffiliate() {
   const commissionRows = [
-    { name: 'Basic Tweaks', price: '4.99', comm: '0.50', tier: 'PRO' },
-    { name: 'Pro Tweaks', price: '9.99', comm: '1.00', tier: 'PRO' },
-    { name: 'Precision Pack', price: '5.99', comm: '0.60', tier: 'PRO' },
-    { name: 'Extreme Tweaks', price: '14.99', comm: '1.50', tier: 'PREMIUM' },
-    { name: 'Full Optimization', price: '24.99', comm: '2.50', tier: 'PREMIUM' }
-  ].map(r => `<tr><td>${r.name}</td><td class="price">&euro;${r.price}</td><td class="commission">&euro;${r.comm}</td><td><span class="tier-badge tier-${r.tier.toLowerCase()}">${r.tier}</span></td></tr>`).join('');
+    { name: 'Basic Tweaks', price: 'Coming Soon', comm: '0.50', tier: 'PRO' },
+    { name: 'Pro Tweaks', price: 'Coming Soon', comm: '1.00', tier: 'PRO' },
+    { name: 'Precision Pack', price: 'Coming Soon', comm: '0.60', tier: 'PRO' },
+    { name: 'Extreme Tweaks', price: 'Coming Soon', comm: '1.50', tier: 'PREMIUM' },
+    { name: 'Full Optimization', price: 'Coming Soon', comm: '2.50', tier: 'PREMIUM' }
+  ].map(r => `<tr><td>${r.name}</td><td class="price">${r.price}</td><td class="commission">&euro;${r.comm}</td><td><span class="tier-badge tier-${r.tier.toLowerCase()}">${r.tier}</span></td></tr>`).join('');
 
   return `
     <div id="publicPage">
@@ -1353,11 +1353,11 @@ document.addEventListener('DOMContentLoaded', init);
 const CHATBOT_FAB_KEY = 'choatix_chatbot_seen';
 
 const CHAT_PRODUCTS = {
-  basic:     { name: 'Basic Tweaks',      price: 4.99,  tweaks: 220, desc: 'Windows debloat, essential settings, GPU, network, power', best: 'Budget-friendly all-rounder' },
-  pro:       { name: 'Pro Tweaks',        price: 9.99,  tweaks: 291, desc: 'Basic + BCD boot tweaks, RAM optimization, USB tuning, deep cleanup', best: 'Best value for most gamers' },
-  extreme:   { name: 'Extreme Tweaks',    price: 14.99, tweaks: 283, desc: 'Full debloat, DirectX, buffer bloat, registry tuning', best: 'Best Seller' },
-  precision: { name: 'Precision Pack',    price: 5.99,  tweaks: 128, desc: 'Input lag, mouse/keyboard optimization, GPU low latency, network', best: 'Competitive FPS players' },
-  full:      { name: 'Full Optimization', price: 24.99, tweaks: 461, desc: 'Everything combined — the complete optimization suite', best: 'Maximum performance' }
+  basic:     { name: 'Basic Tweaks',      price: null,  tweaks: 220, desc: 'Windows debloat, essential settings, GPU, network, power', best: 'Budget-friendly all-rounder', comingSoon: true },
+  pro:       { name: 'Pro Tweaks',        price: null,  tweaks: 291, desc: 'Basic + BCD boot tweaks, RAM optimization, USB tuning, deep cleanup', best: 'Best value for most gamers', comingSoon: true },
+  extreme:   { name: 'Extreme Tweaks',    price: null, tweaks: 283, desc: 'Full debloat, DirectX, buffer bloat, registry tuning', best: 'Best Seller', comingSoon: true },
+  precision: { name: 'Precision Pack',    price: null,  tweaks: 128, desc: 'Input lag, mouse/keyboard optimization, GPU low latency, network', best: 'Competitive FPS players', comingSoon: true },
+  full:      { name: 'Full Optimization', price: null, tweaks: 461, desc: 'Everything combined — the complete optimization suite', best: 'Maximum performance', comingSoon: true }
 };
 
 let chatbotOpen = false;
@@ -1406,7 +1406,7 @@ function botSay(html, product) {
     const p = CHAT_PRODUCTS[product];
     if (p) {
       const tagClass = product === 'extreme' ? 'best' : 'recommended';
-      productTag = `<div class="chat-product-tag ${tagClass}">${p.name} \u2014 \u20ac${p.price.toFixed(2)}</div>`;
+      productTag = `<div class="chat-product-tag ${tagClass}">${p.name} — Coming Soon</div>`;
     }
   }
 
@@ -1668,8 +1668,8 @@ function recommendProduct(id) {
   const p = CHAT_PRODUCTS[id];
   if (!p) return;
   chatContext.lastProduct = id;
-  botSay(`Based on what you've told me, I'd recommend <strong>${p.name}</strong> (\u20ac${p.price.toFixed(2)}).<br><br>${p.desc}.<br><em>${p.best}.</em>`, id);
-  showSuggestions([`Add ${p.name} to cart`, `Tell me more about ${p.name}`, "Compare with other options"]);
+  botSay(`Based on what you've told me, I'd recommend <strong>${p.name}</strong> (Coming Soon).<br><br>${p.desc}.<br><em>${p.best}.</em>`, id);
+  showSuggestions(["Tell me more", "Compare with other options"]);
 }
 
 function showProductDetails(id) {
@@ -1683,8 +1683,8 @@ function showProductDetails(id) {
     precision: "\u2022 Timer resolution fix<br>\u2022 Mouse polling optimization<br>\u2022 Keyboard repeat rate<br>\u2022 GPU low latency mode<br>\u2022 Network for competitive",
     full: "Everything in all packs combined:<br>\u2022 461 system tweaks<br>\u2022 Every optimization category<br>\u2022 Game presets for 20+ titles<br>\u2022 Quick Boost<br>\u2022 Safe rollback"
   };
-  botSay(`<strong>${p.name}</strong> (\u20ac${p.price.toFixed(2)}) \u2014 ${p.tweaks} tweaks:<br><br>${detailMap[id]}`, id);
-  showSuggestions([`Add ${p.name} to cart`, "Compare with others", "What should I buy?"]);
+  botSay(`<strong>${p.name}</strong> (Coming Soon) — ${p.tweaks} tweaks:<br><br>${detailMap[id]}`, id);
+  showSuggestions(["Compare with others", "What should I buy?"]);
 }
 
 function escapeHTML(str) {

@@ -35,10 +35,6 @@ export default function Disclaimer({ onAccept }: { onAccept: () => void }) {
         transition: 'all 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
       }}>
         <div style={{ marginBottom: 28, display: 'inline-block' }}>
-          <img src="/choatix-logo.png" alt="CHOATIX" style={{
-            height: 44, width: 'auto', objectFit: 'contain',
-            filter: 'brightness(0) invert(1)',
-          }} />
         </div>
 
         <h1 style={{
