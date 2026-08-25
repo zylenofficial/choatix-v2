@@ -1181,77 +1181,6 @@ function render404() {
 
 // ── EFFECTS ──
 
-function initMatrixRain() {
-  const canvas = document.getElementById('matrix-rain');
-  if (!canvas) return;
-  const ctx = canvas.getContext('2d');
-  const CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789\u03A3\u03A9\u03BB\u03C0\u03C8\u03C8'.split('');
-  const FONT_SIZE = 14;
-  const CHAR_SPACING = 18;
-  let W, H, cols = [];
-
-  function init() {
-    const dpr = devicePixelRatio || 1;
-    W = innerWidth;
-    H = innerHeight;
-    canvas.width = W * dpr;
-    canvas.height = H * dpr;
-    canvas.style.width = W + 'px';
-    canvas.style.height = H + 'px';
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    cols = [];
-    const numCols = Math.floor(W / CHAR_SPACING);
-    for (let i = 0; i < numCols; i++) {
-      const centerX = W / 2;
-      const dist = Math.abs(i * CHAR_SPACING - centerX) / (W / 2);
-      const chance = dist < 0.3 ? 0.9 : dist < 0.6 ? 0.5 : 0.15;
-      if (Math.random() > chance) continue;
-      const trailLen = 8 + Math.floor(Math.random() * 14);
-      const chars = [];
-      for (let j = 0; j < trailLen; j++) chars.push(CHARS[Math.floor(Math.random() * CHARS.length)]);
-      cols.push({ x: i * CHAR_SPACING + CHAR_SPACING / 2, y: Math.random() * H * 1.5 - H * 0.5, speed: 1.2 + Math.random() * 2.5, chars, ft: 0, fr: 3 + Math.floor(Math.random() * 5) });
-    }
-  }
-
-  init();
-  addEventListener('resize', init);
-
-  function draw() {
-    ctx.fillStyle = 'rgba(0,0,0,0.35)';
-    ctx.fillRect(0, 0, W, H);
-    ctx.font = FONT_SIZE + 'px Consolas, "SF Mono", monospace';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'top';
-
-    for (const col of cols) {
-      col.y += col.speed;
-      col.ft++;
-      if (col.ft >= col.fr) { col.ft = 0; col.chars[Math.floor(Math.random() * col.chars.length)] = CHARS[Math.floor(Math.random() * CHARS.length)]; }
-
-      for (let j = 0; j < col.chars.length; j++) {
-        const cy = col.y - j * CHAR_SPACING;
-        if (cy < -FONT_SIZE || cy > H + FONT_SIZE) continue;
-        let alpha = j === 0 ? 0.95 : j < 3 ? 0.6 - j * 0.1 : Math.max(0.02, 0.45 * Math.pow(0.82, j - 2));
-        if (cy < 80) alpha *= cy / 80;
-        if (cy > H - 60) alpha *= (H - cy) / 60;
-        alpha = Math.max(0, Math.min(1, alpha));
-        if (j === 0) { ctx.shadowColor = 'rgba(255,255,255,0.4)'; ctx.shadowBlur = 6; } else ctx.shadowBlur = 0;
-        ctx.fillStyle = `rgba(255,255,255,${alpha})`;
-        ctx.fillText(col.chars[j], col.x, cy);
-      }
-      ctx.shadowBlur = 0;
-      if (col.y - col.chars.length * CHAR_SPACING > H) {
-        col.y = -CHAR_SPACING * 2;
-        col.speed = 1.2 + Math.random() * 2.5;
-        col.chars = [];
-        const trailLen = 8 + Math.floor(Math.random() * 14);
-        for (let j = 0; j < trailLen; j++) col.chars.push(CHARS[Math.floor(Math.random() * CHARS.length)]);
-      }
-    }
-    requestAnimationFrame(draw);
-  }
-  draw();
-}
 
 function initScrollEffects() {
   const nav = document.getElementById('app-nav');
@@ -1320,7 +1249,6 @@ function init() {
   initAuth();
   renderCartSidebar();
   renderFooter();
-  initMatrixRain();
   router();
 
   addEventListener('hashchange', router);
