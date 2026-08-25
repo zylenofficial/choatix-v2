@@ -1585,8 +1585,7 @@ function processInput(text) {
   // ── Cart / checkout ──
   if (lower.match(/cart|checkout|pay|purchase/)) {
     botSay("All products are Coming Soon! Join our Discord for launch updates.");
-      showSuggestions(["What should I buy?", "Compare products", "I'm on a budget"]);
-    }
+    showSuggestions(["What should I buy?", "Compare products", "I'm on a budget"]);
     return;
   }
 
