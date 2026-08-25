@@ -322,7 +322,7 @@ export function AdvisorPage() {
         <div className="border border-white/[0.06] bg-[#0a0a0a] p-5 flex items-center justify-between">
           <div>
             <div className="text-[11px] text-white/50 mb-0.5">Want deeper optimizations?</div>
-            <div className="text-[10px] text-white/20">Unlock advanced profiles with Choatix Premium</div>
+            <div className="text-[10px] text-white/20">Unlock advanced profiles with Phantom Premium</div>
           </div>
           <Button variant="outline" size="sm" onClick={() => setShowUpgradeModal(true)} className="h-7 text-[11px]">
             <ArrowRight className="w-3 h-3 mr-1.5" />

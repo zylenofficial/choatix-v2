@@ -39,7 +39,7 @@ export function Sidebar({ active, onNavigate, tier, onUpgrade, rollbackCount }: 
 
       {/* Brand */}
       <div className="px-5 py-5 relative" style={{ zIndex: 1 }}>
-        <div className="text-[13px] font-bold tracking-tight" style={{ color: '#fff' }}>CHOATIX</div>
+        <div className="text-[13px] font-bold tracking-tight" style={{ color: '#fff' }}>PHANTOM</div>
         <div className="text-[9px] tracking-[0.15em] font-medium" style={{ color: 'rgba(255,255,255,0.2)' }}>V2</div>
       </div>
 

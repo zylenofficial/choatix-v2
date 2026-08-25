@@ -45,7 +45,7 @@ export default function Disclaimer({ onAccept }: { onAccept: () => void }) {
           fontSize: 18, fontWeight: 300, color: '#fff',
           letterSpacing: '-0.01em', marginBottom: 10,
         }}>
-          Welcome to Choatix
+          Welcome to Phantom
         </h1>
         <p style={{
           fontSize: 11, color: 'rgba(255,255,255,0.3)',

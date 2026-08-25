@@ -163,7 +163,7 @@ export default function Home() {
         {/* Titlebar */}
         <div className="titlebar">
           <div className="titlebar-brand">
-            <img src="/choatix-logo.png" alt="CHOATIX" className="titlebar-logo" />
+            <img src="/choatix-logo.png" alt="PHANTOM" className="titlebar-logo" />
           </div>
           <div className="titlebar-controls">
             <NotificationBell />

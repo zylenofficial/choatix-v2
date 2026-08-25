@@ -3,7 +3,7 @@ import './globals.css'
 import { ClientShell } from '@/components/ClientShell'
 
 export const metadata: Metadata = {
-  title: 'Choatix',
+  title: 'Phantom',
   description: 'Gaming Optimization Suite',
 }
 

@@ -23,7 +23,7 @@ export default function TitleBar() {
     >
       <div className="flex-1 flex items-center pl-3">
         <span className="text-xs font-semibold tracking-wider" style={{ color: 'var(--text-secondary)' }}>
-          CHOATIX
+          PHANTOM
         </span>
       </div>
       <div className="flex items-center" style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}>

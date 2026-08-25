@@ -346,7 +346,7 @@ export function SettingsPage() {
             {/* Footer */}
             <div className="px-4 pb-4">
               <p className="text-[10px]" style={{ color: 'rgba(255,255,255,0.2)' }}>
-                Join the <a href="https://discord.gg/Y92hMwVaUc" target="_blank" rel="noreferrer" className="font-bold text-white hover:underline">CHOATIX Discord</a> to purchase a key.
+                Join the <a href="https://discord.gg/Y92hMwVaUc" target="_blank" rel="noreferrer" className="font-bold text-white hover:underline">PHANTOM Discord</a> to purchase a key.
               </p>
             </div>
           </div>

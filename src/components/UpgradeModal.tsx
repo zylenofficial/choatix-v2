@@ -97,7 +97,7 @@ export function UpgradeModal({ isOpen, onClose, currentTier }: UpgradeModalProps
             </div>
             <div>
               <h2 className="text-[14px] font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>Choose Your Plan</h2>
-              <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-muted)' }}>Unlock the full power of Choatix</p>
+              <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-muted)' }}>Unlock the full power of Phantom</p>
             </div>
           </div>
           <button onClick={onClose} className="w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-150 hover:bg-white/[0.06] ripple" style={{ color: 'var(--text-muted)' }}>
@@ -167,7 +167,7 @@ export function UpgradeModal({ isOpen, onClose, currentTier }: UpgradeModalProps
 
         {/* Footer */}
         <div className="px-6 pb-5 text-center text-[10px]" style={{ color: 'var(--text-muted)' }}>
-          Join the <span className="font-bold gradient-text">CHOATIX</span> Discord to purchase
+          Join the <span className="font-bold gradient-text">PHANTOM</span> Discord to purchase
         </div>
       </div>
     </div>
