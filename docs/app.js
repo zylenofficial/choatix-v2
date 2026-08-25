@@ -394,7 +394,7 @@ function renderNav() {
     : '';
 
   document.getElementById('app-nav').innerHTML = `
-    <a href="#" class="nav-brand" onclick="navigate('');return false">choatix<span>.</span></a>
+    <a href="#" class="nav-brand" onclick="navigate('');return false">phantom<span>.</span></a>
     <button class="hamburger" onclick="document.querySelector('.nav-links').classList.toggle('open')">&#9776;</button>
     <div class="nav-links">
       ${navLinks}
@@ -1470,7 +1470,7 @@ function processInput(text) {
 
   // ── What is Phantom ──
   if (lower.match(/what is|what's|tell me about|how does it work|what do you/)) {
-    if (lower.match(/choatix|product|you|your/)) {
+    if (lower.match(/phantom|product|you|your/)) {
       botSay("Phantom V2 is a Windows PC optimization tool. We apply 220\u2013461 system tweaks (depending on the pack) to boost your FPS, reduce input lag, and clean up Windows. Every change is reversible with one click.");
       showSuggestions(["What should I buy?", "How much FPS?", "Is it safe?", "Compare products"]);
       return;
