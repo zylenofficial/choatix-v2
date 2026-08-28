@@ -947,69 +947,22 @@ function renderRefund() {
 // ── PAGE: AFFILIATE ──
 
 function renderAffiliate() {
-  const commissionRows = [
-    { name: 'Basic Tweaks', price: 'Coming Soon', comm: '0.50', tier: 'PRO' },
-    { name: 'Pro Tweaks', price: 'Coming Soon', comm: '1.00', tier: 'PRO' },
-    { name: 'Precision Pack', price: 'Coming Soon', comm: '0.60', tier: 'PRO' },
-    { name: 'Extreme Tweaks', price: 'Coming Soon', comm: '1.50', tier: 'PREMIUM' },
-    { name: 'Full Optimization', price: 'Coming Soon', comm: '2.50', tier: 'PREMIUM' }
-  ].map(r => `<tr><td>${r.name}</td><td class="price">${r.price}</td><td class="commission">&euro;${r.comm}</td><td><span class="tier-badge tier-${r.tier.toLowerCase()}">${r.tier}</span></td></tr>`).join('');
-
   return `
-    <div id="publicPage">
-      <section class="aff-hero">
-        <div class="aff-badge">Affiliate Program</div>
-        <h1>Earn <span class="green">10%</span><br>On Every Sale</h1>
-        <p class="subtitle">Promote Phantom with your unique referral link. Earn commission on every customer you bring — no limits, no expiration.</p>
-        <div class="aff-metrics">
-          <div class="aff-metric"><div class="val">10%</div><div class="lbl">Commission</div></div>
-          <div class="aff-metric"><div class="val">&euro;5</div><div class="lbl">Min Payout</div></div>
-          <div class="aff-metric"><div class="val">30 Days</div><div class="lbl">Cookie Life</div></div>
-          <div class="aff-metric"><div class="val">5</div><div class="lbl">Products</div></div>
+    <section class="page-hero">
+      <h1>Affiliate <em>Program</em></h1>
+      <p>Promote Phantom and earn commission on every sale</p>
+    </section>
+    <section style="text-align:center;padding:4rem 2rem">
+      <div style="max-width:500px;margin:0 auto;background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:4rem 3rem">
+        <div style="font-size:3rem;margin-bottom:1.5rem">&#128640;</div>
+        <h2 style="font-size:1.8rem;font-weight:900;margin-bottom:0.75rem">Coming Soon</h2>
+        <p style="color:var(--text-dim);font-size:0.95rem;line-height:1.7;margin-bottom:2rem">The affiliate program is currently under development. We're building something great — earn commission on every sale when it launches.</p>
+        <div style="display:flex;gap:0.75rem;justify-content:center;flex-wrap:wrap">
+          <a href="${DISCORD_INVITE}" class="btn btn-discord" target="_blank">Join Discord for Updates</a>
+          <a href="#products" class="btn btn-secondary">View Products</a>
         </div>
-      </section>
-      <section class="aff-section">
-        <div class="aff-section-title"><h2>How It Works</h2><p>Three simple steps to start earning</p></div>
-        <div class="aff-steps">
-          <div class="aff-step"><div class="step-num">1</div><h3>Sign Up</h3><p>Register with your Discord ID and PayPal email. Instant approval — no waiting.</p></div>
-          <div class="aff-step"><div class="step-num">2</div><h3>Share Your Link</h3><p>Get a unique referral link. Share it on YouTube, Twitter, Discord, or anywhere.</p></div>
-          <div class="aff-step"><div class="step-num">3</div><h3>Get Paid</h3><p>Earn 10% on every sale. Request a payout anytime (min &euro;5). Sent via PayPal.</p></div>
-        </div>
-      </section>
-      <section class="aff-table-section">
-        <div class="aff-section-title"><h2>Commission Rates</h2><p>Earn on every product tier</p></div>
-        <table class="products-table"><thead><tr><th>Product</th><th>Price</th><th>Your Commission</th><th>Tier</th></tr></thead><tbody>${commissionRows}</tbody></table>
-      </section>
-      <section class="register-section" id="registerSection">
-        <div class="register-box">
-          <h2>Start Earning Today</h2>
-          <p class="sub">Fill in your details to get your unique referral link</p>
-          <div class="form-row"><label>Discord ID</label><input type="text" id="regDiscordId" placeholder="Right-click your name in Discord → Copy User ID"><div class="hint">Required to track your referrals</div></div>
-          <div class="form-row"><label>Display Name</label><input type="text" id="regDisplayName" placeholder="Your name or brand"></div>
-          <div class="form-row"><label>PayPal Email</label><input type="email" id="regPaypal" placeholder="you@example.com"><div class="hint">Where we send your commission payments</div></div>
-          <div class="form-row"><label>Custom Referral Code <span>(optional)</span></label><input type="text" id="regCustomCode" placeholder="e.g. MYBRAND" maxlength="20"><div class="hint">Letters, numbers, _ or -. 3-20 characters.</div></div>
-          <button class="btn-register" onclick="registerAffiliate()">Get My Referral Link</button>
-          <p class="reg-error" id="regError"></p>
-        </div>
-      </section>
-    </div>
-    <div id="dashPage" class="dash-section">
-      <div class="dash-head"><div><h1>Affiliate Dashboard</h1><p id="dashWelcome">Welcome back</p></div><div><button class="btn-payout" onclick="requestPayout()">Request Payout</button><button class="btn-newlink" onclick="generateLink()">+ New Link</button></div></div>
-      <div class="dash-stats">
-        <div class="dash-stat green"><div class="num" id="sEarned">&euro;0.00</div><div class="lbl">Total Earned</div></div>
-        <div class="dash-stat orange"><div class="num" id="sPending">&euro;0.00</div><div class="lbl">Pending Payout</div></div>
-        <div class="dash-stat blue"><div class="num" id="sClicks">0</div><div class="lbl">Total Clicks</div></div>
-        <div class="dash-stat"><div class="num" id="sConv">0</div><div class="lbl">Conversions</div></div>
       </div>
-      <div class="tab-bar">
-        <button class="tab-btn active" onclick="switchTab(this,'links')">Referral Links</button>
-        <button class="tab-btn" onclick="switchTab(this,'sales')">Sales</button>
-        <button class="tab-btn" onclick="switchTab(this,'payouts')">Payouts</button>
-      </div>
-      <div id="panel-links" class="tab-panel active"></div>
-      <div id="panel-sales" class="tab-panel"></div>
-      <div id="panel-payouts" class="tab-panel"></div>
-    </div>`;
+    </section>`;
 }
 
 let aff = null;
