@@ -317,6 +317,13 @@ footer p{font-size:0.72rem;color:var(--text-dim)}
 .badge-aim-tag{background:#a855f7!important;color:#fff!important}
 .product-card.badge-soon .product-badge{background:#333;color:#888}
 .badge-soon-tag{background:#333!important;color:#888!important}
+.badge-free{border-color:rgba(0,230,118,0.25)}
+.badge-free .product-badge{background:var(--green);color:#000}
+.badge-free-tag{background:var(--green)!important;color:#000!important}
+.badge-timer{border-color:rgba(255,193,7,0.25)}
+.badge-timer .product-badge{background:rgba(255,193,7,0.15);color:#ffc107;border:1px solid rgba(255,193,7,0.2)}
+.badge-timer-tag{background:rgba(255,193,7,0.15)!important;color:#ffc107!important;border:1px solid rgba(255,193,7,0.2)!important}
+.countdown-banner{animation:fadeUp 0.6s ease forwards}
 .product-box{width:85%;aspect-ratio:0.7;background:linear-gradient(160deg,#1a2a2a,#111a1a);border:1px solid rgba(255,255,255,0.06);border-radius:10px;display:flex;flex-direction:column;justify-content:center;align-items:center;margin:0 auto 1.2rem;padding:1.5rem 1rem;position:relative;overflow:hidden;transform:perspective(600px) rotateY(-8deg) rotateX(2deg);box-shadow:8px 8px 24px rgba(0,0,0,0.5);transition:all 0.5s var(--ease)}
 .product-card:hover .product-box{transform:perspective(600px) rotateY(-4deg) rotateX(1deg) translateY(-4px);box-shadow:12px 12px 32px rgba(0,0,0,0.6)}
 .product-box::before{content:'';position:absolute;top:0;left:0;right:0;bottom:0;background:linear-gradient(135deg,rgba(255,255,255,0.05),transparent 50%);pointer-events:none}
