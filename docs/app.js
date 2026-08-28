@@ -8,45 +8,13 @@
 const API = 'https://choatix-v2.onrender.com';
 const DISCORD_INVITE = 'https://discord.gg/AhEK85REhG';
 
-// ── RELEASE TIMER ──
-// Products become free after this time. Change RELEASE_TIME to adjust.
-// Default: 19 hours from first visit (saved in localStorage so it's consistent per user).
-const RELEASE_KEY = 'phantom_release_time';
-let releaseTime = localStorage.getItem(RELEASE_KEY);
-if (!releaseTime) {
-  releaseTime = Date.now() + (19 * 60 * 60 * 1000);
-  localStorage.setItem(RELEASE_KEY, releaseTime);
-}
-releaseTime = parseInt(releaseTime);
-
-function isReleased() { return Date.now() >= releaseTime; }
-
-function getTimeRemaining() {
-  const diff = Math.max(0, releaseTime - Date.now());
-  const h = Math.floor(diff / 3600000);
-  const m = Math.floor((diff % 3600000) / 60000);
-  const s = Math.floor((diff % 60000) / 1000);
-  return { h, m, s, total: diff };
-}
-
-function formatCountdown() {
-  const t = getTimeRemaining();
-  if (t.total <= 0) return 'Available Now!';
-  return `${String(t.h).padStart(2,'0')}:${String(t.m).padStart(2,'0')}:${String(t.s).padStart(2,'0')}`;
-}
-
-function getReleaseBadge() {
-  if (isReleased()) return { badge: 'Free Now!', color: 'free' };
-  return { badge: formatCountdown(), color: 'timer' };
-}
-
 const PRODUCTS = {
-  basic:     { id: 'basic',     name: 'Basic Tweaks',         price: 0,  tier: 'pro',     subtitle: 'Essential',  desc: 'Windows debloat, essential settings, GPU, network, and power optimization.', tweaks: 220 },
-  pro:       { id: 'pro',       name: 'Pro Tweaks',           price: 0,  tier: 'pro',     subtitle: 'Advanced',   desc: 'Everything in Basic plus BCD boot tweaks, RAM optimization, USB tuning, and deep cleanup.', tweaks: 291 },
-  extreme:   { id: 'extreme',   name: 'Extreme Tweaks',       price: 0,  tier: 'premium', subtitle: 'Maximum',    desc: 'Full debloat, buffer bloat fix, DirectX optimization, registry tuning, and process optimization.', tweaks: 283 },
-  full:      { id: 'full',      name: 'Full Optimization',    price: 0,  tier: 'premium', subtitle: 'Everything', desc: 'All 461 tweaks combined — the complete optimization suite with every category included.', tweaks: 461 },
-  precision: { id: 'precision', name: 'Precision Pack',       price: 0,  tier: 'pro',     subtitle: 'Input',      desc: 'Input lag fix, mouse/keyboard optimization, GPU low latency, and network tweaks for competitive FPS.', tweaks: 128 },
-  vibrance:  { id: 'vibrance',  name: 'Vibrance Controller',  price: 0,  tier: null,      subtitle: 'Display',    desc: 'Digital vibrance control with per-game profiles and auto-detection.', tweaks: 0 }
+  basic:     { id: 'basic',     name: 'Basic Tweaks',         price: null,  tier: 'pro',     subtitle: 'Essential',  desc: 'Windows debloat, essential settings, GPU, network, and power optimization.', tweaks: 220, badge: 'Coming Soon', color: 'soon' },
+  pro:       { id: 'pro',       name: 'Pro Tweaks',           price: null,  tier: 'pro',     subtitle: 'Advanced',   desc: 'Everything in Basic plus BCD boot tweaks, RAM optimization, USB tuning, and deep cleanup.', tweaks: 291, badge: 'Coming Soon', color: 'soon' },
+  extreme:   { id: 'extreme',   name: 'Extreme Tweaks',       price: null,  tier: 'premium', subtitle: 'Maximum',    desc: 'Full debloat, buffer bloat fix, DirectX optimization, registry tuning, and process optimization.', tweaks: 283, badge: 'Coming Soon', color: 'soon' },
+  full:      { id: 'full',      name: 'Full Optimization',    price: null,  tier: 'premium', subtitle: 'Everything', desc: 'All 461 tweaks combined — the complete optimization suite with every category included.', tweaks: 461, badge: 'Coming Soon', color: 'soon' },
+  precision: { id: 'precision', name: 'Precision Pack',       price: null,  tier: 'pro',     subtitle: 'Input',      desc: 'Input lag fix, mouse/keyboard optimization, GPU low latency, and network tweaks for competitive FPS.', tweaks: 128, badge: 'Coming Soon', color: 'soon' },
+  vibrance:  { id: 'vibrance',  name: 'Vibrance Controller',  price: null,  tier: null,      subtitle: 'Display',    desc: 'Digital vibrance control with per-game profiles and auto-detection.', tweaks: 0, badge: 'Coming Soon', color: 'soon' }
 };
 
 const DOWNLOADS = {
@@ -520,7 +488,6 @@ function router() {
   renderCart();
   updateBadge();
   initPageEffects();
-  if (page === 'products') startCountdown();
   window.scrollTo(0, 0);
 }
 
@@ -563,12 +530,8 @@ function renderHome() {
         <div class="hero-badge"><span class="dot"></span>v2.3.0 &bull; ${TOTAL_TWEAKS} System Tweaks</div>
         <h1><span class="line1">Maximize Your</span><span class="line2">FPS</span></h1>
         <p class="hero-desc">Optimize your PC for maximum gaming performance. One click. Zero delay. Pure performance.</p>
-        <div id="heroCountdown" style="margin-bottom:1.5rem;padding:1rem 1.5rem;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:12px;display:inline-block">
-          <div style="font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;color:var(--green);margin-bottom:0.3rem">${isReleased() ? 'All Products Released!' : 'All Products Free In'}</div>
-          <div style="font-size:1.8rem;font-weight:900;color:#fff;font-variant-numeric:tabular-nums">${isReleased() ? 'Available Now!' : formatCountdown()}</div>
-        </div>
         <div class="hero-buttons">
-          <a href="#products" class="btn btn-primary">${isReleased() ? 'Download Free' : 'View Products'}</a>
+          <a href="#products" class="btn btn-primary">Download Free</a>
           <a href="${DISCORD_INVITE}" class="btn btn-discord" target="_blank">Join Discord</a>
         </div>
       </div>
@@ -699,20 +662,17 @@ function closeTweakModal() {
 
 function renderProducts() {
   const order = ['full', 'basic', 'pro', 'extreme', 'precision', 'vibrance'];
-  const released = isReleased();
-  const timerInfo = getReleaseBadge();
-
   const cardsHTML = order.map(id => {
     const p = PRODUCTS[id];
     const featured = p.id === 'full' ? 'featured' : '';
+    const badgeClass = p.color ? `badge-${p.color}` : '';
+    const isFree = p.price === null;
     const boxLines = p.name.split(' ');
     const boxName = boxLines.length > 1 ? boxLines.slice(0, -1).join(' ') + '<br>' + boxLines.slice(-1) : p.name;
-    const badgeClass = released ? 'badge-free' : 'badge-timer';
-    const badgeText = released ? 'Free Now!' : formatCountdown();
 
     return `
       <div class="product-card ${featured} ${badgeClass}">
-        <div class="product-badge ${released ? 'badge-free-tag' : 'badge-timer-tag'}">${badgeText}</div>
+        ${p.badge ? `<div class="product-badge ${p.color ? 'badge-' + p.color + '-tag' : ''}">${p.badge}</div>` : ''}
         <div class="product-box">
           <div class="product-box-brand">Phantom</div>
           <div class="product-box-name">${boxName}</div>
@@ -720,12 +680,12 @@ function renderProducts() {
         </div>
         <div class="product-brand">Phantom</div>
         <div class="product-name">${p.name}</div>
-        <div class="product-price">${released ? 'Free' : 'Releases in ' + formatCountdown()}</div>
+        <div class="product-price">${isFree ? 'Coming Soon' : '&euro;' + p.price.toFixed(2)}</div>
         <div class="product-actions">
           <a href="#${p.id}" class="product-link">View Details</a>
-          ${released
-            ? `<a href="#download?id=${p.id}" class="product-link" style="background:var(--green);color:#000;border-color:var(--green)">Download Free</a>`
-            : `<button class="product-link" disabled style="opacity:0.5;cursor:not-allowed">Coming Soon</button>`}
+          ${isFree
+            ? `<a href="${DISCORD_INVITE}" target="_blank" class="product-link">Join Discord</a>`
+            : `<button class="product-link add-to-cart" data-id="${p.id}" data-name="${p.name}" data-price="${p.price}">Add to Cart</button>`}
         </div>
       </div>`;
   }).join('');
@@ -733,37 +693,16 @@ function renderProducts() {
   return `
     <section class="page-hero">
       <h1>Our <em>Products</em></h1>
-      <p>Free optimization packs — releasing soon</p>
+      <p>Premium optimization packs for every need</p>
     </section>
-    <div class="countdown-banner reveal" style="max-width:600px;margin:0 auto 2rem;background:linear-gradient(135deg,rgba(0,230,118,0.06),rgba(0,230,118,0.02));border:1px solid rgba(0,230,118,0.15);border-radius:14px;padding:1.5rem 2rem;text-align:center">
-      <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;color:var(--green);margin-bottom:0.5rem">${released ? 'All Products Released!' : 'All Products Release In'}</div>
-      <div id="countdownTimer" style="font-size:2.5rem;font-weight:900;color:#fff;font-variant-numeric:tabular-nums">${released ? 'Available Now!' : formatCountdown()}</div>
-      <div style="font-size:0.78rem;color:var(--text-dim);margin-top:0.5rem">${released ? 'Download any product for free below.' : 'Products will be free to download after countdown.'}</div>
-    </div>
     <div class="trust-banner reveal">
-      <div class="trust-item"><svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg><strong>100% Free</strong></div>
+      <div class="trust-item"><svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg><strong>Instant Download</strong></div>
       <div class="trust-item"><svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg><strong>100% Reversible</strong></div>
       <div class="trust-item"><svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg><strong>Windows 10/11</strong></div>
     </div>
     <section>
       <div class="products-grid">${cardsHTML}</div>
     </section>`;
-}
-
-let countdownInterval = null;
-function startCountdown() {
-  if (countdownInterval) clearInterval(countdownInterval);
-  countdownInterval = setInterval(() => {
-    const el = document.getElementById('countdownTimer');
-    if (!el) { clearInterval(countdownInterval); return; }
-    if (isReleased()) {
-      el.textContent = 'Available Now!';
-      clearInterval(countdownInterval);
-      router();
-      return;
-    }
-    el.textContent = formatCountdown();
-  }, 1000);
 }
 
 // ── PAGE: PRODUCT DETAIL ──
