@@ -18,11 +18,11 @@ const PRODUCTS = {
 };
 
 const DOWNLOADS = {
-  full:      { name: 'Phantom Full Optimization',   url: 'https://drive.google.com/uc?export=download&id=1nQQuwAsU7zN3NZjVbhAVnW25fHkEqH5D' },
-  basic:     { name: 'Phantom Basic Tweaks',        url: 'https://drive.google.com/uc?export=download&id=1nQQuwAsU7zN3NZjVbhAVnW25fHkEqH5D' },
-  pro:       { name: 'Phantom Pro Tweaks',          url: 'https://drive.google.com/uc?export=download&id=1mjhxk5tHmwcQbBzgJOczbMdO8mLa9UZ8' },
-  extreme:   { name: 'Phantom Extreme Tweaks',      url: 'https://drive.google.com/uc?export=download&id=17BQS4j3yaqaRWiRm_pNfj_coJRr9TdYo' },
-  precision: { name: 'Phantom Precision Pack',      url: 'https://drive.google.com/uc?export=download&id=1TqpIVFWW6WNRZUpDCG2kZiVsHCGG1FGf' },
+  full:      { name: 'Phantom Full Optimization',   url: null, comingSoon: true },
+  basic:     { name: 'Phantom Basic Tweaks',        url: null, comingSoon: true },
+  pro:       { name: 'Phantom Pro Tweaks',          url: null, comingSoon: true },
+  extreme:   { name: 'Phantom Extreme Tweaks',      url: null, comingSoon: true },
+  precision: { name: 'Phantom Precision Pack',      url: null, comingSoon: true },
   vibrance:  { name: 'Phantom Vibrance Controller', url: null, comingSoon: true }
 };
 
