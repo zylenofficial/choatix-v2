@@ -479,6 +479,8 @@ function renderNav() {
     <div class="nav-links">
       ${navLinks}
       <a href="${DISCORD_INVITE}" target="_blank">Discord</a>
+    </div>
+    <div class="nav-actions">
       <button class="cart-btn" onclick="openCart()" id="cartBtn">&#128722;<span class="cart-badge" id="cartBadge">0</span></button>
       ${user ? `
         <div class="user-menu" id="userMenu">
@@ -910,7 +912,7 @@ function renderLicense() {
   }
 
   const planLabel = plan === 'phantom' ? 'Phantom' : plan === 'pro' ? 'Pro' : 'Free';
-  const planColor = plan === 'phantom' ? '#a855f7' : plan === 'pro' ? '#22c55e' : '#6b7280';
+  const planColor = plan === 'phantom' ? '#a855f7' : plan === 'pro' ? '#a855f7' : '#6b7280';
 
   return `
     <div class="dl-page" id="dlPage">
@@ -924,7 +926,7 @@ function renderLicense() {
         </div>
         <div style="margin-bottom:1rem;padding:0.75rem 1rem;background:var(--bg);border:1px solid var(--border);border-radius:8px;font-size:0.85rem">
           <span style="opacity:0.6">Plan:</span> <strong style="color:${planColor}">${planLabel}</strong>
-          <span style="margin-left:1rem;opacity:0.6">Status:</span> <strong style="color:#22c55e">Active</strong>
+          <span style="margin-left:1rem;opacity:0.6">Status:</span> <strong style="color:var(--green)">Active</strong>
         </div>
         <div style="margin-top:1.5rem">
           <h3 style="font-size:1rem;margin-bottom:0.75rem">How to Activate</h3>
