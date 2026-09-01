@@ -1,9 +1,9 @@
-// ════════════════════════════════════════════════════════════════
-// PHANTOM V2 — Complete App
+﻿// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// PHANTOM V2 â€” Complete App
 // Single file: data + state + router + components + pages + effects
-// ════════════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
-// ── DATA LAYER ──
+// â”€â”€ DATA LAYER â”€â”€
 
 const API = 'https://phantom-license-dy15.onrender.com';
 const SITE_API = 'https://choatix-v2.onrender.com';
@@ -75,7 +75,7 @@ const TEAM = [
 const FAQ = [
   { q: 'Is Phantom V2 safe to use?', a: 'Yes. Every tweak is reversible with one click. Phantom never modifies critical system files and all changes can be rolled back from the Settings page.' },
   { q: 'How much FPS will I gain?', a: 'Results vary by hardware and game. Most users see 15-60% FPS improvement. Check the FPS Comparison section for average gains across popular games.' },
-  { q: 'What\'s the difference between the products?', a: '<strong>Full Optimization (&euro;24.99)</strong> — 461 tweaks: Everything combined. <strong>Basic (&euro;4.99)</strong> — 220 tweaks: Windows debloat, essential settings, GPU/network/power. <strong>Pro (&euro;9.99)</strong> — 291 tweaks: Basic + BCD, RAM, USB, deep cleanup. <strong>Extreme (&euro;14.99)</strong> — 283 tweaks: Full debloat, DirectX, buffer bloat, registry. <strong>Precision (&euro;5.99)</strong> — 128 tweaks: Input lag, mouse/keyboard, GPU latency for FPS games.' },
+  { q: 'What\'s the difference between the products?', a: '<strong>Full Optimization (&euro;24.99)</strong> â€” 461 tweaks: Everything combined. <strong>Basic (&euro;4.99)</strong> â€” 220 tweaks: Windows debloat, essential settings, GPU/network/power. <strong>Pro (&euro;9.99)</strong> â€” 291 tweaks: Basic + BCD, RAM, USB, deep cleanup. <strong>Extreme (&euro;14.99)</strong> â€” 283 tweaks: Full debloat, DirectX, buffer bloat, registry. <strong>Precision (&euro;5.99)</strong> â€” 128 tweaks: Input lag, mouse/keyboard, GPU latency for FPS games.' },
   { q: 'Do I need to restart my PC after optimizing?', a: 'Some tweaks take effect immediately, others require a restart. Phantom will notify you when a restart is needed. Quick Boost works instantly without restart.' },
   { q: 'How do I buy a product?', a: 'Go to the Pricing page, choose a plan (Free, Pro, or Phantom), and checkout via PayPal. After payment, you\'ll receive a license key. Paste it in the Phantom app under Settings to activate.' },
   { q: 'Does it work on Windows 11?', a: 'Yes. Phantom V2 supports Windows 10 and Windows 11. All tweaks are compatible with the latest updates.' },
@@ -137,7 +137,7 @@ const FPS_DATA = [
 ];
 
 const FEATURES = [
-  { icon: '&#128293;', title: 'System Optimizer', desc: 'Apply 220-461 tweaks per tier. CPU, GPU, RAM, network, power — all optimized.' },
+  { icon: '&#128293;', title: 'System Optimizer', desc: 'Apply 220-461 tweaks per tier. CPU, GPU, RAM, network, power â€” all optimized.' },
   { icon: '&#127918;', title: 'Game Optimizer', desc: 'Per-game profiles for Fortnite, Valorant, CS2, Apex, Minecraft and more.' },
   { icon: '&#128640;', title: 'Quick Boost', desc: 'Instant performance boost. Free up RAM, kill bloat, boost GPU priority.' },
   { icon: '&#9201;',   title: 'Zero Delay', desc: 'Reduce input lag. Optimize timer resolution, mouse latency, render pipeline.' },
@@ -150,7 +150,7 @@ const FEATURES = [
   { icon: '&#128279;', title: 'Discord Bot', desc: 'License management, giveaway system, daily quests, coins shop, admin tools.' }
 ];
 
-// ── STATE ──
+// â”€â”€ STATE â”€â”€
 
 const CART_KEY = 'phantom_cart';
 const DISCOUNT_KEY = 'phantom_discount';
@@ -158,7 +158,7 @@ let cart = JSON.parse(localStorage.getItem(CART_KEY) || '[]');
 let appliedDiscount = JSON.parse(localStorage.getItem(DISCOUNT_KEY) || 'null');
 let user = null;
 
-// ── AUTH ──
+// â”€â”€ AUTH â”€â”€
 
 function initAuth() {
   const params = new URLSearchParams(location.search);
@@ -198,7 +198,7 @@ function logout(e) {
   renderNav();
 }
 
-// ── CART ──
+// â”€â”€ CART â”€â”€
 
 function saveCart() { localStorage.setItem(CART_KEY, JSON.stringify(cart)); }
 function getCartTotal() { return cart.reduce((s, i) => s + i.price * i.qty, 0); }
@@ -440,7 +440,7 @@ async function startCheckout(plan) {
   }
 }
 
-// ── NAVIGATION ──
+// â”€â”€ NAVIGATION â”€â”€
 
 const ROUTES = [
   { path: '',              label: 'Home' },
@@ -538,7 +538,7 @@ function navigate(path) {
   location.hash = path;
 }
 
-// ── ROUTER ──
+// â”€â”€ ROUTER â”€â”€
 
 function getPage() {
   const hash = location.hash.slice(1).split('?')[0].split('/')[0];
@@ -567,7 +567,7 @@ function router() {
   window.scrollTo(0, 0);
 }
 
-// ── PAGE: HOME ──
+// â”€â”€ PAGE: HOME â”€â”€
 
 function renderHome() {
   const statsHTML = [
@@ -641,7 +641,7 @@ function renderHome() {
     </section>`;
 }
 
-// ── PAGE: FEATURES ──
+// â”€â”€ PAGE: FEATURES â”€â”€
 
 function renderFeatures() {
   const cardsHTML = FEATURES.map((f, i) => `
@@ -669,7 +669,7 @@ function renderFeatures() {
     </section>`;
 }
 
-// ── PAGE: TWEAKS ──
+// â”€â”€ PAGE: TWEAKS â”€â”€
 
 function renderTweaks() {
   const cardsHTML = TWEAK_CATEGORIES.map(c => `
@@ -713,7 +713,7 @@ function closeTweakModal() {
   document.body.style.overflow = '';
 }
 
-// ── PAGE: PRICING ──
+// â”€â”€ PAGE: PRICING â”€â”€
 
 function renderPricing() {
   const tiers = [
@@ -796,7 +796,7 @@ function renderPricing() {
     </section>`;
 }
 
-// ── PAGE: FAQ ──
+// â”€â”€ PAGE: FAQ â”€â”€
 
 function renderFAQ() {
   const faqHTML = FAQ.map(f => `
@@ -825,13 +825,13 @@ function renderFAQ() {
     </section>`;
 }
 
-// ── PAGE: REFUND ──
+// â”€â”€ PAGE: REFUND â”€â”€
 
 function renderRefund() {
   return `
     <section class="page-hero">
       <h1>Refund <em>Policy</em></h1>
-      <p>Digital products — all sales final</p>
+      <p>Digital products â€” all sales final</p>
     </section>
     <section>
       <div class="refund-content">
@@ -844,7 +844,7 @@ function renderRefund() {
     </section>`;
 }
 
-// ── PAGE: TEAM ──
+// â”€â”€ PAGE: TEAM â”€â”€
 
 function renderTeam() {
   const teamHTML = TEAM.map(m => `
@@ -871,7 +871,7 @@ function renderTeam() {
     </section>`;
 }
 
-// ── PAGE: 404 ──
+// â”€â”€ PAGE: 404 â”€â”€
 
 function render404() {
   return `
@@ -888,7 +888,7 @@ function render404() {
     </section>`;
 }
 
-// ── PAGE: LICENSE KEY ──
+// â”€â”€ PAGE: LICENSE KEY â”€â”€
 
 function renderLicense() {
   const params = new URLSearchParams(location.hash.split('?')[1]);
@@ -932,7 +932,7 @@ function renderLicense() {
             <li>Download and install the Phantom app</li>
             <li>Open Phantom and go to <strong>Settings</strong></li>
             <li>Paste your license key in the <strong>License Key</strong> field</li>
-            <li>Click <strong>Activate</strong> — you're done!</li>
+            <li>Click <strong>Activate</strong> â€” you're done!</li>
           </ol>
         </div>
         <div class="dl-alt" style="margin-top:1.5rem">
@@ -955,7 +955,7 @@ function copyLicenseKey() {
   }
 }
 
-// ── EFFECTS ──
+// â”€â”€ EFFECTS â”€â”€
 
 
 function initScrollEffects() {
@@ -1019,7 +1019,7 @@ function initPageEffects() {
   setTimeout(() => initScrollEffects(), 10);
 }
 
-// ── INIT ──
+// â”€â”€ INIT â”€â”€
 
 function init() {
   initAuth();
@@ -1050,347 +1050,3 @@ function init() {
 
 document.addEventListener('DOMContentLoaded', init);
 
-// ════════════════════════════════════════════════════════════════
-// CHATBOT — Conversational Purchase Advisor
-// ════════════════════════════════════════════════════════════════
-
-const CHATBOT_FAB_KEY = 'phantom_chatbot_seen';
-
-const CHAT_PRODUCTS = {
-  basic:     { name: 'Basic Tweaks',      price: 4.99,  tweaks: 220, desc: 'Windows debloat, essential settings, GPU, network, power', best: 'Budget-friendly all-rounder' },
-  pro:       { name: 'Pro Tweaks',        price: 9.99,  tweaks: 291, desc: 'Basic + BCD boot tweaks, RAM optimization, USB tuning, deep cleanup', best: 'Best value for most gamers' },
-  extreme:   { name: 'Extreme Tweaks',    price: 14.99, tweaks: 283, desc: 'Full debloat, DirectX, buffer bloat, registry tuning', best: 'Best Seller' },
-  precision: { name: 'Precision Pack',    price: 5.99,  tweaks: 128, desc: 'Input lag, mouse/keyboard optimization, GPU low latency, network', best: 'Competitive FPS players' },
-  full:      { name: 'Full Optimization', price: 24.99, tweaks: 461, desc: 'Everything combined — the complete optimization suite', best: 'Maximum performance' }
-};
-
-let chatbotOpen = false;
-let chatbotMsgCount = 0;
-let chatbotBadgeShown = false;
-let chatContext = { topic: null, lastProduct: null };
-
-function toggleChatbot() {
-  chatbotOpen = !chatbotOpen;
-  const win = document.getElementById('chatbotWindow');
-  const fab = document.getElementById('chatbotFab');
-  const badge = document.getElementById('chatbotBadge');
-
-  if (chatbotOpen) {
-    win.classList.add('open');
-    fab.classList.add('open');
-    badge.classList.remove('show');
-    chatbotBadgeShown = true;
-    localStorage.setItem(CHATBOT_FAB_KEY, '1');
-
-    if (chatbotMsgCount === 0) {
-      setTimeout(() => {
-        botSay("Hey! I'm the Phantom assistant. I can help you pick the right optimization pack, answer questions about our products, or compare options. What can I help with?");
-        showSuggestions(["What should I buy?", "Compare products", "How much FPS will I gain?", "Is it safe?"]);
-      }, 400);
-    }
-    setTimeout(() => document.getElementById('chatbotInput')?.focus(), 400);
-  } else {
-    win.classList.remove('open');
-    fab.classList.remove('open');
-  }
-}
-
-function showChatbotBadge() {
-  if (chatbotOpen || chatbotBadgeShown || localStorage.getItem(CHATBOT_FAB_KEY)) return;
-  const badge = document.getElementById('chatbotBadge');
-  if (badge) { badge.classList.add('show'); chatbotBadgeShown = true; }
-}
-
-function botSay(html, product) {
-  const el = document.getElementById('chatbotMessages');
-  if (!el) return;
-
-  let productTag = '';
-  if (product) {
-    const p = CHAT_PRODUCTS[product];
-    if (p) {
-      const tagClass = product === 'extreme' ? 'best' : 'recommended';
-      productTag = `<div class="chat-product-tag ${tagClass}">${p.name} — &euro;${p.price}</div>`;
-    }
-  }
-
-  const msgEl = document.createElement('div');
-  msgEl.className = 'chat-msg bot';
-  msgEl.innerHTML = `<div class="chat-msg-avatar">&#128161;</div><div class="chat-msg-bubble">${html}${productTag}</div>`;
-  el.appendChild(msgEl);
-  el.scrollTop = el.scrollHeight;
-  chatbotMsgCount++;
-}
-
-function userSay(text) {
-  const el = document.getElementById('chatbotMessages');
-  if (!el) return;
-  const msgEl = document.createElement('div');
-  msgEl.className = 'chat-msg user';
-  msgEl.innerHTML = `<div class="chat-msg-avatar">Y</div><div class="chat-msg-bubble">${escapeHTML(text)}</div>`;
-  el.appendChild(msgEl);
-  el.scrollTop = el.scrollHeight;
-}
-
-function showSuggestions(labels) {
-  const el = document.getElementById('chatbotQuickReplies');
-  if (!el) return;
-  el.innerHTML = labels.map((label, i) => {
-    const isProduct = Object.keys(CHAT_PRODUCTS).some(k => label.toLowerCase().includes(k));
-    return `<button class="chat-quick-btn${isProduct ? ' primary' : ''}" onclick="handleSuggestion('${escapeHTML(label)}')">${label}</button>`;
-  }).join('');
-}
-
-function clearSuggestions() {
-  const el = document.getElementById('chatbotQuickReplies');
-  if (el) el.innerHTML = '';
-}
-
-function handleSuggestion(label) {
-  userSay(label);
-  clearSuggestions();
-  setTimeout(() => processInput(label), 300);
-}
-
-function sendChatUserMessage() {
-  const input = document.getElementById('chatbotInput');
-  if (!input || !input.value.trim()) return;
-  const text = input.value.trim();
-  input.value = '';
-  userSay(text);
-  clearSuggestions();
-  setTimeout(() => processInput(text), 400);
-}
-
-function processInput(text) {
-  const lower = text.toLowerCase().trim();
-
-  // ── Greetings ──
-  if (lower.match(/^(hi|hello|hey|yo|sup|hola|howdy|good\s*(morning|afternoon|evening))/)) {
-    botSay("Hey! Welcome to Phantom. What brings you here \u2014 looking to optimize your PC?");
-    showSuggestions(["Yes, help me choose", "Just browsing", "What is Phantom?"]);
-    return;
-  }
-
-  // ── What is Phantom ──
-  if (lower.match(/what is|what's|tell me about|how does it work|what do you/)) {
-    if (lower.match(/phantom|product|you|your/)) {
-      botSay("Phantom V2 is a Windows PC optimization tool. We apply 220\u2013461 system tweaks (depending on the pack) to boost your FPS, reduce input lag, and clean up Windows. Every change is reversible with one click.");
-      showSuggestions(["What should I buy?", "How much FPS?", "Is it safe?", "Compare products"]);
-      return;
-    }
-  }
-
-  // ── Safety / reversibility ──
-  if (lower.match(/safe|security|virus|malware|revert|undo|rollback|reverse|restore/)) {
-    botSay("Absolutely safe. Every single tweak has a revert command \u2014 you can undo any change instantly from the app. We never modify critical system files, and nothing we do can brick your PC. If anything feels off, just hit Revert All.");
-    showSuggestions(["What should I buy?", "Compare products", "What games does it support?"]);
-    return;
-  }
-
-  // ── FPS gains ──
-  if (lower.match(/fps|frame|performance|boost|gain|improve/)) {
-    botSay("Most users see <strong>15\u201360% FPS improvement</strong> depending on hardware and game. Here are some real averages:");
-    setTimeout(() => {
-      botSay("\u2022 <strong>Fortnite:</strong> 110 \u2192 170 FPS (+55%)<br>\u2022 <strong>Valorant:</strong> 200 \u2192 320 FPS (+60%)<br>\u2022 <strong>CS2:</strong> 180 \u2192 300 FPS (+67%)<br>\u2022 <strong>Apex:</strong> 100 \u2192 160 FPS (+60%)<br>\u2022 <strong>Minecraft:</strong> 120 \u2192 260 FPS (+117%)");
-      showSuggestions(["Which pack gives the most FPS?", "What about input lag?", "Compare products"]);
-    }, 600);
-    return;
-  }
-
-  // ── Input lag / latency ──
-  if (lower.match(/input lag|latency|delay|response time|mouse.*lag|stutter|frame time/)) {
-    botSay("For input lag, our <strong>Precision Pack</strong> (\u20ac5.99) is specifically designed for that \u2014 it optimizes timer resolution, mouse polling, keyboard repeat rate, and GPU low latency mode. If you also want general system optimization, <strong>Extreme</strong> or <strong>Pro</strong> include those tweaks too.");
-    chatContext.lastProduct = 'precision';
-    showSuggestions(["Tell me about Precision", "Precision vs Extreme", "Add Precision to cart"]);
-    return;
-  }
-
-  // ── Games support ──
-  if (lower.match(/game|fortnite|valorant|cs2|apex|minecraft|gta|pubg|overwatch|warzone/)) {
-    botSay("Phantom works with <strong>all games</strong> \u2014 it optimizes your system-level settings, not individual games. But we have specific FPS benchmarks for Fortnite, Valorant, CS2, Apex Legends, Minecraft, and GTA V. The tweaks affect GPU priority, CPU scheduling, network latency, and memory management which benefit every game.");
-    showSuggestions(["How much FPS in [game]?", "What should I buy?", "Is it safe?"]);
-    return;
-  }
-
-  // ── Compare products ──
-  if (lower.match(/compar|difference|versus|vs|which.*better|what.*choose|which.*one/)) {
-    botSay("Here's a quick breakdown:");
-    setTimeout(() => {
-      botSay("\u2022 <strong>Basic</strong> (\u20ac4.99) \u2014 220 tweaks. Essential Windows + GPU + network<br>\u2022 <strong>Pro</strong> (\u20ac9.99) \u2014 291 tweaks. Basic + BCD + RAM + USB<br>\u2022 <strong>Extreme</strong> (\u20ac14.99) \u2014 283 tweaks. Full debloat + DirectX + registry<br>\u2022 <strong>Precision</strong> (\u20ac5.99) \u2014 128 tweaks. Input lag + mouse + latency<br>\u2022 <strong>Full</strong> (\u20ac24.99) \u2014 461 tweaks. Everything combined");
-      showSuggestions(["I play competitive FPS", "I want best value", "I want everything", "I'm on a budget"]);
-    }, 500);
-    return;
-  }
-
-  // ── Budget / price ──
-  if (lower.match(/budget|cheap|afford|price|cost|expensive|worth|money|pay/)) {
-    botSay("We've got options for every budget:");
-    setTimeout(() => {
-      botSay("\u2022 <strong>Cheapest:</strong> Basic at \u20ac4.99 (220 tweaks)<br>\u2022 <strong>Best value:</strong> Pro at \u20ac9.99 (291 tweaks)<br>\u2022 <strong>Most popular:</strong> Extreme at \u20ac14.99 (283 tweaks)<br>\u2022 <strong>Everything:</strong> Full at \u20ac24.99 (461 tweaks)");
-      showSuggestions(["Under \u20ac10 options", "Under \u20ac15 options", "Full details"]);
-    }, 500);
-    return;
-  }
-
-  // ── Recommendations based on context ──
-  if (lower.match(/recommend|suggest|should i|what.*buy|which.*get|which.*pack|which.*product/)) {
-    if (lower.match(/fps|competitive|aim|shoot/)) {
-      recommendProduct('precision');
-    } else if (lower.match(/everything|all|complete|max|ultimate/)) {
-      recommendProduct('full');
-    } else if (lower.match(/cheap|budget|broke|afford/)) {
-      recommendProduct('basic');
-    } else if (lower.match(/best|popular|most/)) {
-      recommendProduct('extreme');
-    } else {
-      botSay("To give you the best recommendation, tell me a bit about yourself:");
-      showSuggestions(["I play competitive FPS", "I want best value", "I want everything", "I'm on a budget"]);
-    }
-    return;
-  }
-
-  // ── Specific product questions ──
-  if (lower.match(/basic/)) {
-    if (lower.match(/add|cart|buy|purchase/)) { botSay(`<strong>${p.name}</strong> is &euro;${p.price}! Would you like to go to the checkout?`, 'basic'); showSuggestions(["Go to checkout", "Compare other options"]); return; }
-    if (lower.match(/include|contain|what|feature|tweak/)) { showProductDetails('basic'); return; }
-    recommendProduct('basic');
-    return;
-  }
-
-  if (lower.match(/pro/)) {
-    if (lower.match(/add|cart|buy|purchase/)) { botSay(`<strong>${CHAT_PRODUCTS.pro.name}</strong> is &euro;${CHAT_PRODUCTS.pro.price}! Would you like to go to the checkout?`, 'pro'); showSuggestions(["Go to checkout", "Compare other options"]); return; }
-    if (lower.match(/include|contain|what|feature|tweak/)) { showProductDetails('pro'); return; }
-    recommendProduct('pro');
-    return;
-  }
-
-  if (lower.match(/extreme/)) {
-    if (lower.match(/add|cart|buy|purchase/)) { botSay(`<strong>${CHAT_PRODUCTS.extreme.name}</strong> is &euro;${CHAT_PRODUCTS.extreme.price}! Would you like to go to the checkout?`, 'extreme'); showSuggestions(["Go to checkout", "Compare other options"]); return; }
-    if (lower.match(/include|contain|what|feature|tweak/)) { showProductDetails('extreme'); return; }
-    recommendProduct('extreme');
-    return;
-  }
-
-  if (lower.match(/precision/)) {
-    if (lower.match(/add|cart|buy|purchase/)) { botSay(`<strong>${CHAT_PRODUCTS.precision.name}</strong> is &euro;${CHAT_PRODUCTS.precision.price}! Would you like to go to the checkout?`, 'precision'); showSuggestions(["Go to checkout", "Compare other options"]); return; }
-    if (lower.match(/include|contain|what|feature|tweak/)) { showProductDetails('precision'); return; }
-    recommendProduct('precision');
-    return;
-  }
-
-  if (lower.match(/full|everything|all.*tweak|complete/)) {
-    if (lower.match(/add|cart|buy|purchase/)) { botSay(`<strong>${CHAT_PRODUCTS.full.name}</strong> is &euro;${CHAT_PRODUCTS.full.price}! Would you like to go to the checkout?`, 'full'); showSuggestions(["Go to checkout", "Compare other options"]); return; }
-    if (lower.match(/include|contain|what|feature|tweak/)) { showProductDetails('full'); return; }
-    recommendProduct('full');
-    return;
-  }
-
-  // ── Cart / checkout ──
-  if (lower.match(/cart|checkout|pay|purchase/)) {
-    botSay("Head to our <a href='#pricing' style='color:var(--green)'>Pricing page</a> to pick a plan and checkout via PayPal.");
-    showSuggestions(["What should I buy?", "Compare products", "I'm on a budget"]);
-    return;
-  }
-
-  // ── Refund ──
-  if (lower.match(/refund|return|money back/)) {
-    botSay("All sales are final \u2014 no refunds. Our products are digital downloads that provide immediate access. However, every tweak is fully reversible, and we offer free support on Discord if anything doesn't work as expected.");
-    showSuggestions(["Is it safe?", "What should I buy?", "Join Discord"]);
-    return;
-  }
-
-  // ── Windows version ──
-  if (lower.match(/windows (10|11)|win(10|11)/)) {
-    botSay("Yes! Phantom V2 fully supports both <strong>Windows 10</strong> and <strong>Windows 11</strong>. All tweaks are compatible with the latest updates on both versions.");
-    showSuggestions(["What should I buy?", "Is it safe?", "How much FPS?"]);
-    return;
-  }
-
-  // ── Discord / support ──
-  if (lower.match(/discord|support|help|contact|join/)) {
-    botSay("Join our Discord for support, updates, and community: <a href='https://discord.gg/AhEK85REhG' target='_blank' style='color:var(--green)'>discord.gg/AhEK85REhG</a>");
-    showSuggestions(["What should I buy?", "Compare products"]);
-    return;
-  }
-
-  // ── Thank you / bye ──
-  if (lower.match(/thank|thanks|bye|goodbye|see you|that's all|done|great|awesome|perfect/)) {
-    botSay("Glad I could help! If you need anything else, just open this chat again. Happy fragging!");
-    showSuggestions(["Start over"]);
-    return;
-  }
-
-  // ── Competitive / FPS player ──
-  if (lower.match(/competitive|fps|valorant|cs2|apex|shoot|aim|pro.*player|esport/)) {
-    botSay("For competitive FPS, you want low input lag and maximum frame rates. Here's what I'd suggest:");
-    setTimeout(() => {
-      botSay("\u2022 <strong>Precision Pack</strong> (\u20ac5.99) \u2014 pure input lag focus<br>\u2022 <strong>Extreme</strong> (\u20ac14.99) \u2014 input lag + full system optimization<br>\u2022 <strong>Full</strong> (\u20ac24.99) \u2014 everything combined");
-      showSuggestions(["Precision (\u20ac5.99)", "Extreme (\u20ac14.99)", "Full (\u20ac24.99)", "Compare Precision vs Extreme"]);
-    }, 500);
-    return;
-  }
-
-  // ── Under 10 / under 15 ──
-  if (lower.match(/under.*10|less than.*10|below.*10/)) {
-    botSay("Under \u20ac10 you have two solid options:");
-    setTimeout(() => {
-      botSay("\u2022 <strong>Basic</strong> (\u20ac4.99) \u2014 220 tweaks, essential optimization<br>\u2022 <strong>Precision</strong> (\u20ac5.99) \u2014 128 tweaks, input lag focus");
-      showSuggestions(["Basic (\u20ac4.99)", "Precision (\u20ac5.99)", "Which one for me?"]);
-    }, 500);
-    return;
-  }
-
-  if (lower.match(/under.*15|less than.*15|below.*15/)) {
-    botSay("Under \u20ac15, <strong>Extreme</strong> (\u20ac14.99) is the sweet spot \u2014 283 tweaks including full debloat and DirectX optimization. It's our Best Seller.");
-    showSuggestions(["Extreme (\u20ac14.99)", "Add to cart", "Show me cheaper options"]);
-    return;
-  }
-
-  // ── Admin / admin area ──
-  if (lower.match(/admin|panel|dashboard/)) {
-    botSay("Sorry, I can't help with admin stuff. Talk to zylen on Discord for that!");
-    showSuggestions(["Join Discord", "What should I buy?"]);
-    return;
-  }
-
-  // ── Default: try to be helpful ──
-  const responses = [
-    "I'm not sure I understood that. Could you rephrase? I can help with product recommendations, pricing, features, or safety questions.",
-    "Hmm, I didn't quite get that. Try asking about our products, pricing, or which pack is best for you.",
-    "I'm not sure what you mean. Try asking something like \"What should I buy?\" or \"How much FPS will I gain?\""
-  ];
-  botSay(responses[Math.floor(Math.random() * responses.length)]);
-  showSuggestions(["What should I buy?", "Compare products", "How much FPS?", "Is it safe?"]);
-}
-
-function recommendProduct(id) {
-  const p = CHAT_PRODUCTS[id];
-  if (!p) return;
-  chatContext.lastProduct = id;
-  botSay(`Based on what you've told me, I'd recommend <strong>${p.name}</strong> (&euro;${p.price}).<br><br>${p.desc}.<br><em>${p.best}.</em>`, id);
-  showSuggestions(["Tell me more", "Compare with other options", "Go to checkout"]);
-}
-
-function showProductDetails(id) {
-  const p = CHAT_PRODUCTS[id];
-  if (!p) return;
-  chatContext.lastProduct = id;
-  const detailMap = {
-    basic: "\u2022 Windows debloat<br>\u2022 GPU optimization<br>\u2022 Network tuning<br>\u2022 Power plan<br>\u2022 Deep clean (14 caches)<br>\u2022 Gaming settings",
-    pro: "Everything in Basic plus:<br>\u2022 BCD boot tweaks<br>\u2022 RAM optimization<br>\u2022 USB tuning<br>\u2022 Storage optimization<br>\u2022 Audio tweaks",
-    extreme: "\u2022 Full Windows debloat<br>\u2022 DirectX optimization<br>\u2022 Buffer bloat fix<br>\u2022 Registry tuning<br>\u2022 Browser optimization<br>\u2022 Privacy tweaks",
-    precision: "\u2022 Timer resolution fix<br>\u2022 Mouse polling optimization<br>\u2022 Keyboard repeat rate<br>\u2022 GPU low latency mode<br>\u2022 Network for competitive",
-    full: "Everything in all packs combined:<br>\u2022 461 system tweaks<br>\u2022 Every optimization category<br>\u2022 Game presets for 20+ titles<br>\u2022 Quick Boost<br>\u2022 Safe rollback"
-  };
-  botSay(`<strong>${p.name}</strong> (&euro;${p.price}) — ${p.tweaks} tweaks:<br><br>${detailMap[id]}`, id);
-  showSuggestions(["Compare with others", "Go to checkout"]);
-}
-
-function escapeHTML(str) {
-  const div = document.createElement('div');
-  div.textContent = str;
-  return div.innerHTML;
-}
-
-setTimeout(() => showChatbotBadge(), 5000);
