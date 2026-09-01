@@ -369,10 +369,9 @@ async function checkout() {
     }
   } catch (e) {
     console.error('Checkout error:', e);
+    if (btn) { btn.textContent = 'Checkout via PayPal'; btn.disabled = false; }
+    alert('Could not reach the payment server. It may be waking up - please wait 30 seconds and try again.');
   }
-
-  if (btn) { btn.textContent = 'Checkout via PayPal'; btn.disabled = false; }
-  alert('Checkout failed. Try again or contact support on Discord.');
 }
 
 async function requestFreeLicense() {
@@ -393,11 +392,11 @@ async function requestFreeLicense() {
     if (data.licenseKey) {
       location.href = '#license?key=' + encodeURIComponent(data.licenseKey) + '&plan=free';
     } else {
-      alert(data.error || 'Failed to get free license. Try again or contact support.');
+      alert(data.error || 'Failed to get free license. Please wait 30 seconds and try again.');
     }
   } catch (e) {
     console.error('Free license error:', e);
-    alert('Network error. Try again or contact support on Discord.');
+    alert('Could not reach the license server. It may be waking up - please wait 30 seconds and try again.');
   }
 }
 
@@ -432,11 +431,11 @@ async function startCheckout(plan) {
     } else if (data.licenseKey) {
       location.href = '#license?key=' + encodeURIComponent(data.licenseKey) + '&plan=' + plan;
     } else {
-      alert(data.error || 'Checkout failed. Try again or contact support.');
+      alert(data.error || 'Checkout failed. Please wait 30 seconds and try again.');
     }
   } catch (e) {
     console.error('Checkout error:', e);
-    alert('Network error. Try again or contact support on Discord.');
+    alert('Could not reach the payment server. It may be waking up - please wait 30 seconds and try again.');
   }
 }
 
