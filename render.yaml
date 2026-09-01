@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: choatix-v2
+    name: phantom-license
     runtime: node
     plan: free
     buildCommand: cd backend && npm install
@@ -10,13 +10,17 @@ services:
         value: 10000
       - key: DATABASE_URL
         sync: false
-      - key: DISCORD_BOT_TOKEN
+      - key: ADMIN_SECRET
         sync: false
-      - key: DISCORD_CLIENT_ID
+      - key: OWNER_DISCORD_ID
+        value: "1014494449809772544"
+      - key: BASE_URL
+        value: "https://phantom-license-dy15.onrender.com"
+      - key: PAYPAL_CLIENT_ID
         sync: false
-      - key: BACKEND_URL
-        value: http://localhost:10000
-      - key: NODE_ENV
-        value: production
-      - key: PAYPAL_EMAIL
+      - key: PAYPAL_CLIENT_SECRET
         sync: false
+      - key: PAYPAL_WEBHOOK_ID
+        sync: false
+      - key: PAYPAL_MODE
+        value: "sandbox"
