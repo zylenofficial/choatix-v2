@@ -526,7 +526,7 @@ function renderFooter() {
         <a href="#team">Team</a>
         <a href="${DISCORD_INVITE}" target="_blank">Discord</a>
       </div>
-      <p>&copy; 2026 Phantom V2. Built by zylenofficial.</p>
+      <p>&copy; 2026 Phantom V2. Built by re1z.</p>
     </footer>`;
 }
 
@@ -579,19 +579,6 @@ function renderHome() {
     { num: 100, suffix: '%', label: 'Free to Use' }
   ].map(s => `<div class="stat-cell"><div class="stat-num" data-count="${s.num}"${s.suffix ? ` data-suffix="${s.suffix}"` : ''}>0</div><div class="stat-txt">${s.label}</div></div>`).join('');
 
-  const stepsHTML = [
-    { icon: '&#128229;', num: 'Step 01', title: 'Download & Install', desc: 'Install takes 10 seconds. No bloatware, no ads, no data collection.' },
-    { icon: '&#128269;', num: 'Step 02', title: 'Scan Your PC', desc: 'Analyze your hardware, OS, and settings to find optimization opportunities.' },
-    { icon: '&#9889;',   num: 'Step 03', title: 'One-Click Optimize', desc: 'Apply all tweaks instantly. Every change is reversible. FPS jumps in seconds.' }
-  ].map((s, i) => `
-    <div class="step-item reveal reveal-d${i + 1}">
-      <div class="step-icon">${s.icon}</div>
-      <div class="step-num">${s.num}</div>
-      <h3>${s.title}</h3>
-      <p>${s.desc}</p>
-    </div>
-    ${i < 2 ? '<div class="step-line"></div>' : ''}`).join('');
-
   const fpsHTML = FPS_DATA.map(f => `
     <div class="fps-row">
       <div class="fps-name">${f.name}</div>
@@ -607,7 +594,6 @@ function renderHome() {
       <div class="hero-content">
         <div class="hero-badge"><span class="dot"></span>v2.3.0 &bull; ${TOTAL_TWEAKS} System Tweaks</div>
         <h1><span class="line1">Maximize Your</span><span class="line2">FPS</span></h1>
-        <p class="hero-desc">Optimize your PC for maximum gaming performance. One click. Zero delay. Pure performance.</p>
         <div class="hero-buttons">
           <a href="#pricing" class="btn btn-primary">Download Free</a>
           <a href="${DISCORD_INVITE}" class="btn btn-discord" target="_blank">Join Discord</a>
@@ -621,10 +607,6 @@ function renderHome() {
       <div class="trust-item"><svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg><strong>Instant</strong> Download after purchase</div>
     </div>
     <div class="stats-row reveal">${statsHTML}</div>
-    <section id="how-it-works">
-      <div class="section-header reveal"><div class="section-label">How It Works</div><h2>Three steps to peak performance</h2></div>
-      <div class="steps-row">${stepsHTML}</div>
-    </section>
     <section id="fps-compare">
       <div class="section-header reveal"><div class="section-label">Performance</div><h2>Real FPS Gains</h2><p>Average improvements measured across 6 popular games</p></div>
       <div class="fps-grid" id="fpsGrid">${fpsHTML}</div>
