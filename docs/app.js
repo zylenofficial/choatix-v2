@@ -905,6 +905,15 @@ function renderLicense() {
           <div style="flex:1;font-family:'JetBrains Mono',monospace;font-size:1.1rem;font-weight:600;letter-spacing:0.05em;word-break:break-all;color:var(--text)" id="licenseKeyValue">${key}</div>
           <button onclick="copyLicenseKey()" id="copyKeyBtn" style="padding:0.5rem 1rem;background:var(--green);color:#000;border:none;border-radius:8px;font-weight:700;font-size:0.8rem;cursor:pointer;white-space:nowrap">Copy Key</button>
         </div>
+        <div style="margin:1.5rem 0;padding:1rem 1.25rem;background:rgba(88,101,242,0.08);border:1px solid #5865f2;border-radius:12px;text-align:left">
+          <div style="font-weight:800;font-size:0.9rem;color:#5865f2;margin-bottom:0.5rem;letter-spacing:0.03em">&#9889; ACTIVATE YOUR LICENSE ON DISCORD</div>
+          <ol style="text-align:left;font-size:0.85rem;color:var(--text-dim);line-height:2;padding-left:1.25rem;margin:0">
+            <li>Join our <a href="${DISCORD_INVITE}" target="_blank" style="color:#5865f2;font-weight:700">Discord server</a></li>
+            <li>Open the <strong style="color:var(--text)">&#7547;&#7511;&#638;&#115;</strong> channel</li>
+            <li>Create a <strong style="color:var(--text)">ticket</strong></li>
+            <li>Type <code style="background:var(--bg);padding:0.15rem 0.5rem;border-radius:6px;font-family:'JetBrains Mono',monospace;color:var(--text)">/redeem</code> and paste your license key above</li>
+          </ol>
+        </div>
         <div style="margin-bottom:1rem;padding:0.75rem 1rem;background:var(--bg);border:1px solid var(--border);border-radius:8px;font-size:0.85rem">
           <span style="opacity:0.6">Plan:</span> <strong style="color:${planColor}">${planLabel}</strong>
           <span style="margin-left:1rem;opacity:0.6">Status:</span> <strong style="color:var(--green)">Active</strong>
