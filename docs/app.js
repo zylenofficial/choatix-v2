@@ -918,30 +918,6 @@ function renderPricing() {
     </div>`;
   }).join('');
 
-  const productsHTML = ['full', 'basic', 'pro', 'extreme', 'precision', 'vibrance'].map(id => {
-    const p = PRODUCTS[id];
-    const featured = id === 'full' ? 'featured' : '';
-    const badgeClass = p.color ? `badge-${p.color}` : '';
-    const boxLines = p.name.split(' ');
-    const boxName = boxLines.length > 1 ? boxLines.slice(0, -1).join(' ') + '<br>' + boxLines.slice(-1) : p.name;
-    return `
-      <div class="product-card ${featured} ${badgeClass}">
-        ${p.badge ? `<div class="product-badge ${p.color ? 'badge-' + p.color + '-tag' : ''}">${p.badge}</div>` : ''}
-        <div class="product-box">
-          <div class="product-box-brand">Phantom</div>
-          <div class="product-box-name">${boxName}</div>
-          <div class="product-box-sub">${p.subtitle}</div>
-        </div>
-        <div class="product-brand">Phantom</div>
-        <div class="product-name">${p.name}</div>
-        <div class="product-price">${p.price === null ? 'Free' : '&euro;' + p.price.toFixed(2)}</div>
-        <div class="product-actions">
-          <a href="#${p.id}" class="product-link">View Details</a>
-          ${p.price ? `<button class="product-link add-to-cart" data-id="${p.id}" data-name="${p.name}" data-price="${p.price}">Add to Cart</button>` : `<button class="product-link add-to-cart" data-id="${p.id}" data-name="${p.name}" data-price="0">Get Free</button>`}
-        </div>
-      </div>`;
-  }).join('');
-
   const compareFeatures = [
     { cat: 'Dashboard', features: ['System Health Overview', 'CPU / RAM / GPU Monitor', 'Ping & Network Stats', 'Optimization Counter & Rollback'] },
     { cat: 'Scan PC', features: ['Hardware Analysis', 'OS & Settings Scan', 'Optimization Recommendations'] },
@@ -982,10 +958,6 @@ function renderPricing() {
     </section>
     <section class="pricing-section">
       <div class="pricing-grid">${pricingCards}</div>
-    </section>
-    <section>
-      <div class="section-header reveal"><div class="section-label">Individual Products</div><h2>Pick Only What You Need</h2><p>Buy specific tweak packs instead of the full app</p></div>
-      <div class="products-grid">${productsHTML}</div>
     </section>
     <section class="section-compare">
       <div class="section-header reveal"><div class="section-label">Compare</div><h2>Feature Breakdown</h2><p>Every tool in the app, mapped to each plan</p></div>
