@@ -5,7 +5,7 @@
 
 // â”€â”€ DATA LAYER â”€â”€
 
-const API = 'https://phantom-license-dy15.onrender.com';
+const API = 'https://choatix-license-system.onrender.com';
 const SITE_API = 'https://choatix-v2.onrender.com';
 const DISCORD_INVITE = 'https://discord.gg/AhEK85REhG';
 
