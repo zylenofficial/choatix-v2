@@ -9,24 +9,6 @@ const API = 'https://phantom-license-dy15.onrender.com';
 const SITE_API = 'https://choatix-v2.onrender.com';
 const DISCORD_INVITE = 'https://discord.gg/AhEK85REhG';
 
-const PRODUCTS = {
-  basic:     { id: 'basic',     name: 'Basic Tweaks',         price: 4.99,  tier: 'pro',     subtitle: 'Essential',  desc: 'Windows debloat, essential settings, GPU, network, and power optimization.', tweaks: 220, badge: 'Popular', color: 'popular' },
-  pro:       { id: 'pro',       name: 'Pro Tweaks',           price: 9.99,  tier: 'pro',     subtitle: 'Advanced',   desc: 'Everything in Basic plus BCD boot tweaks, RAM optimization, USB tuning, and deep cleanup.', tweaks: 291, badge: 'Best Value', color: 'value' },
-  extreme:   { id: 'extreme',   name: 'Extreme Tweaks',       price: 14.99, tier: 'phantom', subtitle: 'Maximum',    desc: 'Full debloat, buffer bloat fix, DirectX optimization, registry tuning, and process optimization.', tweaks: 283, badge: 'Pro', color: 'pro' },
-  full:      { id: 'full',      name: 'Full Optimization',    price: 24.99, tier: 'phantom', subtitle: 'Everything', desc: 'All 461 tweaks combined — the complete optimization suite with every category included.', tweaks: 461, badge: 'Best Seller', color: 'featured' },
-  precision: { id: 'precision', name: 'Precision Pack',       price: 5.99,  tier: 'pro',     subtitle: 'Input',      desc: 'Input lag fix, mouse/keyboard optimization, GPU low latency, and network tweaks for competitive FPS.', tweaks: 128, badge: 'FPS', color: 'aim' },
-  vibrance:  { id: 'vibrance',  name: 'Vibrance Controller',  price: null,  tier: 'free',    subtitle: 'Display',    desc: 'Digital vibrance control with per-game profiles and auto-detection.', tweaks: 0, badge: 'Free', color: 'free' }
-};
-
-const DOWNLOADS = {
-  full:      { name: 'Phantom Full Optimization',   url: null, comingSoon: true },
-  basic:     { name: 'Phantom Basic Tweaks',        url: null, comingSoon: true },
-  pro:       { name: 'Phantom Pro Tweaks',          url: null, comingSoon: true },
-  extreme:   { name: 'Phantom Extreme Tweaks',      url: null, comingSoon: true },
-  precision: { name: 'Phantom Precision Pack',      url: null, comingSoon: true },
-  vibrance:  { name: 'Phantom Vibrance Controller', url: null, comingSoon: true }
-};
-
 const TWEAK_CATEGORIES = [
   { id: 'deep-clean', icon: '&#128465;',  name: 'Deep Clean', count: 14, items: [
     { name: 'Disk Cleanup', impact: 'low' }, { name: 'DNS Cache Flush', impact: 'low' }, { name: 'Windows Store Cache', impact: 'low' },
@@ -346,10 +328,8 @@ async function checkout() {
 
   try {
     const highestTier = cart.reduce((t, i) => {
-      const p = PRODUCTS[i.id];
-      if (!p) return t;
-      if (p.tier === 'phantom') return 'phantom';
-      if (p.tier === 'pro' && t !== 'phantom') return 'pro';
+      if (i.id === 'phantom') return 'phantom';
+      if (i.id === 'pro' && t !== 'phantom') return 'pro';
       return t;
     }, 'pro');
 
@@ -466,7 +446,6 @@ const ROUTES = [
   { path: '',              label: 'Home' },
   { path: 'features',     label: 'Features' },
   { path: 'tweaks',       label: 'Tweaks' },
-  { path: 'products',     label: 'Products' },
   { path: 'pricing',      label: 'Pricing' },
   { path: 'faq',          label: 'FAQ' },
   { path: 'refund',       label: 'Refund Policy' },
@@ -539,7 +518,7 @@ function renderFooter() {
       <div class="footer-links">
         <a href="#features">Features</a>
         <a href="#tweaks">Tweaks</a>
-        <a href="#products">Products</a>
+        <a href="#pricing">Products</a>
         <a href="#pricing">Pricing</a>
         <a href="#faq">FAQ</a>
         <a href="#refund">Refund Policy</a>
@@ -571,21 +550,18 @@ function getPage() {
 function router() {
   const page = getPage();
   const main = document.getElementById('app-content');
-  const PRODUCT_IDS = ['basic','pro','extreme','full','precision','vibrance'];
   const pages = {
     '':         renderHome,
     'features': renderFeatures,
     'tweaks':   renderTweaks,
-    'products': renderProducts,
     'pricing':  renderPricing,
     'faq':      renderFAQ,
     'refund':   renderRefund,
     'affiliate':renderAffiliate,
     'team':     renderTeam,
-    'download': renderDownload,
     'license':  renderLicense
   };
-  const render = PRODUCT_IDS.includes(page) ? () => renderProductDetail(page) : (pages[page] || render404);
+  const render = pages[page] || render404;
   main.innerHTML = render();
   renderNav();
   renderCart();
@@ -634,7 +610,7 @@ function renderHome() {
         <h1><span class="line1">Maximize Your</span><span class="line2">FPS</span></h1>
         <p class="hero-desc">Optimize your PC for maximum gaming performance. One click. Zero delay. Pure performance.</p>
         <div class="hero-buttons">
-          <a href="#products" class="btn btn-primary">Download Free</a>
+          <a href="#pricing" class="btn btn-primary">Download Free</a>
           <a href="${DISCORD_INVITE}" class="btn btn-discord" target="_blank">Join Discord</a>
         </div>
       </div>
@@ -662,7 +638,7 @@ function renderHome() {
       <h2 class="reveal">Ready to <span>Boost Your FPS</span>?</h2>
       <p class="reveal">Join 50,000+ gamers optimizing their PCs with Phantom V2</p>
       <div class="cta-buttons reveal">
-        <a href="#products" class="btn btn-primary">Download Free</a>
+        <a href="#pricing" class="btn btn-primary">Download Free</a>
         <a href="${DISCORD_INVITE}" class="btn btn-discord" target="_blank">Join Discord</a>
       </div>
     </section>`;
@@ -679,21 +655,16 @@ function renderFeatures() {
     </div>`).join('');
 
   const lineupHTML = [
-    { id: 'basic',     badge: '&euro;4.99', cls: '' },
-    { id: 'pro',       badge: '&euro;9.99', cls: '' },
-    { id: 'extreme',   badge: '&euro;14.99', cls: 'featured' },
-    { id: 'precision', badge: '&euro;5.99', cls: 'aim' },
-    { id: 'full',      badge: '&euro;24.99', cls: 'save' }
-  ].map(p => {
-    const prod = PRODUCTS[p.id];
-    return `
+    { name: 'Free', badge: '&euro;0', cls: '', desc: 'Basic features, community support' },
+    { name: 'Pro', badge: '&euro;5.99', cls: 'featured', desc: '220+ tweaks, game presets, deep clean' },
+    { name: 'Phantom', badge: '&euro;9.99', cls: 'save', desc: '346 tweaks, all categories, full debloat' }
+  ].map(p => `
       <div class="lineup-card ${p.cls}">
         <div class="lineup-badge ${p.cls}">${p.badge}</div>
-        <h3>${prod.name}</h3>
-        <p>${prod.tweaks} tweaks &middot; ${prod.desc}</p>
-        <a href="#${p.id === 'full' ? 'products' : p.id}" class="btn ${p.cls === 'featured' ? 'btn-primary' : 'btn-secondary'}">View Details</a>
-      </div>`;
-  }).join('');
+        <h3>${p.name}</h3>
+        <p>${p.desc}</p>
+        <a href="#pricing" class="btn ${p.cls === 'featured' ? 'btn-primary' : 'btn-secondary'}">View Pricing</a>
+      </div>`).join('');
 
   return `
     <section class="page-hero">
@@ -704,14 +675,14 @@ function renderFeatures() {
       <div class="features-grid">${cardsHTML}</div>
     </section>
     <section class="product-lineup-section">
-      <div class="section-header reveal"><div class="section-label">Product Lineup</div><h2>Choose Your Tier</h2><p>Each product is a standalone app with its own tweak set</p></div>
+      <div class="section-header reveal"><div class="section-label">Product Lineup</div><h2>Choose Your Tier</h2><p>One app, three tiers</p></div>
       <div class="product-lineup-grid reveal">${lineupHTML}</div>
     </section>
     <section class="cta-section">
       <h2 class="reveal">Ready to Boost<br>Your FPS?</h2>
       <p class="reveal">Join gamers optimizing their PCs with Phantom V2</p>
       <div class="cta-buttons reveal">
-        <a href="#products" class="btn btn-primary">Download Free</a>
+        <a href="#pricing" class="btn btn-primary">Download Free</a>
         <a href="${DISCORD_INVITE}" class="btn btn-discord" target="_blank">Join Discord</a>
       </div>
     </section>`;
@@ -759,139 +730,6 @@ function openTweakModal(id) {
 function closeTweakModal() {
   document.getElementById('tweaksModal').style.display = 'none';
   document.body.style.overflow = '';
-}
-
-// ── PAGE: PRODUCTS ──
-
-function renderProducts() {
-  const order = ['full', 'basic', 'pro', 'extreme', 'precision', 'vibrance'];
-  const cardsHTML = order.map(id => {
-    const p = PRODUCTS[id];
-    const featured = p.id === 'full' ? 'featured' : '';
-    const badgeClass = p.color ? `badge-${p.color}` : '';
-    const isFree = p.price === null;
-    const boxLines = p.name.split(' ');
-    const boxName = boxLines.length > 1 ? boxLines.slice(0, -1).join(' ') + '<br>' + boxLines.slice(-1) : p.name;
-
-    return `
-      <div class="product-card ${featured} ${badgeClass}">
-        ${p.badge ? `<div class="product-badge ${p.color ? 'badge-' + p.color + '-tag' : ''}">${p.badge}</div>` : ''}
-        <div class="product-box">
-          <div class="product-box-brand">Phantom</div>
-          <div class="product-box-name">${boxName}</div>
-          <div class="product-box-sub">${p.subtitle}</div>
-        </div>
-        <div class="product-brand">Phantom</div>
-        <div class="product-name">${p.name}</div>
-        <div class="product-price">${isFree ? 'Free' : '&euro;' + p.price.toFixed(2)}</div>
-        <div class="product-actions">
-          <a href="#${p.id}" class="product-link">View Details</a>
-          ${isFree
-            ? `<button class="product-link add-to-cart" data-id="${p.id}" data-name="${p.name}" data-price="0">Get Free</button>`
-            : `<button class="product-link add-to-cart" data-id="${p.id}" data-name="${p.name}" data-price="${p.price}">Add to Cart</button>`}
-        </div>
-      </div>`;
-  }).join('');
-
-  return `
-    <section class="page-hero">
-      <h1>Our <em>Products</em></h1>
-      <p>Premium optimization packs for every need</p>
-    </section>
-    <div class="trust-banner reveal">
-      <div class="trust-item"><svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg><strong>Instant Download</strong></div>
-      <div class="trust-item"><svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg><strong>100% Reversible</strong></div>
-      <div class="trust-item"><svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg><strong>Windows 10/11</strong></div>
-    </div>
-    <section>
-      <div class="products-grid">${cardsHTML}</div>
-    </section>`;
-}
-
-// ── PAGE: PRODUCT DETAIL ──
-
-function renderProductDetail(id) {
-  const p = PRODUCTS[id];
-  if (!p) return render404();
-  const boxLines = p.name.split(' ');
-  const boxName = boxLines.length > 1 ? boxLines.slice(0, -1).join(' ') + '<br>' + boxLines.slice(-1) : p.name;
-  const isFree = p.price === null;
-
-  const tweakGroups = id === 'basic' ? ['deep-clean','network','power','gpu','gaming','windows']
-    : id === 'pro' ? ['deep-clean','network','power','gpu','gaming','windows','storage','audio']
-    : id === 'extreme' ? ['deep-clean','network','power','gpu','gaming','windows','browser','privacy']
-    : id === 'precision' ? ['gpu','timer','network','core']
-    : id === 'full' ? TWEAK_CATEGORIES.map(c => c.id)
-    : [];
-
-  const tweaksHTML = tweakGroups.map(gid => {
-    const cat = TWEAK_CATEGORIES.find(c => c.id === gid);
-    if (!cat) return '';
-    return `<div class="pd-tweak-group"><div class="pd-tweak-icon">${cat.icon}</div><div class="pd-tweak-info"><h3>${cat.name}</h3><p>${cat.items.map(i => i.name).join(', ')}</p></div><div class="pd-tweak-count">${cat.count}</div></div>`;
-  }).join('');
-
-  const featuresHTML = id === 'full' ? [
-    { icon: '&#128293;', title: '461 System Tweaks', desc: 'Every optimization category included' },
-    { icon: '&#127918;', title: 'Game Presets', desc: 'Per-game optimization for 20+ titles' },
-    { icon: '&#128640;', title: 'Quick Boost', desc: 'Instant RAM, process, and GPU boost' },
-    { icon: '&#128260;', title: 'Safe Rollback', desc: 'Every change is reversible' }
-  ] : id === 'precision' ? [
-    { icon: '&#9201;', title: 'Timer Resolution', desc: 'Fix timer for lower input lag' },
-    { icon: '&#127918;', title: 'GPU Low Latency', desc: 'NVIDIA Reflex and low latency mode' },
-    { icon: '&#128187;', title: 'Input Optimization', desc: 'Mouse polling, keyboard repeat rate' },
-    { icon: '&#127760;', title: 'Network for FPS', desc: 'Optimized for competitive online play' }
-  ] : [
-    { icon: '&#128465;', title: 'System Cleanup', desc: 'Remove bloat and temp files' },
-    { icon: '&#127918;', title: 'GPU Optimization', desc: 'NVIDIA settings and power management' },
-    { icon: '&#127760;', title: 'Network Tuning', desc: 'Reduce latency and packet loss' },
-    { icon: '&#9889;', title: 'Power Plan', desc: 'High performance power settings' }
-  ];
-
-  const featCardsHTML = featuresHTML.map(f => `
-    <div class="pd-feature">
-      <div class="pd-feature-icon">${f.icon}</div>
-      <h3>${f.title}</h3>
-      <p>${f.desc}</p>
-    </div>`).join('');
-
-  return `
-    <section class="pd-hero">
-      <div class="pd-box ${id === 'vibrance' ? 'pd-vibrance' : ''}">
-        <div class="pd-box-brand">Phantom</div>
-        <div class="pd-box-name">${boxName}</div>
-        <div class="pd-box-sub">${p.subtitle}</div>
-      </div>
-      <div class="pd-info">
-        ${p.badge ? `<div class="product-badge ${p.color ? 'badge-' + p.color : ''}">${p.badge}</div>` : ''}
-        <h1>${p.name}</h1>
-        <div class="pd-price">${isFree ? 'Free' : '&euro;' + p.price.toFixed(2)}</div>
-        <p>${p.desc}</p>
-        <div class="pd-actions">
-          ${isFree
-            ? `<button class="btn btn-primary add-to-cart" data-id="${p.id}" data-name="${p.name}" data-price="0">Get Free</button>
-               <a href="#products" class="btn btn-secondary">Back to Products</a>`
-            : `<button class="btn btn-primary add-to-cart" data-id="${p.id}" data-name="${p.name}" data-price="${p.price}">Add to Cart</button>
-               <a href="#products" class="btn btn-secondary">Back to Products</a>`}
-        </div>
-      </div>
-    </section>
-    <section class="pd-section">
-      <h2>What's Included</h2>
-      <div class="pd-features">${featCardsHTML}</div>
-    </section>
-    <section class="pd-section">
-      <h2>Tweak Categories</h2>
-      <div class="pd-tweak-list">${tweaksHTML}</div>
-    </section>
-    <section class="pd-section">
-      <div class="pd-cta">
-        <h3>Ready to optimize?</h3>
-        <p>${isFree ? 'Get your free license key and activate it in the Phantom app.' : 'Add to cart and checkout via PayPal. Your license key will be shown after payment.'}</p>
-        ${isFree
-          ? `<button class="btn btn-primary add-to-cart" data-id="${p.id}" data-name="${p.name}" data-price="0">Get Free</button>`
-          : `<button class="btn btn-primary add-to-cart" data-id="${p.id}" data-name="${p.name}" data-price="${p.price}">Add to Cart</button>`}
-      </div>
-    </section>`;
 }
 
 // ── PAGE: PRICING ──
@@ -971,7 +809,7 @@ function renderPricing() {
       <h2 class="reveal">Ready to Boost<br>Your FPS?</h2>
       <p class="reveal">Download free. Upgrade anytime.</p>
       <div class="cta-buttons reveal">
-        <a href="#products" class="btn btn-primary">Download Free</a>
+        <a href="#pricing" class="btn btn-primary">Download Free</a>
         <a href="${DISCORD_INVITE}" class="btn btn-discord" target="_blank">Join Discord</a>
       </div>
     </section>`;
@@ -1018,7 +856,7 @@ function renderRefund() {
       <div class="refund-content">
         <div class="refund-card">${REFUND_POLICY}</div>
         <div class="refund-actions">
-          <a href="#products" class="btn btn-primary">Back to Products</a>
+          <a href="#pricing" class="btn btn-primary">Back to Products</a>
           <a href="${DISCORD_INVITE}" class="btn btn-discord" target="_blank">Contact Support</a>
         </div>
       </div>
@@ -1040,7 +878,7 @@ function renderAffiliate() {
         <p style="color:var(--text-dim);font-size:0.95rem;line-height:1.7;margin-bottom:2rem">The affiliate program is currently under development. We're building something great — earn commission on every sale when it launches.</p>
         <div style="display:flex;gap:0.75rem;justify-content:center;flex-wrap:wrap">
           <a href="${DISCORD_INVITE}" class="btn btn-discord" target="_blank">Join Discord for Updates</a>
-          <a href="#products" class="btn btn-secondary">View Products</a>
+          <a href="#pricing" class="btn btn-secondary">View Products</a>
         </div>
       </div>
     </section>`;
@@ -1153,47 +991,6 @@ function renderTeam() {
         <a href="${DISCORD_INVITE}" class="btn btn-discord" target="_blank">Join Discord</a>
       </div>
     </section>`;
-}
-
-// ── PAGE: DOWNLOAD ──
-
-function renderDownload() {
-  const params = new URLSearchParams(location.hash.split('?')[1]);
-  const token = params.get('token');
-  const userName = params.get('user');
-  const products = params.get('products');
-
-  if (!token || !userName || !products) {
-    return `
-      <div class="dl-empty" id="dlEmpty">
-        <div class="dl-box">
-          <h2>No purchases found</h2>
-          <p>You haven't completed a purchase yet.</p>
-          <a href="#products">Browse Products</a>
-        </div>
-      </div>`;
-  }
-
-  const ids = products.split(',');
-  const listHTML = ids.map(id => {
-    const info = DOWNLOADS[id];
-    if (!info) return '';
-    if (info.comingSoon) {
-      return `<div class="dl-item"><div class="dl-item-info"><div class="dl-item-name">${info.name}</div><div class="dl-item-id">${id}</div></div><span style="color:#ffaa00;font-size:0.8rem;font-weight:600;">Coming Soon</span></div>`;
-    }
-    return `<div class="dl-item"><div class="dl-item-info"><div class="dl-item-name">${info.name}</div><div class="dl-item-id">${id}</div></div><a href="${info.url}" target="_blank"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>Download</a></div>`;
-  }).join('');
-
-  return `
-    <div class="dl-page" id="dlPage">
-      <div class="dl-box">
-        <div class="dl-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
-        <h1>Payment Received!</h1>
-        <p>Thank you for your purchase, ${userName}. Your downloads are ready.</p>
-        <div class="dl-list" id="dlList">${listHTML}</div>
-        <div class="dl-alt">Need help? <a href="${DISCORD_INVITE}" target="_blank">Join our Discord</a></div>
-      </div>
-    </div>`;
 }
 
 // ── PAGE: 404 ──
