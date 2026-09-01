@@ -117,13 +117,13 @@ const REFUND_POLICY = `
       <div class="refund-support-icon">&#9993;</div>
       <div class="refund-support-title">Email Support</div>
       <div class="refund-support-desc">Send us a detailed email for complex issues</div>
-      <a href="mailto:choatixtweaks@gmail.com" class="btn btn-secondary">Send Email</a>
+      <a href="mailto:phantomtweaks@gmail.com" class="btn btn-secondary">Send Email</a>
     </div>
   </div>
   <h3>6. Exceptions</h3>
   <p>The only exception is if we are unable to deliver the purchased product due to technical issues on our end.</p>
   <h3>7. Contact</h3>
-  <p>Questions? Contact us at <a href="mailto:choatixtweaks@gmail.com">choatixtweaks@gmail.com</a> or join our <a href="${DISCORD_INVITE}" target="_blank">Discord server</a>.</p>
+  <p>Questions? Contact us at <a href="mailto:phantomtweaks@gmail.com">phantomtweaks@gmail.com</a> or join our <a href="${DISCORD_INVITE}" target="_blank">Discord server</a>.</p>
   <div class="refund-warning"><p><strong>By completing a purchase, you agree to this policy.</strong></p></div>
 `;
 
@@ -152,8 +152,8 @@ const FEATURES = [
 
 // ── STATE ──
 
-const CART_KEY = 'choatix_cart';
-const DISCOUNT_KEY = 'choatix_discount';
+const CART_KEY = 'phantom_cart';
+const DISCOUNT_KEY = 'phantom_discount';
 let cart = JSON.parse(localStorage.getItem(CART_KEY) || '[]');
 let appliedDiscount = JSON.parse(localStorage.getItem(DISCOUNT_KEY) || 'null');
 let user = null;
@@ -449,7 +449,6 @@ const ROUTES = [
   { path: 'pricing',      label: 'Pricing' },
   { path: 'faq',          label: 'FAQ' },
   { path: 'refund',       label: 'Refund Policy' },
-  { path: 'affiliate',    label: 'Affiliates', cls: 'nav-affiliate' },
   { path: 'team',         label: 'Team' }
 ];
 
@@ -522,7 +521,6 @@ function renderFooter() {
         <a href="#pricing">Pricing</a>
         <a href="#faq">FAQ</a>
         <a href="#refund">Refund Policy</a>
-        <a href="#affiliate" class="footer-affiliate">Affiliates</a>
         <a href="#team">Team</a>
         <a href="${DISCORD_INVITE}" target="_blank">Discord</a>
       </div>
@@ -557,7 +555,6 @@ function router() {
     'pricing':  renderPricing,
     'faq':      renderFAQ,
     'refund':   renderRefund,
-    'affiliate':renderAffiliate,
     'team':     renderTeam,
     'license':  renderLicense
   };
@@ -863,109 +860,6 @@ function renderRefund() {
     </section>`;
 }
 
-// ── PAGE: AFFILIATE ──
-
-function renderAffiliate() {
-  return `
-    <section class="page-hero">
-      <h1>Affiliate <em>Program</em></h1>
-      <p>Promote Phantom and earn commission on every sale</p>
-    </section>
-    <section style="text-align:center;padding:4rem 2rem">
-      <div style="max-width:500px;margin:0 auto;background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:4rem 3rem">
-        <div style="font-size:3rem;margin-bottom:1.5rem">&#128640;</div>
-        <h2 style="font-size:1.8rem;font-weight:900;margin-bottom:0.75rem">Coming Soon</h2>
-        <p style="color:var(--text-dim);font-size:0.95rem;line-height:1.7;margin-bottom:2rem">The affiliate program is currently under development. We're building something great — earn commission on every sale when it launches.</p>
-        <div style="display:flex;gap:0.75rem;justify-content:center;flex-wrap:wrap">
-          <a href="${DISCORD_INVITE}" class="btn btn-discord" target="_blank">Join Discord for Updates</a>
-          <a href="#pricing" class="btn btn-secondary">View Products</a>
-        </div>
-      </div>
-    </section>`;
-}
-
-let aff = null;
-
-async function registerAffiliate() {
-  const di = document.getElementById('regDiscordId')?.value.trim();
-  const dn = document.getElementById('regDisplayName')?.value.trim();
-  const pp = document.getElementById('regPaypal')?.value.trim();
-  const cc = document.getElementById('regCustomCode')?.value.trim();
-  const err = document.getElementById('regError');
-  if (!di || !dn || !pp) { if (err) { err.textContent = 'All fields are required'; err.style.display = 'block'; } return; }
-  try {
-    const body = { discordId: di, displayName: dn, paypalEmail: pp };
-    if (cc) body.customCode = cc;
-    const r = await fetch(`${SITE_API}/api/affiliate/register`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-    const d = await r.json();
-    if (d.success) { user = { id: di, name: dn }; checkAffiliate(); }
-    else { if (err) { err.textContent = d.error || 'Failed'; err.style.display = 'block'; } }
-  } catch { if (err) { err.textContent = 'Network error'; err.style.display = 'block'; } }
-}
-
-async function checkAffiliate() {
-  if (!user) return;
-  try {
-    const r = await fetch(`${SITE_API}/api/affiliate/${user.id}`);
-    const d = await r.json();
-    if (d.affiliate) { aff = d; showDash(); }
-  } catch {}
-}
-
-function showDash() {
-  document.getElementById('publicPage').style.display = 'none';
-  document.getElementById('dashPage').style.display = 'block';
-  document.getElementById('registerSection').style.display = 'none';
-  document.getElementById('dashWelcome').textContent = 'Welcome, ' + (aff?.affiliate?.display_name || user.name);
-  loadStats();
-}
-
-async function loadStats() {
-  if (!user) return;
-  try {
-    const r = await fetch(`${SITE_API}/api/affiliate/${user.id}/stats`);
-    const d = await r.json();
-    document.getElementById('sEarned').textContent = '\u20AC' + (d.totalCommission || 0).toFixed(2);
-    document.getElementById('sPending').textContent = '\u20AC' + (d.pendingCommission || 0).toFixed(2);
-    document.getElementById('sClicks').textContent = d.clicks || 0;
-    document.getElementById('sConv').textContent = d.conversions || 0;
-    const lp = document.getElementById('panel-links');
-    if (aff?.links?.length > 0) {
-      lp.innerHTML = aff.links.map(l => `<div class="link-card"><div class="link-card-head"><span class="link-card-code">${l.code}</span><span class="link-card-stats">${l.clicks || 0} clicks · ${l.conversions || 0} sales</span></div><div class="link-card-url"><input type="text" value="${SITE_API}/api/track/${l.code}" readonly id="lk-${l.code}"><button onclick="copyLk('${l.code}')">Copy</button></div></div>`).join('');
-    } else { lp.innerHTML = '<div class="empty-state"><p>No links yet. Click "+ New Link" to get started.</p></div>'; }
-    const sp = document.getElementById('panel-sales');
-    if (d.recentSales?.length > 0) {
-      sp.innerHTML = d.recentSales.map(s => `<div class="sale-row"><div class="sale-date">${new Date(s.created_at).toLocaleDateString()}</div><div class="sale-product">${s.product_id}</div><div class="sale-amount">&euro;${parseFloat(s.sale_amount).toFixed(2)}</div><div class="sale-commission">&euro;${parseFloat(s.commission).toFixed(2)}</div><div class="sale-status"><span class="status-badge status-${s.status}">${s.status}</span></div></div>`).join('');
-    } else { sp.innerHTML = '<div class="empty-state"><p>No sales yet. Share your link to start earning!</p></div>'; }
-    const pp = document.getElementById('panel-payouts');
-    if (d.payouts?.length > 0) {
-      pp.innerHTML = d.payouts.map(p => `<div class="sale-row"><div class="sale-date">${new Date(p.created_at).toLocaleDateString()}</div><div class="sale-product">PayPal: ${p.paypal_email}</div><div class="sale-amount"></div><div class="sale-commission">&euro;${parseFloat(p.amount).toFixed(2)}</div><div class="sale-status"><span class="status-badge status-${p.status}">${p.status}</span></div></div>`).join('');
-    } else { pp.innerHTML = '<div class="empty-state"><p>No payouts yet. Earn at least &euro;5 to request one.</p></div>'; }
-  } catch {}
-}
-
-function copyLk(code) {
-  const el = document.getElementById('lk-' + code);
-  if (el) { navigator.clipboard.writeText(el.value); const b = el.nextElementSibling; b.textContent = 'Copied!'; setTimeout(() => b.textContent = 'Copy', 2000); }
-}
-
-async function generateLink() {
-  if (!user) return;
-  try { await fetch(`${SITE_API}/api/affiliate/${user.id}/links`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({}) }); const r = await fetch(`${SITE_API}/api/affiliate/${user.id}`); aff = await r.json(); loadStats(); } catch {}
-}
-
-async function requestPayout() {
-  if (!user) return;
-  try { const r = await fetch(`${SITE_API}/api/affiliate/${user.id}/payout`, { method: 'POST', headers: { 'Content-Type': 'application/json' } }); const d = await r.json(); if (d.success) { alert('Payout of \u20AC' + d.amount.toFixed(2) + ' requested!'); loadStats(); } else { alert(d.error || 'Failed'); } } catch { alert('Network error'); }
-}
-
-function switchTab(btn, tab) {
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-  btn.classList.add('active');
-  document.getElementById('panel-' + tab)?.classList.add('active');
-}
-
 // ── PAGE: TEAM ──
 
 function renderTeam() {
@@ -1176,7 +1070,7 @@ document.addEventListener('DOMContentLoaded', init);
 // CHATBOT — Conversational Purchase Advisor
 // ════════════════════════════════════════════════════════════════
 
-const CHATBOT_FAB_KEY = 'choatix_chatbot_seen';
+const CHATBOT_FAB_KEY = 'phantom_chatbot_seen';
 
 const CHAT_PRODUCTS = {
   basic:     { name: 'Basic Tweaks',      price: 4.99,  tweaks: 220, desc: 'Windows debloat, essential settings, GPU, network, power', best: 'Budget-friendly all-rounder' },
