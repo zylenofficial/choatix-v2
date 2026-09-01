@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Phantom Tweaks - Payment Cancelled</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0c0d10; color: #eef0f3; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+    .card { background: #101216; border: 1px solid rgba(255,255,255,0.07); border-radius: 18px; padding: 48px; max-width: 420px; width: 90%; text-align: center; }
+    .icon { width: 64px; height: 64px; border-radius: 50%; background: rgba(255,255,255,0.04); border: 2px solid rgba(255,255,255,0.08); display: flex; align-items: center; justify-content: center; margin: 0 auto 24px; font-size: 28px; color: rgba(255,255,255,0.3); }
+    h1 { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+    .subtitle { font-size: 13px; color: rgba(255,255,255,0.4); margin-bottom: 32px; line-height: 1.6; }
+    .btn { display: inline-block; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); color: #fff; padding: 12px 32px; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; text-decoration: none; transition: background 0.2s; }
+    .btn:hover { background: rgba(255,255,255,0.14); }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="icon">&#10005;</div>
+    <h1>Payment Cancelled</h1>
+    <p class="subtitle">No worries! You haven't been charged.<br>You can try again whenever you're ready.</p>
+    <a href="javascript:history.back()" class="btn">Go Back</a>
+  </div>
+</body>
+</html>

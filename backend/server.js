@@ -1,425 +1,998 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const crypto = require('crypto');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-app.use(cors());
-app.use(express.json());
+// ── Config ──────────────────────────────────────────────────────
+const DB_URL = process.env.DATABASE_URL;
+const ADMIN_SECRET = process.env.ADMIN_SECRET || 'CHANGE_ME_ADMIN_SECRET';
+const PAYPAL_CLIENT_ID = process.env.PAYPAL_CLIENT_ID || '';
+const PAYPAL_CLIENT_SECRET = process.env.PAYPAL_CLIENT_SECRET || '';
+const PAYPAL_WEBHOOK_ID = process.env.PAYPAL_WEBHOOK_ID || '';
+const PAYPAL_MODE = process.env.PAYPAL_MODE || 'live';
+const BASE_URL = process.env.BASE_URL || `http://localhost:${PORT}`;
+const OWNER_DISCORD_ID = process.env.OWNER_DISCORD_ID || '1014494449809772544';
 
-// Simple cookie parser for affiliate tracking
-app.use((req, res, next) => {
-  req.cookies = {};
-  const cookieHeader = req.headers.cookie;
-  if (cookieHeader) {
-    cookieHeader.split(';').forEach(cookie => {
-      const [name, ...rest] = cookie.split('=');
-      req.cookies[name.trim()] = rest.join('=').trim();
-    });
+const PAYPAL_BASE = PAYPAL_MODE === 'sandbox'
+  ? 'https://api-m.sandbox.paypal.com'
+  : 'https://api-m.paypal.com';
+
+const PLAN_PRICES = {
+  pro: { amount: '5.99', currency: 'EUR', label: 'Phantom Pro' },
+  phantom: { amount: '9.99', currency: 'EUR', label: 'Phantom Premium' },
+};
+
+const FREE_RATE_LIMIT = { maxPerIp: 3, maxPerDiscord: 1, windowMs: 24 * 60 * 60 * 1000 };
+
+// ── Middleware ───────────────────────────────────────────────────
+app.use(cors());
+app.use(express.json({ limit: '10mb' }));
+
+// Raw body for webhook signature verification (must be before JSON parser for webhook route)
+app.post('/api/webhook/paypal', express.raw({ type: 'application/json', limit: '10mb' }));
+
+// Serve static success/admin pages
+app.use('/success', express.static(__dirname + '/pages'));
+app.use('/admin', express.static(__dirname + '/pages'));
+
+// ── License Key Generation ──────────────────────────────────────
+function generateLicenseKey() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let segments = [];
+  for (let s = 0; s < 3; s++) {
+    let seg = '';
+    for (let i = 0; i < 4; i++) {
+      seg += chars[crypto.randomInt(chars.length)];
+    }
+    segments.push(seg);
   }
+  return `PHNT-${segments[0]}-${segments[1]}-${segments[2]}`;
+}
+
+function generateIdempotencyKey() {
+  return crypto.randomBytes(16).toString('hex');
+}
+
+// ── Database ────────────────────────────────────────────────────
+let pool = null;
+
+async function initDB() {
+  if (!DB_URL) {
+    console.log('No DATABASE_URL — running in memory mode');
+    return;
+  }
+  const { Pool } = require('pg');
+  pool = new Pool({ connectionString: DB_URL, max: 10, idleTimeoutMillis: 30000 });
+  app.locals.pool = pool;
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS licenses (
+      id SERIAL PRIMARY KEY,
+      license_key TEXT UNIQUE NOT NULL,
+      plan TEXT NOT NULL CHECK (plan IN ('free','pro','phantom')),
+      status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active','inactive','revoked','expired')),
+      customer_email TEXT,
+      discord_id TEXT,
+      paypal_order_id TEXT,
+      paypal_transaction_id TEXT UNIQUE,
+      paypal_payer_id TEXT,
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      expires_at TIMESTAMPTZ,
+      hwid TEXT,
+      activated_at TIMESTAMPTZ,
+      last_validation TIMESTAMPTZ,
+      ip_address TEXT
+    );
+    CREATE INDEX IF NOT EXISTS idx_lic_key ON licenses(license_key);
+    CREATE INDEX IF NOT EXISTS idx_lic_discord ON licenses(discord_id);
+    CREATE INDEX IF NOT EXISTS idx_lic_paypal_tx ON licenses(paypal_transaction_id);
+    CREATE INDEX IF NOT EXISTS idx_lic_paypal_order ON licenses(paypal_order_id);
+    CREATE INDEX IF NOT EXISTS idx_lic_status ON licenses(status);
+    CREATE INDEX IF NOT EXISTS idx_lic_plan ON licenses(plan);
+
+    CREATE TABLE IF NOT EXISTS rate_limits (
+      id SERIAL PRIMARY KEY,
+      identifier TEXT NOT NULL,
+      action TEXT NOT NULL,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    );
+    CREATE INDEX IF NOT EXISTS idx_rl_lookup ON rate_limits(identifier, action, created_at);
+
+    -- Keep legacy tables
+    CREATE TABLE IF NOT EXISTS keys_table (
+      key TEXT PRIMARY KEY, tier TEXT NOT NULL, expiry TEXT,
+      redeemed BOOLEAN DEFAULT false, discord_id TEXT, created_at TEXT
+    );
+    CREATE TABLE IF NOT EXISTS users_table (
+      discord_id TEXT PRIMARY KEY, tier TEXT NOT NULL, key TEXT,
+      activated_at TEXT, username TEXT, avatar TEXT, global_name TEXT
+    );
+    CREATE TABLE IF NOT EXISTS partners_table (
+      discord_id TEXT PRIMARY KEY, name TEXT, tier TEXT DEFAULT 'PARTNER', created_at TEXT
+    );
+    CREATE TABLE IF NOT EXISTS referrals_table (
+      code TEXT PRIMARY KEY, referrer_id TEXT NOT NULL,
+      uses INTEGER DEFAULT 0, max_uses INTEGER DEFAULT 10, created_at TEXT
+    );
+    CREATE TABLE IF NOT EXISTS referral_uses_table (
+      id SERIAL PRIMARY KEY, code TEXT, referee_id TEXT, used_at TEXT
+    );
+  `);
+  console.log('PostgreSQL connected');
+}
+
+async function q(text, params) {
+  if (pool) {
+    const r = await pool.query(text, params);
+    return r.rows;
+  }
+  return [];
+}
+
+async function qOne(text, params) {
+  const rows = await q(text, params);
+  return rows[0] || null;
+}
+
+// ── Rate Limiting ───────────────────────────────────────────────
+async function checkRateLimit(identifier, action, maxRequests, windowMs) {
+  if (!pool) return true;
+  const cutoff = new Date(Date.now() - windowMs).toISOString();
+  const r = await pool.query(
+    'SELECT COUNT(*)::int as cnt FROM rate_limits WHERE identifier=$1 AND action=$2 AND created_at > $3',
+    [identifier, action, cutoff]
+  );
+  if (r.rows[0].cnt >= maxRequests) return false;
+  await pool.query('INSERT INTO rate_limits (identifier, action) VALUES ($1,$2)', [identifier, action]);
+  return true;
+}
+
+// ── PayPal Helpers ──────────────────────────────────────────────
+let paypalToken = null;
+let paypalTokenExpiry = 0;
+
+async function getPayPalToken() {
+  if (paypalToken && Date.now() < paypalTokenExpiry) return paypalToken;
+  if (!PAYPAL_CLIENT_ID || !PAYPAL_CLIENT_SECRET) throw new Error('PayPal not configured');
+  const creds = Buffer.from(`${PAYPAL_CLIENT_ID}:${PAYPAL_CLIENT_SECRET}`).toString('base64');
+  const res = await fetch(`${PAYPAL_BASE}/v1/oauth2/token`, {
+    method: 'POST',
+    headers: { Authorization: `Basic ${creds}`, 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: 'grant_type=client_credentials',
+  });
+  if (!res.ok) throw new Error(`PayPal auth failed: ${res.status}`);
+  const data = await res.json();
+  paypalToken = data.access_token;
+  paypalTokenExpiry = Date.now() + (data.expires_in - 60) * 1000;
+  return paypalToken;
+}
+
+async function verifyPayPalWebhook(headers, rawBody) {
+  if (!PAYPAL_WEBHOOK_ID) {
+    console.warn('No PAYPAL_WEBHOOK_ID configured — skipping signature verification');
+    return true;
+  }
+  try {
+    const token = await getPayPalToken();
+    const body = JSON.parse(rawBody.toString());
+    const verificationPayload = {
+      auth_algo: headers['paypal-auth-algo'],
+      cert_url: headers['paypal-cert-url'],
+      actual_sig: headers['paypal-transmission-sig'],
+      sig_algo: 'SHA256withRSA',
+      webhook_id: PAYPAL_WEBHOOK_ID,
+      transmission_id: headers['paypal-transmission-id'],
+      transmission_time: headers['paypal-transmission-time'],
+      webhook_event: body,
+    };
+    const res = await fetch(`${PAYPAL_BASE}/v1/notifications/verify-webhook-signature`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify(verificationPayload),
+    });
+    const result = await res.json();
+    return result.verification_status === 'SUCCESS';
+  } catch (err) {
+    console.error('Webhook verification error:', err.message);
+    return false;
+  }
+}
+
+async function capturePaypalOrder(orderId) {
+  const token = await getPayPalToken();
+  const res = await fetch(`${PAYPAL_BASE}/v2/checkout/orders/${orderId}/capture`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(`Capture failed: ${res.status} ${JSON.stringify(err)}`);
+  }
+  return res.json();
+}
+
+async function getOrderDetails(orderId) {
+  const token = await getPayPalToken();
+  const res = await fetch(`${PAYPAL_BASE}/v2/checkout/orders/${orderId}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error(`Order fetch failed: ${res.status}`);
+  return res.json();
+}
+
+// ── License Fulfillment (idempotent) ────────────────────────────
+async function fulfillLicense(orderId, payerId, plan) {
+  if (!pool) throw new Error('Database required for license fulfillment');
+
+  // Check if already fulfilled
+  const existing = await qOne('SELECT * FROM licenses WHERE paypal_order_id = $1', [orderId]);
+  if (existing) {
+    return { license: existing, alreadyFulfilled: true };
+  }
+
+  const licenseKey = generateLicenseKey();
+  const now = new Date().toISOString();
+  const license = await qOne(
+    `INSERT INTO licenses (license_key, plan, status, paypal_order_id, paypal_payer_id, created_at)
+     VALUES ($1, $2, 'active', $3, $4, $5) RETURNING *`,
+    [licenseKey, plan, orderId, payerId, now]
+  );
+
+  return { license, alreadyFulfilled: false };
+}
+
+// ── Admin Auth Middleware ────────────────────────────────────────
+function requireAdmin(req, res, next) {
+  const secret = req.headers['x-admin-secret'] || req.query.admin_secret;
+  if (secret !== ADMIN_SECRET) return res.status(403).json({ error: 'Unauthorized' });
   next();
+}
+
+// ────────────────────────────────────────────────────────────────
+//  ROUTES
+// ────────────────────────────────────────────────────────────────
+
+// ── Health ──────────────────────────────────────────────────────
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', db: pool ? 'postgresql' : 'memory', uptime: process.uptime() });
 });
 
-const DB_URL = process.env.DATABASE_URL;
-const SECRET = process.env.KEY_SECRET || 'phantom-secret-key-2024';
-let memKeys = {};
-let memUsers = {};
-let memReferrals = {};
-let memPartners = {};
+// ── Get PayPal Client ID (public) ───────────────────────────────
+app.get('/api/paypal/client-id', (req, res) => {
+  res.json({ clientId: PAYPAL_CLIENT_ID || null });
+});
+
+// ── FREE LICENSE ────────────────────────────────────────────────
+app.post('/api/license/free', async (req, res) => {
+  try {
+    const { discordId, email } = req.body;
+    if (!discordId || typeof discordId !== 'string' || discordId.trim().length < 17) {
+      return res.status(400).json({ error: 'Valid Discord ID required' });
+    }
+    const cleanDiscordId = discordId.trim();
+    const ip = req.ip || req.connection?.remoteAddress || 'unknown';
+
+    // Owner always gets free
+    if (cleanDiscordId === OWNER_DISCORD_ID) {
+      const key = generateLicenseKey();
+      const license = await qOne(
+        `INSERT INTO licenses (license_key, plan, status, discord_id, created_at, activated_at)
+         VALUES ($1, 'free', 'active', $2, NOW(), NOW()) ON CONFLICT DO NOTHING RETURNING *`,
+        [key, cleanDiscordId]
+      );
+      if (!license) {
+        const existing = await qOne('SELECT * FROM licenses WHERE discord_id=$1 AND plan=\'free\' LIMIT 1', [cleanDiscordId]);
+        return res.json({ licenseKey: existing.license_key, plan: 'free', status: 'active', alreadyExists: true });
+      }
+      return res.json({ licenseKey: license.license_key, plan: 'free', status: 'active', alreadyExists: false });
+    }
+
+    // Rate limit: max 3 free per IP per day
+    if (!await checkRateLimit(`ip:${ip}`, 'free', FREE_RATE_LIMIT.maxPerIp, FREE_RATE_LIMIT.windowMs)) {
+      return res.status(429).json({ error: 'Rate limit: too many free license requests from your network' });
+    }
+
+    // Rate limit: max 1 free per Discord ID ever
+    if (!await checkRateLimit(`discord:${cleanDiscordId}`, 'free', FREE_RATE_LIMIT.maxPerDiscord, 365 * 24 * 60 * 60 * 1000)) {
+      return res.status(429).json({ error: 'You already have a free license' });
+    }
+
+    // Check if already has a free license
+    const existingFree = await qOne(
+      'SELECT * FROM licenses WHERE discord_id=$1 AND plan=\'free\' AND status!=\'revoked\' LIMIT 1',
+      [cleanDiscordId]
+    );
+    if (existingFree) {
+      return res.json({ licenseKey: existingFree.license_key, plan: 'free', status: 'active', alreadyExists: true });
+    }
+
+    const key = generateLicenseKey();
+    const license = await qOne(
+      `INSERT INTO licenses (license_key, plan, status, discord_id, customer_email, created_at, activated_at, ip_address)
+       VALUES ($1, 'free', 'active', $2, $3, NOW(), NOW(), $4) RETURNING *`,
+      [key, cleanDiscordId, email || null, ip]
+    );
+
+    res.json({ licenseKey: license.license_key, plan: 'free', status: 'active', alreadyExists: false });
+  } catch (err) {
+    console.error('[Free license error]', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// ── PAYPAL CHECKOUT ────────────────────────────────────────────
+app.post('/api/license/checkout', async (req, res) => {
+  try {
+    const { plan, discordId, email } = req.body;
+    if (!plan || !['pro', 'phantom'].includes(plan)) {
+      return res.status(400).json({ error: 'Invalid plan. Use pro or phantom' });
+    }
+    const cleanDiscordId = discordId && typeof discordId === 'string' ? discordId.trim() : null;
+
+    const planInfo = PLAN_PRICES[plan];
+    const token = await getPayPalToken();
+
+    const orderBody = {
+      intent: 'CAPTURE',
+      purchase_units: [{
+        reference_id: `PHNT-${plan}-${Date.now()}`,
+        description: `${planInfo.label} License`,
+        custom_id: JSON.stringify({ plan, discordId: cleanDiscordId, email: email || null }),
+        amount: {
+          currency_code: planInfo.currency,
+          value: planInfo.amount,
+          breakdown: {
+            item_total: { currency_code: planInfo.currency, value: planInfo.amount },
+          },
+        },
+        items: [{
+          name: planInfo.label,
+          description: `Phantom Tweaks ${planInfo.label} License Key`,
+          unit_amount: { currency_code: planInfo.currency, value: planInfo.amount },
+          quantity: '1',
+          category: 'DIGITAL_GOODS',
+        }],
+      }],
+      application_context: {
+        brand_name: 'Phantom Tweaks',
+        locale: 'en-US',
+        landing_page: 'BILLING',
+        shipping_preference: 'NO_SHIPPING',
+        user_action: 'PAY_NOW',
+        return_url: `${BASE_URL}/success/return.html`,
+        cancel_url: `${BASE_URL}/success/cancel.html`,
+      },
+    };
+
+    const response = await fetch(`${PAYPAL_BASE}/v2/checkout/orders`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+        Prefer: 'return=representation',
+      },
+      body: JSON.stringify(orderBody),
+    });
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      console.error('[PayPal checkout error]', err);
+      return res.status(500).json({ error: 'Failed to create PayPal order' });
+    }
+
+    const order = await response.json();
+    const approveUrl = order.links?.find(l => l.rel === 'approve')?.href;
+
+    // Pre-create license record (pending) for idempotency
+    if (pool) {
+      await q(
+        `INSERT INTO licenses (license_key, plan, status, discord_id, customer_email, paypal_order_id, created_at)
+         VALUES ($1, $2, 'pending', $3, $4, $5, NOW()) ON CONFLICT (paypal_order_id) DO NOTHING`,
+        [generateLicenseKey(), plan, cleanDiscordId, email || null, order.id]
+      );
+    }
+
+    res.json({ orderId: order.id, approvalUrl, status: order.status });
+  } catch (err) {
+    console.error('[Checkout error]', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// ── Capture order (after redirect from PayPal) ──────────────────
+app.post('/api/license/capture', async (req, res) => {
+  try {
+    const { orderId } = req.body;
+    if (!orderId) return res.status(400).json({ error: 'Order ID required' });
+
+    // Check if already fulfilled
+    const existing = await qOne('SELECT * FROM licenses WHERE paypal_order_id=$1 AND status!=\'pending\'', [orderId]);
+    if (existing) {
+      return res.json({ licenseKey: existing.license_key, plan: existing.plan, status: 'active', alreadyFulfilled: true });
+    }
+
+    // Capture payment
+    const captureData = await capturePaypalOrder(orderId);
+    if (captureData.status !== 'COMPLETED') {
+      return res.status(400).json({ error: 'Payment not completed', status: captureData.status });
+    }
+
+    // Extract plan from custom_id
+    const purchaseUnit = captureData.purchase_units?.[0];
+    const customData = JSON.parse(purchaseUnit?.custom_id || '{}');
+    const plan = customData.plan;
+    if (!plan || !['pro', 'phantom'].includes(plan)) {
+      return res.status(400).json({ error: 'Invalid plan in order' });
+    }
+
+    const capture = purchaseUnit?.payments?.captures?.[0];
+    const transactionId = capture?.id;
+    const payerId = captureData.payer?.payer_id;
+
+    // Update or create license
+    let license;
+    if (existing) {
+      license = await qOne(
+        `UPDATE licenses SET status='active', paypal_transaction_id=$1, paypal_payer_id=$2,
+         activated_at=NOW(), expires_at=NULL WHERE paypal_order_id=$3 RETURNING *`,
+        [transactionId, payerId, orderId]
+      );
+    } else {
+      const key = generateLicenseKey();
+      license = await qOne(
+        `INSERT INTO licenses (license_key, plan, status, discord_id, customer_email, paypal_order_id, paypal_transaction_id, paypal_payer_id, created_at, activated_at)
+         VALUES ($1, $2, 'active', $3, $4, $5, $6, $7, NOW(), NOW()) RETURNING *`,
+        [key, plan, customData.discordId, customData.email, orderId, transactionId, payerId]
+      );
+    }
+
+    res.json({ licenseKey: license.license_key, plan: license.plan, status: 'active' });
+  } catch (err) {
+    console.error('[Capture error]', err);
+    res.status(500).json({ error: 'Failed to capture order' });
+  }
+});
+
+// ── PAYPAL WEBHOOK ─────────────────────────────────────────────
+app.post('/api/webhook/paypal', async (req, res) => {
+  try {
+    const rawBody = req.body;
+    const headers = req.headers;
+
+    // Verify webhook signature
+    const valid = await verifyPayPalWebhook(headers, rawBody);
+    if (!valid) {
+      console.warn('[Webhook] Invalid signature');
+      return res.status(401).json({ error: 'Invalid webhook signature' });
+    }
+
+    const event = JSON.parse(rawBody.toString());
+    console.log(`[Webhook] Received: ${event.event_type}`);
+
+    if (event.event_type === 'PAYMENT.CAPTURE.COMPLETED') {
+      const capture = event.resource;
+      const orderId = capture.supplementary_data?.related_ids?.order_id;
+      const transactionId = capture.id;
+      const payerId = capture.payer?.payer_id || event.resource?.payer_id;
+      const amount = capture.amount;
+
+      if (!orderId) {
+        console.warn('[Webhook] No order ID in capture event');
+        return res.json({ received: true });
+      }
+
+      // Idempotency: check if already fulfilled
+      if (pool) {
+        const existing = await qOne(
+          'SELECT * FROM licenses WHERE paypal_order_id=$1 OR paypal_transaction_id=$2',
+          [orderId, transactionId]
+        );
+        if (existing && existing.status !== 'pending') {
+          console.log(`[Webhook] Already fulfilled: ${orderId}`);
+          return res.json({ received: true, duplicate: true });
+        }
+      }
+
+      // Get order details to determine plan
+      let plan = null;
+      let discordId = null;
+      let email = null;
+      try {
+        const orderDetails = await getOrderDetails(orderId);
+        const purchaseUnit = orderDetails.purchase_units?.[0];
+        if (purchaseUnit?.custom_id) {
+          const customData = JSON.parse(purchaseUnit.custom_id);
+          plan = customData.plan;
+          discordId = customData.discordId;
+          email = customData.email;
+        }
+      } catch (err) {
+        console.error('[Webhook] Failed to fetch order details:', err.message);
+      }
+
+      if (!plan || !['pro', 'phantom'].includes(plan)) {
+        console.warn(`[Webhook] Invalid plan: ${plan}`);
+        return res.json({ received: true });
+      }
+
+      // Fulfill license (idempotent)
+      const { license, alreadyFulfilled } = await fulfillLicense(orderId, payerId, plan);
+
+      // Update with additional info if we have it
+      if (pool && !alreadyFulfilled) {
+        await q(
+          `UPDATE licenses SET paypal_transaction_id=$1, discord_id=COALESCE(discord_id, $2),
+           customer_email=COALESCE(customer_email, $3), activated_at=NOW()
+           WHERE paypal_order_id=$4`,
+          [transactionId, discordId, email, orderId]
+        );
+      }
+
+      console.log(`[Webhook] Fulfilled: ${plan} license for order ${orderId}`);
+    }
+
+    // Also handle other events
+    if (event.event_type === 'PAYMENT.CAPTURE.REFUNDED') {
+      const capture = event.resource;
+      const orderId = capture.supplementary_data?.related_ids?.order_id;
+      if (orderId && pool) {
+        await q("UPDATE licenses SET status='revoked' WHERE paypal_order_id=$1", [orderId]);
+        console.log(`[Webhook] Revoked license for refunded order: ${orderId}`);
+      }
+    }
+
+    res.json({ received: true });
+  } catch (err) {
+    console.error('[Webhook error]', err);
+    res.status(500).json({ error: 'Webhook processing error' });
+  }
+});
+
+// ── LICENSE ACTIVATE (with HWID) ──────────────────────────────
+app.post('/api/license/activate', async (req, res) => {
+  try {
+    const { licenseKey, hwid, discordId } = req.body;
+    if (!licenseKey || !hwid) {
+      return res.status(400).json({ valid: false, error: 'License key and HWID required' });
+    }
+
+    const cleanKey = licenseKey.trim().toUpperCase();
+    const license = await qOne('SELECT * FROM licenses WHERE license_key = $1', [cleanKey]);
+    if (!license) {
+      return res.json({ valid: false, error: 'invalid_license' });
+    }
+
+    if (license.status === 'revoked') {
+      return res.json({ valid: false, error: 'revoked' });
+    }
+    if (license.status === 'expired' || (license.expires_at && new Date(license.expires_at) < new Date())) {
+      if (license.status !== 'expired') {
+        await q("UPDATE licenses SET status='expired' WHERE license_key=$1", [cleanKey]);
+      }
+      return res.json({ valid: false, error: 'expired' });
+    }
+    if (license.status === 'inactive') {
+      return res.json({ valid: false, error: 'inactive' });
+    }
+
+    // First activation: bind HWID
+    if (!license.hwid) {
+      await q(
+        'UPDATE licenses SET hwid=$1, activated_at=COALESCE(activated_at, NOW()), discord_id=COALESCE(discord_id, $2) WHERE license_key=$3',
+        [hwid, discordId || null, cleanKey]
+      );
+      return res.json({
+        valid: true,
+        plan: license.plan,
+        status: 'active',
+        expires_at: license.expires_at,
+        hwid_bound: true,
+        activated_at: new Date().toISOString(),
+      });
+    }
+
+    // Subsequent: check HWID
+    if (license.hwid !== hwid) {
+      return res.json({ valid: false, error: 'hwid_mismatch', message: 'This license is bound to another device' });
+    }
+
+    // Update last validation
+    await q('UPDATE licenses SET last_validation=NOW() WHERE license_key=$1', [cleanKey]);
+
+    return res.json({
+      valid: true,
+      plan: license.plan,
+      status: 'active',
+      expires_at: license.expires_at,
+      hwid_bound: true,
+    });
+  } catch (err) {
+    console.error('[Activate error]', err);
+    res.status(500).json({ valid: false, error: 'internal_error' });
+  }
+});
+
+// ── LICENSE VALIDATE ───────────────────────────────────────────
+app.post('/api/license/validate', async (req, res) => {
+  try {
+    const { licenseKey, hwid } = req.body;
+    if (!licenseKey) return res.status(400).json({ valid: false, error: 'License key required' });
+
+    const cleanKey = licenseKey.trim().toUpperCase();
+    const license = await qOne('SELECT * FROM licenses WHERE license_key = $1', [cleanKey]);
+    if (!license) return res.json({ valid: false, error: 'invalid_license' });
+
+    if (license.status === 'revoked') return res.json({ valid: false, error: 'revoked' });
+    if (license.status === 'expired' || (license.expires_at && new Date(license.expires_at) < new Date())) {
+      return res.json({ valid: false, error: 'expired' });
+    }
+    if (license.status !== 'active') return res.json({ valid: false, error: license.status });
+
+    // HWID check
+    if (license.hwid && hwid && license.hwid !== hwid) {
+      return res.json({ valid: false, error: 'hwid_mismatch' });
+    }
+
+    // Check expiry
+    if (license.expires_at && new Date(license.expires_at) < new Date()) {
+      await q("UPDATE licenses SET status='expired' WHERE license_key=$1", [cleanKey]);
+      return res.json({ valid: false, error: 'expired' });
+    }
+
+    await q('UPDATE licenses SET last_validation=NOW() WHERE license_key=$1', [cleanKey]);
+
+    return res.json({
+      valid: true,
+      plan: license.plan,
+      status: license.status,
+      expires_at: license.expires_at,
+      hwid_bound: !!license.hwid,
+    });
+  } catch (err) {
+    console.error('[Validate error]', err);
+    res.status(500).json({ valid: false, error: 'internal_error' });
+  }
+});
+
+// ── LICENSE DEACTIVATE ─────────────────────────────────────────
+app.post('/api/license/deactivate', async (req, res) => {
+  try {
+    const { licenseKey, hwid } = req.body;
+    if (!licenseKey) return res.status(400).json({ error: 'License key required' });
+
+    const cleanKey = licenseKey.trim().toUpperCase();
+    const license = await qOne('SELECT * FROM licenses WHERE license_key = $1', [cleanKey]);
+    if (!license) return res.status(404).json({ error: 'License not found' });
+
+    if (hwid && license.hwid && license.hwid !== hwid) {
+      return res.status(403).json({ error: 'HWID mismatch' });
+    }
+
+    await q("UPDATE licenses SET status='inactive', hwid=NULL WHERE license_key=$1", [cleanKey]);
+    res.json({ success: true, message: 'License deactivated' });
+  } catch (err) {
+    console.error('[Deactivate error]', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// ── LICENSE STATUS ─────────────────────────────────────────────
+app.get('/api/license/status/:key', async (req, res) => {
+  try {
+    const cleanKey = req.params.key.trim().toUpperCase();
+    const license = await qOne('SELECT license_key, plan, status, created_at, expires_at, activated_at, last_validation FROM licenses WHERE license_key=$1', [cleanKey]);
+    if (!license) return res.status(404).json({ error: 'License not found' });
+    res.json(license);
+  } catch (err) {
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// ── LICENSE LOOKUP BY DISCORD ID ───────────────────────────────
+app.get('/api/license/discord/:discordId', async (req, res) => {
+  try {
+    const discordId = req.params.discordId.trim();
+    if (discordId === OWNER_DISCORD_ID) {
+      return res.json({ plan: 'phantom', status: 'active', isOwner: true });
+    }
+    const license = await qOne(
+      'SELECT license_key, plan, status, created_at, expires_at, activated_at, hwid FROM licenses WHERE discord_id=$1 AND status=\'active\' ORDER BY created_at DESC LIMIT 1',
+      [discordId]
+    );
+    if (!license) return res.status(404).json({ error: 'No active license found' });
+    res.json(license);
+  } catch (err) {
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// ── RESET HWID ─────────────────────────────────────────────────
+app.post('/api/license/reset-hwid', async (req, res) => {
+  try {
+    const { licenseKey, adminSecret } = req.body;
+    if (adminSecret !== ADMIN_SECRET) return res.status(403).json({ error: 'Unauthorized' });
+    if (!licenseKey) return res.status(400).json({ error: 'License key required' });
+
+    const cleanKey = licenseKey.trim().toUpperCase();
+    await q('UPDATE licenses SET hwid=NULL WHERE license_key=$1', [cleanKey]);
+    res.json({ success: true, message: 'HWID reset' });
+  } catch (err) {
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// ── ADMIN: LIST ALL LICENSES ───────────────────────────────────
+app.get('/api/admin/licenses', requireAdmin, async (req, res) => {
+  try {
+    const { plan, status, search, page = 1, limit = 50 } = req.query;
+    let where = [];
+    let params = [];
+    let idx = 1;
+
+    if (plan) { where.push(`plan=$${idx++}`); params.push(plan); }
+    if (status) { where.push(`status=$${idx++}`); params.push(status); }
+    if (search) { where.push(`(license_key ILIKE $${idx} OR discord_id ILIKE $${idx} OR customer_email ILIKE $${idx})`); params.push(`%${search}%`); idx++; }
+
+    const whereClause = where.length > 0 ? `WHERE ${where.join(' AND ')}` : '';
+    const offset = (parseInt(page) - 1) * parseInt(limit);
+    params.push(parseInt(limit), offset);
+
+    const rows = await q(
+      `SELECT id, license_key, plan, status, customer_email, discord_id, paypal_order_id, paypal_transaction_id,
+       created_at, expires_at, hwid IS NOT NULL as hwid_bound, activated_at, last_validation
+       FROM licenses ${whereClause} ORDER BY created_at DESC LIMIT $${idx++} OFFSET $${idx}`,
+      params
+    );
+    const countRow = await qOne(`SELECT COUNT(*)::int as total FROM licenses ${whereClause}`, params.slice(0, -2));
+
+    res.json({ licenses: rows, total: countRow?.total || 0, page: parseInt(page), limit: parseInt(limit) });
+  } catch (err) {
+    console.error('[Admin licenses error]', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// ── ADMIN: REVOKE / REACTIVATE / RESET HWID ───────────────────
+app.post('/api/admin/license/revoke', requireAdmin, async (req, res) => {
+  try {
+    const { licenseKey } = req.body;
+    if (!licenseKey) return res.status(400).json({ error: 'License key required' });
+    await q("UPDATE licenses SET status='revoked' WHERE license_key=$1", [licenseKey.trim().toUpperCase()]);
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ error: 'Internal server error' }); }
+});
+
+app.post('/api/admin/license/reactivate', requireAdmin, async (req, res) => {
+  try {
+    const { licenseKey } = req.body;
+    if (!licenseKey) return res.status(400).json({ error: 'License key required' });
+    await q("UPDATE licenses SET status='active' WHERE license_key=$1", [licenseKey.trim().toUpperCase()]);
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ error: 'Internal server error' }); }
+});
+
+app.post('/api/admin/license/reset-hwid', requireAdmin, async (req, res) => {
+  try {
+    const { licenseKey } = req.body;
+    if (!licenseKey) return res.status(400).json({ error: 'License key required' });
+    await q('UPDATE licenses SET hwid=NULL WHERE license_key=$1', [licenseKey.trim().toUpperCase()]);
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ error: 'Internal server error' }); }
+});
+
+// ── ADMIN: STATS ───────────────────────────────────────────────
+app.get('/api/admin/stats', requireAdmin, async (req, res) => {
+  try {
+    const total = await qOne('SELECT COUNT(*)::int as cnt FROM licenses');
+    const byPlan = await q('SELECT plan, COUNT(*)::int as cnt FROM licenses GROUP BY plan');
+    const byStatus = await q('SELECT status, COUNT(*)::int as cnt FROM licenses GROUP BY status');
+    res.json({ total: total?.cnt || 0, byPlan, byStatus });
+  } catch (err) { res.status(500).json({ error: 'Internal server error' }); }
+});
+
+// ── ADMIN DASHBOARD HTML ───────────────────────────────────────
+app.get('/admin/dashboard', (req, res) => {
+  const secret = req.query.key;
+  if (secret !== ADMIN_SECRET) return res.status(403).send('Unauthorized');
+  res.sendFile(__dirname + '/pages/admin.html');
+});
+
+// ── CUSTOMER LICENSE LOOKUP ────────────────────────────────────
+app.get('/api/customer/license', async (req, res) => {
+  try {
+    const { key, discord_id } = req.query;
+    if (!key && !discord_id) return res.status(400).json({ error: 'Provide key or discord_id' });
+
+    let license;
+    if (key) {
+      license = await qOne(
+        'SELECT license_key, plan, status, created_at, expires_at, activated_at, hwid IS NOT NULL as hwid_bound FROM licenses WHERE license_key=$1',
+        [key.trim().toUpperCase()]
+      );
+    } else {
+      license = await qOne(
+        'SELECT license_key, plan, status, created_at, expires_at, activated_at, hwid IS NOT NULL as hwid_bound FROM licenses WHERE discord_id=$1 ORDER BY created_at DESC LIMIT 1',
+        [discord_id.trim()]
+      );
+    }
+    if (!license) return res.status(404).json({ error: 'License not found' });
+    res.json(license);
+  } catch (err) { res.status(500).json({ error: 'Internal server error' }); }
+});
+
+// ────────────────────────────────────────────────────────────────
+//  LEGACY ENDPOINTS (backward compatibility)
+// ────────────────────────────────────────────────────────────────
 
 function hashCode(str) {
   let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    hash = ((hash << 5) - hash) + str.charCodeAt(i);
-    hash |= 0;
-  }
+  for (let i = 0; i < str.length; i++) { hash = ((hash << 5) - hash) + str.charCodeAt(i); hash |= 0; }
   return Math.abs(hash);
 }
 
-function validateKeyFormat(key) {
-  const cleaned = key.trim().toUpperCase();
-  const parts = cleaned.split('-');
-  if (parts.length !== 4 || parts[0] !== 'CHTX') return null;
-  const tierPrefix = parts[1];
-  let tier;
-  if (tierPrefix.startsWith('PRO')) tier = 'PRO';
-  else if (tierPrefix.startsWith('PREM')) tier = 'PREMIUM';
-  else return null;
-  return { tier, nonce: parts[2], checksum: parts[3] };
-}
-
-function generateReferralCode(discordId) {
-  const hash = hashCode(discordId + Date.now()).toString(36).toUpperCase();
-  return `CHOA-${hash.slice(0, 6)}`;
-}
-
 function generateKey(tier) {
-  const expiry = new Date(Date.now() + 365 * 86400000).toISOString().split('T')[0];
   const nonce = Math.random().toString(36).substring(2, 6).toUpperCase();
-  const hash = hashCode(`${tier}:${expiry}:${nonce}:${SECRET}`);
+  const hash = hashCode(`${tier}:${Date.now()}:${nonce}`);
   const checksum = hash.toString(36).toUpperCase().padStart(4, '0');
-  return `CHTX-${tier.substring(0, 4)}-${nonce}-${checksum}`;
-}
-
-async function initDB() {
-  if (!DB_URL) return;
-  const { Pool } = require('pg');
-  const pool = new Pool({ connectionString: DB_URL });
-  app.locals.pool = pool;
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS keys_table (
-      key TEXT PRIMARY KEY,
-      tier TEXT NOT NULL,
-      expiry TEXT,
-      redeemed BOOLEAN DEFAULT false,
-      discord_id TEXT,
-      created_at TEXT
-    );
-    CREATE TABLE IF NOT EXISTS users_table (
-      discord_id TEXT PRIMARY KEY,
-      tier TEXT NOT NULL,
-      key TEXT,
-      activated_at TEXT,
-      username TEXT
-    );
-    CREATE TABLE IF NOT EXISTS partners_table (
-      discord_id TEXT PRIMARY KEY,
-      name TEXT,
-      tier TEXT DEFAULT 'PARTNER',
-      created_at TEXT
-    );
-    CREATE TABLE IF NOT EXISTS referrals_table (
-      code TEXT PRIMARY KEY,
-      referrer_id TEXT NOT NULL,
-      uses INTEGER DEFAULT 0,
-      max_uses INTEGER DEFAULT 10,
-      created_at TEXT
-    );
-    CREATE TABLE IF NOT EXISTS referral_uses_table (
-      id SERIAL PRIMARY KEY,
-      code TEXT,
-      referee_id TEXT,
-      used_at TEXT
-    );
-    CREATE TABLE IF NOT EXISTS user_coins (
-      discord_id TEXT PRIMARY KEY,
-      coins INTEGER DEFAULT 0,
-      total_earned INTEGER DEFAULT 0,
-      created_at TEXT DEFAULT NOW()::TEXT
-    );
-    CREATE TABLE IF NOT EXISTS daily_quests (
-      id SERIAL PRIMARY KEY,
-      name TEXT NOT NULL,
-      description TEXT NOT NULL,
-      type TEXT NOT NULL,
-      target INTEGER NOT NULL,
-      reward INTEGER NOT NULL,
-      active BOOLEAN DEFAULT true
-    );
-    CREATE TABLE IF NOT EXISTS user_quests (
-      id SERIAL PRIMARY KEY,
-      discord_id TEXT NOT NULL,
-      quest_id INTEGER NOT NULL,
-      progress INTEGER DEFAULT 0,
-      completed BOOLEAN DEFAULT false,
-      claimed BOOLEAN DEFAULT false,
-      date TEXT NOT NULL,
-      UNIQUE(discord_id, quest_id, date)
-    );
-    CREATE TABLE IF NOT EXISTS user_pro_time (
-      discord_id TEXT PRIMARY KEY,
-      pro_until TIMESTAMP,
-      activated_at TEXT
-    );
-    CREATE TABLE IF NOT EXISTS benchmarks (
-      id SERIAL PRIMARY KEY,
-      discord_id TEXT NOT NULL,
-      nickname TEXT DEFAULT 'Anonymous',
-      hardware_hash TEXT NOT NULL,
-      cpu_model TEXT,
-      gpu_model TEXT,
-      ram_gb INTEGER,
-      cpu_score FLOAT,
-      ram_score FLOAT,
-      disk_score FLOAT,
-      gpu_score FLOAT,
-      overall_score FLOAT NOT NULL,
-      created_at TIMESTAMP DEFAULT NOW()
-    );
-    CREATE TABLE IF NOT EXISTS product_ratings (
-      id SERIAL PRIMARY KEY,
-      product_id TEXT NOT NULL,
-      discord_id TEXT NOT NULL,
-      rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
-      review TEXT,
-      created_at TIMESTAMP DEFAULT NOW(),
-      UNIQUE(product_id, discord_id)
-    );
-    CREATE TABLE IF NOT EXISTS affiliates (
-      discord_id TEXT PRIMARY KEY,
-      display_name TEXT,
-      paypal_email TEXT,
-      commission_rate FLOAT DEFAULT 0.10,
-      total_earned FLOAT DEFAULT 0,
-      total_paid FLOAT DEFAULT 0,
-      status TEXT DEFAULT 'active',
-      created_at TEXT DEFAULT NOW()::TEXT
-    );
-    CREATE TABLE IF NOT EXISTS affiliate_links (
-      id SERIAL PRIMARY KEY,
-      affiliate_id TEXT NOT NULL,
-      code TEXT UNIQUE NOT NULL,
-      product_id TEXT,
-      clicks INTEGER DEFAULT 0,
-      conversions INTEGER DEFAULT 0,
-      created_at TEXT DEFAULT NOW()::TEXT
-    );
-    CREATE TABLE IF NOT EXISTS affiliate_clicks (
-      id SERIAL PRIMARY KEY,
-      link_id INTEGER,
-      affiliate_id TEXT NOT NULL,
-      ip_address TEXT,
-      user_agent TEXT,
-      referer TEXT,
-      created_at TEXT DEFAULT NOW()::TEXT
-    );
-    CREATE TABLE IF NOT EXISTS affiliate_sales (
-      id SERIAL PRIMARY KEY,
-      affiliate_id TEXT NOT NULL,
-      link_id INTEGER,
-      order_id TEXT,
-      product_id TEXT,
-      sale_amount FLOAT NOT NULL,
-      commission FLOAT NOT NULL,
-      status TEXT DEFAULT 'pending',
-      paid_at TEXT,
-      created_at TEXT DEFAULT NOW()::TEXT
-    );
-    CREATE TABLE IF NOT EXISTS affiliate_payouts (
-      id SERIAL PRIMARY KEY,
-      affiliate_id TEXT NOT NULL,
-      amount FLOAT NOT NULL,
-      paypal_email TEXT,
-      status TEXT DEFAULT 'pending',
-      notes TEXT,
-      created_at TEXT DEFAULT NOW()::TEXT,
-      paid_at TEXT
-    );
-    CREATE TABLE IF NOT EXISTS discount_codes (
-      id SERIAL PRIMARY KEY,
-      code TEXT UNIQUE NOT NULL,
-      discount_percent FLOAT NOT NULL DEFAULT 10,
-      max_uses INT DEFAULT 0,
-      times_used INT DEFAULT 0,
-      active BOOLEAN DEFAULT true,
-      created_at TEXT DEFAULT NOW()::TEXT
-    );
-  `);
-
-  // Seed discount codes
-  const dcCount = await pool.query('SELECT COUNT(*) as c FROM discount_codes');
-  if (parseInt(dcCount.rows[0].c) === 0) {
-    await pool.query(
-      "INSERT INTO discount_codes (code, discount_percent, max_uses) VALUES ('CHOATIX10', 10, 0)"
-    );
-    console.log('Default discount codes seeded');
-  }
-
-  console.log('PostgreSQL connected');
-
-  // Seed daily quests if empty
-  const qCount = await pool.query('SELECT COUNT(*) as c FROM daily_quests');
-  if (parseInt(qCount.rows[0].c) === 0) {
-    await pool.query(`
-      INSERT INTO daily_quests (name, description, type, target, reward) VALUES
-        ('Chat Activity', 'Send 10 messages in any channel', 'chat', 10, 5),
-        ('Invite a Friend', 'Invite 1 person to the server', 'invite', 1, 10),
-        ('Daily Check-in', 'Claim your daily reward', 'claim', 1, 3),
-        ('Bot User', 'Use 3 bot commands', 'commands', 3, 5)
-    `);
-    console.log('Default quests seeded');
-  }
-
-  // Migration: add username column to users_table if missing
-  try {
-    await pool.query('ALTER TABLE users_table ADD COLUMN IF NOT EXISTS username TEXT');
-  } catch (e) {}
+  if (tier === 'PHANTOM') return `PHNTM-PHNT-${nonce}-${checksum}`;
+  return `PHNTM-${tier.substring(0, 4)}-${nonce}-${checksum}`;
 }
 
 async function getKey(key) {
-  if (app.locals.pool) {
-    const r = await app.locals.pool.query('SELECT * FROM keys_table WHERE key = $1', [key]);
-    return r.rows[0] || null;
-  }
-  return memKeys[key] || null;
+  if (pool) { const r = await pool.query('SELECT * FROM keys_table WHERE key = $1', [key]); return r.rows[0] || null; }
+  return null;
 }
 
 async function saveKey(key, data) {
-  if (app.locals.pool) {
-    await app.locals.pool.query(
+  if (pool) {
+    await pool.query(
       'INSERT INTO keys_table (key, tier, expiry, redeemed, discord_id, created_at) VALUES ($1,$2,$3,$4,$5,$6) ON CONFLICT (key) DO UPDATE SET tier=$2, expiry=$3, redeemed=$4, discord_id=$5, created_at=$6',
       [key, data.tier, data.expiry, data.redeemed, data.discordId, data.createdAt]
     );
-  } else {
-    memKeys[key] = data;
   }
 }
 
 async function getUser(discordId) {
-  if (app.locals.pool) {
-    const r = await app.locals.pool.query('SELECT * FROM users_table WHERE discord_id = $1', [discordId]);
-    return r.rows[0] || null;
-  }
-  return memUsers[discordId] || null;
+  if (pool) { const r = await pool.query('SELECT * FROM users_table WHERE discord_id = $1', [discordId]); return r.rows[0] || null; }
+  return null;
 }
 
 async function saveUser(discordId, data) {
-  if (app.locals.pool) {
-    await app.locals.pool.query(
-      'INSERT INTO users_table (discord_id, tier, key, activated_at, username) VALUES ($1,$2,$3,$4,$5) ON CONFLICT (discord_id) DO UPDATE SET tier=$2, key=$3, activated_at=$4, username=COALESCE($5, users_table.username)',
-      [discordId, data.tier, data.key, data.activatedAt, data.username || null]
+  if (pool) {
+    await pool.query(
+      'INSERT INTO users_table (discord_id, tier, key, activated_at, username, avatar, global_name) VALUES ($1,$2,$3,$4,$5,$6,$7) ON CONFLICT (discord_id) DO UPDATE SET tier=$2, key=$3, activated_at=$4, username=COALESCE($5, users_table.username), avatar=COALESCE($6, users_table.avatar), global_name=COALESCE($7, users_table.global_name)',
+      [discordId, data.tier, data.key, data.activatedAt, data.username || null, data.avatar || null, data.globalName || null]
     );
-  } else {
-    memUsers[discordId] = data;
   }
 }
 
 async function deleteUser(discordId) {
-  if (app.locals.pool) {
-    await app.locals.pool.query('DELETE FROM users_table WHERE discord_id = $1', [discordId]);
-  } else {
-    delete memUsers[discordId];
-  }
+  if (pool) await pool.query('DELETE FROM users_table WHERE discord_id = $1', [discordId]);
 }
 
 async function isPartner(discordId) {
-  if (app.locals.pool) {
-    const r = await app.locals.pool.query('SELECT * FROM partners_table WHERE discord_id = $1', [discordId]);
-    return r.rows[0] || null;
-  }
-  return memPartners[discordId] || null;
+  if (pool) { const r = await pool.query('SELECT * FROM partners_table WHERE discord_id = $1', [discordId]); return r.rows[0] || null; }
+  return null;
 }
 
 async function savePartner(discordId, data) {
-  if (app.locals.pool) {
-    await app.locals.pool.query(
+  if (pool) {
+    await pool.query(
       'INSERT INTO partners_table (discord_id, name, tier, created_at) VALUES ($1,$2,$3,$4) ON CONFLICT (discord_id) DO UPDATE SET name=$2, tier=$3, created_at=$4',
       [discordId, data.name, data.tier, data.createdAt]
     );
-  } else {
-    memPartners[discordId] = data;
   }
 }
 
 async function deletePartner(discordId) {
-  if (app.locals.pool) {
-    await app.locals.pool.query('DELETE FROM partners_table WHERE discord_id = $1', [discordId]);
-  } else {
-    delete memPartners[discordId];
-  }
+  if (pool) await pool.query('DELETE FROM partners_table WHERE discord_id = $1', [discordId]);
 }
 
 async function getReferral(code) {
-  if (app.locals.pool) {
-    const r = await app.locals.pool.query('SELECT * FROM referrals_table WHERE code = $1', [code]);
-    return r.rows[0] || null;
-  }
-  return memReferrals[code] || null;
+  if (pool) { const r = await pool.query('SELECT * FROM referrals_table WHERE code = $1', [code]); return r.rows[0] || null; }
+  return null;
 }
 
 async function saveReferral(code, data) {
-  if (app.locals.pool) {
-    await app.locals.pool.query(
+  if (pool) {
+    await pool.query(
       'INSERT INTO referrals_table (code, referrer_id, uses, max_uses, created_at) VALUES ($1,$2,$3,$4,$5) ON CONFLICT (code) DO UPDATE SET referrer_id=$2, uses=$3, max_uses=$4, created_at=$5',
       [code, data.referrerId, data.uses, data.maxUses, data.createdAt]
     );
-  } else {
-    memReferrals[code] = data;
   }
 }
 
 async function useReferral(code, refereeId) {
-  if (app.locals.pool) {
-    await app.locals.pool.query(
-      'INSERT INTO referral_uses_table (code, referee_id, used_at) VALUES ($1,$2,$3)',
-      [code, refereeId, new Date().toISOString()]
-    );
-    await app.locals.pool.query(
-      'UPDATE referrals_table SET uses = uses + 1 WHERE code = $1',
-      [code]
-    );
-  } else {
-    if (memReferrals[code]) memReferrals[code].uses++;
+  if (pool) {
+    await pool.query('INSERT INTO referral_uses_table (code, referee_id, used_at) VALUES ($1,$2,$3)', [code, refereeId, new Date().toISOString()]);
+    await pool.query('UPDATE referrals_table SET uses = uses + 1 WHERE code = $1', [code]);
   }
 }
 
 async function getUserReferral(discordId) {
-  if (app.locals.pool) {
-    const r = await app.locals.pool.query('SELECT * FROM referrals_table WHERE referrer_id = $1', [discordId]);
-    return r.rows[0] || null;
-  }
-  return Object.values(memReferrals).find(r => r.referrerId === discordId) || null;
+  if (pool) { const r = await pool.query('SELECT * FROM referrals_table WHERE referrer_id = $1', [discordId]); return r.rows[0] || null; }
+  return null;
 }
 
-// ─── Health ────────────────────────────────────────────────────
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', db: DB_URL ? 'postgresql' : 'memory', uptime: process.uptime() });
+// Legacy: License lookup by Discord ID
+app.get('/api/license/:discordId', async (req, res) => {
+  const discordId = req.params.discordId.trim();
+  if (discordId === OWNER_DISCORD_ID) {
+    return res.json({ success: true, tier: 'PHANTOM', key: 'OWNER', activatedAt: null });
+  }
+  // Check new licenses table first
+  const newLicense = await qOne(
+    "SELECT * FROM licenses WHERE discord_id=$1 AND status='active' ORDER BY created_at DESC LIMIT 1",
+    [discordId]
+  );
+  if (newLicense) {
+    return res.json({ success: true, tier: newLicense.plan.toUpperCase() === 'PHANTOM' ? 'PHANTOM' : newLicense.plan.toUpperCase(), key: newLicense.license_key, activatedAt: newLicense.activated_at });
+  }
+  // Fallback to legacy users_table
+  const user = await getUser(discordId);
+  if (!user) return res.status(404).json({ success: false, message: 'No license found' });
+  res.json({ success: true, tier: user.tier, key: user.key || null, activatedAt: user.activated_at || null });
 });
 
-// ─── Key Generation (admin + partner) ──────────────────────────
+// Legacy: Key verification
+app.post('/api/license/verify-key', async (req, res) => {
+  const { key, discordId } = req.body;
+  if (!key) return res.status(400).json({ valid: false, message: 'Key required' });
+  const stored = await getKey(key.trim().toUpperCase());
+  if (!stored) return res.json({ valid: false, message: 'Key not found in database' });
+  if (stored.redeemed && stored.discord_id !== discordId) {
+    return res.json({ valid: false, message: 'Key already redeemed by another user' });
+  }
+  await saveKey(key.trim().toUpperCase(), { tier: stored.tier, expiry: stored.expiry, redeemed: true, discordId: discordId || 'in-app', createdAt: stored.created_at });
+  if (discordId) await saveUser(discordId, { tier: stored.tier, key: key.trim().toUpperCase(), activatedAt: new Date().toISOString() });
+  res.json({ valid: true, tier: stored.tier });
+});
+
+// Legacy: Key generation (admin)
+const ADMIN_SECRET_LEGACY = process.env.ADMIN_SECRET || 'izboMyG93P10s5T2yp8VofbN5FWeBut+';
 app.post('/api/generate', async (req, res) => {
   const { tier, count = 1, adminSecret } = req.body;
-  if (adminSecret !== 'phantom-admin-2024') {
-    return res.status(403).json({ error: 'Invalid admin secret' });
-  }
-  if (!['PRO', 'PREMIUM'].includes(tier)) {
-    return res.status(400).json({ error: 'Invalid tier. Use PRO or PREMIUM' });
-  }
-
+  if (adminSecret !== ADMIN_SECRET_LEGACY) return res.status(403).json({ error: 'Invalid admin secret' });
+  if (!['PRO', 'PHANTOM'].includes(tier)) return res.status(400).json({ error: 'Invalid tier' });
   const keys = [];
   for (let i = 0; i < count; i++) {
-    const expiry = new Date(Date.now() + 365 * 86400000).toISOString().split('T')[0];
     const key = generateKey(tier);
-    await saveKey(key, { tier, expiry, redeemed: false, discordId: null, createdAt: new Date().toISOString() });
+    await saveKey(key, { tier, expiry: null, redeemed: false, discordId: null, createdAt: new Date().toISOString() });
     keys.push(key);
   }
   res.json({ success: true, keys });
 });
 
-// ─── Partner generate (no admin secret needed) ────────────────
+// Legacy: Partner
 app.post('/api/partner/generate', async (req, res) => {
   const { tier, count = 1, discordId } = req.body;
   if (!discordId) return res.status(400).json({ error: 'Discord ID required' });
-
   const partner = await isPartner(discordId);
   if (!partner) return res.status(403).json({ error: 'Not a partner' });
-  if (!['PRO', 'PREMIUM'].includes(tier)) return res.status(400).json({ error: 'Invalid tier' });
-
+  if (!['PRO', 'PHANTOM'].includes(tier)) return res.status(400).json({ error: 'Invalid tier' });
   const keys = [];
   for (let i = 0; i < count; i++) {
-    const expiry = new Date(Date.now() + 365 * 86400000).toISOString().split('T')[0];
     const key = generateKey(tier);
-    await saveKey(key, { tier, expiry, redeemed: false, discordId: null, createdAt: new Date().toISOString() });
+    await saveKey(key, { tier, expiry: null, redeemed: false, discordId: null, createdAt: new Date().toISOString() });
     keys.push(key);
   }
   res.json({ success: true, keys, partner: partner.name });
 });
 
-// ─── Partner management (admin) ───────────────────────────────
 app.post('/api/partner/add', async (req, res) => {
   const { discordId, name, adminSecret } = req.body;
-  if (adminSecret !== 'phantom-admin-2024') return res.status(403).json({ error: 'Unauthorized' });
+  if (adminSecret !== ADMIN_SECRET_LEGACY) return res.status(403).json({ error: 'Unauthorized' });
   if (!discordId || !name) return res.status(400).json({ error: 'Discord ID and name required' });
-
   await savePartner(discordId, { name, tier: 'PARTNER', createdAt: new Date().toISOString() });
-  res.json({ success: true, message: `${name} added as partner` });
+  res.json({ success: true });
 });
 
 app.post('/api/partner/remove', async (req, res) => {
   const { discordId, adminSecret } = req.body;
-  if (adminSecret !== 'phantom-admin-2024') return res.status(403).json({ error: 'Unauthorized' });
-
+  if (adminSecret !== ADMIN_SECRET_LEGACY) return res.status(403).json({ error: 'Unauthorized' });
   await deletePartner(discordId);
   res.json({ success: true });
 });
@@ -430,25 +1003,13 @@ app.get('/api/partner/:discordId', async (req, res) => {
   res.json({ isPartner: true, name: partner.name, tier: partner.tier });
 });
 
-// ─── Referral system ──────────────────────────────────────────
+// Legacy: Referrals
 app.post('/api/referral/create', async (req, res) => {
-  const { discordId, customCode } = req.body;
+  const { discordId } = req.body;
   if (!discordId) return res.status(400).json({ error: 'Discord ID required' });
-
   const existing = await getUserReferral(discordId);
-  if (existing && !customCode) return res.json({ success: true, code: existing.code, uses: existing.uses, maxUses: existing.max_uses });
-
-  let code;
-  if (customCode) {
-    const clean = customCode.trim().toUpperCase().replace(/[^A-Z0-9_-]/g, '');
-    if (clean.length < 3 || clean.length > 20) return res.status(400).json({ error: 'Code must be 3-20 characters (letters, numbers, _ -)' });
-    const taken = await getReferral(clean);
-    if (taken) return res.status(409).json({ error: 'That code is already taken' });
-    code = clean;
-  } else {
-    code = generateReferralCode(discordId);
-  }
-
+  if (existing) return res.json({ success: true, code: existing.code, uses: existing.uses, maxUses: existing.max_uses });
+  const code = `CHOA-${hashCode(discordId + Date.now()).toString(36).toUpperCase().slice(0, 6)}`;
   await saveReferral(code, { referrerId: discordId, uses: 0, maxUses: 10, createdAt: new Date().toISOString() });
   res.json({ success: true, code, uses: 0, maxUses: 10 });
 });
@@ -460,32 +1021,20 @@ app.get('/api/referral/:code', async (req, res) => {
 });
 
 app.post('/api/referral/redeem', async (req, res) => {
-  const { code, refereeId, username } = req.body;
+  const { code, refereeId } = req.body;
   if (!code || !refereeId) return res.status(400).json({ error: 'Code and referee ID required' });
-
   const referral = await getReferral(code.toUpperCase());
   if (!referral) return res.json({ success: false, message: 'Invalid referral code' });
   if (referral.referrer_id === refereeId) return res.json({ success: false, message: "You can't use your own referral code" });
   if (referral.uses >= referral.max_uses) return res.json({ success: false, message: 'Referral code has reached max uses' });
-
   await useReferral(code.toUpperCase(), refereeId);
-
-  const expiry = new Date(Date.now() + 365 * 86400000).toISOString().split('T')[0];
-
   const key = generateKey('PRO');
-  await saveKey(key, { tier: 'PRO', expiry, redeemed: true, discordId: refereeId, createdAt: new Date().toISOString() });
+  await saveKey(key, { tier: 'PRO', expiry: null, redeemed: true, discordId: refereeId, createdAt: new Date().toISOString() });
   await saveUser(refereeId, { tier: 'PRO', key, activatedAt: new Date().toISOString() });
-
-  const referrerKey = generateKey('PREMIUM');
-  await saveKey(referrerKey, { tier: 'PREMIUM', expiry, redeemed: true, discordId: referral.referrer_id, createdAt: new Date().toISOString() });
-  await saveUser(referral.referrer_id, { tier: 'PREMIUM', key: referrerKey, activatedAt: new Date().toISOString() });
-
-  res.json({
-    success: true,
-    refereeReward: 'PRO',
-    referrerReward: 'PREMIUM',
-    message: 'You got PRO! Referrer got PREMIUM upgrade!',
-  });
+  const referrerKey = generateKey('PHANTOM');
+  await saveKey(referrerKey, { tier: 'PHANTOM', expiry: null, redeemed: true, discordId: referral.referrer_id, createdAt: new Date().toISOString() });
+  await saveUser(referral.referrer_id, { tier: 'PHANTOM', key: referrerKey, activatedAt: new Date().toISOString() });
+  res.json({ success: true, refereeReward: 'PRO', referrerReward: 'PHANTOM' });
 });
 
 app.get('/api/referral/user/:discordId', async (req, res) => {
@@ -494,1040 +1043,72 @@ app.get('/api/referral/user/:discordId', async (req, res) => {
   res.json({ code: referral.code, uses: referral.uses, maxUses: referral.max_uses });
 });
 
-// ─── License lookup by Discord ID ────────────────────────────
-app.get('/api/license/:discordId', async (req, res) => {
-  const user = await getUser(req.params.discordId);
-  if (!user) return res.json({ success: true, tier: 'FREE', key: null, activatedAt: null });
-  res.json({ success: true, tier: user.tier, key: user.key || null, activatedAt: user.activated_at || null });
-});
-
-// ─── Key / Redeem (legacy) ──────────────────────────────────
-app.post('/api/license/verify-key', async (req, res) => {
-  const { key, discordId, username } = req.body;
-  if (!key) return res.status(400).json({ valid: false, message: 'Key required' });
-
-  const validated = validateKeyFormat(key);
-  if (!validated) return res.json({ valid: false, message: 'Invalid key format' });
-
-  const stored = await getKey(key.trim().toUpperCase());
-  if (!stored) return res.json({ valid: false, message: 'Key not found in database' });
-  if (stored.redeemed && stored.discord_id !== discordId) {
-    return res.json({ valid: false, message: 'Key already redeemed by another user' });
-  }
-
-  await saveKey(key.trim().toUpperCase(), {
-    tier: stored.tier,
-    expiry: stored.expiry,
-    redeemed: true,
-    discordId: discordId || 'in-app',
-    createdAt: stored.created_at,
-  });
-
-  if (discordId) {
-    await saveUser(discordId, {
-      tier: stored.tier,
-      key: key.trim().toUpperCase(),
-      activatedAt: new Date().toISOString(),
-      username: username || null,
-    });
-  }
-
-  res.json({ valid: true, tier: stored.tier });
-});
-
+// Legacy: Redeem
 app.post('/api/redeem', async (req, res) => {
-  const { key, discordId, username } = req.body;
-  if (!key || !discordId) {
-    return res.status(400).json({ success: false, message: 'Key and Discord ID required' });
-  }
-
-  const validated = validateKeyFormat(key);
-  if (!validated) return res.json({ success: false, message: 'Invalid key format' });
-
+  const { key, discordId, username, avatar, globalName } = req.body;
+  if (!key || !discordId) return res.status(400).json({ success: false, message: 'Key and Discord ID required' });
   const stored = await getKey(key.trim().toUpperCase());
   if (!stored) return res.json({ success: false, message: 'Key not found' });
   if (stored.redeemed) return res.json({ success: false, message: 'Key already redeemed' });
-
-  await saveKey(key.trim().toUpperCase(), {
-    tier: stored.tier,
-    expiry: stored.expiry,
-    redeemed: true,
-    discordId,
-    createdAt: stored.created_at,
-  });
-
-  await saveUser(discordId, {
-    tier: stored.tier,
-    key: key.trim().toUpperCase(),
-    activatedAt: new Date().toISOString(),
-    username: username || null,
-  });
-
-  res.json({ success: true, tier: stored.tier, message: `Activated ${stored.tier} plan!` });
+  await saveKey(key.trim().toUpperCase(), { tier: stored.tier, expiry: stored.expiry, redeemed: true, discordId, createdAt: stored.created_at });
+  await saveUser(discordId, { tier: stored.tier, key: key.trim().toUpperCase(), activatedAt: new Date().toISOString(), username, avatar, globalName });
+  res.json({ success: true, tier: stored.tier });
 });
 
 app.post('/api/license/unlink', async (req, res) => {
   const { discordId } = req.body;
   if (!discordId) return res.status(400).json({ success: false, message: 'Discord ID required' });
-
   const user = await getUser(discordId);
-  if (!user) return res.status(404).json({ success: false, message: 'No license found for this Discord ID' });
-
+  if (!user) return res.status(404).json({ success: false, message: 'No license found' });
   if (user.key) {
     const keyData = await getKey(user.key);
-    if (keyData) {
-      await saveKey(user.key, { ...keyData, redeemed: false, discordId: null });
-    }
+    if (keyData) await saveKey(user.key, { ...keyData, redeemed: false, discord_id: null });
   }
-
   await deleteUser(discordId);
-  res.json({ success: true, message: 'License unlinked successfully' });
+  res.json({ success: true });
 });
 
-// ─── Admin ────────────────────────────────────────────────────
+// Legacy: Admin
 app.get('/api/admin/keys', async (req, res) => {
   const adminSecret = req.headers['x-admin-secret'];
-  if (adminSecret !== 'phantom-admin-2024') {
-    return res.status(403).json({ error: 'Unauthorized' });
-  }
-  if (app.locals.pool) {
-    const keys = await app.locals.pool.query('SELECT * FROM keys_table');
-    const users = await app.locals.pool.query('SELECT * FROM users_table');
-    const partners = await app.locals.pool.query('SELECT * FROM partners_table');
-    const referrals = await app.locals.pool.query('SELECT * FROM referrals_table');
+  if (adminSecret !== ADMIN_SECRET_LEGACY) return res.status(403).json({ error: 'Unauthorized' });
+  if (pool) {
+    const keys = await pool.query('SELECT * FROM keys_table');
+    const users = await pool.query('SELECT * FROM users_table');
+    const partners = await pool.query('SELECT * FROM partners_table');
+    const referrals = await pool.query('SELECT * FROM referrals_table');
     res.json({ keys: keys.rows, users: users.rows, partners: partners.rows, referrals: referrals.rows });
   } else {
-    res.json({ keys: memKeys, users: memUsers, partners: memPartners, referrals: memReferrals });
+    res.json({ keys: {}, users: {}, partners: {}, referrals: {} });
   }
 });
 
-// ─── Admin: Revoke key ──────────────────────────────────────
-app.post('/api/admin/revoke', async (req, res) => {
-  const { key, adminSecret } = req.body;
-  if (adminSecret !== 'phantom-admin-2024') return res.status(403).json({ error: 'Unauthorized' });
-  if (!key) return res.status(400).json({ error: 'Key required' });
-
-  const cleaned = key.trim().toUpperCase();
-  const keyData = await getKey(cleaned);
-  if (!keyData) return res.json({ success: false, message: 'Key not found' });
-
-  if (keyData.discord_id) {
-    await deleteUser(keyData.discord_id);
-  }
-  await saveKey(cleaned, { ...keyData, redeemed: false, discordId: null });
-  res.json({ success: true, message: `Key ${cleaned} revoked` });
-});
-
-// ─── Admin: Stats ────────────────────────────────────────────
-app.get('/api/admin/stats', async (req, res) => {
-  const adminSecret = req.headers['x-admin-secret'];
-  if (adminSecret !== 'phantom-admin-2024') return res.status(403).json({ error: 'Unauthorized' });
-
-  if (app.locals.pool) {
-    const totalKeys = await app.locals.pool.query('SELECT COUNT(*) as count FROM keys_table');
-    const redeemedKeys = await app.locals.pool.query('SELECT COUNT(*) as count FROM keys_table WHERE redeemed = true');
-    const proUsers = await app.locals.pool.query("SELECT COUNT(*) as count FROM users_table WHERE tier = 'PRO'");
-    const premiumUsers = await app.locals.pool.query("SELECT COUNT(*) as count FROM users_table WHERE tier = 'PREMIUM'");
-    const totalReferrals = await app.locals.pool.query('SELECT COALESCE(SUM(uses), 0) as count FROM referrals_table');
-    const benchmarks = await app.locals.pool.query('SELECT COUNT(*) as count FROM benchmarks');
-    const totalCoinsEarned = await app.locals.pool.query('SELECT COALESCE(SUM(total_earned), 0) as count FROM user_coins');
-    const proTimePurchases = await app.locals.pool.query('SELECT COUNT(*) as count FROM user_pro_time');
-    res.json({
-      totalKeys: parseInt(totalKeys.rows[0].count),
-      redeemedKeys: parseInt(redeemedKeys.rows[0].count),
-      proUsers: parseInt(proUsers.rows[0].count),
-      premiumUsers: parseInt(premiumUsers.rows[0].count),
-      totalReferrals: parseInt(totalReferrals.rows[0].count),
-      totalBenchmarks: parseInt(benchmarks.rows[0].count),
-      totalCoinsEarned: parseInt(totalCoinsEarned.rows[0].count),
-      proTimePurchases: parseInt(proTimePurchases.rows[0].count),
-    });
-  } else {
-    const keys = Object.values(memKeys);
-    const users = Object.values(memUsers);
-    res.json({
-      totalKeys: keys.length,
-      redeemedKeys: keys.filter(k => k.redeemed).length,
-      proUsers: users.filter(u => u.tier === 'PRO').length,
-      premiumUsers: users.filter(u => u.tier === 'PREMIUM').length,
-      totalReferrals: 0,
-      totalBenchmarks: 0,
-    });
-  }
-});
-
-// ─── Admin: All licensed users ───────────────────────────────
 app.get('/api/admin/users', async (req, res) => {
   const adminSecret = req.headers['x-admin-secret'];
-  if (adminSecret !== 'phantom-admin-2024') return res.status(403).json({ error: 'Unauthorized' });
-
-  if (app.locals.pool) {
-    const r = await app.locals.pool.query('SELECT discord_id, tier, activated_at, username FROM users_table');
-    res.json({ users: r.rows });
-  } else {
-    const users = Object.entries(memUsers).map(([id, d]) => ({ discord_id: id, tier: d.tier, activated_at: d.activatedAt }));
-    res.json({ users });
-  }
-});
-
-// ── Admin: Affiliate Management ──
-app.get('/api/admin/affiliates', async (req, res) => {
-  const adminSecret = req.headers['x-admin-secret'];
-  if (adminSecret !== 'phantom-admin-2024') return res.status(403).json({ error: 'Unauthorized' });
-  const pool = app.locals.pool;
-  if (!pool) return res.status(500).json({ error: 'No database' });
+  if (adminSecret !== ADMIN_SECRET_LEGACY) return res.status(403).json({ error: 'Unauthorized' });
   try {
-    const affiliates = await pool.query('SELECT * FROM affiliates ORDER BY created_at DESC');
-    const sales = await pool.query('SELECT affiliate_id, COUNT(*) as sales, COALESCE(SUM(commission), 0) as commission FROM affiliate_sales GROUP BY affiliate_id');
-    const links = await pool.query('SELECT affiliate_id, COUNT(*) as links, COALESCE(SUM(clicks), 0) as clicks, COALESCE(SUM(conversions), 0) as conversions FROM affiliate_links GROUP BY affiliate_id');
-    res.json({ affiliates: affiliates.rows, sales: sales.rows, links: links.rows });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-app.post('/api/admin/affiliate/payout', async (req, res) => {
-  const { affiliateId, amount, adminSecret } = req.body;
-  if (adminSecret !== 'phantom-admin-2024') return res.status(403).json({ error: 'Unauthorized' });
-  const pool = app.locals.pool;
-  if (!pool) return res.status(500).json({ error: 'No database' });
-  try {
-    const affiliate = await pool.query('SELECT * FROM affiliates WHERE discord_id = $1', [affiliateId]);
-    if (affiliate.rows.length === 0) return res.status(404).json({ error: 'Affiliate not found' });
-    const payoutAmount = amount || parseFloat((await pool.query("SELECT COALESCE(SUM(commission), 0) as total FROM affiliate_sales WHERE affiliate_id = $1 AND status = 'pending'", [affiliateId])).rows[0].total);
-    if (payoutAmount <= 0) return res.status(400).json({ error: 'No pending commission' });
-    await pool.query(
-      'INSERT INTO affiliate_payouts (affiliate_id, amount, paypal_email, status, paid_at) VALUES ($1, $2, $3, $4, NOW()::TEXT)',
-      [affiliateId, payoutAmount, affiliate.rows[0].paypal_email, 'paid']
-    );
-    await pool.query("UPDATE affiliate_sales SET status = 'paid', paid_at = NOW()::TEXT WHERE affiliate_id = $1 AND status = 'pending'", [affiliateId]);
-    await pool.query('UPDATE affiliates SET total_paid = total_paid + $1 WHERE discord_id = $2', [payoutAmount, affiliateId]);
-    res.json({ success: true, amount: payoutAmount });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-app.post('/api/admin/affiliate/approve', async (req, res) => {
-  const { affiliateId, status, adminSecret } = req.body;
-  if (adminSecret !== 'phantom-admin-2024') return res.status(403).json({ error: 'Unauthorized' });
-  const pool = app.locals.pool;
-  if (!pool) return res.status(500).json({ error: 'No database' });
-  try {
-    await pool.query('UPDATE affiliates SET status = $1 WHERE discord_id = $2', [status || 'active', affiliateId]);
-    res.json({ success: true });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// ── Leaderboard ──
-app.post('/api/benchmark/submit', async (req, res) => {
-  const { discord_id, nickname, hardware_hash, cpu_model, gpu_model, ram_gb, cpu_score, ram_score, disk_score, gpu_score, overall_score } = req.body;
-  if (!overall_score) return res.status(400).json({ error: 'overall_score required' });
-  const id = discord_id || 'anonymous';
-  const hw = hardware_hash || 'unknown';
-  if (app.locals.pool) {
-    await app.locals.pool.query(
-      'INSERT INTO benchmarks (discord_id, nickname, hardware_hash, cpu_model, gpu_model, ram_gb, cpu_score, ram_score, disk_score, gpu_score, overall_score) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)',
-      [id, nickname || 'Anonymous', hw, cpu_model || '', gpu_model || '', ram_gb || 0, cpu_score || 0, ram_score || 0, disk_score || 0, gpu_score || 0, overall_score]
-    );
-  }
-  res.json({ success: true });
-});
-
-app.get('/api/leaderboard', async (req, res) => {
-  const limit = Math.min(parseInt(req.query.limit) || 50, 200);
-  if (app.locals.pool) {
-    const r = await app.locals.pool.query(
-      'SELECT *, ROW_NUMBER() OVER (ORDER BY overall_score DESC) as rank FROM benchmarks ORDER BY overall_score DESC LIMIT $1', [limit]
-    );
-    return res.json({ entries: r.rows });
-  }
-  res.json({ entries: [] });
-});
-
-app.get('/api/leaderboard/hardware/:hash', async (req, res) => {
-  const limit = Math.min(parseInt(req.query.limit) || 50, 200);
-  if (app.locals.pool) {
-    const r = await app.locals.pool.query(
-      'SELECT *, ROW_NUMBER() OVER (ORDER BY overall_score DESC) as rank FROM benchmarks WHERE hardware_hash = $1 ORDER BY overall_score DESC LIMIT $2',
-      [req.params.hash, limit]
-    );
-    return res.json({ entries: r.rows });
-  }
-  res.json({ entries: [] });
-});
-
-app.get('/api/leaderboard/user/:discordId', async (req, res) => {
-  if (app.locals.pool) {
-    const r = await app.locals.pool.query(
-      'SELECT *, (SELECT COUNT(*) + 1 FROM benchmarks b2 WHERE b2.overall_score > b1.overall_score) as rank FROM benchmarks b1 WHERE discord_id = $1 ORDER BY overall_score DESC LIMIT 5',
-      [req.params.discordId]
-    );
-    return res.json({ entries: r.rows });
-  }
-  res.json({ entries: [] });
-});
-
-// ── Daily Quests & Coins ──
-
-// Coins leaderboard (must be before /:discordId)
-app.get('/api/coins/leaderboard', async (req, res) => {
-  if (!app.locals.pool) return res.json({ entries: [] });
-  const r = await app.locals.pool.query(
-    'SELECT discord_id, coins, total_earned, ROW_NUMBER() OVER (ORDER BY coins DESC) as rank FROM user_coins ORDER BY coins DESC LIMIT 20'
-  );
-  res.json({ entries: r.rows });
-});
-
-// Get user coins
-app.get('/api/coins/:discordId', async (req, res) => {
-  if (!app.locals.pool) return res.json({ coins: 0, total_earned: 0 });
-  const r = await app.locals.pool.query('SELECT * FROM user_coins WHERE discord_id = $1', [req.params.discordId]);
-  if (r.rows.length === 0) return res.json({ coins: 0, total_earned: 0 });
-  res.json({ coins: r.rows[0].coins, total_earned: r.rows[0].total_earned });
-});
-
-// Get today's quests for a user
-app.get('/api/quests/today/:discordId', async (req, res) => {
-  if (!app.locals.pool) return res.json({ quests: [] });
-  const today = new Date().toISOString().split('T')[0];
-  const quests = await app.locals.pool.query('SELECT * FROM daily_quests WHERE active = true ORDER BY id');
-  const userQuests = await app.locals.pool.query(
-    'SELECT * FROM user_quests WHERE discord_id = $1 AND date = $2', [req.params.discordId, today]
-  );
-
-  const userMap = {};
-  userQuests.rows.forEach(uq => { userMap[uq.quest_id] = uq; });
-
-  const result = quests.rows.map(q => {
-    const uq = userMap[q.id] || { progress: 0, completed: false, claimed: false };
-    return { ...q, progress: uq.progress, completed: uq.completed, claimed: uq.claimed };
-  });
-
-  res.json({ quests: result });
-});
-
-// Update quest progress
-app.post('/api/quests/progress', async (req, res) => {
-  const { discordId, type, amount = 1 } = req.body;
-  if (!discordId || !type) return res.status(400).json({ error: 'discordId and type required' });
-  if (!app.locals.pool) return res.json({ success: true });
-
-  const today = new Date().toISOString().split('T')[0];
-  const quests = await app.locals.pool.query('SELECT * FROM daily_quests WHERE active = true AND type = $1', [type]);
-
-  for (const quest of quests.rows) {
-    await app.locals.pool.query(`
-      INSERT INTO user_quests (discord_id, quest_id, progress, completed, claimed, date)
-      VALUES ($1, $2, 0, false, false, $3)
-      ON CONFLICT (discord_id, quest_id, date) DO NOTHING
-    `, [discordId, quest.id, today]);
-
-    const uq = await app.locals.pool.query(
-      'SELECT * FROM user_quests WHERE discord_id = $1 AND quest_id = $2 AND date = $3 AND completed = false',
-      [discordId, quest.id, today]
-    );
-
-    if (uq.rows.length > 0 && !uq.rows[0].completed) {
-      const newProgress = uq.rows[0].progress + amount;
-      const completed = newProgress >= quest.target;
-      await app.locals.pool.query(
-        'UPDATE user_quests SET progress = $1, completed = $2 WHERE id = $3',
-        [newProgress, completed, uq.rows[0].id]
-      );
+    let users = [];
+    if (pool) {
+      const result = await pool.query('SELECT * FROM users_table ORDER BY activated_at DESC');
+      users = result.rows;
     }
-  }
-
-  res.json({ success: true });
+    res.json({ users: users.map(u => ({
+      discord_id: u.discord_id, tier: u.tier, key: u.key, activated_at: u.activated_at,
+      username: u.username, avatar: u.avatar, global_name: u.global_name,
+    }))});
+  } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// Claim quest reward
-app.post('/api/quests/claim', async (req, res) => {
-  const { discordId, questId } = req.body;
-  if (!discordId || !questId) return res.status(400).json({ error: 'discordId and questId required' });
-  if (!app.locals.pool) return res.json({ success: true, coins: 0 });
-
-  const today = new Date().toISOString().split('T')[0];
-  const uq = await app.locals.pool.query(
-    'SELECT * FROM user_quests WHERE discord_id = $1 AND quest_id = $2 AND date = $3',
-    [discordId, questId, today]
-  );
-
-  if (uq.rows.length === 0) return res.json({ success: false, message: 'Quest not found' });
-  if (!uq.rows[0].completed) return res.json({ success: false, message: 'Quest not completed' });
-  if (uq.rows[0].claimed) return res.json({ success: false, message: 'Already claimed' });
-
-  const quest = await app.locals.pool.query('SELECT * FROM daily_quests WHERE id = $1', [questId]);
-  if (quest.rows.length === 0) return res.json({ success: false, message: 'Quest not found' });
-
-  const reward = quest.rows[0].reward;
-
-  await app.locals.pool.query('UPDATE user_quests SET claimed = true WHERE id = $1', [uq.rows[0].id]);
-  await app.locals.pool.query(`
-    INSERT INTO user_coins (discord_id, coins, total_earned) VALUES ($1, $2, $2)
-    ON CONFLICT (discord_id) DO UPDATE SET coins = user_coins.coins + $2, total_earned = user_coins.total_earned + $2
-  `, [discordId, reward]);
-
-  const balance = await app.locals.pool.query('SELECT coins FROM user_coins WHERE discord_id = $1', [discordId]);
-  res.json({ success: true, coins: balance.rows[0]?.coins || 0 });
-});
-
-// Buy Pro time with coins (10 coins = 1 hour)
-app.post('/api/coins/buy-pro', async (req, res) => {
-  const { discordId, hours = 1 } = req.body;
-  if (!discordId) return res.status(400).json({ error: 'discordId required' });
-  if (!app.locals.pool) return res.json({ success: false, message: 'No database' });
-
-  const cost = hours * 100;
-  const userCoins = await app.locals.pool.query('SELECT * FROM user_coins WHERE discord_id = $1', [discordId]);
-  if (userCoins.rows.length === 0 || userCoins.rows[0].coins < cost) {
-    return res.json({ success: false, message: `Not enough coins. Need ${cost}, have ${userCoins.rows[0]?.coins || 0}` });
-  }
-
-  await app.locals.pool.query('UPDATE user_coins SET coins = coins - $1 WHERE discord_id = $2', [cost, discordId]);
-
-  const existing = await app.locals.pool.query('SELECT * FROM user_pro_time WHERE discord_id = $1', [discordId]);
-  const now = new Date();
-  const base = existing.rows.length > 0 && new Date(existing.rows[0].pro_until) > now
-    ? new Date(existing.rows[0].pro_until) : now;
-  const proUntil = new Date(base.getTime() + hours * 3600000);
-
-  await app.locals.pool.query(`
-    INSERT INTO user_pro_time (discord_id, pro_until, activated_at) VALUES ($1, $2, $3)
-    ON CONFLICT (discord_id) DO UPDATE SET pro_until = $2, activated_at = $3
-  `, [discordId, proUntil.toISOString(), now.toISOString()]);
-
-  const balance = await app.locals.pool.query('SELECT coins FROM user_coins WHERE discord_id = $1', [discordId]);
-  res.json({ success: true, proUntil: proUntil.toISOString(), coins: balance.rows[0]?.coins || 0 });
-});
-
-// Check Pro time status
-app.get('/api/pro-time/:discordId', async (req, res) => {
-  if (!app.locals.pool) return res.json({ active: false });
-  const r = await app.locals.pool.query('SELECT * FROM user_pro_time WHERE discord_id = $1', [req.params.discordId]);
-  if (r.rows.length === 0) return res.json({ active: false });
-  const active = new Date(r.rows[0].pro_until) > new Date();
-  res.json({ active, proUntil: r.rows[0].pro_until });
-});
-
-// ── Team avatars ──
-app.get('/api/team/:id', async (req, res) => {
-  const https = require('https');
-  const token = process.env.DISCORD_BOT_TOKEN;
-  if (!token) return res.status(500).json({ error: 'No bot token' });
-
-  try {
-    const data = await new Promise((resolve, reject) => {
-      const request = https.get(`https://discord.com/api/v10/users/${req.params.id}`, {
-        headers: { 'Authorization': `Bot ${token}` },
-      }, (response) => {
-        let body = '';
-        response.on('data', chunk => body += chunk);
-        response.on('end', () => {
-          try { resolve(JSON.parse(body)); } catch { reject(new Error('Parse error')); }
-        });
-      });
-      request.on('error', reject);
-      request.setTimeout(5000, () => { request.destroy(); reject(new Error('Timeout')); });
-    });
-
-    if (data.message === 'Unknown User') return res.status(404).json({ error: 'Not found' });
-
-    let avatarUrl = null;
-    if (data.avatar) {
-      const ext = data.avatar.startsWith('a_') ? 'gif' : 'png';
-      avatarUrl = `https://cdn.discordapp.com/avatars/${data.id}/${data.avatar}.${ext}?size=256`;
-    }
-
-    res.json({ username: data.username, global_name: data.global_name, avatar: avatarUrl, discriminator: data.discriminator });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// ── Discord OAuth2 ──
-const DISCORD_CLIENT_ID = process.env.DISCORD_CLIENT_ID || '1520450575831929083';
-const DISCORD_CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET || '';
-const REDIRECT_URI = process.env.DISCORD_REDIRECT_URI || 'https://choatix-v2.onrender.com/api/auth/callback';
-
-app.get('/api/auth/discord', (req, res) => {
-  const url = `https://discord.com/api/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&scope=identify+guilds`;
-  res.redirect(url);
-});
-
-app.get('/api/auth/callback', async (req, res) => {
-  const code = req.query.code;
-  if (!code) return res.status(400).json({ error: 'No code provided' });
-
-  const https = require('https');
-  try {
-    const tokenData = await new Promise((resolve, reject) => {
-      const postData = `client_id=${DISCORD_CLIENT_ID}&client_secret=${DISCORD_CLIENT_SECRET}&grant_type=authorization_code&code=${code}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}`;
-      const request = https.request('https://discord.com/api/oauth2/token', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Content-Length': Buffer.byteLength(postData) },
-      }, (response) => {
-        let body = '';
-        response.on('data', chunk => body += chunk);
-        response.on('end', () => { try { resolve(JSON.parse(body)); } catch { reject(new Error('Token parse error')); } });
-      });
-      request.on('error', reject);
-      request.write(postData);
-      request.end();
-    });
-
-    if (!tokenData.access_token) return res.status(400).json({ error: 'Failed to get token', details: tokenData.error_description || tokenData.error || 'unknown' });
-
-    const user = await new Promise((resolve, reject) => {
-      https.get('https://discord.com/api/users/@me', {
-        headers: { 'Authorization': `Bearer ${tokenData.access_token}` },
-      }, (response) => {
-        let body = '';
-        response.on('data', chunk => body += chunk);
-        response.on('end', () => { try { resolve(JSON.parse(body)); } catch { reject(new Error('User parse error')); } });
-      }).on('error', reject);
-    });
-
-    let avatarUrl = null;
-    if (user.avatar) {
-      const ext = user.avatar.startsWith('a_') ? 'gif' : 'png';
-      avatarUrl = `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.${ext}?size=256`;
-    }
-
-    res.redirect(`https://zylenofficial.github.io/choatix-v2?discord_id=${user.id}&username=${user.username}&avatar=${avatarUrl || ''}`);
-  } catch (err) {
-    res.redirect('https://zylenofficial.github.io/choatix-v2?error=auth_failed');
-  }
-});
-
-// ─── PRODUCT RATINGS API ──────────────────────
-app.get('/api/ratings/:productId', async (req, res) => {
-  const pool = app.locals.pool;
-  if (!pool) return res.json({ ratings: [], avg: 0, count: 0 });
-  try {
-    const result = await pool.query(
-      'SELECT rating, COUNT(*) as count FROM product_ratings WHERE product_id = $1 GROUP BY rating ORDER BY rating DESC',
-      [req.params.productId]
-    );
-    const avgResult = await pool.query(
-      'SELECT COALESCE(AVG(rating), 0) as avg, COUNT(*) as count FROM product_ratings WHERE product_id = $1',
-      [req.params.productId]
-    );
-    const totalRatings = await pool.query(
-      'SELECT COUNT(*) as total FROM product_ratings WHERE product_id = $1',
-      [req.params.productId]
-    );
-    res.json({
-      productId: req.params.productId,
-      avg: parseFloat(avgResult.rows[0].avg).toFixed(1),
-      count: parseInt(totalRatings.rows[0].total),
-      breakdown: result.rows
-    });
-  } catch (err) {
-    res.json({ ratings: [], avg: 0, count: 0 });
-  }
-});
-
-app.get('/api/ratings', async (req, res) => {
-  const pool = app.locals.pool;
-  if (!pool) return res.json({ products: {} });
-  try {
-    const products = ['basic', 'pro', 'extreme', 'precision', 'power', 'full'];
-    const result = {};
-    for (const pid of products) {
-      const avgResult = await pool.query(
-        'SELECT COALESCE(AVG(rating), 0) as avg, COUNT(*) as count FROM product_ratings WHERE product_id = $1',
-        [pid]
-      );
-      result[pid] = {
-        avg: parseFloat(avgResult.rows[0].avg).toFixed(1),
-        count: parseInt(avgResult.rows[0].count)
-      };
-    }
-    res.json({ products: result });
-  } catch (err) {
-    res.json({ products: {} });
-  }
-});
-
-app.post('/api/ratings', async (req, res) => {
-  const pool = app.locals.pool;
-  if (!pool) return res.status(500).json({ error: 'No database' });
-  const { productId, discordId, rating, review } = req.body;
-  if (!productId || !discordId || !rating) return res.status(400).json({ error: 'Missing fields' });
-  if (rating < 1 || rating > 5) return res.status(400).json({ error: 'Rating must be 1-5' });
-  try {
-    await pool.query(
-      'INSERT INTO product_ratings (product_id, discord_id, rating, review) VALUES ($1, $2, $3, $4) ON CONFLICT (product_id, discord_id) DO UPDATE SET rating = $3, review = $4',
-      [productId, discordId, rating, review || null]
-    );
-    const avgResult = await pool.query(
-      'SELECT COALESCE(AVG(rating), 0) as avg, COUNT(*) as count FROM product_ratings WHERE product_id = $1',
-      [productId]
-    );
-    res.json({ success: true, avg: parseFloat(avgResult.rows[0].avg).toFixed(1), count: parseInt(avgResult.rows[0].count) });
-  } catch (err) {
-    res.status(500).json({ error: 'Failed to submit rating' });
-  }
-});
-
-// ── Affiliate Program ──
-function generateAffiliateCode(discordId) {
-  const hash = hashCode(discordId + Date.now()).toString(36).toUpperCase();
-  return `CX-${hash.slice(0, 8)}`;
-}
-
-// Register as affiliate
-app.post('/api/affiliate/register', async (req, res) => {
-  const pool = app.locals.pool;
-  if (!pool) return res.status(500).json({ error: 'No database' });
-  const { discordId, displayName, paypalEmail, customCode } = req.body;
-  if (!discordId || !displayName || !paypalEmail) return res.status(400).json({ error: 'Missing fields' });
-  try {
-    const existing = await pool.query('SELECT * FROM affiliates WHERE discord_id = $1', [discordId]);
-    if (existing.rows.length > 0) return res.status(409).json({ error: 'Already registered' });
-    await pool.query(
-      'INSERT INTO affiliates (discord_id, display_name, paypal_email) VALUES ($1, $2, $3)',
-      [discordId, displayName, paypalEmail]
-    );
-    // Generate default link (or use custom code)
-    let code;
-    if (customCode && customCode.trim()) {
-      const clean = customCode.trim().toUpperCase().replace(/[^A-Z0-9_-]/g, '');
-      if (clean.length < 3 || clean.length > 20) return res.status(400).json({ error: 'Custom code must be 3-20 characters' });
-      const taken = await pool.query('SELECT * FROM affiliate_links WHERE code = $1', [clean]);
-      if (taken.rows.length > 0) return res.status(409).json({ error: 'That code is already taken' });
-      code = clean;
-    } else {
-      code = generateAffiliateCode(discordId);
-    }
-    await pool.query(
-      'INSERT INTO affiliate_links (affiliate_id, code) VALUES ($1, $2)',
-      [discordId, code]
-    );
-    // Notify admins via Discord
-    try {
-      const bot = require('./bot.js');
-      if (bot.notifyAdmins) {
-        await bot.notifyAdmins(
-          '🤝 New Affiliate Registered',
-          `**${displayName}** just joined the affiliate program!\n\n` +
-          `**Discord ID:** ${discordId}\n` +
-          `**PayPal:** ${paypalEmail}\n` +
-          `**Referral Code:** ${code}`
-        );
-      }
-    } catch (e) {}
-    res.json({ success: true, code });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// Get affiliate info
-app.get('/api/affiliate/:discordId', async (req, res) => {
-  const pool = app.locals.pool;
-  if (!pool) return res.status(500).json({ error: 'No database' });
-  try {
-    const result = await pool.query('SELECT * FROM affiliates WHERE discord_id = $1', [req.params.discordId]);
-    if (result.rows.length === 0) return res.json({ affiliate: null });
-    const links = await pool.query('SELECT * FROM affiliate_links WHERE affiliate_id = $1 ORDER BY created_at DESC', [req.params.discordId]);
-    res.json({ affiliate: result.rows[0], links: links.rows });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// Get affiliate stats
-app.get('/api/affiliate/:discordId/stats', async (req, res) => {
-  const pool = app.locals.pool;
-  if (!pool) return res.status(500).json({ error: 'No database' });
-  try {
-    const affiliate = await pool.query('SELECT * FROM affiliates WHERE discord_id = $1', [req.params.discordId]);
-    if (affiliate.rows.length === 0) return res.status(404).json({ error: 'Not an affiliate' });
-    const totalClicks = await pool.query('SELECT COALESCE(SUM(clicks), 0) as total FROM affiliate_links WHERE affiliate_id = $1', [req.params.discordId]);
-    const totalConversions = await pool.query('SELECT COALESCE(SUM(conversions), 0) as total FROM affiliate_links WHERE affiliate_id = $1', [req.params.discordId]);
-    const totalSales = await pool.query('SELECT COALESCE(SUM(sale_amount), 0) as total, COALESCE(SUM(commission), 0) as commission FROM affiliate_sales WHERE affiliate_id = $1', [req.params.discordId]);
-    const pendingCommission = await pool.query("SELECT COALESCE(SUM(commission), 0) as total FROM affiliate_sales WHERE affiliate_id = $1 AND status = 'pending'", [req.params.discordId]);
-    const recentSales = await pool.query('SELECT * FROM affiliate_sales WHERE affiliate_id = $1 ORDER BY created_at DESC LIMIT 10', [req.params.discordId]);
-    const payouts = await pool.query('SELECT * FROM affiliate_payouts WHERE affiliate_id = $1 ORDER BY created_at DESC LIMIT 10', [req.params.discordId]);
-    res.json({
-      affiliate: affiliate.rows[0],
-      clicks: parseInt(totalClicks.rows[0].total),
-      conversions: parseInt(totalConversions.rows[0].total),
-      totalSales: parseFloat(totalSales.rows[0].total),
-      totalCommission: parseFloat(totalSales.rows[0].commission),
-      pendingCommission: parseFloat(pendingCommission.rows[0].total),
-      recentSales: recentSales.rows,
-      payouts: payouts.rows
-    });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// Generate affiliate link
-app.post('/api/affiliate/:discordId/links', async (req, res) => {
-  const pool = app.locals.pool;
-  if (!pool) return res.status(500).json({ error: 'No database' });
-  const { productId } = req.body;
-  try {
-    const code = generateAffiliateCode(req.params.discordId) + (productId ? '-' + productId.toUpperCase() : '');
-    await pool.query(
-      'INSERT INTO affiliate_links (affiliate_id, code, product_id) VALUES ($1, $2, $3)',
-      [req.params.discordId, code, productId || null]
-    );
-    res.json({ success: true, code });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// Track affiliate click + redirect
-app.get('/api/track/:code', async (req, res) => {
-  const pool = app.locals.pool;
-  if (!pool) return res.redirect('https://zylenofficial.github.io/choatix-v2/products.html');
-  try {
-    const link = await pool.query('SELECT * FROM affiliate_links WHERE code = $1', [req.params.code]);
-    if (link.rows.length === 0) return res.redirect('https://zylenofficial.github.io/choatix-v2/products.html');
-    const linkData = link.rows[0];
-    // Record click
-    await pool.query('UPDATE affiliate_links SET clicks = clicks + 1 WHERE id = $1', [linkData.id]);
-    await pool.query(
-      'INSERT INTO affiliate_clicks (link_id, affiliate_id, ip_address, user_agent, referer) VALUES ($1, $2, $3, $4, $5)',
-      [linkData.id, linkData.affiliate_id, req.ip, req.headers['user-agent'] || '', req.headers.referer || '']
-    );
-    // Set cookie for tracking (30 day expiry)
-    res.cookie('cx_aff', req.params.code, { maxAge: 30 * 24 * 60 * 60 * 1000, httpOnly: true });
-    // Redirect to product page
-    const baseUrl = 'https://zylenofficial.github.io/choatix-v2/products.html';
-    const redirect = linkData.product_id ? `${baseUrl}?ref=${req.params.code}&product=${linkData.product_id}` : `${baseUrl}?ref=${req.params.code}`;
-    res.redirect(redirect);
-  } catch (err) {
-    res.redirect('https://zylenofficial.github.io/choatix-v2/products.html');
-  }
-});
-
-// Get affiliate link by code (for tracking info)
-app.get('/api/affiliate-link/:code', async (req, res) => {
-  const pool = app.locals.pool;
-  if (!pool) return res.status(500).json({ error: 'No database' });
-  try {
-    const result = await pool.query('SELECT * FROM affiliate_links WHERE code = $1', [req.params.code]);
-    if (result.rows.length === 0) return res.status(404).json({ error: 'Link not found' });
-    res.json(result.rows[0]);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// Request payout
-app.post('/api/affiliate/:discordId/payout', async (req, res) => {
-  const pool = app.locals.pool;
-  if (!pool) return res.status(500).json({ error: 'No database' });
-  try {
-    const affiliate = await pool.query('SELECT * FROM affiliates WHERE discord_id = $1', [req.params.discordId]);
-    if (affiliate.rows.length === 0) return res.status(404).json({ error: 'Not an affiliate' });
-    const pending = await pool.query("SELECT COALESCE(SUM(commission), 0) as total FROM affiliate_sales WHERE affiliate_id = $1 AND status = 'pending'", [req.params.discordId]);
-    const amount = parseFloat(pending.rows[0].total);
-    if (amount < 5) return res.status(400).json({ error: 'Minimum payout is €5.00' });
-    await pool.query(
-      'INSERT INTO affiliate_payouts (affiliate_id, amount, paypal_email) VALUES ($1, $2, $3)',
-      [req.params.discordId, amount, affiliate.rows[0].paypal_email]
-    );
-    await pool.query("UPDATE affiliate_sales SET status = 'paid', paid_at = NOW()::TEXT WHERE affiliate_id = $1 AND status = 'pending'", [req.params.discordId]);
-    // Notify admins via Discord
-    try {
-      const bot = require('./bot.js');
-      if (bot.notifyAdmins) {
-        await bot.notifyAdmins(
-          '💰 Affiliate Payout Requested',
-          `**${affiliate.rows[0].display_name}** (ID: ${req.params.discordId}) requested a payout.\n\n` +
-          `**Amount:** €${amount.toFixed(2)}\n` +
-          `**PayPal:** ${affiliate.rows[0].paypal_email}\n\n` +
-          `Send payment within 24-48 hours.`
-        );
-      }
-    } catch (e) {}
-    res.json({ success: true, amount });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// ── Discount Codes ──
-app.get('/api/discount/:code', async (req, res) => {
-  const pool = app.locals.pool;
-  if (!pool) return res.status(500).json({ error: 'No database' });
-  try {
-    const result = await pool.query('SELECT * FROM discount_codes WHERE code = $1 AND active = true', [req.params.code.toUpperCase()]);
-    if (result.rows.length === 0) return res.status(404).json({ valid: false, error: 'Invalid discount code' });
-    const dc = result.rows[0];
-    if (dc.max_uses > 0 && dc.times_used >= dc.max_uses) return res.status(400).json({ valid: false, error: 'Code expired' });
-    res.json({ valid: true, code: dc.code, discount: dc.discount_percent });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// ── Admin: Create Discount Code ──
-app.post('/api/admin/discount/create', async (req, res) => {
-  const pool = app.locals.pool;
-  if (!pool) return res.status(500).json({ error: 'No database' });
-  const { code, discount_percent, max_uses, customCode } = req.body;
-  const finalCode = (customCode || code || '').trim().toUpperCase().replace(/[^A-Z0-9_-]/g, '');
-  if (!finalCode || finalCode.length < 3 || finalCode.length > 20) return res.status(400).json({ error: 'Code must be 3-20 characters' });
-  if (!discount_percent || discount_percent < 1 || discount_percent > 90) return res.status(400).json({ error: 'Discount must be 1-90%' });
-  try {
-    const existing = await pool.query('SELECT * FROM discount_codes WHERE code = $1', [finalCode]);
-    if (existing.rows.length > 0) return res.status(409).json({ error: 'Code already exists' });
-    await pool.query('INSERT INTO discount_codes (code, discount_percent, max_uses) VALUES ($1,$2,$3)', [finalCode, discount_percent, max_uses || 0]);
-    res.json({ success: true, code: finalCode, discount_percent, max_uses: max_uses || 0 });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// ── Admin: Get All Discount Codes ──
-app.get('/api/admin/discounts', async (req, res) => {
-  const pool = app.locals.pool;
-  if (!pool) return res.json({ discounts: [] });
-  try {
-    const result = await pool.query('SELECT * FROM discount_codes ORDER BY id DESC');
-    res.json({ discounts: result.rows });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// ── Admin: Delete Discount Code ──
-app.delete('/api/admin/discount/:code', async (req, res) => {
-  const pool = app.locals.pool;
-  if (!pool) return res.status(500).json({ error: 'No database' });
-  try {
-    await pool.query('DELETE FROM discount_codes WHERE code = $1', [req.params.code.toUpperCase()]);
-    res.json({ success: true });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// ── PayPal Checkout ──
-const PRODUCTS = {
-  basic:     { name: 'Phantom Basic Tweaks',       price: null,  tier: 'PRO' },
-  pro:       { name: 'Phantom Pro Tweaks',          price: null,  tier: 'PRO' },
-  extreme:   { name: 'Phantom Extreme Tweaks',      price: null,  tier: 'PREMIUM' },
-  precision: { name: 'Phantom Precision Pack',      price: null,  tier: 'PRO' },
-  full:      { name: 'Phantom Full Optimization',   price: null,  tier: 'PREMIUM' },
-};
-
-app.post('/api/checkout', async (req, res) => {
-  const { productId, items: cartItems, discordUsername, discountCode } = req.body;
-  if (!discordUsername) return res.status(400).json({ error: 'Discord username required' });
-
-  const paypalEmail = process.env.PAYPAL_EMAIL || 'RememberSkill';
-  const pool = app.locals.pool;
-
-  let orderItems = [];
-  let total = 0;
-
-  if (cartItems && Array.isArray(cartItems) && cartItems.length > 0) {
-    for (const ci of cartItems) {
-      const product = PRODUCTS[ci.id];
-      if (!product) continue;
-      const qty = ci.qty || 1;
-      const price = parseFloat(product.price) * qty;
-      total += price;
-      orderItems.push({ id: ci.id, name: product.name, price: product.price, qty, tier: product.tier });
-    }
-  } else if (productId && PRODUCTS[productId]) {
-    const product = PRODUCTS[productId];
-    total = parseFloat(product.price);
-    orderItems.push({ id: productId, name: product.name, price: product.price, qty: 1, tier: product.tier });
-  } else {
-    return res.status(400).json({ error: 'Invalid product' });
-  }
-
-  if (orderItems.length === 0) return res.status(400).json({ error: 'Invalid product' });
-
-  // Apply discount code
-  let discountPercent = 0;
-  let discountCodeStr = null;
-  if (discountCode && pool) {
-    try {
-      const dcResult = await pool.query('SELECT * FROM discount_codes WHERE code = $1 AND active = true', [discountCode.toUpperCase()]);
-      if (dcResult.rows.length > 0) {
-        const dc = dcResult.rows[0];
-        if (dc.max_uses === 0 || dc.times_used < dc.max_uses) {
-          discountPercent = dc.discount_percent;
-          discountCodeStr = dc.code;
-          await pool.query('UPDATE discount_codes SET times_used = times_used + 1 WHERE id = $1', [dc.id]);
-  }
-
-  // Migration: add username column to users_table if missing
-  try {
-    await pool.query('ALTER TABLE users_table ADD COLUMN IF NOT EXISTS username TEXT');
-  } catch (e) {}
-}
-    } catch (e) {}
-  }
-
-  const discountAmount = total * (discountPercent / 100);
-  const finalTotal = total - discountAmount;
-  const totalStr = finalTotal.toFixed(2);
-  const names = orderItems.map(i => i.name).join(', ');
-
-  const crypto = require('crypto');
-  const downloadToken = crypto.randomBytes(16).toString('hex');
-  const productIds = orderItems.map(i => i.id).join(',');
-
-  const successUrl = `${req.headers.origin || 'https://zylenofficial.github.io/choatix-v2'}/?checkout=success&user=${encodeURIComponent(discordUsername)}&token=${downloadToken}&products=${encodeURIComponent(productIds)}`;
-  const note = encodeURIComponent(`Phantom - ${names} (${discordUsername})${discountCodeStr ? ' [' + discountCodeStr + ' -' + discountPercent + '%]' : ''}`);
-  const paypalUrl = `https://paypal.me/${paypalEmail}/${totalStr}?currencyCode=EUR&note=${note}`;
-
-  // Record affiliate sale if tracking cookie exists
-  const affiliateCode = req.cookies?.cx_aff || req.body.affiliateCode || null;
-  if (affiliateCode && pool) {
-    try {
-      const link = await pool.query('SELECT * FROM affiliate_links WHERE code = $1', [affiliateCode]);
-      if (link.rows.length > 0) {
-        const linkData = link.rows[0];
-        const commission = total * 0.10; // 10% commission
-        await pool.query('UPDATE affiliate_links SET conversions = conversions + 1 WHERE id = $1', [linkData.id]);
-        await pool.query(
-          'INSERT INTO affiliate_sales (affiliate_id, link_id, order_id, product_id, sale_amount, commission) VALUES ($1, $2, $3, $4, $5, $6)',
-          [linkData.affiliate_id, linkData.id, `order_${discordUsername}_${Date.now()}`, productIds, total, commission]
-        );
-        await pool.query('UPDATE affiliates SET total_earned = total_earned + $1 WHERE discord_id = $2', [commission, linkData.affiliate_id]);
-      }
-    } catch (err) {
-      console.error('Affiliate tracking error:', err.message);
-    }
-  }
-
-  if (pool) {
-    try {
-      await pool.query(`
-        CREATE TABLE IF NOT EXISTS pending_orders (
-          id SERIAL PRIMARY KEY,
-          discord_username TEXT,
-          product_id TEXT,
-          product_name TEXT,
-          price TEXT,
-          tier TEXT,
-          status TEXT DEFAULT 'pending',
-          download_token TEXT,
-          created_at TEXT DEFAULT NOW()::TEXT
-        )
-      `);
-      await pool.query("ALTER TABLE pending_orders ADD COLUMN IF NOT EXISTS download_token TEXT");
-      for (const item of orderItems) {
-        await pool.query(
-          'INSERT INTO pending_orders (discord_username, product_id, product_name, price, tier, download_token) VALUES ($1, $2, $3, $4, $5, $6)',
-          [discordUsername, item.id, item.name, String(parseFloat(item.price) * item.qty), item.tier, downloadToken]
-        );
-      }
-    } catch (err) {
-      console.error('Order storage error:', err.message);
-    }
-  }
-
-  res.json({
-    url: paypalUrl,
-    orderId: `order_${discordUsername}_${Date.now()}`,
-    downloadToken,
-    discount: discountPercent > 0 ? { code: discountCodeStr, percent: discountPercent, saved: discountAmount.toFixed(2) } : null,
-    originalTotal: total.toFixed(2),
-    finalTotal: totalStr
-  });
-});
-
-app.post('/api/verify-download', async (req, res) => {
-  const { token, discordUsername } = req.body;
-  if (!token || !discordUsername) return res.status(400).json({ valid: false });
-  const pool = app.locals.pool;
-  if (!pool) return res.status(500).json({ valid: false });
-  try {
-    const result = await pool.query(
-      'SELECT product_id FROM pending_orders WHERE download_token = $1 AND discord_username = $2',
-      [token, discordUsername]
-    );
-    if (result.rows.length === 0) return res.json({ valid: false });
-    const products = result.rows.map(r => r.product_id);
-    await pool.query(
-      'DELETE FROM pending_orders WHERE download_token = $1 AND discord_username = $2',
-      [token, discordUsername]
-    );
-    res.json({ valid: true, products: [...new Set(products)] });
-  } catch (err) {
-    res.status(500).json({ valid: false });
-  }
-});
-
-app.get('/api/claim-key/:username', async (req, res) => {
-  const pool = app.locals.pool;
-  if (!pool) return res.status(500).json({ error: 'No database' });
-  try {
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS pending_deliveries (
-        id SERIAL PRIMARY KEY,
-        discord_username TEXT,
-        key TEXT,
-        product_id TEXT,
-        claimed BOOLEAN DEFAULT false,
-        created_at TEXT DEFAULT NOW()::TEXT
-      )
-    `);
-    const result = await pool.query(
-      'SELECT key, product_id FROM pending_deliveries WHERE discord_username = $1 AND claimed = false ORDER BY created_at DESC LIMIT 1',
-      [req.params.username]
-    );
-    if (result.rows.length === 0) return res.status(404).json({ error: 'No pending order found. Complete payment first.' });
-    const row = result.rows[0];
-    await pool.query('UPDATE pending_deliveries SET claimed = true WHERE key = $1', [row.key]);
-    res.json({ key: row.key, product: row.product_id });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-app.post('/api/admin/deliver', async (req, res) => {
-  const { discordUsername, productId } = req.body;
-  if (!discordUsername || !productId || !PRODUCTS[productId]) return res.status(400).json({ error: 'Invalid' });
-  const product = PRODUCTS[productId];
-  const pool = app.locals.pool;
-  if (!pool) return res.status(500).json({ error: 'No database' });
-  try {
-    const key = generateKey(product.tier);
-    const expiry = new Date(Date.now() + 365 * 86400000).toISOString().split('T')[0];
-    await pool.query(
-      'INSERT INTO keys_table (key, tier, expiry, redeemed, created_at) VALUES ($1, $2, $3, false, NOW()::TEXT)',
-      [key, product.tier, expiry]
-    );
-    await pool.query(
-      'INSERT INTO pending_deliveries (discord_username, key, product_id) VALUES ($1, $2, $3)',
-      [discordUsername, key, productId]
-    );
-    res.json({ success: true, key });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
+// ── Start ───────────────────────────────────────────────────────
 initDB().then(() => {
   app.listen(PORT, () => {
-    console.log(`Phantom License Server running on port ${PORT} (${DB_URL ? 'PostgreSQL' : 'in-memory'})`);
-    const bot = require('./bot.js');
-    bot.start(app, app.locals.pool);
+    console.log(`Phantom License Server running on port ${PORT} (${pool ? 'PostgreSQL' : 'in-memory'})`);
+    if (PAYPAL_CLIENT_ID) console.log(`PayPal mode: ${PAYPAL_MODE}`);
+    else console.log('PayPal: NOT CONFIGURED');
   });
 }).catch((err) => {
   console.error('Failed to init DB, falling back to memory:', err.message);
   app.listen(PORT, () => {
     console.log(`Phantom License Server running on port ${PORT} (in-memory fallback)`);
-    const bot = require('./bot.js');
-    bot.start(app, app.locals.pool);
   });
 });
-

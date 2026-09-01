@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Phantom Admin - Licenses</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0c0d10; color: #eef0f3; min-height: 100vh; }
+    .header { padding: 24px 32px; border-bottom: 1px solid rgba(255,255,255,0.07); display: flex; align-items: center; justify-content: space-between; }
+    .header h1 { font-size: 18px; font-weight: 700; }
+    .stats { display: flex; gap: 16px; padding: 20px 32px; }
+    .stat { background: #101216; border: 1px solid rgba(255,255,255,0.07); border-radius: 12px; padding: 16px 20px; min-width: 120px; }
+    .stat-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; color: rgba(255,255,255,0.3); margin-bottom: 4px; }
+    .stat-value { font-size: 24px; font-weight: 700; }
+    .controls { padding: 16px 32px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+    .controls input, .controls select { background: #101216; border: 1px solid rgba(255,255,255,0.1); color: #eef0f3; padding: 8px 14px; border-radius: 8px; font-size: 13px; outline: none; }
+    .controls input { flex: 1; min-width: 200px; }
+    .controls select { min-width: 120px; }
+    .table-wrap { padding: 0 32px 32px; overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    th { text-align: left; padding: 10px 12px; font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; color: rgba(255,255,255,0.3); border-bottom: 1px solid rgba(255,255,255,0.07); }
+    td { padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,0.04); color: rgba(255,255,255,0.6); }
+    tr:hover td { background: rgba(255,255,255,0.02); }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 6px; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+    .badge-active { background: rgba(34,197,94,0.12); color: #22c55e; }
+    .badge-revoked { background: rgba(228,92,92,0.12); color: #e45c5c; }
+    .badge-expired { background: rgba(232,179,57,0.12); color: #e8b339; }
+    .badge-pending { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.4); }
+    .badge-inactive { background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.3); }
+    .badge-free { background: rgba(34,197,94,0.08); color: #22c55e; }
+    .badge-pro { background: rgba(59,130,246,0.12); color: #3b82f6; }
+    .badge-phantom { background: rgba(168,85,247,0.12); color: #a855f7; }
+    .actions { display: flex; gap: 6px; }
+    .actions button { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08); color: rgba(255,255,255,0.5); padding: 4px 10px; border-radius: 6px; font-size: 10px; cursor: pointer; transition: all 0.15s; }
+    .actions button:hover { background: rgba(255,255,255,0.12); color: #fff; }
+    .actions button.danger:hover { background: rgba(228,92,92,0.15); color: #e45c5c; border-color: rgba(228,92,92,0.3); }
+    .mono { font-family: 'SF Mono', Monaco, monospace; font-size: 11px; letter-spacing: 0.5px; }
+    .page-info { padding: 16px 32px; font-size: 11px; color: rgba(255,255,255,0.3); }
+    .page-btns { display: flex; gap: 8px; }
+    .page-btns button { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08); color: rgba(255,255,255,0.5); padding: 6px 14px; border-radius: 6px; font-size: 12px; cursor: pointer; }
+    .page-btns button:hover { background: rgba(255,255,255,0.12); color: #fff; }
+    .toast { position: fixed; bottom: 24px; right: 24px; background: #16181d; border: 1px solid rgba(255,255,255,0.1); color: #fff; padding: 12px 20px; border-radius: 10px; font-size: 12px; display: none; z-index: 999; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Phantom Admin - License Management</h1>
+    <span style="font-size:12px; color:rgba(255,255,255,0.3)" id="totalDisplay"></span>
+  </div>
+  <div class="stats" id="stats"></div>
+  <div class="controls">
+    <input type="text" id="search" placeholder="Search by key, Discord ID, or email...">
+    <select id="filterPlan">
+      <option value="">All Plans</option>
+      <option value="free">Free</option>
+      <option value="pro">Pro</option>
+      <option value="phantom">Phantom</option>
+    </select>
+    <select id="filterStatus">
+      <option value="">All Statuses</option>
+      <option value="active">Active</option>
+      <option value="inactive">Inactive</option>
+      <option value="revoked">Revoked</option>
+      <option value="expired">Expired</option>
+      <option value="pending">Pending</option>
+    </select>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Key</th>
+          <th>Plan</th>
+          <th>Status</th>
+          <th>Discord ID</th>
+          <th>Email</th>
+          <th>HWID</th>
+          <th>Created</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+  <div class="page-info">
+    <div class="page-btns">
+      <button onclick="changePage(-1)">&#8592; Prev</button>
+      <span id="pageInfo">Page 1</span>
+      <button onclick="changePage(1)">Next &#8594;</button>
+    </div>
+  </div>
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const ADMIN_KEY = new URLSearchParams(window.location.search).get('key');
+    const API = window.location.origin;
+    let currentPage = 1;
+
+    async function api(path, opts = {}) {
+      const sep = path.includes('?') ? '&' : '?';
+      const url = `${API}${path}${sep}admin_secret=${ADMIN_KEY}`;
+      const res = await fetch(url, opts);
+      return res.json();
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.style.display = 'block';
+      setTimeout(() => t.style.display = 'none', 3000);
+    }
+
+    async function loadStats() {
+      const data = await api('/api/admin/stats');
+      const el = document.getElementById('stats');
+      let html = `<div class="stat"><div class="stat-label">Total</div><div class="stat-value">${data.total}</div></div>`;
+      for (const p of (data.byPlan || [])) {
+        html += `<div class="stat"><div class="stat-label">${p.plan}</div><div class="stat-value">${p.cnt}</div></div>`;
+      }
+      for (const s of (data.byStatus || [])) {
+        html += `<div class="stat"><div class="stat-label">${s.status}</div><div class="stat-value">${s.cnt}</div></div>`;
+      }
+      el.innerHTML = html;
+      document.getElementById('totalDisplay').textContent = `${data.total} total licenses`;
+    }
+
+    async function loadLicenses() {
+      const search = document.getElementById('search').value;
+      const plan = document.getElementById('filterPlan').value;
+      const status = document.getElementById('filterStatus').value;
+      const params = new URLSearchParams({ page: currentPage, limit: 50 });
+      if (search) params.set('search', search);
+      if (plan) params.set('plan', plan);
+      if (status) params.set('status', status);
+
+      const data = await api(`/api/admin/licenses?${params}`);
+      const tbody = document.getElementById('tbody');
+      if (!data.licenses || data.licenses.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:40px;color:rgba(255,255,255,0.3)">No licenses found</td></tr>';
+        return;
+      }
+      tbody.innerHTML = data.licenses.map(l => `
+        <tr>
+          <td class="mono">${l.license_key}</td>
+          <td><span class="badge badge-${l.plan}">${l.plan}</span></td>
+          <td><span class="badge badge-${l.status}">${l.status}</span></td>
+          <td>${l.discord_id || '<span style="color:rgba(255,255,255,0.15)">-</span>'}</td>
+          <td>${l.customer_email || '<span style="color:rgba(255,255,255,0.15)">-</span>'}</td>
+          <td>${l.hwid_bound ? '<span style="color:#22c55e">&#9679; Bound</span>' : '<span style="color:rgba(255,255,255,0.2)">Unbound</span>'}</td>
+          <td style="font-size:11px">${l.created_at ? new Date(l.created_at).toLocaleDateString() : '-'}</td>
+          <td class="actions">
+            ${l.status === 'active' ? `<button class="danger" onclick="actionLicense('revoke','${l.license_key}')">Revoke</button>` : ''}
+            ${l.status === 'revoked' ? `<button onclick="actionLicense('reactivate','${l.license_key}')">Reactivate</button>` : ''}
+            ${l.hwid_bound ? `<button onclick="actionLicense('reset-hwid','${l.license_key}')">Reset HWID</button>` : ''}
+          </td>
+        </tr>
+      `).join('');
+      document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${Math.ceil((data.total || 0) / 50)}`;
+    }
+
+    async function actionLicense(action, key) {
+      if (!confirm(`${action} license ${key}?`)) return;
+      await api(`/api/admin/license/${action}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ licenseKey: key, adminSecret: ADMIN_KEY }),
+      });
+      showToast(`License ${action}d`);
+      loadLicenses();
+      loadStats();
+    }
+
+    function changePage(delta) {
+      currentPage = Math.max(1, currentPage + delta);
+      loadLicenses();
+    }
+
+    document.getElementById('search').addEventListener('input', () => { currentPage = 1; loadLicenses(); });
+    document.getElementById('filterPlan').addEventListener('change', () => { currentPage = 1; loadLicenses(); });
+    document.getElementById('filterStatus').addEventListener('change', () => { currentPage = 1; loadLicenses(); });
+
+    if (!ADMIN_KEY) {
+      document.body.innerHTML = '<div style="text-align:center;padding:100px;color:#999">No admin key provided. Access via /admin/dashboard?key=YOUR_SECRET</div>';
+    } else {
+      loadStats();
+      loadLicenses();
+    }
+  </script>
+</body>
+</html>
