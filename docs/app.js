@@ -635,7 +635,7 @@ function renderHome() {
     </section>
     <section class="cta-section">
       <h2 class="reveal">Ready to <span>Boost Your FPS</span>?</h2>
-      <p class="reveal">Join 50,000+ gamers optimizing their PCs with Phantom V2</p>
+      <p class="reveal">Join gamers optimizing their PCs with Phantom V2</p>
       <div class="cta-buttons reveal">
         <a href="#pricing" class="btn btn-primary">Download Free</a>
         <a href="${DISCORD_INVITE}" class="btn btn-discord" target="_blank">Join Discord</a>
