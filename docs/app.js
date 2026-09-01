@@ -5,16 +5,17 @@
 
 // ── DATA LAYER ──
 
-const API = 'https://choatix-v2.onrender.com';
+const API = 'https://phantom-license-dy15.onrender.com';
+const SITE_API = 'https://choatix-v2.onrender.com';
 const DISCORD_INVITE = 'https://discord.gg/AhEK85REhG';
 
 const PRODUCTS = {
-  basic:     { id: 'basic',     name: 'Basic Tweaks',         price: null,  tier: 'pro',     subtitle: 'Essential',  desc: 'Windows debloat, essential settings, GPU, network, and power optimization.', tweaks: 220, badge: 'Coming Soon', color: 'soon' },
-  pro:       { id: 'pro',       name: 'Pro Tweaks',           price: null,  tier: 'pro',     subtitle: 'Advanced',   desc: 'Everything in Basic plus BCD boot tweaks, RAM optimization, USB tuning, and deep cleanup.', tweaks: 291, badge: 'Coming Soon', color: 'soon' },
-  extreme:   { id: 'extreme',   name: 'Extreme Tweaks',       price: null,  tier: 'premium', subtitle: 'Maximum',    desc: 'Full debloat, buffer bloat fix, DirectX optimization, registry tuning, and process optimization.', tweaks: 283, badge: 'Coming Soon', color: 'soon' },
-  full:      { id: 'full',      name: 'Full Optimization',    price: null,  tier: 'premium', subtitle: 'Everything', desc: 'All 461 tweaks combined — the complete optimization suite with every category included.', tweaks: 461, badge: 'Coming Soon', color: 'soon' },
-  precision: { id: 'precision', name: 'Precision Pack',       price: null,  tier: 'pro',     subtitle: 'Input',      desc: 'Input lag fix, mouse/keyboard optimization, GPU low latency, and network tweaks for competitive FPS.', tweaks: 128, badge: 'Coming Soon', color: 'soon' },
-  vibrance:  { id: 'vibrance',  name: 'Vibrance Controller',  price: null,  tier: null,      subtitle: 'Display',    desc: 'Digital vibrance control with per-game profiles and auto-detection.', tweaks: 0, badge: 'Coming Soon', color: 'soon' }
+  basic:     { id: 'basic',     name: 'Basic Tweaks',         price: 4.99,  tier: 'pro',     subtitle: 'Essential',  desc: 'Windows debloat, essential settings, GPU, network, and power optimization.', tweaks: 220, badge: 'Popular', color: 'popular' },
+  pro:       { id: 'pro',       name: 'Pro Tweaks',           price: 9.99,  tier: 'pro',     subtitle: 'Advanced',   desc: 'Everything in Basic plus BCD boot tweaks, RAM optimization, USB tuning, and deep cleanup.', tweaks: 291, badge: 'Best Value', color: 'value' },
+  extreme:   { id: 'extreme',   name: 'Extreme Tweaks',       price: 14.99, tier: 'phantom', subtitle: 'Maximum',    desc: 'Full debloat, buffer bloat fix, DirectX optimization, registry tuning, and process optimization.', tweaks: 283, badge: 'Pro', color: 'pro' },
+  full:      { id: 'full',      name: 'Full Optimization',    price: 24.99, tier: 'phantom', subtitle: 'Everything', desc: 'All 461 tweaks combined — the complete optimization suite with every category included.', tweaks: 461, badge: 'Best Seller', color: 'featured' },
+  precision: { id: 'precision', name: 'Precision Pack',       price: 5.99,  tier: 'pro',     subtitle: 'Input',      desc: 'Input lag fix, mouse/keyboard optimization, GPU low latency, and network tweaks for competitive FPS.', tweaks: 128, badge: 'FPS', color: 'aim' },
+  vibrance:  { id: 'vibrance',  name: 'Vibrance Controller',  price: null,  tier: 'free',    subtitle: 'Display',    desc: 'Digital vibrance control with per-game profiles and auto-detection.', tweaks: 0, badge: 'Free', color: 'free' }
 };
 
 const DOWNLOADS = {
@@ -94,11 +95,11 @@ const FAQ = [
   { q: 'How much FPS will I gain?', a: 'Results vary by hardware and game. Most users see 15-60% FPS improvement. Check the FPS Comparison section for average gains across popular games.' },
   { q: 'What\'s the difference between the products?', a: '<strong>Full Optimization (&euro;24.99)</strong> — 461 tweaks: Everything combined. <strong>Basic (&euro;4.99)</strong> — 220 tweaks: Windows debloat, essential settings, GPU/network/power. <strong>Pro (&euro;9.99)</strong> — 291 tweaks: Basic + BCD, RAM, USB, deep cleanup. <strong>Extreme (&euro;14.99)</strong> — 283 tweaks: Full debloat, DirectX, buffer bloat, registry. <strong>Precision (&euro;5.99)</strong> — 128 tweaks: Input lag, mouse/keyboard, GPU latency for FPS games.' },
   { q: 'Do I need to restart my PC after optimizing?', a: 'Some tweaks take effect immediately, others require a restart. Phantom will notify you when a restart is needed. Quick Boost works instantly without restart.' },
-  { q: 'How do I buy a product?', a: 'Go to the Products page, add items to cart, and checkout via PayPal. After payment, you\'ll be redirected to a download page with your .exe installer.' },
+  { q: 'How do I buy a product?', a: 'Go to the Pricing page, choose a plan (Free, Pro, or Phantom), and checkout via PayPal. After payment, you\'ll receive a license key. Paste it in the Phantom app under Settings to activate.' },
   { q: 'Does it work on Windows 11?', a: 'Yes. Phantom V2 supports Windows 10 and Windows 11. All tweaks are compatible with the latest updates.' },
   { q: 'Do I need to run as Administrator?', a: 'Yes. System-level tweaks (registry HKLM, services, power plans, bcdedit) require Administrator privileges. The app will warn you if not running as admin.' },
   { q: 'Can I revert changes?', a: 'Yes. Every tweak has a revert command. Use "Revert All" or click the checkmark next to any category to undo everything safely.' },
-  { q: 'What if I lose my download link?', a: 'Your purchase is tied to your Discord username. Contact support in our Discord server with your username and we\'ll resend the download link.' },
+  { q: 'What if I lose my license key?', a: 'Your purchase is tied to your Discord account. Contact support in our Discord server with your Discord ID and we\'ll resend your license key.' },
   { q: 'What is your refund policy?', a: '<strong>No refunds.</strong> All sales are final. You receive a digital product that cannot be returned. If the app doesn\'t work, contact support on Discord.' }
 ];
 
@@ -186,25 +187,28 @@ function initAuth() {
     history.replaceState({}, '', location.pathname);
   }
   if (params.get('checkout') === 'success') {
-    const user = params.get('user') || '';
     const token = params.get('token') || '';
     const products = params.get('products') || '';
     history.replaceState({}, '', location.pathname);
-    location.href = '#download?token=' + encodeURIComponent(token) + '&user=' + encodeURIComponent(user) + '&products=' + encodeURIComponent(products);
+    if (token) {
+      location.href = '#license?key=' + encodeURIComponent(token) + '&plan=' + (localStorage.getItem('phantom_checkout_plan') || 'pro');
+      localStorage.removeItem('phantom_checkout_plan');
+    }
   }
   const id = localStorage.getItem('discord_id');
   const name = localStorage.getItem('username');
   const av = localStorage.getItem('avatar');
   if (id && name) {
     user = { id, name, avatar: av };
-    fetch(`${API}/api/license/${id}`).then(r => r.json()).then(d => {
-      if (d.tier) user.tier = d.tier;
+    fetch(`${API}/api/license/discord/${id}`).then(r => r.json()).then(d => {
+      if (d.plan) user.tier = d.plan;
+      else if (d.tier) user.tier = d.tier;
       renderNav();
     }).catch(() => {});
   }
 }
 
-function login() { location.href = `${API}/api/auth/discord`; }
+function login() { location.href = `${SITE_API}/api/auth/discord`; }
 function logout(e) {
   e.preventDefault();
   ['discord_id', 'username', 'avatar'].forEach(k => localStorage.removeItem(k));
@@ -303,7 +307,7 @@ async function applyDiscount() {
   if (!input?.value.trim()) return;
   const code = input.value.trim().toUpperCase();
   try {
-    const r = await fetch(`${API}/api/discount/${code}`);
+    const r = await fetch(`${SITE_API}/api/discount/${code}`);
     const d = await r.json();
     if (d.valid) {
       appliedDiscount = { code: d.code, percent: d.discount };
@@ -329,33 +333,131 @@ function closeCart() {
 }
 async function checkout() {
   if (!cart.length) return;
+
+  let discordId = localStorage.getItem('discord_id');
   let username = localStorage.getItem('username');
-  if (!username) {
-    username = prompt('Enter your Discord username (for delivery):');
-    if (!username) return;
-    localStorage.setItem('username', username);
+  if (!discordId && !username) {
+    username = prompt('Enter your Discord username (optional, for license linking):');
+    if (username) localStorage.setItem('username', username);
   }
+
   const btn = document.getElementById('cartCheckout');
   if (btn) { btn.textContent = 'Redirecting to PayPal...'; btn.disabled = true; }
+
   try {
-    const items = cart.map(i => ({ id: i.id, name: i.name, price: i.price, qty: i.qty }));
-    const r = await fetch(`${API}/api/checkout`, {
+    const highestTier = cart.reduce((t, i) => {
+      const p = PRODUCTS[i.id];
+      if (!p) return t;
+      if (p.tier === 'phantom') return 'phantom';
+      if (p.tier === 'pro' && t !== 'phantom') return 'pro';
+      return t;
+    }, 'pro');
+
+    const total = getCartTotal();
+    const disc = appliedDiscount ? total * (appliedDiscount.percent / 100) : 0;
+    const amount = (total - disc).toFixed(2);
+
+    const body = {
+      plan: highestTier,
+      amount: amount,
+      discordId: discordId || null,
+      email: null,
+      return_url: API + '/success/return.html',
+      cancel_url: location.origin + location.pathname + '#pricing'
+    };
+
+    const r = await fetch(`${API}/api/license/checkout`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ items, discordUsername: username, discountCode: appliedDiscount?.code || null })
+      body: JSON.stringify(body)
     });
     const data = await r.json();
-    if (data.url) {
+
+    if (data.approvalUrl) {
+      localStorage.setItem('phantom_checkout_plan', highestTier);
       localStorage.removeItem(CART_KEY);
       localStorage.removeItem(DISCOUNT_KEY);
       appliedDiscount = null;
-      if (data.downloadToken) localStorage.setItem('choatix_download_token', data.downloadToken);
-      location.href = data.url;
+      location.href = data.approvalUrl;
+      return;
+    } else if (data.licenseKey) {
+      localStorage.removeItem(CART_KEY);
+      localStorage.removeItem(DISCOUNT_KEY);
+      appliedDiscount = null;
+      location.href = '#license?key=' + encodeURIComponent(data.licenseKey) + '&plan=' + highestTier;
       return;
     }
-  } catch {}
+  } catch (e) {
+    console.error('Checkout error:', e);
+  }
+
   if (btn) { btn.textContent = 'Checkout via PayPal'; btn.disabled = false; }
   alert('Checkout failed. Try again or contact support on Discord.');
+}
+
+async function requestFreeLicense() {
+  let discordId = localStorage.getItem('discord_id');
+  if (!discordId) {
+    const input = prompt('Enter your Discord ID (right-click your name in Discord > Copy User ID):');
+    if (!input) return;
+    discordId = input.trim();
+    localStorage.setItem('discord_id', discordId);
+  }
+  try {
+    const r = await fetch(`${API}/api/license/free`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ discordId })
+    });
+    const data = await r.json();
+    if (data.licenseKey) {
+      location.href = '#license?key=' + encodeURIComponent(data.licenseKey) + '&plan=free';
+    } else {
+      alert(data.error || 'Failed to get free license. Try again or contact support.');
+    }
+  } catch (e) {
+    console.error('Free license error:', e);
+    alert('Network error. Try again or contact support on Discord.');
+  }
+}
+
+async function startCheckout(plan) {
+  let discordId = localStorage.getItem('discord_id');
+  let username = localStorage.getItem('username');
+  if (!discordId && !username) {
+    username = prompt('Enter your Discord username (optional, for license linking):');
+    if (username) localStorage.setItem('username', username);
+  }
+
+  try {
+    const body = {
+      plan: plan,
+      amount: plan === 'pro' ? '5.99' : '9.99',
+      discordId: discordId || null,
+      email: null,
+      return_url: API + '/success/return.html',
+      cancel_url: location.origin + location.pathname + '#pricing'
+    };
+
+    const r = await fetch(`${API}/api/license/checkout`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    const data = await r.json();
+
+    if (data.approvalUrl) {
+      localStorage.setItem('phantom_checkout_plan', plan);
+      location.href = data.approvalUrl;
+    } else if (data.licenseKey) {
+      location.href = '#license?key=' + encodeURIComponent(data.licenseKey) + '&plan=' + plan;
+    } else {
+      alert(data.error || 'Checkout failed. Try again or contact support.');
+    }
+  } catch (e) {
+    console.error('Checkout error:', e);
+    alert('Network error. Try again or contact support on Discord.');
+  }
 }
 
 // ── NAVIGATION ──
@@ -480,7 +582,8 @@ function router() {
     'refund':   renderRefund,
     'affiliate':renderAffiliate,
     'team':     renderTeam,
-    'download': renderDownload
+    'download': renderDownload,
+    'license':  renderLicense
   };
   const render = PRODUCT_IDS.includes(page) ? () => renderProductDetail(page) : (pages[page] || render404);
   main.innerHTML = render();
@@ -680,11 +783,11 @@ function renderProducts() {
         </div>
         <div class="product-brand">Phantom</div>
         <div class="product-name">${p.name}</div>
-        <div class="product-price">${isFree ? 'Coming Soon' : '&euro;' + p.price.toFixed(2)}</div>
+        <div class="product-price">${isFree ? 'Free' : '&euro;' + p.price.toFixed(2)}</div>
         <div class="product-actions">
           <a href="#${p.id}" class="product-link">View Details</a>
           ${isFree
-            ? `<a href="${DISCORD_INVITE}" target="_blank" class="product-link">Join Discord</a>`
+            ? `<button class="product-link add-to-cart" data-id="${p.id}" data-name="${p.name}" data-price="0">Get Free</button>`
             : `<button class="product-link add-to-cart" data-id="${p.id}" data-name="${p.name}" data-price="${p.price}">Add to Cart</button>`}
         </div>
       </div>`;
@@ -761,11 +864,12 @@ function renderProductDetail(id) {
       <div class="pd-info">
         ${p.badge ? `<div class="product-badge ${p.color ? 'badge-' + p.color : ''}">${p.badge}</div>` : ''}
         <h1>${p.name}</h1>
-        <div class="pd-price">${isFree ? 'Coming Soon' : '&euro;' + p.price.toFixed(2)}</div>
+        <div class="pd-price">${isFree ? 'Free' : '&euro;' + p.price.toFixed(2)}</div>
         <p>${p.desc}</p>
         <div class="pd-actions">
           ${isFree
-            ? `<a href="${DISCORD_INVITE}" class="btn btn-discord" target="_blank">Join Discord for Updates</a>`
+            ? `<button class="btn btn-primary add-to-cart" data-id="${p.id}" data-name="${p.name}" data-price="0">Get Free</button>
+               <a href="#products" class="btn btn-secondary">Back to Products</a>`
             : `<button class="btn btn-primary add-to-cart" data-id="${p.id}" data-name="${p.name}" data-price="${p.price}">Add to Cart</button>
                <a href="#products" class="btn btn-secondary">Back to Products</a>`}
         </div>
@@ -782,9 +886,9 @@ function renderProductDetail(id) {
     <section class="pd-section">
       <div class="pd-cta">
         <h3>Ready to optimize?</h3>
-        <p>${isFree ? 'Join our Discord to get notified when this product launches.' : 'Add to cart and checkout via PayPal. Instant download after purchase.'}</p>
+        <p>${isFree ? 'Get your free license key and activate it in the Phantom app.' : 'Add to cart and checkout via PayPal. Your license key will be shown after payment.'}</p>
         ${isFree
-          ? `<a href="${DISCORD_INVITE}" class="btn btn-discord" target="_blank">Join Discord</a>`
+          ? `<button class="btn btn-primary add-to-cart" data-id="${p.id}" data-name="${p.name}" data-price="0">Get Free</button>`
           : `<button class="btn btn-primary add-to-cart" data-id="${p.id}" data-name="${p.name}" data-price="${p.price}">Add to Cart</button>`}
       </div>
     </section>`;
@@ -794,20 +898,25 @@ function renderProductDetail(id) {
 
 function renderPricing() {
   const tiers = [
-    { name: 'Free', price: '0', period: 'Forever', features: ['System Health Overview', 'Scan PC', 'Quick Boost', 'System Info', 'Process Manager', 'Community Support'], cta: 'Download Free', href: '#products', cls: '' },
-    { name: 'Full', price: 'Coming Soon', period: '', popular: true, features: ['Everything below', TOTAL_TWEAKS + ' System Tweaks', '20 Game Presets', 'Game Library (auto-detect)', 'VBS/HVCI, C-States, Hyper-V', 'NVIDIA Telemetry, Drive Optim', 'Auto Restore Points', 'TrustedInstaller Elevation', 'Everything in Free'], cta: 'Coming Soon', href: '#products', cls: 'popular' },
-    { name: 'Pro', price: 'Coming Soon', period: '', features: ['Everything in Free', '291 System Tweaks', 'Game Presets', 'Deep Clean', 'FPS Compare'], cta: 'Coming Soon', href: '#products', cls: '' }
+    { name: 'Free', price: '0', period: 'Forever', features: ['System Health Overview', 'Scan PC', 'Quick Boost', 'System Info', 'Process Manager', '114 Free Tweaks', 'Community Support'], cta: 'Get Free License', action: 'getFree', cls: '' },
+    { name: 'Pro', price: '5.99', period: 'One-time', popular: true, features: ['Everything in Free', '220+ System Tweaks', 'Game Presets', 'Deep Clean', 'FPS Compare', 'GPU / Network Optimizer', 'Priority Support'], cta: 'Get Pro', action: 'getPro', cls: 'popular' },
+    { name: 'Phantom', price: '9.99', period: 'One-time', features: ['Everything in Pro', '346 System Tweaks', 'All Categories', 'VBS / Hyper-V', 'Registry Tuning', 'Full Debloat', 'TrustedInstaller Elevation', 'Auto Restore Points'], cta: 'Get Phantom', action: 'getPhantom', cls: '' }
   ];
 
-  const pricingCards = tiers.map((t, i) => `
+  const pricingCards = tiers.map((t, i) => {
+    const btnHTML = t.action === 'getFree'
+      ? `<button class="btn ${t.popular ? 'btn-primary' : 'btn-secondary'} price-btn" onclick="requestFreeLicense()">${t.cta}</button>`
+      : `<button class="btn ${t.popular ? 'btn-primary' : 'btn-secondary'} price-btn" onclick="startCheckout('${t.action === 'getPro' ? 'pro' : 'phantom'}')">${t.cta}</button>`;
+    return `
     <div class="price-card ${t.popular ? 'featured' : ''} reveal reveal-d${i + 1}">
       ${t.popular ? '<div class="price-popular">BEST VALUE</div>' : ''}
       <div class="price-tier">${t.name}</div>
-      <div class="price-amount">${t.price === '0' ? '&euro;0' : t.price === 'Coming Soon' ? 'Coming Soon' : '&euro;' + t.price}</div>
+      <div class="price-amount">${t.price === '0' ? '&euro;0' : '&euro;' + t.price}</div>
       <div class="price-period">${t.period ? t.period + ' payment' : ''}</div>
       <ul class="price-features">${t.features.map(f => `<li><span class="price-check"><svg viewBox="0 0 12 12"><path d="M2 6l3 3 5-5"/></svg></span>${f}</li>`).join('')}</ul>
-      <a href="${t.href}" class="btn ${t.popular ? 'btn-primary' : 'btn-secondary'} price-btn">${t.cta}</a>
-    </div>`).join('');
+      ${btnHTML}
+    </div>`;
+  }).join('');
 
   const productsHTML = ['full', 'basic', 'pro', 'extreme', 'precision', 'vibrance'].map(id => {
     const p = PRODUCTS[id];
@@ -825,10 +934,10 @@ function renderPricing() {
         </div>
         <div class="product-brand">Phantom</div>
         <div class="product-name">${p.name}</div>
-        <div class="product-price">${p.price === null ? 'Coming Soon' : '&euro;' + p.price.toFixed(2)}</div>
+        <div class="product-price">${p.price === null ? 'Free' : '&euro;' + p.price.toFixed(2)}</div>
         <div class="product-actions">
           <a href="#${p.id}" class="product-link">View Details</a>
-          ${p.price ? `<button class="product-link add-to-cart" data-id="${p.id}" data-name="${p.name}" data-price="${p.price}">Add to Cart</button>` : ''}
+          ${p.price ? `<button class="product-link add-to-cart" data-id="${p.id}" data-name="${p.name}" data-price="${p.price}">Add to Cart</button>` : `<button class="product-link add-to-cart" data-id="${p.id}" data-name="${p.name}" data-price="0">Get Free</button>`}
         </div>
       </div>`;
   }).join('');
@@ -884,7 +993,7 @@ function renderPricing() {
         <thead><tr><th>Feature</th><th>Free</th><th>Pro <span class="compare-badge pop">Popular</span></th><th>Premium</th></tr></thead>
         <tbody>${tableRows}</tbody>
       </table>
-      <div class="pricing-note reveal"><p>All plans include the full desktop app. Upgrade via Discord with <code>/redeem</code> or buy directly from the <a href="#products">Products</a> page.</p></div>
+      <div class="pricing-note reveal"><p>All plans include the full desktop app. After purchase, you'll receive a license key. Enter it in the Phantom app under Settings to activate your tier.</p></div>
     </section>
     <section class="cta-section">
       <h2 class="reveal">Ready to Boost<br>Your FPS?</h2>
@@ -977,7 +1086,7 @@ async function registerAffiliate() {
   try {
     const body = { discordId: di, displayName: dn, paypalEmail: pp };
     if (cc) body.customCode = cc;
-    const r = await fetch(`${API}/api/affiliate/register`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    const r = await fetch(`${SITE_API}/api/affiliate/register`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
     const d = await r.json();
     if (d.success) { user = { id: di, name: dn }; checkAffiliate(); }
     else { if (err) { err.textContent = d.error || 'Failed'; err.style.display = 'block'; } }
@@ -987,7 +1096,7 @@ async function registerAffiliate() {
 async function checkAffiliate() {
   if (!user) return;
   try {
-    const r = await fetch(`${API}/api/affiliate/${user.id}`);
+    const r = await fetch(`${SITE_API}/api/affiliate/${user.id}`);
     const d = await r.json();
     if (d.affiliate) { aff = d; showDash(); }
   } catch {}
@@ -1004,7 +1113,7 @@ function showDash() {
 async function loadStats() {
   if (!user) return;
   try {
-    const r = await fetch(`${API}/api/affiliate/${user.id}/stats`);
+    const r = await fetch(`${SITE_API}/api/affiliate/${user.id}/stats`);
     const d = await r.json();
     document.getElementById('sEarned').textContent = '\u20AC' + (d.totalCommission || 0).toFixed(2);
     document.getElementById('sPending').textContent = '\u20AC' + (d.pendingCommission || 0).toFixed(2);
@@ -1012,7 +1121,7 @@ async function loadStats() {
     document.getElementById('sConv').textContent = d.conversions || 0;
     const lp = document.getElementById('panel-links');
     if (aff?.links?.length > 0) {
-      lp.innerHTML = aff.links.map(l => `<div class="link-card"><div class="link-card-head"><span class="link-card-code">${l.code}</span><span class="link-card-stats">${l.clicks || 0} clicks · ${l.conversions || 0} sales</span></div><div class="link-card-url"><input type="text" value="${API}/api/track/${l.code}" readonly id="lk-${l.code}"><button onclick="copyLk('${l.code}')">Copy</button></div></div>`).join('');
+      lp.innerHTML = aff.links.map(l => `<div class="link-card"><div class="link-card-head"><span class="link-card-code">${l.code}</span><span class="link-card-stats">${l.clicks || 0} clicks · ${l.conversions || 0} sales</span></div><div class="link-card-url"><input type="text" value="${SITE_API}/api/track/${l.code}" readonly id="lk-${l.code}"><button onclick="copyLk('${l.code}')">Copy</button></div></div>`).join('');
     } else { lp.innerHTML = '<div class="empty-state"><p>No links yet. Click "+ New Link" to get started.</p></div>'; }
     const sp = document.getElementById('panel-sales');
     if (d.recentSales?.length > 0) {
@@ -1032,12 +1141,12 @@ function copyLk(code) {
 
 async function generateLink() {
   if (!user) return;
-  try { await fetch(`${API}/api/affiliate/${user.id}/links`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({}) }); const r = await fetch(`${API}/api/affiliate/${user.id}`); aff = await r.json(); loadStats(); } catch {}
+  try { await fetch(`${SITE_API}/api/affiliate/${user.id}/links`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({}) }); const r = await fetch(`${SITE_API}/api/affiliate/${user.id}`); aff = await r.json(); loadStats(); } catch {}
 }
 
 async function requestPayout() {
   if (!user) return;
-  try { const r = await fetch(`${API}/api/affiliate/${user.id}/payout`, { method: 'POST', headers: { 'Content-Type': 'application/json' } }); const d = await r.json(); if (d.success) { alert('Payout of \u20AC' + d.amount.toFixed(2) + ' requested!'); loadStats(); } else { alert(d.error || 'Failed'); } } catch { alert('Network error'); }
+  try { const r = await fetch(`${SITE_API}/api/affiliate/${user.id}/payout`, { method: 'POST', headers: { 'Content-Type': 'application/json' } }); const d = await r.json(); if (d.success) { alert('Payout of \u20AC' + d.amount.toFixed(2) + ' requested!'); loadStats(); } else { alert(d.error || 'Failed'); } } catch { alert('Network error'); }
 }
 
 function switchTab(btn, tab) {
@@ -1132,6 +1241,73 @@ function render404() {
     </section>`;
 }
 
+// ── PAGE: LICENSE KEY ──
+
+function renderLicense() {
+  const params = new URLSearchParams(location.hash.split('?')[1]);
+  const key = params.get('key');
+  const plan = params.get('plan');
+
+  if (!key) {
+    return `
+      <div class="dl-page" id="dlPage">
+        <div class="dl-box">
+          <h2>No License Key Found</h2>
+          <p>Enter your license key in the Phantom app Settings page to activate.</p>
+          <div style="margin-top:1.5rem;display:flex;gap:0.75rem;justify-content:center;flex-wrap:wrap">
+            <a href="#pricing" class="btn btn-primary">Get a License</a>
+            <a href="${DISCORD_INVITE}" class="btn btn-discord" target="_blank">Need Help?</a>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  const planLabel = plan === 'phantom' ? 'Phantom' : plan === 'pro' ? 'Pro' : 'Free';
+  const planColor = plan === 'phantom' ? '#a855f7' : plan === 'pro' ? '#22c55e' : '#6b7280';
+
+  return `
+    <div class="dl-page" id="dlPage">
+      <div class="dl-box" style="max-width:560px">
+        <div class="dl-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <h1>License Key</h1>
+        <p>Copy this key and paste it in the Phantom app under <strong>Settings > License Key</strong>.</p>
+        <div style="margin:1.5rem 0;padding:1rem 1.5rem;background:var(--bg);border:1px solid var(--border);border-radius:12px;display:flex;align-items:center;gap:1rem">
+          <div style="flex:1;font-family:'JetBrains Mono',monospace;font-size:1.1rem;font-weight:600;letter-spacing:0.05em;word-break:break-all;color:var(--text)" id="licenseKeyValue">${key}</div>
+          <button onclick="copyLicenseKey()" id="copyKeyBtn" style="padding:0.5rem 1rem;background:var(--green);color:#000;border:none;border-radius:8px;font-weight:700;font-size:0.8rem;cursor:pointer;white-space:nowrap">Copy Key</button>
+        </div>
+        <div style="margin-bottom:1rem;padding:0.75rem 1rem;background:var(--bg);border:1px solid var(--border);border-radius:8px;font-size:0.85rem">
+          <span style="opacity:0.6">Plan:</span> <strong style="color:${planColor}">${planLabel}</strong>
+          <span style="margin-left:1rem;opacity:0.6">Status:</span> <strong style="color:#22c55e">Active</strong>
+        </div>
+        <div style="margin-top:1.5rem">
+          <h3 style="font-size:1rem;margin-bottom:0.75rem">How to Activate</h3>
+          <ol style="text-align:left;font-size:0.85rem;color:var(--text-dim);line-height:2;padding-left:1.5rem">
+            <li>Download and install the Phantom app</li>
+            <li>Open Phantom and go to <strong>Settings</strong></li>
+            <li>Paste your license key in the <strong>License Key</strong> field</li>
+            <li>Click <strong>Activate</strong> — you're done!</li>
+          </ol>
+        </div>
+        <div class="dl-alt" style="margin-top:1.5rem">
+          Need help? <a href="${DISCORD_INVITE}" target="_blank">Join our Discord</a>
+        </div>
+        <div style="margin-top:1rem">
+          <a href="#" class="btn btn-secondary" style="font-size:0.8rem">Back to Home</a>
+        </div>
+      </div>
+    </div>`;
+}
+
+function copyLicenseKey() {
+  const el = document.getElementById('licenseKeyValue');
+  const btn = document.getElementById('copyKeyBtn');
+  if (el) {
+    navigator.clipboard.writeText(el.textContent.trim()).then(() => {
+      if (btn) { btn.textContent = 'Copied!'; setTimeout(() => btn.textContent = 'Copy Key', 2000); }
+    }).catch(() => {});
+  }
+}
+
 // ── EFFECTS ──
 
 
@@ -1188,7 +1364,7 @@ function initScrollEffects() {
 
   TEAM.forEach(m => {
     const img = document.getElementById('avatar-' + m.id);
-    if (img) fetch(`${API}/api/team/${m.id}`).then(r => r.json()).then(d => { if (d.avatar) img.src = d.avatar; }).catch(() => {});
+    if (img) fetch(`${SITE_API}/api/team/${m.id}`).then(r => r.json()).then(d => { if (d.avatar) img.src = d.avatar; }).catch(() => {});
   });
 }
 
@@ -1234,11 +1410,11 @@ document.addEventListener('DOMContentLoaded', init);
 const CHATBOT_FAB_KEY = 'choatix_chatbot_seen';
 
 const CHAT_PRODUCTS = {
-  basic:     { name: 'Basic Tweaks',      price: null,  tweaks: 220, desc: 'Windows debloat, essential settings, GPU, network, power', best: 'Budget-friendly all-rounder' },
-  pro:       { name: 'Pro Tweaks',        price: null,  tweaks: 291, desc: 'Basic + BCD boot tweaks, RAM optimization, USB tuning, deep cleanup', best: 'Best value for most gamers' },
-  extreme:   { name: 'Extreme Tweaks',    price: null, tweaks: 283, desc: 'Full debloat, DirectX, buffer bloat, registry tuning', best: 'Best Seller' },
-  precision: { name: 'Precision Pack',    price: null,  tweaks: 128, desc: 'Input lag, mouse/keyboard optimization, GPU low latency, network', best: 'Competitive FPS players' },
-  full:      { name: 'Full Optimization', price: null, tweaks: 461, desc: 'Everything combined — the complete optimization suite', best: 'Maximum performance' }
+  basic:     { name: 'Basic Tweaks',      price: 4.99,  tweaks: 220, desc: 'Windows debloat, essential settings, GPU, network, power', best: 'Budget-friendly all-rounder' },
+  pro:       { name: 'Pro Tweaks',        price: 9.99,  tweaks: 291, desc: 'Basic + BCD boot tweaks, RAM optimization, USB tuning, deep cleanup', best: 'Best value for most gamers' },
+  extreme:   { name: 'Extreme Tweaks',    price: 14.99, tweaks: 283, desc: 'Full debloat, DirectX, buffer bloat, registry tuning', best: 'Best Seller' },
+  precision: { name: 'Precision Pack',    price: 5.99,  tweaks: 128, desc: 'Input lag, mouse/keyboard optimization, GPU low latency, network', best: 'Competitive FPS players' },
+  full:      { name: 'Full Optimization', price: 24.99, tweaks: 461, desc: 'Everything combined — the complete optimization suite', best: 'Maximum performance' }
 };
 
 let chatbotOpen = false;
@@ -1287,7 +1463,7 @@ function botSay(html, product) {
     const p = CHAT_PRODUCTS[product];
     if (p) {
       const tagClass = product === 'extreme' ? 'best' : 'recommended';
-      productTag = `<div class="chat-product-tag ${tagClass}">${p.name} — Coming Soon</div>`;
+      productTag = `<div class="chat-product-tag ${tagClass}">${p.name} — &euro;${p.price}</div>`;
     }
   }
 
@@ -1429,35 +1605,35 @@ function processInput(text) {
 
   // ── Specific product questions ──
   if (lower.match(/basic/)) {
-    if (lower.match(/add|cart|buy|purchase/)) { botSay("<strong>Basic Tweaks</strong> is Coming Soon! Join our Discord for launch updates."); showSuggestions(["Join Discord", "Compare other options"]); return; }
+    if (lower.match(/add|cart|buy|purchase/)) { botSay(`<strong>${p.name}</strong> is &euro;${p.price}! Would you like to go to the checkout?`, 'basic'); showSuggestions(["Go to checkout", "Compare other options"]); return; }
     if (lower.match(/include|contain|what|feature|tweak/)) { showProductDetails('basic'); return; }
     recommendProduct('basic');
     return;
   }
 
   if (lower.match(/pro/)) {
-    if (lower.match(/add|cart|buy|purchase/)) { botSay("<strong>Pro Tweaks</strong> is Coming Soon! Join our Discord for launch updates."); showSuggestions(["Join Discord", "Compare other options"]); return; }
+    if (lower.match(/add|cart|buy|purchase/)) { botSay(`<strong>${CHAT_PRODUCTS.pro.name}</strong> is &euro;${CHAT_PRODUCTS.pro.price}! Would you like to go to the checkout?`, 'pro'); showSuggestions(["Go to checkout", "Compare other options"]); return; }
     if (lower.match(/include|contain|what|feature|tweak/)) { showProductDetails('pro'); return; }
     recommendProduct('pro');
     return;
   }
 
   if (lower.match(/extreme/)) {
-    if (lower.match(/add|cart|buy|purchase/)) { botSay("<strong>Extreme Tweaks</strong> is Coming Soon! Join our Discord for launch updates."); showSuggestions(["Join Discord", "Compare other options"]); return; }
+    if (lower.match(/add|cart|buy|purchase/)) { botSay(`<strong>${CHAT_PRODUCTS.extreme.name}</strong> is &euro;${CHAT_PRODUCTS.extreme.price}! Would you like to go to the checkout?`, 'extreme'); showSuggestions(["Go to checkout", "Compare other options"]); return; }
     if (lower.match(/include|contain|what|feature|tweak/)) { showProductDetails('extreme'); return; }
     recommendProduct('extreme');
     return;
   }
 
   if (lower.match(/precision/)) {
-    if (lower.match(/add|cart|buy|purchase/)) { botSay("<strong>Precision Pack</strong> is Coming Soon! Join our Discord for launch updates."); showSuggestions(["Join Discord", "Compare other options"]); return; }
+    if (lower.match(/add|cart|buy|purchase/)) { botSay(`<strong>${CHAT_PRODUCTS.precision.name}</strong> is &euro;${CHAT_PRODUCTS.precision.price}! Would you like to go to the checkout?`, 'precision'); showSuggestions(["Go to checkout", "Compare other options"]); return; }
     if (lower.match(/include|contain|what|feature|tweak/)) { showProductDetails('precision'); return; }
     recommendProduct('precision');
     return;
   }
 
   if (lower.match(/full|everything|all.*tweak|complete/)) {
-    if (lower.match(/add|cart|buy|purchase/)) { botSay("<strong>Full Optimization</strong> is Coming Soon! Join our Discord for launch updates."); showSuggestions(["Join Discord", "Compare other options"]); return; }
+    if (lower.match(/add|cart|buy|purchase/)) { botSay(`<strong>${CHAT_PRODUCTS.full.name}</strong> is &euro;${CHAT_PRODUCTS.full.price}! Would you like to go to the checkout?`, 'full'); showSuggestions(["Go to checkout", "Compare other options"]); return; }
     if (lower.match(/include|contain|what|feature|tweak/)) { showProductDetails('full'); return; }
     recommendProduct('full');
     return;
@@ -1465,7 +1641,7 @@ function processInput(text) {
 
   // ── Cart / checkout ──
   if (lower.match(/cart|checkout|pay|purchase/)) {
-    botSay("All products are Coming Soon! Join our Discord for launch updates.");
+    botSay("Head to our <a href='#pricing' style='color:var(--green)'>Pricing page</a> to pick a plan and checkout via PayPal.");
     showSuggestions(["What should I buy?", "Compare products", "I'm on a budget"]);
     return;
   }
@@ -1545,8 +1721,8 @@ function recommendProduct(id) {
   const p = CHAT_PRODUCTS[id];
   if (!p) return;
   chatContext.lastProduct = id;
-  botSay(`Based on what you've told me, I'd recommend <strong>${p.name}</strong> (Coming Soon).<br><br>${p.desc}.<br><em>${p.best}.</em>`, id);
-  showSuggestions(["Tell me more", "Compare with other options"]);
+  botSay(`Based on what you've told me, I'd recommend <strong>${p.name}</strong> (&euro;${p.price}).<br><br>${p.desc}.<br><em>${p.best}.</em>`, id);
+  showSuggestions(["Tell me more", "Compare with other options", "Go to checkout"]);
 }
 
 function showProductDetails(id) {
@@ -1560,8 +1736,8 @@ function showProductDetails(id) {
     precision: "\u2022 Timer resolution fix<br>\u2022 Mouse polling optimization<br>\u2022 Keyboard repeat rate<br>\u2022 GPU low latency mode<br>\u2022 Network for competitive",
     full: "Everything in all packs combined:<br>\u2022 461 system tweaks<br>\u2022 Every optimization category<br>\u2022 Game presets for 20+ titles<br>\u2022 Quick Boost<br>\u2022 Safe rollback"
   };
-  botSay(`<strong>${p.name}</strong> (Coming Soon) — ${p.tweaks} tweaks:<br><br>${detailMap[id]}`, id);
-  showSuggestions(["Compare with others", "What should I buy?"]);
+  botSay(`<strong>${p.name}</strong> (&euro;${p.price}) — ${p.tweaks} tweaks:<br><br>${detailMap[id]}`, id);
+  showSuggestions(["Compare with others", "Go to checkout"]);
 }
 
 function escapeHTML(str) {
