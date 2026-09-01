@@ -651,18 +651,6 @@ function renderFeatures() {
       <p>${f.desc}</p>
     </div>`).join('');
 
-  const lineupHTML = [
-    { name: 'Free', badge: '&euro;0', cls: '', desc: 'Basic features, community support' },
-    { name: 'Pro', badge: '&euro;5.99', cls: 'featured', desc: '220+ tweaks, game presets, deep clean' },
-    { name: 'Phantom', badge: '&euro;9.99', cls: 'save', desc: '346 tweaks, all categories, full debloat' }
-  ].map(p => `
-      <div class="lineup-card ${p.cls}">
-        <div class="lineup-badge ${p.cls}">${p.badge}</div>
-        <h3>${p.name}</h3>
-        <p>${p.desc}</p>
-        <a href="#pricing" class="btn ${p.cls === 'featured' ? 'btn-primary' : 'btn-secondary'}">View Pricing</a>
-      </div>`).join('');
-
   return `
     <section class="page-hero">
       <h1><span class="line1">Everything You</span><span class="line2">Need</span></h1>
@@ -670,10 +658,6 @@ function renderFeatures() {
     </section>
     <section id="features-grid">
       <div class="features-grid">${cardsHTML}</div>
-    </section>
-    <section class="product-lineup-section">
-      <div class="section-header reveal"><div class="section-label">Product Lineup</div><h2>Choose Your Tier</h2><p>One app, three tiers</p></div>
-      <div class="product-lineup-grid reveal">${lineupHTML}</div>
     </section>
     <section class="cta-section">
       <h2 class="reveal">Ready to Boost<br>Your FPS?</h2>
@@ -853,7 +837,7 @@ function renderRefund() {
       <div class="refund-content">
         <div class="refund-card">${REFUND_POLICY}</div>
         <div class="refund-actions">
-          <a href="#pricing" class="btn btn-primary">Back to Products</a>
+          <a href="#pricing" class="btn btn-primary">Back to Pricing</a>
           <a href="${DISCORD_INVITE}" class="btn btn-discord" target="_blank">Contact Support</a>
         </div>
       </div>
