@@ -1099,6 +1099,80 @@ app.get('/api/admin/users', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
+// ── Discord OAuth Login ─────────────────────────────────────────
+const DISCORD_CLIENT_ID = process.env.DISCORD_CLIENT_ID || '';
+const DISCORD_CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET || '';
+const SITE_URL = process.env.SITE_URL || 'https://zylenofficial.github.io/choatix-v2/';
+
+// Step 1: send user to Discord's consent screen
+app.get('/api/auth/discord', (req, res) => {
+  if (!DISCORD_CLIENT_ID || !DISCORD_CLIENT_SECRET) {
+    return res.status(500).send('Discord OAuth not configured. Set DISCORD_CLIENT_ID and DISCORD_CLIENT_SECRET.');
+  }
+  // Use the public host of this service as the redirect URI
+  const proto = req.headers['x-forwarded-proto'] || req.protocol || 'https';
+  const host = req.headers['x-forwarded-host'] || req.headers.host;
+  const redirectUri = process.env.DISCORD_REDIRECT_URI || `${proto}://${host}/api/auth/discord/callback`;
+
+  const params = new URLSearchParams({
+    client_id: DISCORD_CLIENT_ID,
+    redirect_uri: redirectUri,
+    response_type: 'code',
+    scope: 'identify',
+    prompt: 'consent',
+  });
+  res.redirect(`https://discord.com/oauth2/authorize?${params.toString()}`);
+});
+
+// Step 2: Discord redirects back here with a code — exchange it for the user
+app.get('/api/auth/discord/callback', async (req, res) => {
+  const { code } = req.query;
+  if (!code) return res.status(400).send('Missing code');
+  try {
+    const proto = req.headers['x-forwarded-proto'] || req.protocol || 'https';
+    const host = req.headers['x-forwarded-host'] || req.headers.host;
+    const redirectUri = process.env.DISCORD_REDIRECT_URI || `${proto}://${host}/api/auth/discord/callback`;
+
+    // Exchange the code for an access token
+    const tokenRes = await fetch('https://discord.com/api/oauth2/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        client_id: DISCORD_CLIENT_ID,
+        client_secret: DISCORD_CLIENT_SECRET,
+        grant_type: 'authorization_code',
+        code,
+        redirect_uri: redirectUri,
+      }),
+    });
+    if (!tokenRes.ok) throw new Error(`Token exchange failed: ${tokenRes.status}`);
+    const tokenData = await tokenRes.json();
+
+    // Fetch the user's identity
+    const userRes = await fetch('https://discord.com/api/users/@me', {
+      headers: { Authorization: `Bearer ${tokenData.access_token}` },
+    });
+    if (!userRes.ok) throw new Error(`User fetch failed: ${userRes.status}`);
+    const u = await userRes.json();
+
+    const username = u.global_name || u.username || 'User';
+    const avatar = u.avatar
+      ? `https://cdn.discordapp.com/avatars/${u.id}/${u.avatar}.png`
+      : `https://cdn.discordapp.com/embed/avatars/${(Number(u.discriminator) || 0) % 5}.png`;
+
+    // Send identity back to the website (initAuth in app.js picks this up)
+    const params = new URLSearchParams({
+      discord_id: u.id,
+      username,
+      avatar,
+    });
+    res.redirect(`${SITE_URL}?${params.toString()}`);
+  } catch (err) {
+    console.error('Discord OAuth error:', err.message);
+    res.redirect(`${SITE_URL}?discord_login=failed`);
+  }
+});
+
 // ── Start ───────────────────────────────────────────────────────
 initDB().then(() => {
   app.listen(PORT, () => {
