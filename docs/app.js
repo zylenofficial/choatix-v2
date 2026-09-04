@@ -875,8 +875,21 @@ function render404() {
 
 function renderLicense() {
   const params = new URLSearchParams(location.hash.split('?')[1]);
+  const sessionID = params.get('session_id');
   const key = params.get('key');
   const plan = params.get('plan');
+
+  // Coming back from a Stripe Checkout redirect: exchange session_id for a license key
+  if (!key && sessionID) {
+    setTimeout(() => fetchLicenseFromSession(sessionID), 0);
+    return `
+      <div class="dl-page" id="dlPage">
+        <div class="dl-box">
+          <h2>Processing your payment&#8230;</h2>
+          <p>Retrieving your license key, please wait&#8230;</p>
+        </div>
+      </div>`;
+  }
 
   if (!key) {
     return `
@@ -935,6 +948,44 @@ function renderLicense() {
         </div>
       </div>
     </div>`;
+}
+
+function fetchLicenseFromSession(sessionID) {
+  fetch('https://choatix-license-system.onrender.com/api/checkout/capture-order', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ sessionID: sessionID })
+  })
+    .then(r => r.json())
+    .then(d => {
+      if (d && d.licenseKey) {
+        // Swap the hash to key= form so the page renders the license (and refreshes don't re-capture)
+        location.hash = '#license?key=' + encodeURIComponent(d.licenseKey) + '&plan=' + encodeURIComponent(d.plan || '');
+      } else {
+        const box = document.querySelector('#dlPage .dl-box');
+        if (box) {
+          box.innerHTML = `
+            <h2>Payment not confirmed yet</h2>
+            <p>Your payment is still processing. If you paid successfully, your license key will be available shortly \u2014 try refreshing this page in a moment.</p>
+            <div style="margin-top:1.5rem;display:flex;gap:0.75rem;justify-content:center;flex-wrap:wrap">
+              <a href="javascript:location.reload()" class="btn btn-primary">Retry</a>
+              <a href="${DISCORD_INVITE}" class="btn btn-discord" target="_blank">Need Help?</a>
+            </div>`;
+        }
+      }
+    })
+    .catch(() => {
+      const box = document.querySelector('#dlPage .dl-box');
+      if (box) {
+        box.innerHTML = `
+          <h2>Something went wrong</h2>
+          <p>We couldn't retrieve your license key. Please try again or contact support.</p>
+          <div style="margin-top:1.5rem;display:flex;gap:0.75rem;justify-content:center;flex-wrap:wrap">
+            <a href="javascript:location.reload()" class="btn btn-primary">Retry</a>
+            <a href="${DISCORD_INVITE}" class="btn btn-discord" target="_blank">Need Help?</a>
+          </div>`;
+      }
+    });
 }
 
 function copyLicenseKey() {
