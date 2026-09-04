@@ -73,8 +73,18 @@
 
   <script>
   (function() {
+    // Parse session_id from either query string or hash fragment
+    var sessionID = null;
     var params = new URLSearchParams(window.location.search);
-    var sessionID = params.get('session_id');
+    sessionID = params.get('session_id');
+    
+    // If not in query string, check hash fragment (#license?session_id=...)
+    if (!sessionID && window.location.hash) {
+      var hashStr = window.location.hash.substring(1); // remove #
+      var hashParams = new URLSearchParams(hashStr.split('?')[1] || '');
+      sessionID = hashParams.get('session_id');
+    }
+    
     if (!sessionID) return;
 
     fetch('https://choatix-license-system.onrender.com/api/checkout/capture-order', {
