@@ -51,5 +51,46 @@
 
   <script src="particles.js"></script>
   <script src="app.js"></script>
+
+  <!-- License Key Display after Payment -->
+  <div id="license-panel" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(10,10,15,0.95); z-index:10000; justify-content:center; align-items:center;">
+    <div style="background:#15151f; border:1px solid #2a2a3e; border-radius:16px; padding:40px; max-width:500px; width:90%; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,0.5);">
+      <div style="font-size:3rem; margin-bottom:16px;">✅</div>
+      <h2 style="color:#00ff9d; margin:0 0 8px; font-size:1.5rem;">Payment Successful!</h2>
+      <p style="color:#a0a0b0; margin:0 0 20px;">Your license key is ready</p>
+      <div id="license-key" style="font-family:'JetBrains Mono',monospace; font-size:1.1rem; color:#00d4ff; background:#0a0a09; padding:16px; border:1px solid #2a2a3e; border-radius:10px; margin-bottom:24px; word-break:break-all; letter-spacing:1px;"></div>
+      <div style="background:#1a1a2e; border:1px solid #5865f2; border-radius:12px; padding:20px; text-align:left;">
+        <h3 style="color:#5865f2; margin:0 0 12px; font-size:1rem;">⚡ ACTIVATE ON DISCORD</h3>
+        <ol style="color:#e0e0e0; line-height:2; margin:0; padding-left:20px; font-size:0.9rem;">
+          <li>Join <a href="https://discord.gg/AhEK85REhG" target="_blank" style="color:#5865f2;">Discord server</a></li>
+          <li>Open <b>#tickets</b></li>
+          <li>Create a ticket</li>
+          <li>Type <code style="background:#0a0a09; padding:2px 8px; border-radius:4px; color:#00ff9d;">/redeem</code> + your key</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  (function() {
+    var params = new URLSearchParams(window.location.search);
+    var sessionID = params.get('session_id');
+    if (!sessionID) return;
+
+    fetch('https://choatix-license-system.onrender.com/api/checkout/capture-order', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sessionID: sessionID })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (d.licenseKey) {
+        document.getElementById('license-key').textContent = d.licenseKey;
+        document.getElementById('license-panel').style.display = 'flex';
+      }
+    })
+    .catch(function() { /* silent */ });
+  })();
+  </script>
 </body>
 </html>
