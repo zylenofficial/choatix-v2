@@ -32,9 +32,9 @@ function generateKeyLocal(tier) {
   return `CHTX-${tier.substring(0, 4)}-${nonce}-${checksum}`;
 }
 
-function apiRequest(method, path, body) {
+function apiRequest(method, path, body, baseUrl) {
   return new Promise((resolve, reject) => {
-    const url = new URL(path, API_URL);
+    const url = new URL(path, baseUrl || API_URL);
     const options = {
       hostname: url.hostname,
       port: url.port || (url.protocol === 'https:' ? 443 : 80),
@@ -58,6 +58,12 @@ function apiRequest(method, path, body) {
     if (body) req.write(JSON.stringify(body));
     req.end();
   });
+}
+
+// Stripe license system — new-format keys (PHTN-/PHNTM-) live here
+const NEW_API_URL = process.env.NEW_API_URL || 'https://choatix-license-system.onrender.com';
+function isNewFormatKey(key) {
+  return key.startsWith('PHTN-') || key.startsWith('PHNTM-');
 }
 
 const client = new Client({
@@ -304,7 +310,11 @@ client.on('interactionCreate', async (interaction) => {
     await interaction.deferReply();
 
     try {
-      const result = await apiRequest('POST', '/api/redeem', { key, discordId, username: interaction.user.username });
+      // New Stripe keys (PHTN-/PHNTM-) are validated by the new license system;
+      // legacy CHTX keys keep using the original backend.
+      const result = isNewFormatKey(key)
+        ? await apiRequest('POST', '/api/license/redeem', { key, discordId, username: interaction.user.username }, NEW_API_URL)
+        : await apiRequest('POST', '/api/redeem', { key, discordId, username: interaction.user.username });
 
       if (result.success) {
         let roleMsg = '';
@@ -336,7 +346,12 @@ client.on('interactionCreate', async (interaction) => {
     await interaction.deferReply();
 
     try {
-      const result = await apiRequest('GET', `/api/license/${discordId}`);
+      let result = await apiRequest('GET', `/api/license/${discordId}`);
+      // Fall back to the new Stripe license system (new-format keys)
+      if (!result.tier) {
+        const newResult = await apiRequest('GET', `/api/license/${discordId}`, null, NEW_API_URL);
+        if (newResult && newResult.tier) result = newResult;
+      }
       if (result.tier) {
         let roleMsg = '';
         if (interaction.guild && interaction.member) {
