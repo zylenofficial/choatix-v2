@@ -338,19 +338,22 @@ async function checkout() {
   if (btn) { btn.textContent = 'Redirecting to Stripe...'; btn.disabled = true; }
 
   try {
-    const highestTier = cart.reduce((t, i) => {
-      if (i.id === 'phantom') return 'phantom';
-      if (i.id === 'pro' && t !== 'phantom') return 'pro';
-      return t;
-    }, 'pro');
-
-    const total = getCartTotal();
-    const disc = appliedDiscount ? total * (appliedDiscount.percent / 100) : 0;
-    const amount = (total - disc).toFixed(2);
+    // Build the cart items [{plan, qty}] — one license key per unit
+    const itemsMap = {};
+    cart.forEach(i => {
+      if (i.id !== 'pro' && i.id !== 'phantom') return;
+      itemsMap[i.id] = (itemsMap[i.id] || 0) + i.qty;
+    });
+    const items = Object.entries(itemsMap).map(([p, qty]) => ({ plan: p, qty }));
+    if (!items.length) {
+      alert('Your cart contains no purchasable plans.');
+      if (btn) { btn.textContent = 'Checkout via Stripe'; btn.disabled = false; }
+      return;
+    }
 
     const body = {
-      plan: highestTier,
-      amount: amount,
+      items: items,
+      discountPercent: appliedDiscount ? appliedDiscount.percent : 0,
       discordId: discordId || null,
       email: null,
       return_url: API + '/success/return.html',
@@ -365,7 +368,7 @@ async function checkout() {
     const data = await r.json();
 
     if (data.approvalUrl) {
-      localStorage.setItem('phantom_checkout_plan', highestTier);
+      localStorage.setItem('phantom_checkout_plan', items[items.length - 1].plan);
       localStorage.removeItem(CART_KEY);
       localStorage.removeItem(DISCOUNT_KEY);
       appliedDiscount = null;
@@ -375,7 +378,7 @@ async function checkout() {
       localStorage.removeItem(CART_KEY);
       localStorage.removeItem(DISCOUNT_KEY);
       appliedDiscount = null;
-      location.href = '#license?key=' + encodeURIComponent(data.licenseKey) + '&plan=' + highestTier;
+      location.href = '#license?key=' + encodeURIComponent(data.licenseKey) + '&plan=' + (items[items.length - 1].plan || 'pro');
       return;
     }
   } catch (e) {
@@ -864,8 +867,12 @@ function renderLicense() {
   const key = params.get('key');
   const plan = params.get('plan');
 
+  // Multiple keys (cart with quantities)
+  let keys = null;
+  try { keys = params.get('keys') ? JSON.parse(params.get('keys')) : null; } catch (e) { keys = null; }
+
   // Coming back from a Stripe Checkout redirect: exchange session_id for a license key
-  if (!key && sessionID) {
+  if (!key && !keys && sessionID) {
     setTimeout(() => fetchLicenseFromSession(sessionID), 0);
     return `
       <div class="dl-page" id="dlPage">
@@ -876,7 +883,7 @@ function renderLicense() {
       </div>`;
   }
 
-  if (!key) {
+  if (!key && !keys) {
     return `
       <div class="dl-page" id="dlPage">
         <div class="dl-box">
@@ -893,16 +900,24 @@ function renderLicense() {
   const planLabel = plan === 'phantom' ? 'Phantom' : plan === 'pro' ? 'Pro' : 'Free';
   const planColor = plan === 'phantom' ? '#a855f7' : plan === 'pro' ? '#a855f7' : '#6b7280';
 
+  const keyList = keys && keys.length ? keys : [key];
+  const isMulti = keyList.length > 1;
+  const keysHTML = keyList.map((k, i) => `
+          <div class="lic-key-row" style="margin:1.5rem 0;padding:1rem 1.5rem;background:var(--bg);border:1px solid var(--border);border-radius:12px;display:flex;align-items:center;gap:1rem">
+            ${isMulti ? `<div style="font-weight:800;color:var(--text-dim);font-size:0.8rem">#${i + 1}</div>` : ''}
+            <div style="flex:1;font-family:'JetBrains Mono',monospace;font-size:1.1rem;font-weight:600;letter-spacing:0.05em;word-break:break-all;color:var(--text)" class="lic-key-text">${k}</div>
+            <button onclick="copyKeyFromBtn(this)" style="padding:0.5rem 1rem;background:var(--green);color:#000;border:none;border-radius:8px;font-weight:700;font-size:0.8rem;cursor:pointer;white-space:nowrap">Copy Key</button>
+          </div>`).join('\n');
+
   return `
     <div class="dl-page" id="dlPage">
       <div class="dl-box" style="max-width:560px">
         <div class="dl-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
-        <h1>License Key</h1>
-        <p>Copy this key and paste it in the Phantom app under <strong>Settings > License Key</strong>.</p>
-        <div style="margin:1.5rem 0;padding:1rem 1.5rem;background:var(--bg);border:1px solid var(--border);border-radius:12px;display:flex;align-items:center;gap:1rem">
-          <div style="flex:1;font-family:'JetBrains Mono',monospace;font-size:1.1rem;font-weight:600;letter-spacing:0.05em;word-break:break-all;color:var(--text)" id="licenseKeyValue">${key}</div>
-          <button onclick="copyLicenseKey()" id="copyKeyBtn" style="padding:0.5rem 1rem;background:var(--green);color:#000;border:none;border-radius:8px;font-weight:700;font-size:0.8rem;cursor:pointer;white-space:nowrap">Copy Key</button>
-        </div>
+        <h1>${isMulti ? 'Your License Keys' : 'License Key'}</h1>
+        <p>${isMulti
+          ? `You purchased <strong>${keyList.length} licenses</strong>. Copy each key and paste it in the Phantom app under <strong>Settings > License Key</strong>.`
+          : 'Copy this key and paste it in the Phantom app under <strong>Settings > License Key</strong>.'}</p>
+        ${keysHTML}
         <div style="margin:1.5rem 0;padding:1rem 1.25rem;background:rgba(88,101,242,0.08);border:1px solid #5865f2;border-radius:12px;text-align:left">
           <div style="font-weight:800;font-size:0.9rem;color:#5865f2;margin-bottom:0.5rem;letter-spacing:0.03em">&#9889; ACTIVATE YOUR LICENSE ON DISCORD</div>
           <ol style="text-align:left;font-size:0.85rem;color:var(--text-dim);line-height:2;padding-left:1.25rem;margin:0">
@@ -943,7 +958,10 @@ function fetchLicenseFromSession(sessionID) {
   })
     .then(r => r.json())
     .then(d => {
-      if (d && d.licenseKey) {
+      if (d && d.licenseKeys && d.licenseKeys.length > 1) {
+        // Multiple keys (cart with quantities) — pass them all to the license page
+        location.hash = '#license?keys=' + encodeURIComponent(JSON.stringify(d.licenseKeys)) + '&plan=' + encodeURIComponent(d.plan || '');
+      } else if (d && d.licenseKey) {
         // Swap the hash to key= form so the page renders the license (and refreshes don't re-capture)
         location.hash = '#license?key=' + encodeURIComponent(d.licenseKey) + '&plan=' + encodeURIComponent(d.plan || '');
       } else {
@@ -981,6 +999,17 @@ function copyLicenseKey() {
       if (btn) { btn.textContent = 'Copied!'; setTimeout(() => btn.textContent = 'Copy Key', 2000); }
     }).catch(() => {});
   }
+}
+
+function copyKeyFromBtn(btn) {
+  const row = btn.closest('.lic-key-row');
+  const textEl = row ? row.querySelector('.lic-key-text') : null;
+  if (!textEl) return;
+  navigator.clipboard.writeText(textEl.textContent.trim()).then(() => {
+    const old = btn.textContent;
+    btn.textContent = 'Copied!';
+    setTimeout(() => btn.textContent = old, 2000);
+  }).catch(() => {});
 }
 
 // â”€â”€ EFFECTS â”€â”€
