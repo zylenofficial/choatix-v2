@@ -214,6 +214,7 @@ function addToCart(id, name, price) {
   if (item) item.qty++;
   else cart.push({ id, name, price, qty: 1 });
   saveCart();
+  renderCart();
   updateBadge();
   openCart();
 }
@@ -684,17 +685,20 @@ function closeTweakModal() {
 
 function renderPricing() {
   const tiers = [
+    { name: 'Free', price: '0', period: 'Forever', features: ['System Health Overview', 'Scan PC', 'Quick Boost', 'System Info', 'Process Manager', '114 Free Tweaks', 'Community Support'], cta: 'Download', action: 'download', cls: '' },
     { name: 'Pro', price: '5.99', period: 'One-time', popular: true, features: ['Everything in Free', '220+ System Tweaks', 'Game Presets', 'Deep Clean', 'FPS Compare', 'GPU / Network Optimizer', 'Priority Support'], cta: 'Get Pro', action: 'pro', cls: 'popular' },
     { name: 'Phantom', price: '9.99', period: 'One-time', features: ['Everything in Pro', '346 System Tweaks', 'All Categories', 'VBS / Hyper-V', 'Registry Tuning', 'Full Debloat', 'TrustedInstaller Elevation', 'Auto Restore Points'], cta: 'Get Phantom', action: 'phantom', cls: '' }
   ];
 
   const pricingCards = tiers.map((t, i) => {
-    const btnHTML = `<button class="btn ${t.popular ? 'btn-primary' : 'btn-secondary'} price-btn" onclick="addPlanToCart('${t.action}')">${t.cta}</button>`;
+    const btnHTML = t.action === 'download'
+      ? `<button class="btn btn-secondary price-btn" onclick="alert('Phantom V2 download is coming soon!')">${t.cta}</button>`
+      : `<button class="btn ${t.popular ? 'btn-primary' : 'btn-secondary'} price-btn" onclick="addPlanToCart('${t.action}')">${t.cta}</button>`;
     return `
     <div class="price-card ${t.popular ? 'featured' : ''} reveal reveal-d${i + 1}">
       ${t.popular ? '<div class="price-popular">BEST VALUE</div>' : ''}
       <div class="price-tier">${t.name}</div>
-      <div class="price-amount">$${t.price}</div>
+      <div class="price-amount">${t.price === '0' ? '$0' : '$' + t.price}</div>
       <div class="price-period">${t.period ? t.period + ' payment' : ''}</div>
       <ul class="price-features">${t.features.map(f => `<li><span class="price-check"><svg viewBox="0 0 12 12"><path d="M2 6l3 3 5-5"/></svg></span>${f}</li>`).join('')}</ul>
       ${btnHTML}
