@@ -1125,7 +1125,8 @@ app.get('/api/auth/discord', (req, res) => {
 });
 
 // Step 2: Discord redirects back here with a code — exchange it for the user
-app.get('/api/auth/discord/callback', async (req, res) => {
+// (alias /api/auth/callback for compatibility with existing Discord app configs)
+async function discordOAuthCallback(req, res) {
   const { code } = req.query;
   if (!code) return res.status(400).send('Missing code');
   try {
@@ -1171,7 +1172,12 @@ app.get('/api/auth/discord/callback', async (req, res) => {
     console.error('Discord OAuth error:', err.message);
     res.redirect(`${SITE_URL}?discord_login=failed`);
   }
-});
+}
+
+// Register the callback handler on both paths — whichever redirect_uri
+// is registered in the Discord Developer Portal, both will work.
+app.get('/api/auth/discord/callback', discordOAuthCallback);
+app.get('/api/auth/callback', discordOAuthCallback);
 
 // ── Start ───────────────────────────────────────────────────────
 initDB().then(() => {
