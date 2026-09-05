@@ -77,7 +77,7 @@ const FAQ = [
   { q: 'How much FPS will I gain?', a: 'Results vary by hardware and game. Most users see 15-60% FPS improvement. Check the FPS Comparison section for average gains across popular games.' },
   { q: 'What\'s the difference between the products?', a: '<strong>Full Optimization (&euro;24.99)</strong> â€” 461 tweaks: Everything combined. <strong>Basic (&euro;4.99)</strong> â€” 220 tweaks: Windows debloat, essential settings, GPU/network/power. <strong>Pro (&euro;9.99)</strong> â€” 291 tweaks: Basic + BCD, RAM, USB, deep cleanup. <strong>Extreme (&euro;14.99)</strong> â€” 283 tweaks: Full debloat, DirectX, buffer bloat, registry. <strong>Precision (&euro;5.99)</strong> â€” 128 tweaks: Input lag, mouse/keyboard, GPU latency for FPS games.' },
   { q: 'Do I need to restart my PC after optimizing?', a: 'Some tweaks take effect immediately, others require a restart. Phantom will notify you when a restart is needed. Quick Boost works instantly without restart.' },
-  { q: 'How do I buy a product?', a: 'Go to the Pricing page, choose a plan (Free, Pro, or Phantom), and checkout via PayPal. After payment, you\'ll receive a license key. Paste it in the Phantom app under Settings to activate.' },
+  { q: 'How do I buy a product?', a: 'Go to the Pricing page, choose a plan (Pro or Phantom), and it will be added to your cart. Checkout with credit/debit card via Stripe. After payment, you\'ll receive a license key. Paste it in the Phantom app under Settings to activate.' },
   { q: 'Does it work on Windows 11?', a: 'Yes. Phantom V2 supports Windows 10 and Windows 11. All tweaks are compatible with the latest updates.' },
   { q: 'Do I need to run as Administrator?', a: 'Yes. System-level tweaks (registry HKLM, services, power plans, bcdedit) require Administrator privileges. The app will warn you if not running as admin.' },
   { q: 'Can I revert changes?', a: 'Yes. Every tweak has a revert command. Use "Revert All" or click the checkmark next to any category to undo everything safely.' },
@@ -232,6 +232,16 @@ function removeFromCart(id) {
   renderCart();
   updateBadge();
 }
+// Add a pricing plan to the cart (Pro / Phantom)
+function addPlanToCart(plan) {
+  const plans = {
+    pro: { id: 'pro', name: 'Phantom V2 Pro', price: 5.99 },
+    phantom: { id: 'phantom', name: 'Phantom V2 Premium', price: 9.99 },
+  };
+  const p = plans[plan];
+  if (!p) return;
+  addToCart(p.id, p.name, p.price);
+}
 function renderCart() {
   const el = document.getElementById('cartItems');
   const total = document.getElementById('cartTotal');
@@ -248,7 +258,7 @@ function renderCart() {
         <div class="cart-item-icon">&#9733;</div>
         <div class="cart-item-info">
           <div class="cart-item-name">${i.name}</div>
-          <div class="cart-item-price">&euro;${i.price.toFixed(2)}</div>
+          <div class="cart-item-price">$${i.price.toFixed(2)}</div>
         </div>
         <div class="cart-item-qty">
           <button onclick="changeQty('${i.id}',-1)">&#8722;</button>
@@ -324,7 +334,7 @@ async function checkout() {
   }
 
   const btn = document.getElementById('cartCheckout');
-  if (btn) { btn.textContent = 'Redirecting to PayPal...'; btn.disabled = true; }
+  if (btn) { btn.textContent = 'Redirecting to Stripe...'; btn.disabled = true; }
 
   try {
     const highestTier = cart.reduce((t, i) => {
@@ -369,34 +379,8 @@ async function checkout() {
     }
   } catch (e) {
     console.error('Checkout error:', e);
-    if (btn) { btn.textContent = 'Checkout via PayPal'; btn.disabled = false; }
+    if (btn) { btn.textContent = 'Checkout via Stripe'; btn.disabled = false; }
     alert('Could not reach the payment server. It may be waking up - please wait 30 seconds and try again.');
-  }
-}
-
-async function requestFreeLicense() {
-  let discordId = localStorage.getItem('discord_id');
-  if (!discordId) {
-    const input = prompt('Enter your Discord ID (right-click your name in Discord > Copy User ID):');
-    if (!input) return;
-    discordId = input.trim();
-    localStorage.setItem('discord_id', discordId);
-  }
-  try {
-    const r = await fetch(`${API}/api/license/free`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ discordId })
-    });
-    const data = await r.json();
-    if (data.licenseKey) {
-      location.href = '#license?key=' + encodeURIComponent(data.licenseKey) + '&plan=free';
-    } else {
-      alert(data.error || 'Failed to get free license. Please wait 30 seconds and try again.');
-    }
-  } catch (e) {
-    console.error('Free license error:', e);
-    alert('Could not reach the license server. It may be waking up - please wait 30 seconds and try again.');
   }
 }
 
@@ -506,8 +490,8 @@ function renderCartSidebar() {
       <div class="cart-head"><h3>Shopping Cart</h3><button class="cart-close" onclick="closeCart()">&#10005;</button></div>
       <div class="cart-items" id="cartItems"></div>
       <div class="cart-foot">
-        <div class="cart-total"><span class="cart-total-label">Total</span><span class="cart-total-price" id="cartTotal">&euro;0.00</span></div>
-        <button class="cart-checkout" id="cartCheckout" onclick="checkout()" disabled>Checkout via PayPal</button>
+        <div class="cart-total"><span class="cart-total-label">Total</span><span class="cart-total-price" id="cartTotal">$0.00</span></div>
+        <button class="cart-checkout" id="cartCheckout" onclick="checkout()" disabled>Checkout via Stripe</button>
       </div>
     </div>`;
 }
@@ -700,20 +684,17 @@ function closeTweakModal() {
 
 function renderPricing() {
   const tiers = [
-    { name: 'Free', price: '0', period: 'Forever', features: ['System Health Overview', 'Scan PC', 'Quick Boost', 'System Info', 'Process Manager', '114 Free Tweaks', 'Community Support'], cta: 'Get Free License', action: 'getFree', cls: '' },
-    { name: 'Pro', price: '5.99', period: 'One-time', popular: true, features: ['Everything in Free', '220+ System Tweaks', 'Game Presets', 'Deep Clean', 'FPS Compare', 'GPU / Network Optimizer', 'Priority Support'], cta: 'Get Pro', action: 'getPro', cls: 'popular' },
-    { name: 'Phantom', price: '9.99', period: 'One-time', features: ['Everything in Pro', '346 System Tweaks', 'All Categories', 'VBS / Hyper-V', 'Registry Tuning', 'Full Debloat', 'TrustedInstaller Elevation', 'Auto Restore Points'], cta: 'Get Phantom', action: 'getPhantom', cls: '' }
+    { name: 'Pro', price: '5.99', period: 'One-time', popular: true, features: ['Everything in Free', '220+ System Tweaks', 'Game Presets', 'Deep Clean', 'FPS Compare', 'GPU / Network Optimizer', 'Priority Support'], cta: 'Get Pro', action: 'pro', cls: 'popular' },
+    { name: 'Phantom', price: '9.99', period: 'One-time', features: ['Everything in Pro', '346 System Tweaks', 'All Categories', 'VBS / Hyper-V', 'Registry Tuning', 'Full Debloat', 'TrustedInstaller Elevation', 'Auto Restore Points'], cta: 'Get Phantom', action: 'phantom', cls: '' }
   ];
 
   const pricingCards = tiers.map((t, i) => {
-    const btnHTML = t.action === 'getFree'
-      ? `<button class="btn ${t.popular ? 'btn-primary' : 'btn-secondary'} price-btn" onclick="requestFreeLicense()">${t.cta}</button>`
-      : `<button class="btn ${t.popular ? 'btn-primary' : 'btn-secondary'} price-btn" onclick="startCheckout('${t.action === 'getPro' ? 'pro' : 'phantom'}')">${t.cta}</button>`;
+    const btnHTML = `<button class="btn ${t.popular ? 'btn-primary' : 'btn-secondary'} price-btn" onclick="addPlanToCart('${t.action}')">${t.cta}</button>`;
     return `
     <div class="price-card ${t.popular ? 'featured' : ''} reveal reveal-d${i + 1}">
       ${t.popular ? '<div class="price-popular">BEST VALUE</div>' : ''}
       <div class="price-tier">${t.name}</div>
-      <div class="price-amount">${t.price === '0' ? '&euro;0' : '&euro;' + t.price}</div>
+      <div class="price-amount">$${t.price}</div>
       <div class="price-period">${t.period ? t.period + ' payment' : ''}</div>
       <ul class="price-features">${t.features.map(f => `<li><span class="price-check"><svg viewBox="0 0 12 12"><path d="M2 6l3 3 5-5"/></svg></span>${f}</li>`).join('')}</ul>
       ${btnHTML}
@@ -756,7 +737,7 @@ function renderPricing() {
   return `
     <section class="page-hero">
       <h1 class="reveal">Simple Pricing</h1>
-      <p class="hero-desc reveal">Start free. Upgrade when you need more.</p>
+      <p class="hero-desc reveal">One-time payment. Lifetime access. Instant license key.</p>
     </section>
     <section class="pricing-section">
       <div class="pricing-grid">${pricingCards}</div>
