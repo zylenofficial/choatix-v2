@@ -1,4 +1,4 @@
-﻿// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // PHANTOM V2 â€” Complete App
 // Single file: data + state + router + components + pages + effects
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
@@ -68,7 +68,6 @@ const TEAM = [
   { id: '1014494449809772544', name: 'rei1z',   role: 'Developer',    level: 'owner' },
   { id: '1032970883192606780', name: 'domi',    role: 'Server Owner', level: 'admin' },
   { id: '398137085430726656',  name: 'nedis',   role: 'Admin',        level: 'admin' },
-  { id: '1322475983386837006', name: 'donce',   role: 'Admin',        level: 'admin' },
   { id: '1402203036914290764', name: 'lukutis', role: 'Ticket Support', level: 'support' }
 ];
 
@@ -1068,7 +1067,10 @@ function initScrollEffects() {
 
   TEAM.forEach(m => {
     const img = document.getElementById('avatar-' + m.id);
-    if (img) fetch(`${SITE_API}/api/team/${m.id}`).then(r => r.json()).then(d => { if (d.avatar) img.src = d.avatar; }).catch(() => {});
+    if (!img) return;
+    const defaultAvatar = `https://cdn.discordapp.com/embed/avatars/${(BigInt(m.id) >> 22n) % 6n}.png`;
+    img.src = defaultAvatar;
+    fetch(`${SITE_API}/api/team/${m.id}`).then(r => r.json()).then(d => { if (d.avatar) img.src = d.avatar; }).catch(() => {});
   });
 }
 

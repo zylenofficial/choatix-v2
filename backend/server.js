@@ -260,6 +260,54 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', db: pool ? 'postgresql' : 'memory', uptime: process.uptime() });
 });
 
+// ── Team Avatars (public) ──────────────────────────────────────
+const teamAvatarCache = {};
+const TEAM_CACHE_TTL = 60 * 60 * 1000; // 1 hour
+
+app.get('/api/team/:id', async (req, res) => {
+  try {
+    const userId = req.params.id;
+    if (!/^\d{17,20}$/.test(userId)) return res.status(400).json({ error: 'Invalid user ID' });
+
+    const cached = teamAvatarCache[userId];
+    if (cached && Date.now() - cached.ts < TEAM_CACHE_TTL) {
+      return res.json({ avatar: cached.avatar });
+    }
+
+    const botToken = process.env.DISCORD_BOT_TOKEN;
+    if (!botToken || botToken === 'YOUR_BOT_TOKEN_HERE') {
+      const defaultIndex = Number((BigInt(userId) >> 22n) % 6n);
+      return res.json({ avatar: `https://cdn.discordapp.com/embed/avatars/${defaultIndex}.png` });
+    }
+
+    const discordRes = await fetch(`https://discord.com/api/v10/users/${userId}`, {
+      headers: { Authorization: `Bot ${botToken}` }
+    });
+
+    if (!discordRes.ok) {
+      const defaultIndex = Number((BigInt(userId) >> 22n) % 6n);
+      return res.json({ avatar: `https://cdn.discordapp.com/embed/avatars/${defaultIndex}.png` });
+    }
+
+    const user = await discordRes.json();
+    let avatarUrl;
+    if (user.avatar) {
+      const ext = user.avatar.startsWith('a_') ? 'gif' : 'png';
+      avatarUrl = `https://cdn.discordapp.com/avatars/${userId}/${user.avatar}.${ext}?size=256`;
+    } else {
+      const defaultIndex = Number((BigInt(userId) >> 22n) % 6n);
+      avatarUrl = `https://cdn.discordapp.com/embed/avatars/${defaultIndex}.png`;
+    }
+
+    teamAvatarCache[userId] = { avatar: avatarUrl, ts: Date.now() };
+    res.json({ avatar: avatarUrl });
+  } catch (err) {
+    console.error('[Team Avatar]', err.message);
+    const defaultIndex = Number((BigInt(req.params.id) >> 22n) % 6n);
+    res.json({ avatar: `https://cdn.discordapp.com/embed/avatars/${defaultIndex}.png` });
+  }
+});
+
 // ── Get PayPal Client ID (public) ───────────────────────────────
 app.get('/api/paypal/client-id', (req, res) => {
   res.json({ clientId: PAYPAL_CLIENT_ID || null });
