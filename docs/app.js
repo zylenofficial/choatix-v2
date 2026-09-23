@@ -116,7 +116,7 @@ const REFUND_POLICY = `
       <div class="refund-support-icon">&#9993;</div>
       <div class="refund-support-title">Email Support</div>
       <div class="refund-support-desc">Send us a detailed email for complex issues</div>
-      <a href="mailto:phantomtweaks@gmail.com" class="btn btn-secondary">Send Email</a>
+      <a href="https://mail.google.com/mail/?view=cm&to=phantomtweaks@gmail.com&su=Support%20Request" target="_blank" class="btn btn-secondary">Send Email</a>
     </div>
   </div>
   <h3>6. Exceptions</h3>
