@@ -186,6 +186,17 @@ function initAuth() {
       else if (d.tier) user.tier = d.tier;
       renderNav();
     }).catch(() => {});
+    // Refresh avatar from Discord via team API
+    fetch(`${SITE_API}/api/team/${id}`).then(r => r.json()).then(d => {
+      if (d.avatar) {
+        user.avatar = d.avatar;
+        localStorage.setItem('avatar', d.avatar);
+        const img = document.getElementById('userAvatar');
+        const fallback = document.getElementById('userAvatarFallback');
+        if (img) { img.src = d.avatar; img.style.display = ''; }
+        if (fallback) fallback.style.display = 'none';
+      }
+    }).catch(() => {});
   }
 }
 
