@@ -65,9 +65,9 @@ const TWEAK_CATEGORIES = [
 const TOTAL_TWEAKS = TWEAK_CATEGORIES.reduce((s, c) => s + c.count, 0);
 
 const TEAM = [
-  { id: '1014494449809772544', name: 're1z',    role: 'Head Admin',  level: 'admin' },
-  { id: '1032970883192606780', name: 'domi',    role: 'Server Owner', level: 'admin' },
-  { id: '398137085430726656',  name: 'nedis',   role: 'Admin',        level: 'admin' },
+  { id: '1014494449809772544', name: 're1z',    role: 'Developer',   level: 'owner' },
+  { id: '1032970883192606780', name: 'domi',    role: 'Head Admin',  level: 'admin' },
+  { id: '398137085430726656',  name: 'nedis',   role: 'Head Admin',  level: 'admin' },
   { id: '1402203036914290764', name: 'lukutis', role: 'Ticket Support', level: 'support' }
 ];
 
