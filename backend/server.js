@@ -1000,7 +1000,7 @@ app.post('/api/license/verify-key', async (req, res) => {
 });
 
 // Legacy: Key generation (admin)
-const ADMIN_SECRET_LEGACY = process.env.ADMIN_SECRET || 'izboMyG93P10s5T2yp8VofbN5FWeBut+';
+const ADMIN_SECRET_LEGACY = ADMIN_SECRET;
 app.post('/api/generate', async (req, res) => {
   const { tier, count = 1, adminSecret } = req.body;
   if (adminSecret !== ADMIN_SECRET_LEGACY) return res.status(403).json({ error: 'Invalid admin secret' });
