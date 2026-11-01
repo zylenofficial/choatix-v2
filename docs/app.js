@@ -310,6 +310,24 @@ async function applyDiscount() {
     } else { alert(d.error || 'Invalid discount code'); }
   } catch { alert('Failed to verify discount code'); }
 }
+async function verifyAppliedDiscount() {
+  if (!appliedDiscount) return true;
+  try {
+    const r = await fetch(`${API}/api/discount/${encodeURIComponent(appliedDiscount.code)}`);
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok || !d.valid) {
+      removeDiscount();
+      alert(d.error || 'This discount code is no longer available. Please remove it and try again.');
+      return false;
+    }
+    appliedDiscount = { code: d.code, percent: d.discount };
+    localStorage.setItem(DISCOUNT_KEY, JSON.stringify(appliedDiscount));
+    return true;
+  } catch {
+    alert('Could not verify the discount code. Please try again before checking out.');
+    return false;
+  }
+}
 function removeDiscount() {
   appliedDiscount = null;
   localStorage.removeItem(DISCOUNT_KEY);
@@ -327,6 +345,7 @@ function closeCart() {
 }
 async function checkout() {
   if (!cart.length) return;
+  if (!await verifyAppliedDiscount()) return;
 
   let discordId = localStorage.getItem('discord_id');
   let username = localStorage.getItem('username');
@@ -395,6 +414,7 @@ async function checkout() {
 }
 
 async function startCheckout(plan) {
+  if (!await verifyAppliedDiscount()) return;
   let discordId = localStorage.getItem('discord_id');
   let username = localStorage.getItem('username');
   if (!discordId && !username) {
