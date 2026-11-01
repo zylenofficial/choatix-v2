@@ -592,7 +592,7 @@ function renderHome() {
         <div class="hero-badge"><span class="dot"></span>v2.3.1 &bull; ${TOTAL_TWEAKS} System Tweaks</div>
         <h1><span class="line1">Maximize Your</span><span class="line2">FPS</span></h1>
         <div class="hero-buttons">
-          <a href="https://github.com/zylenofficial/choatix-v2/releases/download/v2.3.1/Phantom.V2.Setup.2.3.1.exe" class="btn btn-primary" target="_blank" rel="noopener">Download Free</a>
+          <a href="https://github.com/zylenofficial/choatix-v2/releases/download/v2.3.1/Choatix.V2.Setup.2.3.1.exe" class="btn btn-primary" target="_blank" rel="noopener">Download Free</a>
           <a href="${DISCORD_INVITE}" class="btn btn-discord" target="_blank">Join Discord</a>
         </div>
       </div>
@@ -616,7 +616,7 @@ function renderHome() {
       <h2 class="reveal">Ready to <span>Boost Your FPS</span>?</h2>
       <p class="reveal">Join gamers optimizing their PCs with Phantom V2</p>
       <div class="cta-buttons reveal">
-        <a href="https://github.com/zylenofficial/choatix-v2/releases/download/v2.3.1/Phantom.V2.Setup.2.3.1.exe" class="btn btn-primary" target="_blank" rel="noopener">Download Free</a>
+        <a href="https://github.com/zylenofficial/choatix-v2/releases/download/v2.3.1/Choatix.V2.Setup.2.3.1.exe" class="btn btn-primary" target="_blank" rel="noopener">Download Free</a>
         <a href="${DISCORD_INVITE}" class="btn btn-discord" target="_blank">Join Discord</a>
       </div>
     </section>`;
@@ -644,7 +644,7 @@ function renderFeatures() {
       <h2 class="reveal">Ready to Boost<br>Your FPS?</h2>
       <p class="reveal">Join gamers optimizing their PCs with Phantom V2</p>
       <div class="cta-buttons reveal">
-        <a href="https://github.com/zylenofficial/choatix-v2/releases/download/v2.3.1/Phantom.V2.Setup.2.3.1.exe" class="btn btn-primary" target="_blank" rel="noopener">Download Free</a>
+        <a href="https://github.com/zylenofficial/choatix-v2/releases/download/v2.3.1/Choatix.V2.Setup.2.3.1.exe" class="btn btn-primary" target="_blank" rel="noopener">Download Free</a>
         <a href="${DISCORD_INVITE}" class="btn btn-discord" target="_blank">Join Discord</a>
       </div>
     </section>`;
@@ -705,7 +705,7 @@ function renderPricing() {
 
   const pricingCards = tiers.map((t, i) => {
     const btnHTML = t.action === 'download'
-      ? `<a class="btn btn-secondary price-btn" href="https://github.com/zylenofficial/choatix-v2/releases/download/v2.3.1/Phantom.V2.Setup.2.3.1.exe" target="_blank" rel="noopener">${t.cta}</a>`
+      ? `<a class="btn btn-secondary price-btn" href="https://github.com/zylenofficial/choatix-v2/releases/download/v2.3.1/Choatix.V2.Setup.2.3.1.exe" target="_blank" rel="noopener">${t.cta}</a>`
       : `<button class="btn ${t.popular ? 'btn-primary' : 'btn-secondary'} price-btn" onclick="addPlanToCart('${t.action}')">${t.cta}</button>`;
     return `
     <div class="price-card ${t.popular ? 'featured' : ''} reveal reveal-d${i + 1}">
@@ -771,7 +771,7 @@ function renderPricing() {
       <h2 class="reveal">Ready to Boost<br>Your FPS?</h2>
       <p class="reveal">Download free. Upgrade anytime.</p>
       <div class="cta-buttons reveal">
-        <a href="https://github.com/zylenofficial/choatix-v2/releases/download/v2.3.1/Phantom.V2.Setup.2.3.1.exe" class="btn btn-primary" target="_blank" rel="noopener">Download Free</a>
+        <a href="https://github.com/zylenofficial/choatix-v2/releases/download/v2.3.1/Choatix.V2.Setup.2.3.1.exe" class="btn btn-primary" target="_blank" rel="noopener">Download Free</a>
         <a href="${DISCORD_INVITE}" class="btn btn-discord" target="_blank">Join Discord</a>
       </div>
     </section>`;
