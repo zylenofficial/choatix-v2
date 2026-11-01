@@ -5,10 +5,11 @@ const crypto = require('crypto');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+app.set('trust proxy', 1);
 
 // ── Config ──────────────────────────────────────────────────────
 const DB_URL = process.env.DATABASE_URL;
-const ADMIN_SECRET = process.env.ADMIN_SECRET || 'CHANGE_ME_ADMIN_SECRET';
+const ADMIN_SECRET = process.env.ADMIN_SECRET || '';
 const PAYPAL_CLIENT_ID = process.env.PAYPAL_CLIENT_ID || '';
 const PAYPAL_CLIENT_SECRET = process.env.PAYPAL_CLIENT_SECRET || '';
 const PAYPAL_WEBHOOK_ID = process.env.PAYPAL_WEBHOOK_ID || '';
@@ -25,6 +26,7 @@ const PLAN_PRICES = {
   phantom: { amount: '9.99', currency: 'EUR', label: 'Phantom Premium' },
 };
 
+const DISCOUNT_CODE_RE = /^[A-Z0-9][A-Z0-9_-]{2,19}$/;
 const FREE_RATE_LIMIT = { maxPerIp: 3, maxPerDiscord: 1, windowMs: 24 * 60 * 60 * 1000 };
 
 // ── Middleware ───────────────────────────────────────────────────
@@ -100,6 +102,14 @@ async function initDB() {
       created_at TIMESTAMPTZ DEFAULT NOW()
     );
     CREATE INDEX IF NOT EXISTS idx_rl_lookup ON rate_limits(identifier, action, created_at);
+
+    CREATE TABLE IF NOT EXISTS discount_codes (
+      code TEXT PRIMARY KEY,
+      discount_percent INTEGER NOT NULL CHECK (discount_percent BETWEEN 1 AND 90),
+      active BOOLEAN NOT NULL DEFAULT TRUE,
+      expires_at TIMESTAMPTZ,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
 
     -- Keep legacy tables
     CREATE TABLE IF NOT EXISTS keys_table (
@@ -246,6 +256,7 @@ async function fulfillLicense(orderId, payerId, plan) {
 
 // ── Admin Auth Middleware ────────────────────────────────────────
 function requireAdmin(req, res, next) {
+  if (!ADMIN_SECRET) return res.status(503).json({ error: 'Admin access is not configured' });
   const secret = req.headers['x-admin-secret'] || req.query.admin_secret;
   if (secret !== ADMIN_SECRET) return res.status(403).json({ error: 'Unauthorized' });
   next();
@@ -258,6 +269,28 @@ function requireAdmin(req, res, next) {
 // ── Health ──────────────────────────────────────────────────────
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', db: pool ? 'postgresql' : 'memory', uptime: process.uptime() });
+});
+
+app.get('/api/discount/:code', async (req, res) => {
+  if (!pool) return res.status(503).json({ valid: false, error: 'Discount validation is temporarily unavailable' });
+  const code = req.params.code.trim().toUpperCase();
+  if (!DISCOUNT_CODE_RE.test(code)) return res.json({ valid: false, error: 'Invalid discount code' });
+
+  try {
+    const ip = req.ip || req.connection?.remoteAddress || 'unknown';
+    if (!await checkRateLimit(`ip:${ip}`, 'discount_validation', 30, 60 * 1000)) {
+      return res.status(429).json({ valid: false, error: 'Too many code checks. Please try again in a minute.' });
+    }
+    const discount = await qOne(
+      'SELECT code, discount_percent FROM discount_codes WHERE code=$1 AND active=TRUE AND (expires_at IS NULL OR expires_at > NOW())',
+      [code]
+    );
+    if (!discount) return res.json({ valid: false, error: 'Invalid or expired discount code' });
+    res.json({ valid: true, code: discount.code, discount: discount.discount_percent });
+  } catch (err) {
+    console.error('[Discount validation error]', err);
+    res.status(500).json({ valid: false, error: 'Could not validate discount code' });
+  }
 });
 
 // ── Team Avatars (public) ──────────────────────────────────────
@@ -374,13 +407,32 @@ app.post('/api/license/free', async (req, res) => {
 // ── PAYPAL CHECKOUT ────────────────────────────────────────────
 app.post('/api/license/checkout', async (req, res) => {
   try {
-    const { plan, discordId, email } = req.body;
+    const { plan, discordId, email, discountCode } = req.body;
     if (!plan || !['pro', 'phantom'].includes(plan)) {
       return res.status(400).json({ error: 'Invalid plan. Use pro or phantom' });
     }
     const cleanDiscordId = discordId && typeof discordId === 'string' ? discordId.trim() : null;
 
     const planInfo = PLAN_PRICES[plan];
+    const submittedCode = typeof discountCode === 'string' ? discountCode.trim().toUpperCase() : '';
+    if (discountCode != null && !submittedCode) {
+      return res.status(400).json({ error: 'Invalid discount code' });
+    }
+
+    let discount = null;
+    if (submittedCode) {
+      if (!DISCOUNT_CODE_RE.test(submittedCode)) return res.status(400).json({ error: 'Invalid discount code' });
+      if (!pool) return res.status(503).json({ error: 'Discount validation is temporarily unavailable' });
+      discount = await qOne(
+        'SELECT code, discount_percent FROM discount_codes WHERE code=$1 AND active=TRUE AND (expires_at IS NULL OR expires_at > NOW())',
+        [submittedCode]
+      );
+      if (!discount) return res.status(400).json({ error: 'Invalid or expired discount code' });
+    }
+
+    const amountCents = Math.round(Number(planInfo.amount) * 100);
+    const discountCents = discount ? Math.round(amountCents * discount.discount_percent / 100) : 0;
+    const orderTotal = ((amountCents - discountCents) / 100).toFixed(2);
     const token = await getPayPalToken();
 
     const orderBody = {
@@ -388,12 +440,20 @@ app.post('/api/license/checkout', async (req, res) => {
       purchase_units: [{
         reference_id: `PHNT-${plan}-${Date.now()}`,
         description: `${planInfo.label} License`,
-        custom_id: JSON.stringify({ plan, discordId: cleanDiscordId, email: email || null }),
+        custom_id: JSON.stringify({
+          plan,
+          discordId: cleanDiscordId,
+          email: email || null,
+          discountCode: discount ? discount.code : null,
+        }),
         amount: {
           currency_code: planInfo.currency,
-          value: planInfo.amount,
+          value: orderTotal,
           breakdown: {
             item_total: { currency_code: planInfo.currency, value: planInfo.amount },
+            ...(discountCents ? {
+              discount: { currency_code: planInfo.currency, value: (discountCents / 100).toFixed(2) },
+            } : {}),
           },
         },
         items: [{
@@ -829,6 +889,66 @@ app.post('/api/admin/license/reset-hwid', requireAdmin, async (req, res) => {
     await q('UPDATE licenses SET hwid=NULL WHERE license_key=$1', [licenseKey.trim().toUpperCase()]);
     res.json({ success: true });
   } catch (err) { res.status(500).json({ error: 'Internal server error' }); }
+});
+
+// ── ADMIN: DISCOUNT CODES ──────────────────────────────────────
+app.get('/api/admin/discount-codes', requireAdmin, async (req, res) => {
+  if (!pool) return res.status(503).json({ error: 'Database is not configured' });
+  try {
+    const discountCodes = await q(
+      'SELECT code, discount_percent, active, expires_at, created_at FROM discount_codes ORDER BY created_at DESC'
+    );
+    res.json({ discountCodes });
+  } catch (err) {
+    console.error('[Admin discount list error]', err);
+    res.status(500).json({ error: 'Could not load discount codes' });
+  }
+});
+
+app.post('/api/admin/discount-codes', requireAdmin, async (req, res) => {
+  if (!pool) return res.status(503).json({ error: 'Database is not configured' });
+  const code = typeof req.body.code === 'string' ? req.body.code.trim().toUpperCase() : '';
+  const discountPercent = req.body.discountPercent;
+  const expiresAt = req.body.expiresAt ? new Date(req.body.expiresAt) : null;
+
+  if (!DISCOUNT_CODE_RE.test(code)) {
+    return res.status(400).json({ error: 'Code must be 3-20 letters, numbers, hyphens, or underscores' });
+  }
+  if (!Number.isInteger(discountPercent) || discountPercent < 1 || discountPercent > 90) {
+    return res.status(400).json({ error: 'Discount must be a whole percentage from 1 to 90' });
+  }
+  if (req.body.expiresAt && (!Number.isFinite(expiresAt.getTime()) || expiresAt <= new Date())) {
+    return res.status(400).json({ error: 'Expiration must be a valid future date' });
+  }
+
+  try {
+    const discount = await qOne(
+      'INSERT INTO discount_codes (code, discount_percent, expires_at) VALUES ($1, $2, $3) RETURNING code, discount_percent, active, expires_at, created_at',
+      [code, discountPercent, expiresAt ? expiresAt.toISOString() : null]
+    );
+    res.status(201).json({ discountCode: discount });
+  } catch (err) {
+    if (err.code === '23505') return res.status(409).json({ error: 'That discount code already exists' });
+    console.error('[Admin discount create error]', err);
+    res.status(500).json({ error: 'Could not create discount code' });
+  }
+});
+
+app.post('/api/admin/discount-codes/:code/deactivate', requireAdmin, async (req, res) => {
+  if (!pool) return res.status(503).json({ error: 'Database is not configured' });
+  const code = req.params.code.trim().toUpperCase();
+  if (!DISCOUNT_CODE_RE.test(code)) return res.status(400).json({ error: 'Invalid discount code' });
+  try {
+    const discount = await qOne(
+      'UPDATE discount_codes SET active=FALSE WHERE code=$1 RETURNING code',
+      [code]
+    );
+    if (!discount) return res.status(404).json({ error: 'Discount code not found' });
+    res.json({ success: true });
+  } catch (err) {
+    console.error('[Admin discount deactivate error]', err);
+    res.status(500).json({ error: 'Could not deactivate discount code' });
+  }
 });
 
 // ── ADMIN: STATS ───────────────────────────────────────────────

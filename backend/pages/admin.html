@@ -35,6 +35,8 @@
     .actions button { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08); color: rgba(255,255,255,0.5); padding: 4px 10px; border-radius: 6px; font-size: 10px; cursor: pointer; transition: all 0.15s; }
     .actions button:hover { background: rgba(255,255,255,0.12); color: #fff; }
     .actions button.danger:hover { background: rgba(228,92,92,0.15); color: #e45c5c; border-color: rgba(228,92,92,0.3); }
+    .discount-create { background: #7c5cff; border: 0; color: #fff; padding: 9px 14px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; }
+    .discount-create:hover { background: #9278ff; }
     .mono { font-family: 'SF Mono', Monaco, monospace; font-size: 11px; letter-spacing: 0.5px; }
     .page-info { padding: 16px 32px; font-size: 11px; color: rgba(255,255,255,0.3); }
     .page-btns { display: flex; gap: 8px; }
@@ -49,6 +51,23 @@
     <span style="font-size:12px; color:rgba(255,255,255,0.3)" id="totalDisplay"></span>
   </div>
   <div class="stats" id="stats"></div>
+  <section aria-labelledby="discountHeading">
+    <h2 id="discountHeading" style="padding:8px 32px;font-size:15px">Discount Codes</h2>
+    <div class="controls">
+      <input type="text" id="discountCode" placeholder="Code (e.g. LAUNCH20)" maxlength="20" autocomplete="off">
+      <input type="number" id="discountPercent" placeholder="Discount %" min="1" max="90" step="1">
+      <input type="date" id="discountExpires" aria-label="Expiration date (optional)">
+      <button class="discount-create" onclick="createDiscountCode()">Create Code</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Code</th><th>Discount</th><th>Status</th><th>Expires</th><th>Created</th><th>Actions</th></tr>
+        </thead>
+        <tbody id="discountTbody"></tbody>
+      </table>
+    </div>
+  </section>
   <div class="controls">
     <input type="text" id="search" placeholder="Search by key, Discord ID, or email...">
     <select id="filterPlan">
@@ -98,9 +117,8 @@
     let currentPage = 1;
 
     async function api(path, opts = {}) {
-      const sep = path.includes('?') ? '&' : '?';
-      const url = `${API}${path}${sep}admin_secret=${ADMIN_KEY}`;
-      const res = await fetch(url, opts);
+      const headers = { ...(opts.headers || {}), 'x-admin-secret': ADMIN_KEY };
+      const res = await fetch(`${API}${path}`, { ...opts, headers });
       return res.json();
     }
 
@@ -159,6 +177,66 @@
       document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${Math.ceil((data.total || 0) / 50)}`;
     }
 
+    async function loadDiscountCodes() {
+      const tbody = document.getElementById('discountTbody');
+      try {
+        const data = await api('/api/admin/discount-codes');
+        if (data.error) throw new Error(data.error);
+        const codes = data.discountCodes || [];
+        tbody.innerHTML = codes.length ? codes.map(code => `
+          <tr>
+            <td class="mono">${code.code}</td>
+            <td>${code.discount_percent}%</td>
+            <td><span class="badge badge-${code.active ? 'active' : 'inactive'}">${code.active ? 'Active' : 'Inactive'}</span></td>
+            <td>${code.expires_at ? new Date(code.expires_at).toLocaleDateString() : 'Never'}</td>
+            <td>${new Date(code.created_at).toLocaleDateString()}</td>
+            <td class="actions">${code.active ? `<button class="danger" onclick="deactivateDiscountCode('${code.code}')">Deactivate</button>` : ''}</td>
+          </tr>
+        `).join('') : '<tr><td colspan="6" style="text-align:center;padding:24px;color:rgba(255,255,255,0.3)">No discount codes yet</td></tr>';
+      } catch (error) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:24px;color:#e45c5c">Could not load discount codes</td></tr>';
+        showToast(error.message || 'Could not load discount codes');
+      }
+    }
+
+    async function createDiscountCode() {
+      const codeInput = document.getElementById('discountCode');
+      const percentInput = document.getElementById('discountPercent');
+      const expiresInput = document.getElementById('discountExpires');
+      const payload = {
+        code: codeInput.value.trim().toUpperCase(),
+        discountPercent: Number(percentInput.value),
+        expiresAt: expiresInput.value ? new Date(`${expiresInput.value}T23:59:59`).toISOString() : null,
+      };
+      try {
+        const data = await api('/api/admin/discount-codes', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        if (data.error) throw new Error(data.error);
+        codeInput.value = '';
+        percentInput.value = '';
+        expiresInput.value = '';
+        showToast(`Created ${data.discountCode.code}`);
+        loadDiscountCodes();
+      } catch (error) {
+        showToast(error.message || 'Could not create discount code');
+      }
+    }
+
+    async function deactivateDiscountCode(code) {
+      if (!confirm(`Deactivate discount code ${code}?`)) return;
+      try {
+        const data = await api(`/api/admin/discount-codes/${encodeURIComponent(code)}/deactivate`, { method: 'POST' });
+        if (data.error) throw new Error(data.error);
+        showToast(`Deactivated ${code}`);
+        loadDiscountCodes();
+      } catch (error) {
+        showToast(error.message || 'Could not deactivate discount code');
+      }
+    }
+
     async function actionLicense(action, key) {
       if (!confirm(`${action} license ${key}?`)) return;
       await api(`/api/admin/license/${action}`, {
@@ -183,8 +261,10 @@
     if (!ADMIN_KEY) {
       document.body.innerHTML = '<div style="text-align:center;padding:100px;color:#999">No admin key provided. Access via /admin/dashboard?key=YOUR_SECRET</div>';
     } else {
+      history.replaceState(null, '', window.location.pathname);
       loadStats();
       loadLicenses();
+      loadDiscountCodes();
     }
   </script>
 </body>
