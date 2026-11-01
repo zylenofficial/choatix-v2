@@ -725,7 +725,7 @@ function renderPricing() {
 
   const pricingCards = tiers.map((t, i) => {
     const btnHTML = t.action === 'download'
-      ? `<a class="btn btn-secondary price-btn" href="https://github.com/zylenofficial/choatix-v2/releases/download/v2.3.1/Choatix.V2.Setup.2.3.1.exe" target="_blank" rel="noopener">${t.cta}</a>`
+      ? `<a class="btn btn-secondary price-btn" href="https://github.com/zylenofficial/choatix-v2/releases/latest/download/Phantom.V2.Setup.2.4.0.exe" target="_blank" rel="noopener">${t.cta}</a>`
       : `<button class="btn ${t.popular ? 'btn-primary' : 'btn-secondary'} price-btn" onclick="addPlanToCart('${t.action}')">${t.cta}</button>`;
     return `
     <div class="price-card ${t.popular ? 'featured' : ''} reveal reveal-d${i + 1}">
