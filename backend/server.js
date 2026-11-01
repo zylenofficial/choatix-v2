@@ -266,7 +266,14 @@ function requireAdmin(req, res, next) {
 
 // ── Health ──────────────────────────────────────────────────────
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', db: pool ? 'postgresql' : 'memory', uptime: process.uptime() });
+  res.json({
+    status: 'ok',
+    db: pool ? 'postgresql' : 'memory',
+    paymentProvider: 'stripe',
+    stripeConfigured: Boolean(STRIPE_SECRET_KEY),
+    stripeWebhookConfigured: Boolean(STRIPE_WEBHOOK_SECRET),
+    uptime: process.uptime(),
+  });
 });
 
 app.get('/api/discount/:code', async (req, res) => {
@@ -351,6 +358,9 @@ app.post('/api/license/free', async (req, res) => {
 // ── STRIPE CHECKOUT ────────────────────────────────────────────
 app.post('/api/license/checkout', async (req, res) => {
   try {
+    if (!STRIPE_SECRET_KEY) {
+      return res.status(503).json({ error: 'Stripe payments are not configured on the server' });
+    }
     const { plan, discordId, email, discountCode } = req.body;
     if (!plan || !['pro', 'phantom'].includes(plan)) {
       return res.status(400).json({ error: 'Invalid plan. Use pro or phantom' });
