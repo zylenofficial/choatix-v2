@@ -3,8 +3,10 @@ services:
     name: phantom-license
     runtime: node
     plan: free
+    autoDeployTrigger: commit
     buildCommand: cd backend && npm install
     startCommand: cd backend && node server.js
+    healthCheckPath: /api/health
     envVars:
       - key: PORT
         value: 10000
