@@ -10,16 +10,10 @@ app.set('trust proxy', 1);
 // ── Config ──────────────────────────────────────────────────────
 const DB_URL = process.env.DATABASE_URL;
 const ADMIN_SECRET = process.env.ADMIN_SECRET || '';
-const PAYPAL_CLIENT_ID = process.env.PAYPAL_CLIENT_ID || '';
-const PAYPAL_CLIENT_SECRET = process.env.PAYPAL_CLIENT_SECRET || '';
-const PAYPAL_WEBHOOK_ID = process.env.PAYPAL_WEBHOOK_ID || '';
-const PAYPAL_MODE = process.env.PAYPAL_MODE || 'live';
+const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY || '';
+const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET || '';
 const BASE_URL = process.env.BASE_URL || `http://localhost:${PORT}`;
 const OWNER_DISCORD_ID = process.env.OWNER_DISCORD_ID || '1014494449809772544';
-
-const PAYPAL_BASE = PAYPAL_MODE === 'sandbox'
-  ? 'https://api-m.sandbox.paypal.com'
-  : 'https://api-m.paypal.com';
 
 const PLAN_PRICES = {
   pro: { amount: '5.99', currency: 'EUR', label: 'Phantom Pro' },
@@ -31,10 +25,9 @@ const FREE_RATE_LIMIT = { maxPerIp: 3, maxPerDiscord: 1, windowMs: 24 * 60 * 60 
 
 // ── Middleware ───────────────────────────────────────────────────
 app.use(cors());
-app.use(express.json({ limit: '10mb' }));
-
 // Raw body for webhook signature verification (must be before JSON parser for webhook route)
-app.post('/api/webhook/paypal', express.raw({ type: 'application/json', limit: '10mb' }));
+app.post('/api/webhook/stripe', express.raw({ type: 'application/json', limit: '10mb' }));
+app.use(express.json({ limit: '10mb' }));
 
 // Serve static success/admin pages
 app.use('/success', express.static(__dirname + '/pages'));
@@ -81,6 +74,9 @@ async function initDB() {
       paypal_order_id TEXT,
       paypal_transaction_id TEXT UNIQUE,
       paypal_payer_id TEXT,
+      stripe_session_id TEXT,
+      stripe_payment_intent TEXT,
+      stripe_customer_id TEXT,
       created_at TIMESTAMPTZ DEFAULT NOW(),
       expires_at TIMESTAMPTZ,
       hwid TEXT,
@@ -92,8 +88,16 @@ async function initDB() {
     CREATE INDEX IF NOT EXISTS idx_lic_discord ON licenses(discord_id);
     CREATE INDEX IF NOT EXISTS idx_lic_paypal_tx ON licenses(paypal_transaction_id);
     CREATE INDEX IF NOT EXISTS idx_lic_paypal_order ON licenses(paypal_order_id);
+    CREATE INDEX IF NOT EXISTS idx_lic_stripe_session ON licenses(stripe_session_id);
+    CREATE INDEX IF NOT EXISTS idx_lic_stripe_pi ON licenses(stripe_payment_intent);
     CREATE INDEX IF NOT EXISTS idx_lic_status ON licenses(status);
     CREATE INDEX IF NOT EXISTS idx_lic_plan ON licenses(plan);
+
+    ALTER TABLE licenses ADD COLUMN IF NOT EXISTS stripe_session_id TEXT;
+    ALTER TABLE licenses ADD COLUMN IF NOT EXISTS stripe_payment_intent TEXT;
+    ALTER TABLE licenses ADD COLUMN IF NOT EXISTS stripe_customer_id TEXT;
+    CREATE INDEX IF NOT EXISTS idx_lic_stripe_session ON licenses(stripe_session_id);
+    CREATE INDEX IF NOT EXISTS idx_lic_stripe_pi ON licenses(stripe_payment_intent);
 
     CREATE TABLE IF NOT EXISTS rate_limits (
       id SERIAL PRIMARY KEY,
@@ -160,85 +164,79 @@ async function checkRateLimit(identifier, action, maxRequests, windowMs) {
   return true;
 }
 
-// ── PayPal Helpers ──────────────────────────────────────────────
-let paypalToken = null;
-let paypalTokenExpiry = 0;
+// ── Stripe Helpers ─────────────────────────────────────────────
+const STRIPE_API = 'https://api.stripe.com/v1';
 
-async function getPayPalToken() {
-  if (paypalToken && Date.now() < paypalTokenExpiry) return paypalToken;
-  if (!PAYPAL_CLIENT_ID || !PAYPAL_CLIENT_SECRET) throw new Error('PayPal not configured');
-  const creds = Buffer.from(`${PAYPAL_CLIENT_ID}:${PAYPAL_CLIENT_SECRET}`).toString('base64');
-  const res = await fetch(`${PAYPAL_BASE}/v1/oauth2/token`, {
-    method: 'POST',
-    headers: { Authorization: `Basic ${creds}`, 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: 'grant_type=client_credentials',
-  });
-  if (!res.ok) throw new Error(`PayPal auth failed: ${res.status}`);
-  const data = await res.json();
-  paypalToken = data.access_token;
-  paypalTokenExpiry = Date.now() + (data.expires_in - 60) * 1000;
-  return paypalToken;
-}
-
-async function verifyPayPalWebhook(headers, rawBody) {
-  if (!PAYPAL_WEBHOOK_ID) {
-    console.warn('No PAYPAL_WEBHOOK_ID configured — skipping signature verification');
-    return true;
-  }
-  try {
-    const token = await getPayPalToken();
-    const body = JSON.parse(rawBody.toString());
-    const verificationPayload = {
-      auth_algo: headers['paypal-auth-algo'],
-      cert_url: headers['paypal-cert-url'],
-      actual_sig: headers['paypal-transmission-sig'],
-      sig_algo: 'SHA256withRSA',
-      webhook_id: PAYPAL_WEBHOOK_ID,
-      transmission_id: headers['paypal-transmission-id'],
-      transmission_time: headers['paypal-transmission-time'],
-      webhook_event: body,
-    };
-    const res = await fetch(`${PAYPAL_BASE}/v1/notifications/verify-webhook-signature`, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify(verificationPayload),
-    });
-    const result = await res.json();
-    return result.verification_status === 'SUCCESS';
-  } catch (err) {
-    console.error('Webhook verification error:', err.message);
-    return false;
-  }
-}
-
-async function capturePaypalOrder(orderId) {
-  const token = await getPayPalToken();
-  const res = await fetch(`${PAYPAL_BASE}/v2/checkout/orders/${orderId}/capture`, {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+async function stripeRequest(path, opts = {}) {
+  if (!STRIPE_SECRET_KEY) throw new Error('Stripe not configured');
+  const res = await fetch(`${STRIPE_API}${path}`, {
+    method: opts.method || 'GET',
+    headers: {
+      Authorization: `Bearer ${STRIPE_SECRET_KEY}`,
+      'Content-Type': 'application/x-www-form-urlencoded',
+      ...(opts.headers || {}),
+    },
+    body: opts.body,
   });
   if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(`Capture failed: ${res.status} ${JSON.stringify(err)}`);
+    const err = await res.text().catch(() => '');
+    throw new Error(`Stripe API ${res.status}: ${err}`);
   }
   return res.json();
 }
 
-async function getOrderDetails(orderId) {
-  const token = await getPayPalToken();
-  const res = await fetch(`${PAYPAL_BASE}/v2/checkout/orders/${orderId}`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  if (!res.ok) throw new Error(`Order fetch failed: ${res.status}`);
-  return res.json();
+async function createStripeCheckout({ plan, discordId, email, amountCents, discountCode }) {
+  const planInfo = PLAN_PRICES[plan];
+  const body = new URLSearchParams();
+  body.set('mode', 'payment');
+  body.set('locale', 'en');
+  body.set('client_reference_id', generateIdempotencyKey());
+  body.set('success_url', `${BASE_URL}/success/return.html?session_id={CHECKOUT_SESSION_ID}`);
+  body.set('cancel_url', `${BASE_URL}/success/cancel.html`);
+  body.set('line_items[0][quantity]', '1');
+  body.set('line_items[0][price_data][currency]', planInfo.currency.toLowerCase());
+  body.set('line_items[0][price_data][unit_amount]', String(amountCents));
+  body.set('line_items[0][price_data][product_data][name]', `${planInfo.label} License`);
+  body.set('line_items[0][price_data][product_data][description]', `Phantom Tweaks ${planInfo.label} License Key`);
+  body.set('metadata[plan]', plan);
+  body.set('metadata[discordId]', discordId || '');
+  if (discountCode) body.set('metadata[discountCode]', discountCode);
+  if (email) body.set('customer_email', email);
+  return stripeRequest('/checkout/sessions', { method: 'POST', body: body.toString() });
+}
+
+async function retrieveStripeSession(sessionId) {
+  return stripeRequest(`/checkout/sessions/${encodeURIComponent(sessionId)}`);
+}
+
+// Stripe-Signature header format: t=<timestamp>,v1=<hmac_sha256_hex>
+function verifyStripeWebhook(rawBody, signatureHeader) {
+  if (!STRIPE_WEBHOOK_SECRET) {
+    console.warn('No STRIPE_WEBHOOK_SECRET configured — skipping signature verification');
+    return null;
+  }
+  const parts = (signatureHeader || '').split(',').map(s => s.trim());
+  const t = parts.find(p => p.startsWith('t='))?.slice(2);
+  const sig = parts.find(p => p.startsWith('v1='))?.slice(3);
+  if (!t || !sig) return null;
+  const ts = parseInt(t, 10);
+  if (isNaN(ts) || Math.abs(Date.now() / 1000 - ts) > 300) return null;
+  const payload = `${t}.${rawBody.toString()}`;
+  const expected = crypto.createHmac('sha256', STRIPE_WEBHOOK_SECRET).update(payload).digest();
+  const received = Buffer.from(sig, 'hex');
+  if (received.length !== expected.length || !crypto.timingSafeEqual(received, expected)) return null;
+  return JSON.parse(rawBody.toString());
 }
 
 // ── License Fulfillment (idempotent) ────────────────────────────
-async function fulfillLicense(orderId, payerId, plan) {
+async function fulfillLicense({ plan, discordId, email, sessionId, paymentIntent, customerId }) {
   if (!pool) throw new Error('Database required for license fulfillment');
 
   // Check if already fulfilled
-  const existing = await qOne('SELECT * FROM licenses WHERE paypal_order_id = $1', [orderId]);
+  const existing = await qOne(
+    'SELECT * FROM licenses WHERE (stripe_session_id IS NOT NULL AND stripe_session_id=$1) OR (stripe_payment_intent IS NOT NULL AND stripe_payment_intent=$2)',
+    [sessionId, paymentIntent]
+  );
   if (existing) {
     return { license: existing, alreadyFulfilled: true };
   }
@@ -246,9 +244,9 @@ async function fulfillLicense(orderId, payerId, plan) {
   const licenseKey = generateLicenseKey();
   const now = new Date().toISOString();
   const license = await qOne(
-    `INSERT INTO licenses (license_key, plan, status, paypal_order_id, paypal_payer_id, created_at)
-     VALUES ($1, $2, 'active', $3, $4, $5) RETURNING *`,
-    [licenseKey, plan, orderId, payerId, now]
+    `INSERT INTO licenses (license_key, plan, status, discord_id, customer_email, stripe_session_id, stripe_payment_intent, stripe_customer_id, created_at)
+     VALUES ($1, $2, 'active', $3, $4, $5, $6, $7, $8) RETURNING *`,
+    [licenseKey, plan, discordId || null, email || null, sessionId || null, paymentIntent || null, customerId || null, now]
   );
 
   return { license, alreadyFulfilled: false };
@@ -275,7 +273,6 @@ app.get('/api/discount/:code', async (req, res) => {
   if (!pool) return res.status(503).json({ valid: false, error: 'Discount validation is temporarily unavailable' });
   const code = req.params.code.trim().toUpperCase();
   if (!DISCOUNT_CODE_RE.test(code)) return res.json({ valid: false, error: 'Invalid discount code' });
-
   try {
     const ip = req.ip || req.connection?.remoteAddress || 'unknown';
     if (!await checkRateLimit(`ip:${ip}`, 'discount_validation', 30, 60 * 1000)) {
@@ -291,59 +288,6 @@ app.get('/api/discount/:code', async (req, res) => {
     console.error('[Discount validation error]', err);
     res.status(500).json({ valid: false, error: 'Could not validate discount code' });
   }
-});
-
-// ── Team Avatars (public) ──────────────────────────────────────
-const teamAvatarCache = {};
-const TEAM_CACHE_TTL = 60 * 60 * 1000; // 1 hour
-
-app.get('/api/team/:id', async (req, res) => {
-  try {
-    const userId = req.params.id;
-    if (!/^\d{17,20}$/.test(userId)) return res.status(400).json({ error: 'Invalid user ID' });
-
-    const cached = teamAvatarCache[userId];
-    if (cached && Date.now() - cached.ts < TEAM_CACHE_TTL) {
-      return res.json({ avatar: cached.avatar });
-    }
-
-    const botToken = process.env.DISCORD_BOT_TOKEN;
-    if (!botToken || botToken === 'YOUR_BOT_TOKEN_HERE') {
-      const defaultIndex = Number((BigInt(userId) >> 22n) % 6n);
-      return res.json({ avatar: `https://cdn.discordapp.com/embed/avatars/${defaultIndex}.png` });
-    }
-
-    const discordRes = await fetch(`https://discord.com/api/v10/users/${userId}`, {
-      headers: { Authorization: `Bot ${botToken}` }
-    });
-
-    if (!discordRes.ok) {
-      const defaultIndex = Number((BigInt(userId) >> 22n) % 6n);
-      return res.json({ avatar: `https://cdn.discordapp.com/embed/avatars/${defaultIndex}.png` });
-    }
-
-    const user = await discordRes.json();
-    let avatarUrl;
-    if (user.avatar) {
-      const ext = user.avatar.startsWith('a_') ? 'gif' : 'png';
-      avatarUrl = `https://cdn.discordapp.com/avatars/${userId}/${user.avatar}.${ext}?size=256`;
-    } else {
-      const defaultIndex = Number((BigInt(userId) >> 22n) % 6n);
-      avatarUrl = `https://cdn.discordapp.com/embed/avatars/${defaultIndex}.png`;
-    }
-
-    teamAvatarCache[userId] = { avatar: avatarUrl, ts: Date.now() };
-    res.json({ avatar: avatarUrl });
-  } catch (err) {
-    console.error('[Team Avatar]', err.message);
-    const defaultIndex = Number((BigInt(req.params.id) >> 22n) % 6n);
-    res.json({ avatar: `https://cdn.discordapp.com/embed/avatars/${defaultIndex}.png` });
-  }
-});
-
-// ── Get PayPal Client ID (public) ───────────────────────────────
-app.get('/api/paypal/client-id', (req, res) => {
-  res.json({ clientId: PAYPAL_CLIENT_ID || null });
 });
 
 // ── FREE LICENSE ────────────────────────────────────────────────
@@ -404,7 +348,7 @@ app.post('/api/license/free', async (req, res) => {
   }
 });
 
-// ── PAYPAL CHECKOUT ────────────────────────────────────────────
+// ── STRIPE CHECKOUT ────────────────────────────────────────────
 app.post('/api/license/checkout', async (req, res) => {
   try {
     const { plan, discordId, email, discountCode } = req.body;
@@ -430,225 +374,133 @@ app.post('/api/license/checkout', async (req, res) => {
       if (!discount) return res.status(400).json({ error: 'Invalid or expired discount code' });
     }
 
-    const amountCents = Math.round(Number(planInfo.amount) * 100);
-    const discountCents = discount ? Math.round(amountCents * discount.discount_percent / 100) : 0;
-    const orderTotal = ((amountCents - discountCents) / 100).toFixed(2);
-    const token = await getPayPalToken();
-
-    const orderBody = {
-      intent: 'CAPTURE',
-      purchase_units: [{
-        reference_id: `PHNT-${plan}-${Date.now()}`,
-        description: `${planInfo.label} License`,
-        custom_id: JSON.stringify({
-          plan,
-          discordId: cleanDiscordId,
-          email: email || null,
-          discountCode: discount ? discount.code : null,
-        }),
-        amount: {
-          currency_code: planInfo.currency,
-          value: orderTotal,
-          breakdown: {
-            item_total: { currency_code: planInfo.currency, value: planInfo.amount },
-            ...(discountCents ? {
-              discount: { currency_code: planInfo.currency, value: (discountCents / 100).toFixed(2) },
-            } : {}),
-          },
-        },
-        items: [{
-          name: planInfo.label,
-          description: `Phantom Tweaks ${planInfo.label} License Key`,
-          unit_amount: { currency_code: planInfo.currency, value: planInfo.amount },
-          quantity: '1',
-          category: 'DIGITAL_GOODS',
-        }],
-      }],
-      application_context: {
-        brand_name: 'Phantom Tweaks',
-        locale: 'en-US',
-        landing_page: 'BILLING',
-        shipping_preference: 'NO_SHIPPING',
-        user_action: 'PAY_NOW',
-        return_url: `${BASE_URL}/success/return.html`,
-        cancel_url: `${BASE_URL}/success/cancel.html`,
-      },
-    };
-
-    const response = await fetch(`${PAYPAL_BASE}/v2/checkout/orders`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-        Prefer: 'return=representation',
-      },
-      body: JSON.stringify(orderBody),
+    const baseCents = Math.round(Number(planInfo.amount) * 100);
+    const finalCents = baseCents - (discount ? Math.round(baseCents * discount.discount_percent / 100) : 0);
+    const session = await createStripeCheckout({
+      plan,
+      discordId: cleanDiscordId,
+      email: email || null,
+      amountCents: finalCents,
+      discountCode: discount?.code || null,
     });
 
-    if (!response.ok) {
-      const err = await response.json().catch(() => ({}));
-      console.error('[PayPal checkout error]', err);
-      return res.status(500).json({ error: 'Failed to create PayPal order' });
+    if (!session.url) {
+      return res.status(500).json({ error: 'Failed to create Stripe Checkout Session' });
     }
-
-    const order = await response.json();
-    const approveUrl = order.links?.find(l => l.rel === 'approve')?.href;
 
     // Pre-create license record (pending) for idempotency
     if (pool) {
       await q(
-        `INSERT INTO licenses (license_key, plan, status, discord_id, customer_email, paypal_order_id, created_at)
-         VALUES ($1, $2, 'pending', $3, $4, $5, NOW()) ON CONFLICT (paypal_order_id) DO NOTHING`,
-        [generateLicenseKey(), plan, cleanDiscordId, email || null, order.id]
+        `INSERT INTO licenses (license_key, plan, status, discord_id, customer_email, stripe_session_id, created_at)
+         VALUES ($1, $2, 'pending', $3, $4, $5, NOW()) ON CONFLICT (stripe_session_id) DO NOTHING`,
+        [generateLicenseKey(), plan, cleanDiscordId, email || null, session.id]
       );
     }
 
-    res.json({ orderId: order.id, approvalUrl, status: order.status });
+    res.json({ sessionId: session.id, url: session.url, status: session.payment_status });
   } catch (err) {
     console.error('[Checkout error]', err);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-// ── Capture order (after redirect from PayPal) ──────────────────
+// ── Complete order (after redirect from Stripe) ─────────────────
 app.post('/api/license/capture', async (req, res) => {
   try {
-    const { orderId } = req.body;
-    if (!orderId) return res.status(400).json({ error: 'Order ID required' });
+    const { sessionId } = req.body;
+    if (!sessionId) return res.status(400).json({ error: 'Session ID required' });
 
-    // Check if already fulfilled
-    const existing = await qOne('SELECT * FROM licenses WHERE paypal_order_id=$1 AND status!=\'pending\'', [orderId]);
-    if (existing) {
+    const session = await retrieveStripeSession(sessionId);
+    if (session.payment_status !== 'paid') {
+      return res.status(400).json({ error: 'Payment not completed', status: session.payment_status });
+    }
+
+    const plan = session.metadata?.plan;
+    if (!plan || !['pro', 'phantom'].includes(plan)) {
+      return res.status(400).json({ error: 'Invalid plan in session' });
+    }
+
+    const paymentIntent = session.payment_intent || null;
+    const customerId = typeof session.customer === 'string' ? session.customer : (session.customer?.id || null);
+
+    const existing = await qOne('SELECT * FROM licenses WHERE stripe_session_id=$1', [sessionId]);
+    if (existing && existing.status !== 'pending') {
       return res.json({ licenseKey: existing.license_key, plan: existing.plan, status: 'active', alreadyFulfilled: true });
     }
 
-    // Capture payment
-    const captureData = await capturePaypalOrder(orderId);
-    if (captureData.status !== 'COMPLETED') {
-      return res.status(400).json({ error: 'Payment not completed', status: captureData.status });
-    }
-
-    // Extract plan from custom_id
-    const purchaseUnit = captureData.purchase_units?.[0];
-    const customData = JSON.parse(purchaseUnit?.custom_id || '{}');
-    const plan = customData.plan;
-    if (!plan || !['pro', 'phantom'].includes(plan)) {
-      return res.status(400).json({ error: 'Invalid plan in order' });
-    }
-
-    const capture = purchaseUnit?.payments?.captures?.[0];
-    const transactionId = capture?.id;
-    const payerId = captureData.payer?.payer_id;
-
-    // Update or create license
-    let license;
-    if (existing) {
-      license = await qOne(
-        `UPDATE licenses SET status='active', paypal_transaction_id=$1, paypal_payer_id=$2,
-         activated_at=NOW(), expires_at=NULL WHERE paypal_order_id=$3 RETURNING *`,
-        [transactionId, payerId, orderId]
-      );
-    } else {
-      const key = generateLicenseKey();
-      license = await qOne(
-        `INSERT INTO licenses (license_key, plan, status, discord_id, customer_email, paypal_order_id, paypal_transaction_id, paypal_payer_id, created_at, activated_at)
-         VALUES ($1, $2, 'active', $3, $4, $5, $6, $7, NOW(), NOW()) RETURNING *`,
-        [key, plan, customData.discordId, customData.email, orderId, transactionId, payerId]
-      );
-    }
+    const { license } = await fulfillLicense({
+      plan,
+      discordId: session.metadata?.discordId || null,
+      email: session.customer_details?.email || null,
+      sessionId,
+      paymentIntent,
+      customerId,
+    });
 
     res.json({ licenseKey: license.license_key, plan: license.plan, status: 'active' });
   } catch (err) {
     console.error('[Capture error]', err);
-    res.status(500).json({ error: 'Failed to capture order' });
+    res.status(500).json({ error: 'Failed to complete order' });
   }
 });
 
-// ── PAYPAL WEBHOOK ─────────────────────────────────────────────
-app.post('/api/webhook/paypal', async (req, res) => {
+// ── STRIPE WEBHOOK ─────────────────────────────────────────────
+app.post('/api/webhook/stripe', async (req, res) => {
   try {
     const rawBody = req.body;
-    const headers = req.headers;
+    const signature = req.headers['stripe-signature'];
 
     // Verify webhook signature
-    const valid = await verifyPayPalWebhook(headers, rawBody);
-    if (!valid) {
+    const event = verifyStripeWebhook(rawBody, signature);
+    if (!event) {
       console.warn('[Webhook] Invalid signature');
       return res.status(401).json({ error: 'Invalid webhook signature' });
     }
 
-    const event = JSON.parse(rawBody.toString());
-    console.log(`[Webhook] Received: ${event.event_type}`);
+    console.log(`[Webhook] Received: ${event.type}`);
 
-    if (event.event_type === 'PAYMENT.CAPTURE.COMPLETED') {
-      const capture = event.resource;
-      const orderId = capture.supplementary_data?.related_ids?.order_id;
-      const transactionId = capture.id;
-      const payerId = capture.payer?.payer_id || event.resource?.payer_id;
-      const amount = capture.amount;
-
-      if (!orderId) {
-        console.warn('[Webhook] No order ID in capture event');
-        return res.json({ received: true });
-      }
-
-      // Idempotency: check if already fulfilled
-      if (pool) {
-        const existing = await qOne(
-          'SELECT * FROM licenses WHERE paypal_order_id=$1 OR paypal_transaction_id=$2',
-          [orderId, transactionId]
-        );
-        if (existing && existing.status !== 'pending') {
-          console.log(`[Webhook] Already fulfilled: ${orderId}`);
-          return res.json({ received: true, duplicate: true });
-        }
-      }
-
-      // Get order details to determine plan
-      let plan = null;
-      let discordId = null;
-      let email = null;
-      try {
-        const orderDetails = await getOrderDetails(orderId);
-        const purchaseUnit = orderDetails.purchase_units?.[0];
-        if (purchaseUnit?.custom_id) {
-          const customData = JSON.parse(purchaseUnit.custom_id);
-          plan = customData.plan;
-          discordId = customData.discordId;
-          email = customData.email;
-        }
-      } catch (err) {
-        console.error('[Webhook] Failed to fetch order details:', err.message);
-      }
+    if (event.type === 'checkout.session.completed') {
+      const session = event.data.object;
+      const plan = session.metadata?.plan;
+      const sessionId = session.id;
+      const paymentIntent = session.payment_intent || null;
+      const customerId = typeof session.customer === 'string' ? session.customer : (session.customer?.id || null);
 
       if (!plan || !['pro', 'phantom'].includes(plan)) {
         console.warn(`[Webhook] Invalid plan: ${plan}`);
         return res.json({ received: true });
       }
-
-      // Fulfill license (idempotent)
-      const { license, alreadyFulfilled } = await fulfillLicense(orderId, payerId, plan);
-
-      // Update with additional info if we have it
-      if (pool && !alreadyFulfilled) {
-        await q(
-          `UPDATE licenses SET paypal_transaction_id=$1, discord_id=COALESCE(discord_id, $2),
-           customer_email=COALESCE(customer_email, $3), activated_at=NOW()
-           WHERE paypal_order_id=$4`,
-          [transactionId, discordId, email, orderId]
-        );
+      if (session.payment_status !== 'paid') {
+        return res.json({ received: true });
       }
 
-      console.log(`[Webhook] Fulfilled: ${plan} license for order ${orderId}`);
+      // Idempotency: check if already fulfilled
+      if (pool) {
+        const existing = await qOne('SELECT * FROM licenses WHERE stripe_session_id=$1', [sessionId]);
+        if (existing && existing.status !== 'pending') {
+          console.log(`[Webhook] Already fulfilled: ${sessionId}`);
+          return res.json({ received: true, duplicate: true });
+        }
+      }
+
+      await fulfillLicense({
+        plan,
+        discordId: session.metadata?.discordId || null,
+        email: session.customer_details?.email || null,
+        sessionId,
+        paymentIntent,
+        customerId,
+      });
+
+      console.log(`[Webhook] Fulfilled: ${plan} license for session ${sessionId}`);
     }
 
-    // Also handle other events
-    if (event.event_type === 'PAYMENT.CAPTURE.REFUNDED') {
-      const capture = event.resource;
-      const orderId = capture.supplementary_data?.related_ids?.order_id;
-      if (orderId && pool) {
-        await q("UPDATE licenses SET status='revoked' WHERE paypal_order_id=$1", [orderId]);
-        console.log(`[Webhook] Revoked license for refunded order: ${orderId}`);
+    if (event.type === 'charge.refunded') {
+      const charge = event.data.object;
+      const pi = charge.payment_intent;
+      if (pi && pool) {
+        await q("UPDATE licenses SET status='revoked' WHERE stripe_payment_intent=$1", [pi]);
+        console.log(`[Webhook] Revoked license for refunded payment: ${pi}`);
       }
     }
 
@@ -804,14 +656,34 @@ app.get('/api/license/discord/:discordId', async (req, res) => {
   try {
     const discordId = req.params.discordId.trim();
     if (discordId === OWNER_DISCORD_ID) {
-      return res.json({ plan: 'phantom', status: 'active', isOwner: true });
+      const user = await getUser(discordId);
+      return res.json({
+        plan: 'phantom',
+        status: 'active',
+        isOwner: true,
+        profile: user?.username ? {
+          id: discordId,
+          username: user.username,
+          displayName: user.global_name || user.username,
+          avatarUrl: user.avatar || '',
+        } : null,
+      });
     }
     const license = await qOne(
       'SELECT license_key, plan, status, created_at, expires_at, activated_at, hwid FROM licenses WHERE discord_id=$1 AND status=\'active\' ORDER BY created_at DESC LIMIT 1',
       [discordId]
     );
     if (!license) return res.status(404).json({ error: 'No active license found' });
-    res.json(license);
+    const user = await getUser(discordId);
+    res.json({
+      ...license,
+      profile: user?.username ? {
+        id: discordId,
+        username: user.username,
+        displayName: user.global_name || user.username,
+        avatarUrl: user.avatar || '',
+      } : null,
+    });
   } catch (err) {
     res.status(500).json({ error: 'Internal server error' });
   }
@@ -850,6 +722,7 @@ app.get('/api/admin/licenses', requireAdmin, async (req, res) => {
 
     const rows = await q(
       `SELECT id, license_key, plan, status, customer_email, discord_id, paypal_order_id, paypal_transaction_id,
+       stripe_session_id, stripe_payment_intent,
        created_at, expires_at, hwid IS NOT NULL as hwid_bound, activated_at, last_validation
        FROM licenses ${whereClause} ORDER BY created_at DESC LIMIT $${idx++} OFFSET $${idx}`,
       params
@@ -964,6 +837,7 @@ app.get('/api/admin/stats', requireAdmin, async (req, res) => {
 // ── ADMIN DASHBOARD HTML ───────────────────────────────────────
 app.get('/admin/dashboard', (req, res) => {
   const secret = req.query.key;
+  if (!ADMIN_SECRET) return res.status(503).send('Admin access is not configured');
   if (secret !== ADMIN_SECRET) return res.status(403).send('Unauthorized');
   res.sendFile(__dirname + '/pages/admin.html');
 });
@@ -1089,7 +963,19 @@ async function getUserReferral(discordId) {
 app.get('/api/license/:discordId', async (req, res) => {
   const discordId = req.params.discordId.trim();
   if (discordId === OWNER_DISCORD_ID) {
-    return res.json({ success: true, tier: 'PHANTOM', key: 'OWNER', activatedAt: null });
+    const user = await getUser(discordId);
+    return res.json({
+      success: true,
+      tier: 'PHANTOM',
+      key: 'OWNER',
+      activatedAt: null,
+      profile: user?.username ? {
+        id: discordId,
+        username: user.username,
+        displayName: user.global_name || user.username,
+        avatarUrl: user.avatar || '',
+      } : null,
+    });
   }
   // Check new licenses table first
   const newLicense = await qOne(
@@ -1097,12 +983,35 @@ app.get('/api/license/:discordId', async (req, res) => {
     [discordId]
   );
   if (newLicense) {
-    return res.json({ success: true, tier: newLicense.plan.toUpperCase() === 'PHANTOM' ? 'PHANTOM' : newLicense.plan.toUpperCase(), key: newLicense.license_key, activatedAt: newLicense.activated_at });
+    const user = await getUser(discordId);
+    return res.json({
+      success: true,
+      tier: newLicense.plan.toUpperCase() === 'PHANTOM' ? 'PHANTOM' : newLicense.plan.toUpperCase(),
+      key: newLicense.license_key,
+      activatedAt: newLicense.activated_at,
+      profile: user?.username ? {
+        id: discordId,
+        username: user.username,
+        displayName: user.global_name || user.username,
+        avatarUrl: user.avatar || '',
+      } : null,
+    });
   }
   // Fallback to legacy users_table
   const user = await getUser(discordId);
   if (!user) return res.status(404).json({ success: false, message: 'No license found' });
-  res.json({ success: true, tier: user.tier, key: user.key || null, activatedAt: user.activated_at || null });
+  res.json({
+    success: true,
+    tier: user.tier,
+    key: user.key || null,
+    activatedAt: user.activated_at || null,
+    profile: user.username ? {
+      id: discordId,
+      username: user.username,
+      displayName: user.global_name || user.username,
+      avatarUrl: user.avatar || '',
+    } : null,
+  });
 });
 
 // Legacy: Key verification
@@ -1267,92 +1176,12 @@ app.get('/api/admin/users', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// ── Discord OAuth Login ─────────────────────────────────────────
-const DISCORD_CLIENT_ID = process.env.DISCORD_CLIENT_ID || '';
-const DISCORD_CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET || '';
-const SITE_URL = process.env.SITE_URL || 'https://zylenofficial.github.io/choatix-v2/';
-
-// Step 1: send user to Discord's consent screen
-app.get('/api/auth/discord', (req, res) => {
-  if (!DISCORD_CLIENT_ID || !DISCORD_CLIENT_SECRET) {
-    return res.status(500).send('Discord OAuth not configured. Set DISCORD_CLIENT_ID and DISCORD_CLIENT_SECRET.');
-  }
-  // Use the public host of this service as the redirect URI
-  const proto = req.headers['x-forwarded-proto'] || req.protocol || 'https';
-  const host = req.headers['x-forwarded-host'] || req.headers.host;
-  const redirectUri = process.env.DISCORD_REDIRECT_URI || `${proto}://${host}/api/auth/discord/callback`;
-
-  const params = new URLSearchParams({
-    client_id: DISCORD_CLIENT_ID,
-    redirect_uri: redirectUri,
-    response_type: 'code',
-    scope: 'identify',
-    prompt: 'consent',
-  });
-  res.redirect(`https://discord.com/oauth2/authorize?${params.toString()}`);
-});
-
-// Step 2: Discord redirects back here with a code — exchange it for the user
-// (alias /api/auth/callback for compatibility with existing Discord app configs)
-async function discordOAuthCallback(req, res) {
-  const { code } = req.query;
-  if (!code) return res.status(400).send('Missing code');
-  try {
-    const proto = req.headers['x-forwarded-proto'] || req.protocol || 'https';
-    const host = req.headers['x-forwarded-host'] || req.headers.host;
-    const redirectUri = process.env.DISCORD_REDIRECT_URI || `${proto}://${host}/api/auth/discord/callback`;
-
-    // Exchange the code for an access token
-    const tokenRes = await fetch('https://discord.com/api/oauth2/token', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({
-        client_id: DISCORD_CLIENT_ID,
-        client_secret: DISCORD_CLIENT_SECRET,
-        grant_type: 'authorization_code',
-        code,
-        redirect_uri: redirectUri,
-      }),
-    });
-    if (!tokenRes.ok) throw new Error(`Token exchange failed: ${tokenRes.status}`);
-    const tokenData = await tokenRes.json();
-
-    // Fetch the user's identity
-    const userRes = await fetch('https://discord.com/api/users/@me', {
-      headers: { Authorization: `Bearer ${tokenData.access_token}` },
-    });
-    if (!userRes.ok) throw new Error(`User fetch failed: ${userRes.status}`);
-    const u = await userRes.json();
-
-    const username = u.global_name || u.username || 'User';
-    const avatar = u.avatar
-      ? `https://cdn.discordapp.com/avatars/${u.id}/${u.avatar}.png`
-      : `https://cdn.discordapp.com/embed/avatars/${(Number(u.discriminator) || 0) % 5}.png`;
-
-    // Send identity back to the website (initAuth in app.js picks this up)
-    const params = new URLSearchParams({
-      discord_id: u.id,
-      username,
-      avatar,
-    });
-    res.redirect(`${SITE_URL}?${params.toString()}`);
-  } catch (err) {
-    console.error('Discord OAuth error:', err.message);
-    res.redirect(`${SITE_URL}?discord_login=failed`);
-  }
-}
-
-// Register the callback handler on both paths — whichever redirect_uri
-// is registered in the Discord Developer Portal, both will work.
-app.get('/api/auth/discord/callback', discordOAuthCallback);
-app.get('/api/auth/callback', discordOAuthCallback);
-
 // ── Start ───────────────────────────────────────────────────────
 initDB().then(() => {
   app.listen(PORT, () => {
     console.log(`Phantom License Server running on port ${PORT} (${pool ? 'PostgreSQL' : 'in-memory'})`);
-    if (PAYPAL_CLIENT_ID) console.log(`PayPal mode: ${PAYPAL_MODE}`);
-    else console.log('PayPal: NOT CONFIGURED');
+    if (STRIPE_SECRET_KEY) console.log('Stripe: configured');
+    else console.log('Stripe: NOT CONFIGURED');
   });
 }).catch((err) => {
   console.error('Failed to init DB, falling back to memory:', err.message);

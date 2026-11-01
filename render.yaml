@@ -12,15 +12,11 @@ services:
         sync: false
       - key: ADMIN_SECRET
         sync: false
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
       - key: OWNER_DISCORD_ID
         value: "1014494449809772544"
       - key: BASE_URL
         value: "https://phantom-license-dy15.onrender.com"
-      - key: PAYPAL_CLIENT_ID
-        sync: false
-      - key: PAYPAL_CLIENT_SECRET
-        sync: false
-      - key: PAYPAL_WEBHOOK_ID
-        sync: false
-      - key: PAYPAL_MODE
-        value: "sandbox"

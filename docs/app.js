@@ -1,4 +1,4 @@
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+﻿// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 // PHANTOM V2 â€” Complete App
 // Single file: data + state + router + components + pages + effects
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
@@ -76,7 +76,7 @@ const FAQ = [
   { q: 'How much FPS will I gain?', a: 'Results vary by hardware and game. Most users see 15-60% FPS improvement. Check the FPS Comparison section for average gains across popular games.' },
   { q: 'What\'s the difference between the products?', a: '<strong>Full Optimization (&euro;24.99)</strong> â€” 461 tweaks: Everything combined. <strong>Basic (&euro;4.99)</strong> â€” 220 tweaks: Windows debloat, essential settings, GPU/network/power. <strong>Pro (&euro;9.99)</strong> â€” 291 tweaks: Basic + BCD, RAM, USB, deep cleanup. <strong>Extreme (&euro;14.99)</strong> â€” 283 tweaks: Full debloat, DirectX, buffer bloat, registry. <strong>Precision (&euro;5.99)</strong> â€” 128 tweaks: Input lag, mouse/keyboard, GPU latency for FPS games.' },
   { q: 'Do I need to restart my PC after optimizing?', a: 'Some tweaks take effect immediately, others require a restart. Phantom will notify you when a restart is needed. Quick Boost works instantly without restart.' },
-  { q: 'How do I buy a product?', a: 'Go to the Pricing page, choose a plan (Pro or Phantom), and it will be added to your cart. Checkout securely with PayPal or a supported card. After payment, you\'ll receive a license key. Paste it in the Phantom app under Settings to activate.' },
+  { q: 'How do I buy a product?', a: 'Go to the Pricing page, choose a plan (Pro or Phantom), and it will be added to your cart. Checkout with credit/debit card via Stripe. After payment, you\'ll receive a license key. Paste it in the Phantom app under Settings to activate.' },
   { q: 'Does it work on Windows 11?', a: 'Yes. Phantom V2 supports Windows 10 and Windows 11. All tweaks are compatible with the latest updates.' },
   { q: 'Do I need to run as Administrator?', a: 'Yes. System-level tweaks (registry HKLM, services, power plans, bcdedit) require Administrator privileges. The app will warn you if not running as admin.' },
   { q: 'Can I revert changes?', a: 'Yes. Every tweak has a revert command. Use "Revert All" or click the checkmark next to any category to undo everything safely.' },
@@ -166,6 +166,15 @@ function initAuth() {
     localStorage.setItem('username', params.get('username'));
     localStorage.setItem('avatar', params.get('avatar') || '');
     history.replaceState({}, '', location.pathname);
+  }
+  if (params.get('checkout') === 'success') {
+    const token = params.get('token') || '';
+    const products = params.get('products') || '';
+    history.replaceState({}, '', location.pathname);
+    if (token) {
+      location.href = '#license?key=' + encodeURIComponent(token) + '&plan=' + (localStorage.getItem('phantom_checkout_plan') || 'pro');
+      localStorage.removeItem('phantom_checkout_plan');
+    }
   }
   const id = localStorage.getItem('discord_id');
   const name = localStorage.getItem('username');
@@ -317,14 +326,14 @@ async function verifyAppliedDiscount() {
     const d = await r.json().catch(() => ({}));
     if (!r.ok || !d.valid) {
       removeDiscount();
-      alert(d.error || 'This discount code is no longer available. Please remove it and try again.');
+      alert(d.error || 'This discount code is no longer available.');
       return false;
     }
     appliedDiscount = { code: d.code, percent: d.discount };
     localStorage.setItem(DISCOUNT_KEY, JSON.stringify(appliedDiscount));
     return true;
   } catch {
-    alert('Could not verify the discount code. Please try again before checking out.');
+    alert('Could not verify the discount code. Please try again before checkout.');
     return false;
   }
 }
@@ -355,9 +364,10 @@ async function checkout() {
   }
 
   const btn = document.getElementById('cartCheckout');
-  if (btn) { btn.textContent = 'Redirecting to PayPal...'; btn.disabled = true; }
+  if (btn) { btn.textContent = 'Redirecting to Stripe...'; btn.disabled = true; }
 
   try {
+    // Build the cart items [{plan, qty}] — one license key per unit
     const itemsMap = {};
     cart.forEach(i => {
       if (i.id !== 'pro' && i.id !== 'phantom') return;
@@ -366,12 +376,12 @@ async function checkout() {
     const items = Object.entries(itemsMap).map(([p, qty]) => ({ plan: p, qty }));
     if (!items.length) {
       alert('Your cart contains no purchasable plans.');
-      if (btn) { btn.textContent = 'Checkout via PayPal'; btn.disabled = false; }
+      if (btn) { btn.textContent = 'Checkout via Stripe'; btn.disabled = false; }
       return;
     }
     if (items.length !== 1 || items[0].qty !== 1) {
       alert('Checkout currently supports one license per order. Remove extra plans or quantities from your cart and try again.');
-      if (btn) { btn.textContent = 'Checkout via PayPal'; btn.disabled = false; }
+      if (btn) { btn.textContent = 'Checkout via Stripe'; btn.disabled = false; }
       return;
     }
 
@@ -389,26 +399,20 @@ async function checkout() {
     });
     const data = await r.json();
 
-    if (data.approvalUrl) {
+    if (data.url) {
       localStorage.setItem('phantom_checkout_plan', items[0].plan);
       localStorage.removeItem(CART_KEY);
       localStorage.removeItem(DISCOUNT_KEY);
       appliedDiscount = null;
-      location.href = data.approvalUrl;
-      return;
-    } else if (data.licenseKey) {
-      localStorage.removeItem(CART_KEY);
-      localStorage.removeItem(DISCOUNT_KEY);
-      appliedDiscount = null;
-      location.href = '#license?key=' + encodeURIComponent(data.licenseKey) + '&plan=' + items[0].plan;
+      location.href = data.url;
       return;
     } else {
-      if (btn) { btn.textContent = 'Checkout via PayPal'; btn.disabled = false; }
+      if (btn) { btn.textContent = 'Checkout via Stripe'; btn.disabled = false; }
       alert(data.error || 'Could not start checkout. Please try again.');
     }
   } catch (e) {
     console.error('Checkout error:', e);
-    if (btn) { btn.textContent = 'Checkout via PayPal'; btn.disabled = false; }
+    if (btn) { btn.textContent = 'Checkout via Stripe'; btn.disabled = false; }
     alert('Could not reach the payment server. It may be waking up - please wait 30 seconds and try again.');
   }
 }
@@ -437,9 +441,11 @@ async function startCheckout(plan) {
     });
     const data = await r.json();
 
-    if (data.approvalUrl) {
+    if (data.url) {
       localStorage.setItem('phantom_checkout_plan', plan);
-      location.href = data.approvalUrl;
+      location.href = data.url;
+    } else if (data.error) {
+      alert(data.error);
     } else if (data.licenseKey) {
       location.href = '#license?key=' + encodeURIComponent(data.licenseKey) + '&plan=' + plan;
     } else {
@@ -519,7 +525,7 @@ function renderCartSidebar() {
       <div class="cart-items" id="cartItems"></div>
       <div class="cart-foot">
         <div class="cart-total"><span class="cart-total-label">Total</span><span class="cart-total-price" id="cartTotal">$0.00</span></div>
-        <button class="cart-checkout" id="cartCheckout" onclick="checkout()" disabled>Checkout via PayPal</button>
+        <button class="cart-checkout" id="cartCheckout" onclick="checkout()" disabled>Checkout via Stripe</button>
       </div>
     </div>`;
 }
@@ -887,12 +893,25 @@ function render404() {
 
 function renderLicense() {
   const params = new URLSearchParams(location.hash.split('?')[1]);
+  const sessionID = params.get('session_id');
   const key = params.get('key');
   const plan = params.get('plan');
 
   // Multiple keys (cart with quantities)
   let keys = null;
   try { keys = params.get('keys') ? JSON.parse(params.get('keys')) : null; } catch (e) { keys = null; }
+
+  // Coming back from a Stripe Checkout redirect: exchange session_id for a license key
+  if (!key && !keys && sessionID) {
+    setTimeout(() => fetchLicenseFromSession(sessionID), 0);
+    return `
+      <div class="dl-page" id="dlPage">
+        <div class="dl-box">
+          <h2>Processing your payment&#8230;</h2>
+          <p>Retrieving your license key, please wait&#8230;</p>
+        </div>
+      </div>`;
+  }
 
   if (!key && !keys) {
     return `
@@ -959,6 +978,47 @@ function renderLicense() {
         </div>
       </div>
     </div>`;
+}
+
+function fetchLicenseFromSession(sessionID) {
+  fetch(`${API}/api/license/capture`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ sessionId: sessionID })
+  })
+    .then(r => r.json())
+    .then(d => {
+      if (d && d.licenseKeys && d.licenseKeys.length > 1) {
+        // Multiple keys (cart with quantities) — pass them all to the license page
+        location.hash = '#license?keys=' + encodeURIComponent(JSON.stringify(d.licenseKeys)) + '&plan=' + encodeURIComponent(d.plan || '');
+      } else if (d && d.licenseKey) {
+        // Swap the hash to key= form so the page renders the license (and refreshes don't re-capture)
+        location.hash = '#license?key=' + encodeURIComponent(d.licenseKey) + '&plan=' + encodeURIComponent(d.plan || '');
+      } else {
+        const box = document.querySelector('#dlPage .dl-box');
+        if (box) {
+          box.innerHTML = `
+            <h2>Payment not confirmed yet</h2>
+            <p>Your payment is still processing. If you paid successfully, your license key will be available shortly \u2014 try refreshing this page in a moment.</p>
+            <div style="margin-top:1.5rem;display:flex;gap:0.75rem;justify-content:center;flex-wrap:wrap">
+              <a href="javascript:location.reload()" class="btn btn-primary">Retry</a>
+              <a href="${DISCORD_INVITE}" class="btn btn-discord" target="_blank">Need Help?</a>
+            </div>`;
+        }
+      }
+    })
+    .catch(() => {
+      const box = document.querySelector('#dlPage .dl-box');
+      if (box) {
+        box.innerHTML = `
+          <h2>Something went wrong</h2>
+          <p>We couldn't retrieve your license key. Please try again or contact support.</p>
+          <div style="margin-top:1.5rem;display:flex;gap:0.75rem;justify-content:center;flex-wrap:wrap">
+            <a href="javascript:location.reload()" class="btn btn-primary">Retry</a>
+            <a href="${DISCORD_INVITE}" class="btn btn-discord" target="_blank">Need Help?</a>
+          </div>`;
+      }
+    });
 }
 
 function copyLicenseKey() {
