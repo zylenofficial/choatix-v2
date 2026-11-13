@@ -15,6 +15,12 @@ const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET || '';
 const BASE_URL = process.env.BASE_URL || `http://localhost:${PORT}`;
 const OWNER_DISCORD_ID = process.env.OWNER_DISCORD_ID || '1014494449809772544';
 
+// Website Discord login (PKCE, no client secret required).
+const DISCORD_CLIENT_ID = process.env.DISCORD_CLIENT_ID || '1542139702382174249';
+const SITE_URL = process.env.SITE_URL || 'https://zylenofficial.github.io/choatix-v2/';
+const DISCORD_AUTH_TTL_MS = 10 * 60 * 1000;
+const pendingDiscordAuth = new Map();
+
 const PLAN_PRICES = {
   pro: { amount: '5.99', currency: 'EUR', label: 'Phantom Pro' },
   phantom: { amount: '9.99', currency: 'EUR', label: 'Phantom Premium' },
@@ -274,6 +280,133 @@ app.get('/api/health', (req, res) => {
     stripeWebhookConfigured: Boolean(STRIPE_WEBHOOK_SECRET),
     uptime: process.uptime(),
   });
+});
+
+// ── Discord website login ───────────────────────────────────────
+// The static site redirects here, Discord sends the user back to
+// /api/auth/discord/callback, and we bounce them to the site with the
+// discord_id/username/avatar query params its initAuth() expects.
+function discordRedirectUri(req) {
+  return process.env.DISCORD_REDIRECT_URI ||
+    `${req.protocol}://${req.get('host')}/api/auth/discord/callback`;
+}
+
+function sweepPendingDiscordAuth() {
+  const now = Date.now();
+  for (const [state, entry] of pendingDiscordAuth) {
+    if (entry.expiresAt <= now) pendingDiscordAuth.delete(state);
+  }
+}
+
+app.get('/api/auth/discord', (req, res) => {
+  try {
+    sweepPendingDiscordAuth();
+    const state = crypto.randomBytes(32).toString('hex');
+    const verifier = crypto.randomBytes(32).toString('base64url');
+    const challenge = crypto.createHash('sha256').update(verifier).digest('base64url');
+    pendingDiscordAuth.set(state, { verifier, expiresAt: Date.now() + DISCORD_AUTH_TTL_MS });
+    const url = new URL('https://discord.com/oauth2/authorize');
+    url.search = new URLSearchParams({
+      client_id: DISCORD_CLIENT_ID,
+      response_type: 'code',
+      redirect_uri: discordRedirectUri(req),
+      scope: 'identify',
+      state,
+      code_challenge: challenge,
+      code_challenge_method: 'S256',
+    }).toString();
+    res.redirect(url.toString());
+  } catch (err) {
+    console.error('[Discord auth start error]', err);
+    res.status(500).send('Could not start Discord sign-in. Please try again.');
+  }
+});
+
+app.get('/api/auth/discord/callback', async (req, res) => {
+  const state = String(req.query.state || '');
+  const code = String(req.query.code || '');
+  const pending = state ? pendingDiscordAuth.get(state) : null;
+  if (state) pendingDiscordAuth.delete(state);
+  if (req.query.error) {
+    return res.status(400).send('Discord sign-in was cancelled. Return to the site and try again.');
+  }
+  if (!pending || pending.expiresAt <= Date.now()) {
+    return res.status(400).send('Discord sign-in expired. Return to the site and try again.');
+  }
+  if (!code) return res.status(400).send('Discord did not return an authorization code.');
+
+  try {
+    const tokenRes = await fetch('https://discord.com/api/oauth2/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        client_id: DISCORD_CLIENT_ID,
+        grant_type: 'authorization_code',
+        code,
+        redirect_uri: discordRedirectUri(req),
+        code_verifier: pending.verifier,
+      }),
+    });
+    if (!tokenRes.ok) {
+      console.error('[Discord auth token error]', await tokenRes.text());
+      return res.status(502).send('Discord rejected the sign-in. Return to the site and try again.');
+    }
+    const token = await tokenRes.json();
+
+    const userRes = await fetch('https://discord.com/api/users/@me', {
+      headers: { Authorization: `Bearer ${token.access_token}` },
+    });
+    if (!userRes.ok) {
+      console.error('[Discord auth profile error]', await userRes.text());
+      return res.status(502).send('Could not read your Discord profile. Return to the site and try again.');
+    }
+    const profile = await userRes.json();
+    const avatar = profile.avatar
+      ? `https://cdn.discordapp.com/avatars/${profile.id}/${profile.avatar}.${profile.avatar.startsWith('a_') ? 'gif' : 'png'}?size=128`
+      : '';
+    const displayName = profile.global_name || profile.username || '';
+
+    if (pool) {
+      await pool.query(
+        `INSERT INTO users_table (discord_id, tier, username, avatar, global_name)
+         VALUES ($1, 'free', $2, $3, $4)
+         ON CONFLICT (discord_id) DO UPDATE
+         SET username = EXCLUDED.username, avatar = EXCLUDED.avatar, global_name = EXCLUDED.global_name`,
+        [profile.id, profile.username || null, avatar || null, profile.global_name || null]
+      ).catch(err => console.error('[Discord auth profile save error]', err.message));
+    }
+
+    const dest = new URL(SITE_URL);
+    dest.searchParams.set('discord_id', profile.id);
+    dest.searchParams.set('username', displayName);
+    if (avatar) dest.searchParams.set('avatar', avatar);
+    res.redirect(dest.toString());
+  } catch (err) {
+    console.error('[Discord auth callback error]', err);
+    res.status(502).send('Discord sign-in failed. Return to the site and try again.');
+  }
+});
+
+app.get('/api/team/:discordId', async (req, res) => {
+  const discordId = String(req.params.discordId || '').trim();
+  if (!/^\d{15,20}$/.test(discordId)) return res.json({ id: discordId });
+  if (!pool) return res.json({ id: discordId });
+  try {
+    const row = await qOne(
+      'SELECT discord_id, username, avatar, global_name FROM users_table WHERE discord_id=$1',
+      [discordId]
+    );
+    if (!row) return res.json({ id: discordId });
+    res.json({
+      id: row.discord_id,
+      username: row.username,
+      globalName: row.global_name,
+      avatar: row.avatar,
+    });
+  } catch (err) {
+    console.error('[Team lookup error]', err.message);
+    res.json({ id: discordId });
+  }
 });
 
 app.get('/api/discount/:code', async (req, res) => {
