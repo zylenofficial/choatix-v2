@@ -181,9 +181,14 @@ function initAuth() {
   const av = localStorage.getItem('avatar');
   if (id && name) {
     user = { id, name, avatar: av };
-    fetch(`${API}/api/license/discord/${id}`).then(r => r.json()).then(d => {
-      if (d.plan) user.tier = d.plan;
-      else if (d.tier) user.tier = d.tier;
+    // Tier lookup lives on the site API; the checkout API does not expose
+    // /api/license/discord/:id. Keep checkout/capture on API above.
+    fetch(`${SITE_API}/api/license/discord/${id}`).then(r => r.json()).then(d => {
+      const rawTier = d.plan || d.tier;
+      if (rawTier) {
+        const t = String(rawTier).toLowerCase();
+        user.tier = t === 'phantom' || t === 'premium' ? 'Phantom' : t === 'pro' ? 'Pro' : 'Free';
+      }
       renderNav();
     }).catch(() => {});
     // Refresh avatar from Discord via team API
