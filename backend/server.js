@@ -17,6 +17,7 @@ const OWNER_DISCORD_ID = process.env.OWNER_DISCORD_ID || '1014494449809772544';
 
 // Website Discord login (PKCE, no client secret required).
 const DISCORD_CLIENT_ID = process.env.DISCORD_CLIENT_ID || '1542139702382174249';
+const DISCORD_CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET || '';
 const SITE_URL = process.env.SITE_URL || 'https://zylenofficial.github.io/choatix-v2/';
 const DISCORD_AUTH_TTL_MS = 10 * 60 * 1000;
 const pendingDiscordAuth = new Map();
@@ -322,7 +323,7 @@ app.get('/api/auth/discord', (req, res) => {
   }
 });
 
-app.get('/api/auth/discord/callback', async (req, res) => {
+async function handleDiscordCallback(req, res) {
   const state = String(req.query.state || '');
   const code = String(req.query.code || '');
   const pending = state ? pendingDiscordAuth.get(state) : null;
@@ -339,13 +340,17 @@ app.get('/api/auth/discord/callback', async (req, res) => {
     const tokenRes = await fetch('https://discord.com/api/oauth2/token', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({
-        client_id: DISCORD_CLIENT_ID,
-        grant_type: 'authorization_code',
-        code,
-        redirect_uri: discordRedirectUri(req),
-        code_verifier: pending.verifier,
-      }),
+      body: (() => {
+        const params = new URLSearchParams({
+          client_id: DISCORD_CLIENT_ID,
+          grant_type: 'authorization_code',
+          code,
+          redirect_uri: discordRedirectUri(req),
+          code_verifier: pending.verifier,
+        });
+        if (DISCORD_CLIENT_SECRET) params.set('client_secret', DISCORD_CLIENT_SECRET);
+        return params;
+      })(),
     });
     if (!tokenRes.ok) {
       console.error('[Discord auth token error]', await tokenRes.text());
@@ -385,7 +390,12 @@ app.get('/api/auth/discord/callback', async (req, res) => {
     console.error('[Discord auth callback error]', err);
     res.status(502).send('Discord sign-in failed. Return to the site and try again.');
   }
-});
+}
+
+// Support both the app's default callback path and the path configured on
+// Render via DISCORD_REDIRECT_URI.
+app.get('/api/auth/discord/callback', handleDiscordCallback);
+app.get('/api/auth/callback', handleDiscordCallback);
 
 app.get('/api/team/:discordId', async (req, res) => {
   const discordId = String(req.params.discordId || '').trim();
