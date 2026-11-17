@@ -222,6 +222,7 @@ footer{border-top:1px solid var(--line);padding:36px 0 52px;color:var(--dim);fon
 .prod h3 span{color:var(--ash);font-weight:400;margin-left:8px;font-size:1rem}
 .prod p{margin-top:6px;color:var(--ash);font-size:.97rem;max-width:36em}
 .price{font-family:var(--display);font-weight:800;font-stretch:112%;font-variation-settings:"wdth" 112;font-size:2rem;letter-spacing:-.02em;min-width:5.5em;text-align:right}
+.price span{display:block;font-family:var(--body);font-weight:400;font-size:.85rem;color:var(--ash);letter-spacing:0;margin-top:4px}
 .price s{display:block;font-family:var(--body);font-weight:400;font-size:.9rem;color:var(--dim);letter-spacing:0}
 .prod .btn{min-width:150px}
 
@@ -908,8 +909,8 @@ const CONFIG = {
     redirectUri: ""   // blank = use this page's URL; register it at discord.com/developers/applications
   },
   products: [
-    { id:"pro-key",     tier:"Pro",     period:"/ KEY", price:5.99, desc:"Everything in Free plus Pro tweaks like Steam process priority." },
-    { id:"phantom-key", tier:"Phantom", period:"/ KEY", price:9.99, desc:"Every tweak, including the Phantom-only ones." }
+    { id:"pro-key",     tier:"Pro",     period:"KEY", price:5.99, desc:"Everything in Free plus Pro tweaks like Steam process priority." },
+    { id:"phantom-key", tier:"Phantom", period:"KEY", price:9.99, desc:"Every tweak, including the Phantom-only ones." }
   ],
   // Discount codes. type: "percent" or "flat". Optional: min (minimum subtotal).
   discounts: {
@@ -950,8 +951,8 @@ const esc = t => String(t).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">"
   const list=document.getElementById("storeList");
   const tiers=[...new Set(CONFIG.products.map(p=>p.tier))];
   list.innerHTML=tiers.map(t=>`<div class="tier"><h2>${esc(t)}</h2>${CONFIG.products.filter(p=>p.tier===t).map(p=>`
-    <div class="prod"><div><h3>${esc(p.tier)}<span>${esc(p.period)}</span></h3><p>${esc(p.desc)}</p></div>
-    <div class="price">${money(p.price)}</div>
+    <div class="prod"><div><h3>${esc(p.tier)}</h3><p>${esc(p.desc)}</p></div>
+    <div class="price">${money(p.price)}<span> / ${esc(p.period)}</span></div>
     <button class="btn ${t==="Phantom"?"btn-solid":"btn-line"} add" data-id="${esc(p.id)}" type="button">Add to cart</button></div>`).join("")}</div>`).join("");
   list.addEventListener("click",e=>{const b=e.target.closest(".add"); if(!b)return; Cart.add(b.dataset.id); const o=b.textContent; b.textContent="Added"; setTimeout(()=>b.textContent=o,1100);});
 })();
