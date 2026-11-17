@@ -18,6 +18,7 @@ const OWNER_DISCORD_ID = process.env.OWNER_DISCORD_ID || '1014494449809772544';
 // Website Discord login (PKCE, no client secret required).
 const DISCORD_CLIENT_ID = process.env.DISCORD_CLIENT_ID || '1542139702382174249';
 const DISCORD_CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET || '';
+const DISCORD_BOT_TOKEN = process.env.DISCORD_BOT_TOKEN || '';
 const SITE_URL = process.env.SITE_URL || 'https://zylenofficial.github.io/choatix-v2/';
 const DISCORD_AUTH_TTL_MS = 10 * 60 * 1000;
 const pendingDiscordAuth = new Map();
@@ -397,26 +398,80 @@ async function handleDiscordCallback(req, res) {
 app.get('/api/auth/discord/callback', handleDiscordCallback);
 app.get('/api/auth/callback', handleDiscordCallback);
 
+// Team avatars: prefer the cached profile saved on website login, otherwise
+// fetch the Discord user with the bot token so staff show real avatars even
+// if they never signed in on the site.
+const teamDiscordCache = new Map();
+const TEAM_CACHE_TTL_MS = 60 * 60 * 1000;
+
+async function fetchDiscordTeamProfile(discordId) {
+  if (!/^\d{15,20}$/.test(discordId) || !DISCORD_BOT_TOKEN) return null;
+  const cached = teamDiscordCache.get(discordId);
+  if (cached && cached.expiresAt > Date.now()) return cached.profile;
+  try {
+    const res = await fetch(`https://discord.com/api/v10/users/${discordId}`, {
+      headers: { Authorization: `Bot ${DISCORD_BOT_TOKEN}` },
+    });
+    if (!res.ok) {
+      console.warn('[Discord team fetch] user lookup failed:', discordId, res.status);
+      return null;
+    }
+    const u = await res.json();
+    const avatar = u.avatar
+      ? `https://cdn.discordapp.com/avatars/${u.id}/${u.avatar}.${u.avatar.startsWith('a_') ? 'gif' : 'png'}?size=128`
+      : '';
+    const profile = {
+      id: u.id,
+      username: u.username || null,
+      globalName: u.global_name || null,
+      avatar: avatar || null,
+    };
+    teamDiscordCache.set(discordId, { profile, expiresAt: Date.now() + TEAM_CACHE_TTL_MS });
+    return profile;
+  } catch (err) {
+    console.error('[Discord team fetch error]', err.message);
+    return null;
+  }
+}
+
 app.get('/api/team/:discordId', async (req, res) => {
   const discordId = String(req.params.discordId || '').trim();
   if (!/^\d{15,20}$/.test(discordId)) return res.json({ id: discordId });
-  if (!pool) return res.json({ id: discordId });
+  let row = null;
   try {
-    const row = await qOne(
+    row = await qOne(
       'SELECT discord_id, username, avatar, global_name FROM users_table WHERE discord_id=$1',
       [discordId]
     );
-    if (!row) return res.json({ id: discordId });
-    res.json({
+  } catch (err) {
+    console.error('[Team lookup error]', err.message);
+  }
+  if (row?.avatar) {
+    return res.json({
       id: row.discord_id,
       username: row.username,
       globalName: row.global_name,
       avatar: row.avatar,
     });
-  } catch (err) {
-    console.error('[Team lookup error]', err.message);
-    res.json({ id: discordId });
   }
+  const fromBot = await fetchDiscordTeamProfile(discordId);
+  if (fromBot) {
+    return res.json({
+      id: fromBot.id,
+      username: fromBot.username || row?.username || null,
+      globalName: fromBot.globalName || row?.globalName || null,
+      avatar: fromBot.avatar || row?.avatar || null,
+    });
+  }
+  if (row) {
+    return res.json({
+      id: row.discord_id,
+      username: row.username,
+      globalName: row.global_name,
+      avatar: row.avatar,
+    });
+  }
+  res.json({ id: discordId });
 });
 
 app.get('/api/discount/:code', async (req, res) => {
