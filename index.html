@@ -524,7 +524,7 @@ footer{position:relative;overflow:hidden;padding-bottom:0}
     </nav>
     <div class="actions">
       <button class="icon-btn pal-btn" id="palBtn" type="button" aria-label="Search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><span>Search</span><kbd id="palKbd">Ctrl K</kbd></button>
-      <button class="icon-btn" id="loginBtn" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4.5-6 8-6s7 2 8 6"/></svg><span>Log in</span></button>
+      <button class="icon-btn" id="loginBtn" type="button"><span id="loginIcon" style="display:flex;align-items:center"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994.021-.041.001-.09-.041-.106a13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.929 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.894.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.028zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg></span><span id="loginText">Log in</span></button>
       <button class="icon-btn" id="cartBtn" type="button" aria-label="Open cart"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h2.2l2.1 11h10.4l2-8H6.2"/><circle cx="9" cy="19.5" r="1.4"/><circle cx="17" cy="19.5" r="1.4"/></svg><span class="cart-count" id="cartCount" hidden>0</span></button>
       <a class="btn btn-solid btn-sm dl" data-link="download" href="#">Download</a>
       <button class="icon-btn burger" id="burger" type="button" aria-label="Menu" aria-expanded="false" aria-controls="mobileMenu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
@@ -852,29 +852,44 @@ footer{position:relative;overflow:hidden;padding-bottom:0}
     <ul class="pal-list" id="palList" role="listbox"></ul>
   </div>
 </dialog>
-<!-- login -->
+<!-- login / profile dialog -->
 <dialog id="loginDialog" aria-labelledby="loginTitle">
   <form method="dialog" class="dlg-close"><button aria-label="Close" class="icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></form>
-  <img class="dlg-logo" src="data:image/png;base64,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" alt="">
-  <h2 id="loginTitle">Log in</h2>
-  <p class="dlg-sub" id="loginSub">Welcome back. Log in to manage your plan.</p>
-  <form id="loginForm" novalidate>
-    <label id="userRow" hidden>Username<input name="username" autocomplete="username" placeholder="Choose a username"></label>
-    <label>Email<input name="email" type="email" autocomplete="email" placeholder="you@example.com" required></label>
-    <label>Password<input name="password" type="password" autocomplete="current-password" placeholder="Your password" required></label>
-    <p class="code-msg" id="loginMsg" aria-live="polite"></p>
-    <button class="btn btn-solid btn-block" id="loginSubmit" type="submit">Log in</button>
-  </form>
-  <p class="dlg-switch"><span id="switchText">New here?</span> <button class="link-btn" id="switchMode" type="button">Create an account</button></p>
+  <div id="dlgLoggedOut">
+    <div style="width:46px;height:46px;border-radius:13px;background:#5865F2;display:grid;place-items:center;color:#fff;margin-bottom:18px">
+      <svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994.021-.041.001-.09-.041-.106a13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.929 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.894.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.028zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>
+    </div>
+    <h2 id="loginTitle">Log in with Discord</h2>
+    <p class="dlg-sub" id="loginSub">Sign in with your Discord account to manage your plan, access license keys, and view your subscription.</p>
+    <a class="btn btn-solid btn-block" id="discordLoginBtn" href="https://choatix-v2.onrender.com/api/auth/discord" style="background:#5865F2;color:#fff;border-color:#5865F2;display:flex;align-items:center;justify-content:center;gap:10px;margin-top:20px;padding:12px 18px;font-weight:600">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994.021-.041.001-.09-.041-.106a13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.929 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.894.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.028zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>
+      Continue with Discord
+    </a>
+    <p class="dlg-switch" style="margin-top:18px"><a class="link-btn" href="https://discord.gg/AhEK85REhG" target="_blank" rel="noopener">Need help? Join our Discord server</a></p>
+  </div>
+  <div id="dlgLoggedIn" hidden>
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:18px">
+      <img id="dlgUserAvatar" src="" alt="" style="width:52px;height:52px;border-radius:50%;border:2px solid var(--line2);object-fit:cover">
+      <div>
+        <h3 id="dlgUsername" style="font-size:1.25rem;font-weight:700;line-height:1.2"></h3>
+        <span id="dlgUserTier" style="display:inline-block;margin-top:4px;font-size:0.75rem;padding:2px 8px;border-radius:6px;background:rgba(255,255,255,0.1);color:var(--ink)">Free Plan</span>
+      </div>
+    </div>
+    <div style="padding:14px;background:#121214;border:1px solid var(--line);border-radius:12px;margin-bottom:18px;font-size:0.9rem;display:grid;gap:8px">
+      <div style="display:flex;justify-content:space-between;color:var(--ash)"><span>Discord ID</span><code id="dlgDiscordId" style="color:var(--ink);font-family:monospace"></code></div>
+      <div style="display:flex;justify-content:space-between;color:var(--ash)"><span>Status</span><span style="color:#9fe0b0;font-weight:500">Connected</span></div>
+    </div>
+    <button class="btn btn-line btn-block" id="logoutBtn" type="button" style="color:#f48686;border-color:rgba(248,113,113,0.3)">Log out</button>
+  </div>
 </dialog>
 
 <script>
 /* ---- EDIT YOUR LINKS HERE ---- */
 const LINKS = {
   download: "#",
-  discord:  "#",
-  login:    "",   // optional: your existing login page URL. If set, the Log in button goes straight there.
-  checkout: ""    // your payment page URL (Stripe, Sell.app, Shopify...). Cart contents are added as ?items=id:qty&code=CODE
+  discord:  "https://discord.gg/AhEK85REhG",
+  login:    "https://choatix-v2.onrender.com/api/auth/discord",
+  checkout: ""
 };
 document.querySelectorAll("[data-link]").forEach(a => { a.href = LINKS[a.dataset.link] || "#"; });
 
@@ -897,10 +912,10 @@ const CONFIG = {
     "WELCOME5":  { type:"flat",    value:5, min:15 }
   },
   staff: [
-    { group:"Leadership",  name:"Your Name",   role:"Founder",         bio:"Builds Phantom Tweaks and decides what goes into it.", handle:"@yourhandle", photo:"" },
-    { group:"Development", name:"Dev Name",    role:"Lead developer",  bio:"Writes and tests the tweaks before they ship.",        handle:"@devhandle",  photo:"" },
-    { group:"Support",     name:"Support Name",role:"Support",         bio:"Helps you with setup, licenses and rollbacks.",        handle:"@supporthandle", photo:"" },
-    { group:"Support",     name:"Mod Name",    role:"Community moderator", bio:"Keeps the Discord helpful and friendly.",          handle:"@modhandle",  photo:"" }
+    { group:"Leadership",     name:"re1z",    role:"Developer",      bio:"Creator & developer of Phantom Tweaks.", handle:"re1z", photo:"", id:"1014494449809772544" },
+    { group:"Leadership",     name:"domi",    role:"Head Admin",     bio:"Head Administrator and project coordinator.", handle:"domi", photo:"", id:"1032970883192606780" },
+    { group:"Administration", name:"nedis",   role:"Head Admin",     bio:"Community management and operations.", handle:"nedis", photo:"", id:"398137085430726656" },
+    { group:"Support",        name:"lukutis", role:"Ticket Support", bio:"Customer support, license verification & assistance.", handle:"lukutis", photo:"", id:"1402203036914290764" }
   ]
 };
 
@@ -1005,40 +1020,92 @@ const Cart=(function(){
   const groups=[...new Set(CONFIG.staff.map(m=>m.group))];
   document.getElementById("teamList").innerHTML=groups.map(g=>`<div class="group"><h2>${esc(g)}</h2>${CONFIG.staff.filter(m=>m.group===g).map(m=>{
     const ini=m.name.split(/\s+/).map(w=>w[0]).join("").slice(0,2).toUpperCase();
-    return `<div class="member"><div class="avatar">${m.photo?`<img src="${esc(m.photo)}" alt="${esc(m.name)}">`:esc(ini)}</div>
+    return `<div class="member"><div class="avatar" id="av-${m.id||m.name}">${m.photo?`<img src="${esc(m.photo)}" alt="${esc(m.name)}">`:esc(ini)}</div>
       <div><h3>${esc(m.name)}</h3><div class="role">${esc(m.role)}</div><p>${esc(m.bio)}</p></div><div class="handle">${esc(m.handle||"")}</div></div>`}).join("")}</div>`).join("");
+  CONFIG.staff.forEach(m => {
+    if (m.id) {
+      fetch(`${SITE_API}/api/team/${m.id}`).then(r=>r.json()).then(d=>{
+        if (d.avatar) {
+          const el = document.getElementById("av-" + m.id);
+          if (el) el.innerHTML = `<img src="${esc(d.avatar)}" alt="${esc(m.name)}">`;
+        }
+      }).catch(()=>{});
+    }
+  });
 })();
 
-/* ---- login / sign up ---- */
+/* ---- Discord Auth ---- */
+const SITE_API = "https://choatix-v2.onrender.com";
+
 (function(){
-  const $=id=>document.getElementById(id), dlg=$("loginDialog"), form=$("loginForm"), msg=$("loginMsg");
-  let mode="login";
-  function setMode(m){
-    mode=m; const su=m==="signup";
-    $("loginTitle").textContent=su?"Create account":"Log in";
-    $("loginSub").textContent=su?"Create an account to manage your plan.":"Welcome back. Log in to manage your plan.";
-    $("loginSubmit").textContent=su?"Create account":"Log in";
-    $("userRow").hidden=!su; $("switchText").textContent=su?"Already have an account?":"New here?";
-    $("switchMode").textContent=su?"Log in":"Create an account";
-    form.password.autocomplete=su?"new-password":"current-password"; msg.textContent=""; msg.className="code-msg";
+  const $=id=>document.getElementById(id), dlg=$("loginDialog");
+  const params = new URLSearchParams(location.search);
+  if (params.get("discord_id")) {
+    localStorage.setItem("discord_id", params.get("discord_id"));
+    if (params.get("username")) localStorage.setItem("username", params.get("username"));
+    if (params.get("avatar")) localStorage.setItem("avatar", params.get("avatar"));
+    history.replaceState({}, "", location.pathname + location.hash);
   }
-  $("loginBtn").addEventListener("click",()=>{ if(LINKS.login){location.href=LINKS.login;return} setMode("login"); dlg.showModal(); form.email.focus(); });
-  $("switchMode").addEventListener("click",()=>setMode(mode==="login"?"signup":"login"));
-  dlg.addEventListener("click",e=>{ if(e.target===dlg) dlg.close(); });
-  form.addEventListener("submit",async e=>{
-    e.preventDefault(); msg.className="code-msg";
-    const d=Object.fromEntries(new FormData(form));
-    if(!/^\S+@\S+\.\S+$/.test(d.email||"")){msg.classList.add("err");msg.textContent="Enter a valid email address.";return}
-    if((d.password||"").length<8){msg.classList.add("err");msg.textContent="Your password needs at least 8 characters.";return}
-    if(mode==="signup"&&!(d.username||"").trim()){msg.classList.add("err");msg.textContent="Choose a username.";return}
-    if(!CONFIG.authEndpoint){msg.classList.add("err");msg.textContent="Login isn't connected yet. Set CONFIG.authEndpoint or LINKS.login to your account system.";return}
-    try{
-      const r=await fetch(CONFIG.authEndpoint,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({mode,...d})});
-      const j=await r.json();
-      if(j.ok){ if(j.redirect) location.href=j.redirect; else {msg.classList.add("ok");msg.textContent=j.message||"Done."} }
-      else {msg.classList.add("err");msg.textContent=j.message||"That didn't work. Check your details and try again."}
-    }catch(err){msg.classList.add("err");msg.textContent="Couldn't reach the server. Try again in a moment."}
+
+  const id = localStorage.getItem("discord_id");
+  const name = localStorage.getItem("username");
+  const av = localStorage.getItem("avatar");
+
+  const loginBtn = $("loginBtn"), loginIcon = $("loginIcon"), loginText = $("loginText");
+  const loggedOut = $("dlgLoggedOut"), loggedIn = $("dlgLoggedIn");
+
+  if (id && name) {
+    if (loginText) loginText.textContent = name;
+    if (loginIcon) {
+      if (av) {
+        loginIcon.innerHTML = `<img src="${esc(av)}" alt="${esc(name)}" style="width:22px;height:22px;border-radius:50%;object-fit:cover;border:1px solid rgba(255,255,255,0.3)">`;
+      }
+    }
+    if (loggedOut) loggedOut.hidden = true;
+    if (loggedIn) {
+      loggedIn.hidden = false;
+      $("dlgUsername").textContent = name;
+      $("dlgDiscordId").textContent = id;
+      if (av) $("dlgUserAvatar").src = av;
+      else $("dlgUserAvatar").src = `https://cdn.discordapp.com/embed/avatars/${(BigInt(id) >> 22n) % 6n}.png`;
+    }
+    fetch(`${SITE_API}/api/license/discord/${id}`)
+      .then(r=>r.json())
+      .then(d=>{
+        const raw = d.plan || d.tier;
+        if (raw) {
+          const t = String(raw).toLowerCase();
+          const tierName = t === "phantom" || t === "premium" ? "Phantom Plan" : t === "pro" ? "Pro Plan" : "Free Plan";
+          const el = $("dlgUserTier"); if (el) el.textContent = tierName;
+        }
+      })
+      .catch(()=>{});
+  } else {
+    if (loginText) loginText.textContent = "Log in";
+    if (loggedOut) loggedOut.hidden = false;
+    if (loggedIn) loggedIn.hidden = true;
+  }
+
+  loginBtn.addEventListener("click", () => {
+    if (localStorage.getItem("discord_id")) {
+      dlg.showModal();
+    } else {
+      location.href = `${SITE_API}/api/auth/discord`;
+    }
   });
+
+  const logoutBtn = $("logoutBtn");
+  if (logoutBtn) {
+    logoutBtn.addEventListener("click", () => {
+      localStorage.removeItem("discord_id");
+      localStorage.removeItem("username");
+      localStorage.removeItem("avatar");
+      dlg.close();
+      location.reload();
+    });
+  }
+
+  dlg.addEventListener("click", e => { if (e.target === dlg) dlg.close(); });
 })();
 
 /* ---- live demo ---- */
