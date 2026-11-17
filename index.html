@@ -295,6 +295,7 @@ dialog .btn-block{margin-top:4px}
 .dlg-user img{width:52px;height:52px;border-radius:50%;object-fit:cover}
 .dlg-user strong{display:block;font-size:1.05rem}
 .dlg-user span{color:var(--ash);font-size:.9rem}
+.dlg-user .dlg-tier{display:inline-block;margin-top:9px;padding:2px 9px;border:1px solid var(--line2);border-radius:6px;color:var(--ink);font-size:.8rem;letter-spacing:.04em}
 #loginBtn .nav-av{width:22px;height:22px;border-radius:50%;object-fit:cover}
 dialog .btn-block{width:100%}
 
@@ -881,7 +882,7 @@ footer{position:relative;overflow:hidden;padding-bottom:0}
     <p class="dlg-fine">We only see your Discord name and avatar.</p>
   </div>
   <div id="authIn" hidden>
-    <div class="dlg-user"><img id="duAvatar" alt=""><div><strong id="duName"></strong><span id="duTag"></span></div></div>
+    <div class="dlg-user"><img id="duAvatar" alt=""><div><strong id="duName"></strong><span id="duTag"></span><span id="dlgUserTier" class="dlg-tier"></span></div></div>
     <button class="btn btn-line btn-block" id="logoutBtn" type="button">Log out</button>
   </div>
 </dialog>
@@ -891,7 +892,7 @@ footer{position:relative;overflow:hidden;padding-bottom:0}
 const LINKS = {
   download: "#",
   discord:  "https://discord.gg/Y92hMwVaUc",
-  login:    "",   // optional: your existing login page URL. If set, the Log in button goes straight there.
+  login:    "https://choatix-v2.onrender.com/api/auth/discord", // existing Discord OAuth (server-side)
   checkout: ""    // your payment page URL (Stripe, Sell.app, Shopify...). Cart contents are added as ?items=id:qty&code=CODE
 };
 document.querySelectorAll("[data-link]").forEach(a => { a.href = LINKS[a.dataset.link] || "#"; });
@@ -1030,32 +1031,52 @@ const Cart=(function(){
       <div><h3>${esc(m.name)}</h3><div class="role">${esc(m.role)}</div><p>${esc(m.bio)}</p></div><div class="handle">${esc(m.handle||"")}</div></div>`}).join("")}</div>`).join("");
 })();
 
-/* ---- login with Discord (OAuth2 implicit grant, scope: identify) ---- */
+/* ---- login with Discord (via the choatix-v2 backend) ---- */
 (function(){
-  const $=id=>document.getElementById(id), dlg=$("loginDialog"), msg=$("loginMsg"), btn=$("loginBtn");
-  const KEY="phantom_discord_user", D=CONFIG.discord||{};
-  const store={
-    get(){try{return JSON.parse(localStorage.getItem(KEY)||"null")}catch(e){return null}},
-    set(v){try{localStorage.setItem(KEY,JSON.stringify(v))}catch(e){}},
-    del(){try{localStorage.removeItem(KEY)}catch(e){}}
+  const $=id=>document.getElementById(id), dlg=$("loginDialog"), btn=$("loginBtn"), msg=$("loginMsg");
+  const API="https://choatix-v2.onrender.com";
+  const LOGIN_URL=LINKS.login||(API+"/api/auth/discord");
+  const K_ID="discord_id", K_NAME="username", K_AV="avatar";
+
+  /* The backend returns here with ?discord_id=...&username=...&avatar=... */
+  const params=new URLSearchParams(location.search);
+  if(params.get(K_ID)){
+    localStorage.setItem(K_ID,params.get(K_ID));
+    if(params.get(K_NAME)) localStorage.setItem(K_NAME,params.get(K_NAME));
+    if(params.get(K_AV)) localStorage.setItem(K_AV,params.get(K_AV));
+    history.replaceState(null,"",location.pathname+location.hash);
+  }
+
+  const current=()=>{
+    const id=localStorage.getItem(K_ID);
+    if(!id) return null;
+    return {id, username:localStorage.getItem(K_NAME)||"", avatar:localStorage.getItem(K_AV)||""};
   };
-  const avatarUrl=u=>u.avatar
-    ? `https://cdn.discordapp.com/avatars/${u.id}/${u.avatar}.png?size=64`
-    : `https://cdn.discordapp.com/embed/avatars/${Number((BigInt(u.id)>>22n)%6n)}.png`;
-  const showErr=t=>{msg.className="code-msg err";msg.textContent=t};
+  const avatarUrl=u=>u.avatar||`https://cdn.discordapp.com/embed/avatars/${Number((BigInt(u.id)>>22n)%6n)}.png`;
+  const tierName=raw=>{
+    const t=String(raw||"").toLowerCase();
+    return t==="phantom"||t==="premium" ? "Phantom" : t==="pro" ? "Pro" : "Free";
+  };
 
   function render(){
-    const u=store.get();
+    const u=current();
     $("authOut").hidden=!!u; $("authIn").hidden=!u;
     if(u){
-      const name=u.global_name||u.username;
+      const name=u.username||"Discord user";
       $("loginTitle").textContent="You're logged in";
       $("loginSub").textContent="Logged in with Discord.";
-      $("duAvatar").src=avatarUrl(u); $("duName").textContent=name; $("duTag").textContent="@"+u.username;
+      $("duAvatar").src=avatarUrl(u);
+      $("duName").textContent=name;
+      $("duTag").textContent="@"+u.username;
+      const tier=$("dlgUserTier"); if(tier) tier.textContent="";
       btn.innerHTML="";
       const im=document.createElement("img"); im.className="nav-av"; im.src=avatarUrl(u); im.alt="";
       const sp=document.createElement("span"); sp.textContent=name;
       btn.append(im,sp);
+      fetch(API+"/api/license/discord/"+encodeURIComponent(u.id))
+        .then(r=>r.json())
+        .then(d=>{ const el=$("dlgUserTier"); if(el) el.textContent=tierName(d.plan||d.tier); })
+        .catch(()=>{});
     }else{
       $("loginTitle").textContent="Log in";
       $("loginSub").textContent="Log in with your Discord account.";
@@ -1063,40 +1084,19 @@ const Cart=(function(){
     }
   }
 
-  function startLogin(){
-    if(!D.clientId){showErr("Discord login isn't connected yet. Add your Application ID to CONFIG.discord.clientId.");return}
-    const state=crypto.getRandomValues(new Uint32Array(4)).join("-");
-    try{sessionStorage.setItem("phantom_oauth_state",state)}catch(e){}
-    const redirect=D.redirectUri||(location.origin+location.pathname);
-    location.href="https://discord.com/oauth2/authorize?"+new URLSearchParams({
-      client_id:D.clientId, redirect_uri:redirect, response_type:"token", scope:"identify", state
-    });
-  }
-
-  async function finishLogin(){
-    if(!/access_token=/.test(location.hash)) return;
-    const p=new URLSearchParams(location.hash.slice(1));
-    const token=p.get("access_token"), state=p.get("state");
-    let saved=null; try{saved=sessionStorage.getItem("phantom_oauth_state");sessionStorage.removeItem("phantom_oauth_state")}catch(e){}
-    history.replaceState(null,"",location.pathname+location.search);
-    if(!token||!state||state!==saved){dlg.showModal();showErr("Couldn't log you in. Try again.");return}
-    try{
-      const r=await fetch("https://discord.com/api/users/@me",{headers:{Authorization:"Bearer "+token}});
-      if(!r.ok) throw 0;
-      const u=await r.json();
-      store.set({id:u.id,username:u.username,global_name:u.global_name||"",avatar:u.avatar||""});
-      render();
-    }catch(e){dlg.showModal();showErr("Couldn't reach Discord. Try again in a moment.")}
-  }
+  const goLogin=()=>{ location.href=LOGIN_URL; };
 
   btn.addEventListener("click",()=>{
-    if(!store.get()&&LINKS.login){location.href=LINKS.login;return}
+    if(!current()){ goLogin(); return; }
     msg.textContent=""; msg.className="code-msg"; render(); dlg.showModal();
   });
-  $("discordBtn").addEventListener("click",startLogin);
-  $("logoutBtn").addEventListener("click",()=>{store.del();render();dlg.close()});
+  $("discordBtn").addEventListener("click",goLogin);
+  $("logoutBtn").addEventListener("click",()=>{
+    [K_ID,K_NAME,K_AV].forEach(k=>localStorage.removeItem(k));
+    dlg.close(); location.reload();
+  });
   dlg.addEventListener("click",e=>{ if(e.target===dlg) dlg.close(); });
-  render(); finishLogin();
+  render();
 })();
 
 /* ---- live demo ---- */
