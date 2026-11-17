@@ -919,10 +919,10 @@ const CONFIG = {
     "WELCOME5":  { type:"flat",    value:5, min:15 }
   },
   staff: [
-    { group:"Leadership",  name:"Your Name",   role:"Founder",         bio:"Started Phantom Tweaks and decides what goes in.", handle:"@yourhandle", photo:"" },
-    { group:"Development", name:"Dev Name",    role:"Lead developer",  bio:"Writes the tweaks and tests them before release.",        handle:"@devhandle",  photo:"" },
-    { group:"Support",     name:"Support Name",role:"Support",         bio:"Helps with setup, licenses and rollbacks.",        handle:"@supporthandle", photo:"" },
-    { group:"Support",     name:"Mod Name",    role:"Community moderator", bio:"Moderates the Discord.",          handle:"@modhandle",  photo:"" }
+    { group:"Leadership",     name:"re1z",    role:"Developer",      bio:"Creator & developer of Phantom Tweaks.", handle:"re1z",    id:"1014494449809772544", photo:"" },
+    { group:"Leadership",     name:"domi",    role:"Head Admin",     bio:"Head Administrator and project coordinator.", handle:"domi", id:"1032970883192606780", photo:"" },
+    { group:"Administration", name:"nedis",   role:"Head Admin",     bio:"Community management and operations.", handle:"nedis",    id:"398137085430726656", photo:"" },
+    { group:"Support",        name:"lukutis", role:"Ticket Support", bio:"Customer support, license verification & assistance.", handle:"lukutis", id:"1402203036914290764", photo:"" }
   ]
 };
 
@@ -1027,8 +1027,15 @@ const Cart=(function(){
   const groups=[...new Set(CONFIG.staff.map(m=>m.group))];
   document.getElementById("teamList").innerHTML=groups.map(g=>`<div class="group"><h2>${esc(g)}</h2>${CONFIG.staff.filter(m=>m.group===g).map(m=>{
     const ini=m.name.split(/\s+/).map(w=>w[0]).join("").slice(0,2).toUpperCase();
-    return `<div class="member"><div class="avatar">${m.photo?`<img src="${esc(m.photo)}" alt="${esc(m.name)}">`:esc(ini)}</div>
-      <div><h3>${esc(m.name)}</h3><div class="role">${esc(m.role)}</div><p>${esc(m.bio)}</p></div><div class="handle">${esc(m.handle||"")}</div></div>`}).join("")}</div>`).join("");
+    return `<div class="member"><div class="avatar" id="team-av-${esc(m.id||m.name)}">${m.photo?`<img src="${esc(m.photo)}" alt="${esc(m.name)}">`:esc(ini)}</div>
+      <div><h3>${esc(m.name)}</h3><div class="role">${esc(m.role)}</div><p>${esc(m.bio)}</p></div><div class="handle" data-discord-id="${esc(m.id||"")}">${esc(m.handle||"")}</div></div>`}).join("")}</div>`).join("");
+  CONFIG.staff.forEach(m=>{
+    if(!m.id) return;
+    fetch("https://choatix-v2.onrender.com/api/team/"+encodeURIComponent(m.id))
+      .then(r=>r.json())
+      .then(d=>{ if(d.avatar){ const el=document.getElementById("team-av-"+m.id); if(el) el.innerHTML=`<img src="${esc(d.avatar)}" alt="${esc(m.name)}">`; } })
+      .catch(()=>{});
+  });
 })();
 
 /* ---- login with Discord (via the choatix-v2 backend) ---- */
@@ -1373,7 +1380,14 @@ document.querySelectorAll("details").forEach(d=>{
 
 /* ---- team: discord buttons ---- */
 (function(){
-  document.querySelectorAll("#teamList .handle").forEach(h=>{const a=document.createElement("a");a.textContent="Message on Discord";a.href=LINKS.discord||"#";a.setAttribute("data-link","discord");h.appendChild(a)});
+  document.querySelectorAll("#teamList .handle").forEach(h=>{
+    const id=h.dataset.discordId;
+    const a=document.createElement("a");
+    a.textContent="Message on Discord";
+    a.href=id?`https://discord.com/users/${encodeURIComponent(id)}`:(LINKS.discord||"#");
+    a.target="_blank"; a.rel="noopener";
+    h.appendChild(a);
+  });
 })();
 
 /* ---- cart polish: bump badge, saved line, continue ---- */
