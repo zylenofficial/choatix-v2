@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Phantom Tweaks – Windows, tuned for gaming</title>
-<meta name="description" content="Phantom Tweaks is a Windows optimizer for gamers. 340+ reversible tweaks for FPS, latency and background bloat. Apply what helps, roll back anything.">
+<title>Phantom Tweaks – Windows optimizer for gaming</title>
+<meta name="description" content="Phantom Tweaks is a Windows optimizer for gamers. 340+ tweaks for FPS, input lag and background junk, and you can undo any of them.">
 <meta name="theme-color" content="#030303">
-<meta property="og:type" content="website"><meta property="og:title" content="Phantom Tweaks – Windows, tuned for gaming">
-<meta property="og:description" content="340+ reversible Windows tweaks for FPS, latency and background bloat. Apply what helps, roll back anything.">
+<meta property="og:type" content="website"><meta property="og:title" content="Phantom Tweaks – Windows optimizer for gaming">
+<meta property="og:description" content="340+ Windows tweaks for FPS and lag. Every one can be undone.">
 <meta name="twitter:card" content="summary_large_image">
 <script>document.documentElement.classList.add("js")</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Phantom Tweaks","applicationCategory":"UtilitiesApplication","operatingSystem":"Windows","description":"A Windows optimizer for gamers with 340+ reversible tweaks."}</script>
@@ -284,6 +284,20 @@ dialog .btn-block{margin-top:4px}
 .dlg-switch{margin-top:20px;text-align:center;color:var(--ash);font-size:.93rem}
 .dlg-switch .link-btn{color:#fff;font-size:.93rem}
 
+
+/* discord login */
+.btn-discord{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;height:48px;border-radius:12px;background:#5865F2;color:#fff;font-weight:600;font-size:1rem;transition:background .2s,transform .2s}
+.btn-discord:hover{background:#4752c4}
+.btn-discord:active{transform:scale(.98)}
+.btn-discord svg{width:22px;height:22px;flex:none}
+.dlg-fine{color:var(--ash);font-size:.85rem;text-align:center;margin-top:14px}
+.dlg-user{display:flex;align-items:center;gap:14px;margin-bottom:18px;padding:14px;border:1px solid var(--line2);border-radius:14px;background:#050506}
+.dlg-user img{width:52px;height:52px;border-radius:50%;object-fit:cover}
+.dlg-user strong{display:block;font-size:1.05rem}
+.dlg-user span{color:var(--ash);font-size:.9rem}
+#loginBtn .nav-av{width:22px;height:22px;border-radius:50%;object-fit:cover}
+dialog .btn-block{width:100%}
+
 @media (max-width:980px){
   .actions .dl{display:none}
   .burger{display:inline-flex}
@@ -524,7 +538,7 @@ footer{position:relative;overflow:hidden;padding-bottom:0}
     </nav>
     <div class="actions">
       <button class="icon-btn pal-btn" id="palBtn" type="button" aria-label="Search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><span>Search</span><kbd id="palKbd">Ctrl K</kbd></button>
-      <button class="icon-btn" id="loginBtn" type="button"><span id="loginIcon" style="display:flex;align-items:center"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994.021-.041.001-.09-.041-.106a13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.929 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.894.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.028zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg></span><span id="loginText">Log in</span></button>
+      <button class="icon-btn" id="loginBtn" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4.5-6 8-6s7 2 8 6"/></svg><span>Log in</span></button>
       <button class="icon-btn" id="cartBtn" type="button" aria-label="Open cart"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h2.2l2.1 11h10.4l2-8H6.2"/><circle cx="9" cy="19.5" r="1.4"/><circle cx="17" cy="19.5" r="1.4"/></svg><span class="cart-count" id="cartCount" hidden>0</span></button>
       <a class="btn btn-solid btn-sm dl" data-link="download" href="#">Download</a>
       <button class="icon-btn burger" id="burger" type="button" aria-label="Menu" aria-expanded="false" aria-controls="mobileMenu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
@@ -541,13 +555,13 @@ footer{position:relative;overflow:hidden;padding-bottom:0}
 <div class="hero">
   <div class="wrap hero-grid">
     <div>
-      <h1 class="display"><span>Windows,</span><span>tuned for</span><span>games.</span></h1>
-      <p class="lede">Phantom Tweaks scans your PC, recommends what will help, and applies it in one click. Over 340 tweaks for FPS, latency and background bloat. Every one can be rolled back.</p>
+      <h1 class="display"><span>Get more</span><span>FPS out of</span><span>Windows.</span></h1>
+      <p class="lede">Phantom Tweaks looks at your PC, suggests the tweaks that make sense for it, and applies them with one click. There are 340+ of them, covering FPS, input lag and the junk running in the background. You can undo any of them.</p>
       <div class="cta-row">
         <a class="btn btn-solid" data-link="download" href="#">Download Phantom Tweaks</a>
         <a class="btn btn-line" href="#/store">Visit the store</a>
       </div>
-      <p class="fine">Free to start. No tweak is permanent.</p>
+      <p class="fine">Free to start. Everything can be undone.</p>
     </div>
 
     <!-- live demo: real tweaks from the app -->
@@ -582,7 +596,7 @@ footer{position:relative;overflow:hidden;padding-bottom:0}
           <button class="apply" type="button" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span>Apply</span></button>
         </div>
       </div>
-      <div class="demo-foot"><span>4 of 340+ tweaks shown. Try it, nothing here changes your PC.</span></div>
+      <div class="demo-foot"><span>Showing 4 of 340+ tweaks. It's a demo, so nothing here touches your PC.</span></div>
     </div>
   </div>
 </div>
@@ -593,7 +607,7 @@ footer{position:relative;overflow:hidden;padding-bottom:0}
     <div class="stat"><b data-count="340" data-suffix="+">340+</b><span>reversible tweaks</span></div>
     <div class="stat"><b data-count="12">12</b><span>categories, from Gaming to Debloat</span></div>
     <div class="stat"><b data-count="3">3</b><span>profiles: Competitive, Max Performance, Balanced</span></div>
-    <div class="stat"><b>1</b><span>click to apply, one click to roll back</span></div>
+    <div class="stat"><b>1</b><span>click to apply, one click to undo</span></div>
   </div>
 </section>
 
@@ -601,13 +615,13 @@ footer{position:relative;overflow:hidden;padding-bottom:0}
 <section id="app">
   <div class="wrap">
     <div class="sec-head">
-      <h2 class="display">Built to be read, not decoded.</h2>
-      <p>Every tweak says what it changes, how much it matters and whether it is safe, before you touch Apply.</p>
+      <h2 class="display">See what each tweak does first.</h2>
+      <p>Each tweak lists what it changes, how much difference it makes and how risky it is, so you know before you press Apply.</p>
     </div>
     <div class="showcase">
       <div class="tabs" role="tablist" aria-label="App screens">
-        <button class="tab" role="tab" aria-selected="true" data-tab="overview"><strong>Overview</strong><span>A health score for your PC, live CPU, memory and GPU readings, and one button to scan and optimize.</span></button>
-        <button class="tab" role="tab" aria-selected="false" data-tab="tweaks"><strong>Tweaks</strong><span>Search the whole library, filter by Free, Pro or Phantom, and apply any tweak with a single click.</span></button>
+        <button class="tab" role="tab" aria-selected="true" data-tab="overview"><strong>Overview</strong><span>Health score, live CPU, memory and GPU numbers, and a button that scans your PC and optimizes it.</span></button>
+        <button class="tab" role="tab" aria-selected="false" data-tab="tweaks"><strong>Tweaks</strong><span>Search every tweak, filter by Free, Pro or Phantom, and apply one with a click.</span></button>
       </div>
       <div class="frame-wrap">
 <div class="frame" id="frame" data-tab="overview">
@@ -639,8 +653,8 @@ footer{position:relative;overflow:hidden;padding-bottom:0}
           <div class="ring"><svg viewBox="0 0 200 200"><circle class="trk" cx="100" cy="100" r="88"/><circle class="prg" id="ovRing" cx="100" cy="100" r="88"/></svg><div class="ring-n"><b id="ovScore">0</b><small>OUT OF 100</small></div></div>
           <div class="hl-r">
             <div class="hl-k">SYSTEM HEALTH</div><div class="hl-s" id="ovState">Not scanned yet</div>
-            <div class="hl-v" id="ovVerdict">Excellent</div><div class="hl-d" id="ovDesc">Run a system scan to find improvements</div>
-            <div class="hl-btns"><button class="ov-btn solid" id="ovScan" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/></svg><span>Scan and optimize</span></button><div class="ov-btn"><div><b>Best tweaks</b><small>Curated gaming optimizations</small></div></div><div class="ov-btn"><div><b>Game library</b><small>Optimize supported games</small></div></div></div>
+            <div class="hl-v" id="ovVerdict">Excellent</div><div class="hl-d" id="ovDesc">Run a scan to see what can be improved</div>
+            <div class="hl-btns"><button class="ov-btn solid" id="ovScan" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/></svg><span>Scan and optimize</span></button><div class="ov-btn"><div><b>Best tweaks</b><small>Hand-picked gaming tweaks</small></div></div><div class="ov-btn"><div><b>Game library</b><small>Optimize supported games</small></div></div></div>
             <div class="hl-stats">
               <div class="hs" data-k="0"><i class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></i><div><small>CPU load</small><b id="hsCpu">22%</b></div></div>
               <div class="hs" data-k="1"><i class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></i><div><small>Memory</small><b id="hsMem">39%</b></div></div>
@@ -660,7 +674,7 @@ footer{position:relative;overflow:hidden;padding-bottom:0}
         <div class="ov-bottom">
           <div class="ov-card pn"><h4>System</h4>
             <div class="kv"><span>Windows</span><b>Microsoft Windows 11</b></div><div class="kv"><span>Graphics</span><b>NVIDIA GeForce RTX</b></div><div class="kv"><span>Memory</span><b>16 GB</b></div></div>
-          <div class="ov-card pn" id="ovRes"><h4>Scan results <a>Browse all tweaks</a></h4><div class="res" id="ovResBody"><div class="res-empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/></svg><b>No scan yet</b><p>Run a system scan to find reversible improvements for your PC.</p></div></div></div>
+          <div class="ov-card pn" id="ovRes"><h4>Scan results <a>Browse all tweaks</a></h4><div class="res" id="ovResBody"><div class="res-empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/></svg><b>No scan yet</b><p>Run a scan to see which tweaks fit your PC.</p></div></div></div>
         </div>
       </div>
     </div>
@@ -668,7 +682,7 @@ footer{position:relative;overflow:hidden;padding-bottom:0}
   </div>
   <div class="ov tw" id="tw" role="img" aria-label="Animated preview of the Phantom Tweaks Tweaks screen with live search, tier filters and Apply buttons"><div class="ov-in" id="twIn"></div></div>
 </div>
-<p class="fine frame-note" id="frameNote">Interactive preview with simulated readings. Press Scan and optimize.</p>
+<p class="fine frame-note" id="frameNote">This preview uses made-up numbers. Hit Scan and optimize to try it.</p>
 </div>
     </div>
   </div>
@@ -678,17 +692,17 @@ footer{position:relative;overflow:hidden;padding-bottom:0}
 <section class="safety" id="safety">
   <div class="wrap">
     <div class="sec-head">
-      <h2 class="display">Every change can be undone.</h2>
-      <p>Tuning shouldn't feel like a gamble. Phantom saves your original setting before it changes anything.</p>
+      <h2 class="display">You can undo everything.</h2>
+      <p>Before Phantom changes a setting, it saves what it was. If you don't like the result, put it back.</p>
     </div>
     <div class="flow">
-      <div class="step"><div class="dot">1</div><h3>Scan your PC</h3><p>Phantom checks your system and recommends the tweaks that fit your hardware.</p></div>
-      <div class="step"><div class="dot">2</div><h3>Apply what helps</h3><p>Apply tweaks one at a time, or work through a full profile. Restart prompts are flagged up front.</p></div>
-      <div class="step"><div class="dot">3</div><h3>Roll back any time</h3><p>Open Rollback to restore any tweak to its original setting, or revert everything at once.</p></div>
+      <div class="step"><div class="dot">1</div><h3>Scan your PC</h3><p>Phantom looks at your system and picks tweaks that suit your hardware.</p></div>
+      <div class="step"><div class="dot">2</div><h3>Apply what helps</h3><p>Apply tweaks one by one or pick a whole profile. If one needs a restart, it tells you first.</p></div>
+      <div class="step"><div class="dot">3</div><h3>Roll back any time</h3><p>Open Rollback to put any tweak back how it was, or undo all of them in one go.</p></div>
     </div>
     <div class="lock">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
-      <p><b>If a tweak can't be backed up, it stays locked.</b> Phantom disables those tweaks and marks them “Backup unavailable” until it can save your original settings first.</p>
+      <p><b>Tweaks that can't be backed up are locked.</b> They show “Backup unavailable” and stay off until Phantom can save the original setting.</p>
     </div>
   </div>
 </section>
@@ -697,22 +711,22 @@ footer{position:relative;overflow:hidden;padding-bottom:0}
 <section id="tunes">
   <div class="wrap">
     <div class="sec-head">
-      <h2 class="display">Twelve places Windows slows you down.</h2>
-      <p>Each category groups tweaks by what they touch, so you can go broad with a profile or narrow with a single setting.</p>
+      <h2 class="display">12 categories of tweaks</h2>
+      <p>Tweaks are grouped by what they change. Use a profile to apply a lot at once, or pick single settings yourself.</p>
     </div>
     <div class="cats">
       <div class="cat"><h3>Gaming</h3><p>Game Mode, Game DVR, the Xbox overlay and background recording.</p></div>
-      <div class="cat"><h3>Performance</h3><p>Power plans and system settings that favor speed over idle savings.</p></div>
-      <div class="cat"><h3>GPU</h3><p>Graphics and rendering settings that affect frame delivery.</p></div>
-      <div class="cat"><h3>Network</h3><p>Connection settings that cut latency for online games.</p></div>
-      <div class="cat"><h3>Input</h3><p>Mouse and keyboard response, tuned for fast reactions.</p></div>
-      <div class="cat"><h3>Storage</h3><p>Disk behavior and clutter that gets in the way of load times.</p></div>
+      <div class="cat"><h3>Performance</h3><p>Power plans and system settings that go for speed over saving power.</p></div>
+      <div class="cat"><h3>GPU</h3><p>Graphics settings that affect how smoothly frames come out.</p></div>
+      <div class="cat"><h3>Network</h3><p>Network settings that lower ping in online games.</p></div>
+      <div class="cat"><h3>Input</h3><p>Makes your mouse and keyboard respond faster.</p></div>
+      <div class="cat"><h3>Storage</h3><p>Disk settings and leftover files that slow down load times.</p></div>
       <div class="cat"><h3>Memory</h3><p>Free up RAM so games get more of it.</p></div>
-      <div class="cat"><h3>Windows</h3><p>System behaviors that interrupt or slow down your sessions.</p></div>
+      <div class="cat"><h3>Windows</h3><p>Windows features that interrupt your game or slow it down.</p></div>
       <div class="cat"><h3>Privacy</h3><p>Turn off telemetry and tracking you didn't ask for.</p></div>
       <div class="cat"><h3>Debloat</h3><p>Remove preinstalled apps and services you never use.</p></div>
-      <div class="cat"><h3>Audio</h3><p>Audio settings that reduce delay and background processing.</p></div>
-      <div class="cat"><h3>Apps</h3><p>Discord, Steam, Chrome and Epic: hardware acceleration and auto-start, handled.</p></div>
+      <div class="cat"><h3>Audio</h3><p>Settings that cut audio delay and background processing.</p></div>
+      <div class="cat"><h3>Apps</h3><p>Hardware acceleration and auto-start settings for Discord, Steam, Chrome and Epic.</p></div>
     </div>
   </div>
 </section>
@@ -722,11 +736,11 @@ footer{position:relative;overflow:hidden;padding-bottom:0}
 <section id="plans" style="padding-top:0">
   <div class="wrap">
     <div class="sec-head">
-      <h2 class="display">Start free. Go deeper when you want to.</h2>
+      <h2 class="display">Free to start, upgrade if you want more</h2>
     </div>
     <div class="plans">
       <div class="plan">
-        <h3>Free</h3><p class="tag">The essentials, no payment needed.</p>
+        <h3>Free</h3><p class="tag">The basics, no payment needed.</p>
         <ul>
           <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Core gaming tweaks like Game Mode and Game DVR</li>
           <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Live system monitor</li>
@@ -735,7 +749,7 @@ footer{position:relative;overflow:hidden;padding-bottom:0}
         <a class="btn btn-line" data-link="download" href="#">Download free</a>
       </div>
       <div class="plan">
-        <h3>Pro</h3><p class="tag">More tweaks, more control.</p>
+        <h3>Pro</h3><p class="tag">More tweaks.</p>
         <ul>
           <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Everything in Free</li>
           <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Pro-only tweaks, such as Steam process priority</li>
@@ -743,7 +757,7 @@ footer{position:relative;overflow:hidden;padding-bottom:0}
         <a class="btn btn-line" href="#/store">Get Pro</a>
       </div>
       <div class="plan top">
-        <h3>Phantom</h3><p class="tag">The full library.</p>
+        <h3>Phantom</h3><p class="tag">Every tweak.</p>
         <ul>
           <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Everything in Pro</li>
           <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Phantom-only tweaks</li>
@@ -759,13 +773,13 @@ footer{position:relative;overflow:hidden;padding-bottom:0}
   <div class="wrap">
     <div class="sec-head"><h2 class="display">Questions</h2></div>
     <div class="faq">
-      <details><summary>Is it safe to use?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></summary><p>Every tweak is labeled Safe or Moderate and shows its impact. Phantom saves the original setting before applying, and tweaks that can't be backed up are locked. If you don't like a result, restore it from the Rollback page.</p></details>
+      <details><summary>Is it safe to use?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></summary><p>Every tweak is marked Safe or Moderate and shows how much impact it has. Phantom saves the original setting before it applies anything, and tweaks it can't back up are locked. Don't like a result? Restore it from the Rollback page.</p></details>
       <details><summary>How do I undo a tweak?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></summary><p>Open Rollback in the sidebar to restore individual tweaks, or use Revert all on the Tweaks page to undo everything you've applied.</p></details>
-      <details><summary>Do I need to restart my PC?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></summary><p>Only some tweaks need one. Those are marked “Restart required” before you apply them.</p></details>
-      <details><summary>What do impact and safety mean?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></summary><p>Impact shows how much a tweak is likely to matter: high, medium or low. Safe tweaks are low-risk, and Moderate tweaks change deeper settings, so read their description first. Starting with the high-impact Safe ones is a good first pass.</p></details>
-      <details><summary>Is Phantom Tweaks free?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></summary><p>You can start free. Pro and Phantom plans unlock more tweaks when you want to go further.</p></details>
-      <details><summary>What do Free, Pro and Phantom tweaks mean?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></summary><p>Each tweak is tagged with the plan that unlocks it. Free tweaks work for everyone, Pro adds deeper options like audio latency tweaks, and Phantom unlocks the rest of the library.</p></details>
-      <details><summary>What does “Backup unavailable” mean?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></summary><p>Some tweaks change settings Phantom can't fully back up yet. Those stay disabled and are marked “Backup unavailable” so nothing gets changed that you couldn't undo.</p></details>
+      <details><summary>Do I need to restart my PC?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></summary><p>Only some do, and those are marked “Restart required” before you apply them.</p></details>
+      <details><summary>What do impact and safety mean?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></summary><p>Impact is how much a tweak is likely to help: high, medium or low. Safe tweaks are low-risk. Moderate ones change deeper settings, so read the description first. If you're not sure where to start, go with the high-impact Safe ones.</p></details>
+      <details><summary>Is Phantom Tweaks free?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></summary><p>Yes, you can use it for free. Pro and Phantom unlock more tweaks.</p></details>
+      <details><summary>What do Free, Pro and Phantom tweaks mean?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></summary><p>Every tweak is tagged with the plan it needs. Free tweaks are open to everyone, Pro adds things like the audio latency tweaks, and Phantom gets you the rest.</p></details>
+      <details><summary>What does “Backup unavailable” mean?<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></summary><p>Some tweaks change settings Phantom can't fully back up yet. They stay disabled and show “Backup unavailable”, so nothing gets changed that you can't undo.</p></details>
     </div>
   </div>
 </section>
@@ -773,7 +787,7 @@ footer{position:relative;overflow:hidden;padding-bottom:0}
 <!-- ================= FINAL ================= -->
 <section class="final">
   <div class="wrap">
-    <h2 class="display">Your next session, tuned.</h2>
+    <h2 class="display">Try it on your PC.</h2>
     <div class="cta-row">
       <a class="btn btn-solid" data-link="download" href="#">Download Phantom Tweaks</a>
       <a class="btn btn-line" data-link="discord" href="#">Join the Discord</a>
@@ -787,7 +801,7 @@ footer{position:relative;overflow:hidden;padding-bottom:0}
   <section class="page-head">
     <div class="wrap">
       <h1 class="display page-title">Store</h1>
-      <p class="page-lede">Pick a plan, add it to your cart, and enter a discount code before you check out.</p>
+      <p class="page-lede">Pick a plan, add it to your cart and enter a discount code at checkout.</p>
     </div>
   </section>
   <section class="store-body">
@@ -803,7 +817,7 @@ footer{position:relative;overflow:hidden;padding-bottom:0}
   <section class="page-head">
     <div class="wrap">
       <h1 class="display page-title">The team</h1>
-      <p class="page-lede">The people who build, test and support Phantom Tweaks. Message any of them on Discord.</p>
+      <p class="page-lede">Who makes and supports Phantom Tweaks. You can message any of us on Discord.</p>
     </div>
   </section>
   <section class="store-body">
@@ -852,34 +866,23 @@ footer{position:relative;overflow:hidden;padding-bottom:0}
     <ul class="pal-list" id="palList" role="listbox"></ul>
   </div>
 </dialog>
-<!-- login / profile dialog -->
+<!-- login -->
 <dialog id="loginDialog" aria-labelledby="loginTitle">
   <form method="dialog" class="dlg-close"><button aria-label="Close" class="icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></form>
-  <div id="dlgLoggedOut">
-    <div style="width:46px;height:46px;border-radius:13px;background:#5865F2;display:grid;place-items:center;color:#fff;margin-bottom:18px">
-      <svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994.021-.041.001-.09-.041-.106a13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.929 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.894.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.028zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>
-    </div>
-    <h2 id="loginTitle">Log in with Discord</h2>
-    <p class="dlg-sub" id="loginSub">Sign in with your Discord account to manage your plan, access license keys, and view your subscription.</p>
-    <a class="btn btn-solid btn-block" id="discordLoginBtn" href="https://choatix-v2.onrender.com/api/auth/discord" style="background:#5865F2;color:#fff;border-color:#5865F2;display:flex;align-items:center;justify-content:center;gap:10px;margin-top:20px;padding:12px 18px;font-weight:600">
-      <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994.021-.041.001-.09-.041-.106a13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.929 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.894.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.028zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>
-      Continue with Discord
-    </a>
-    <p class="dlg-switch" style="margin-top:18px"><a class="link-btn" href="https://discord.gg/AhEK85REhG" target="_blank" rel="noopener">Need help? Join our Discord server</a></p>
+  <img class="dlg-logo" src="data:image/png;base64,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" alt="">
+  <h2 id="loginTitle">Log in</h2>
+  <p class="dlg-sub" id="loginSub">Log in with your Discord account.</p>
+  <div id="authOut">
+    <button class="btn btn-discord" id="discordBtn" type="button">
+      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.4189-2.1568 2.4189z"/></svg>
+      <span>Continue with Discord</span>
+    </button>
+    <p class="code-msg" id="loginMsg" aria-live="polite"></p>
+    <p class="dlg-fine">We only see your Discord name and avatar.</p>
   </div>
-  <div id="dlgLoggedIn" hidden>
-    <div style="display:flex;align-items:center;gap:14px;margin-bottom:18px">
-      <img id="dlgUserAvatar" src="" alt="" style="width:52px;height:52px;border-radius:50%;border:2px solid var(--line2);object-fit:cover">
-      <div>
-        <h3 id="dlgUsername" style="font-size:1.25rem;font-weight:700;line-height:1.2"></h3>
-        <span id="dlgUserTier" style="display:inline-block;margin-top:4px;font-size:0.75rem;padding:2px 8px;border-radius:6px;background:rgba(255,255,255,0.1);color:var(--ink)">Free Plan</span>
-      </div>
-    </div>
-    <div style="padding:14px;background:#121214;border:1px solid var(--line);border-radius:12px;margin-bottom:18px;font-size:0.9rem;display:grid;gap:8px">
-      <div style="display:flex;justify-content:space-between;color:var(--ash)"><span>Discord ID</span><code id="dlgDiscordId" style="color:var(--ink);font-family:monospace"></code></div>
-      <div style="display:flex;justify-content:space-between;color:var(--ash)"><span>Status</span><span style="color:#9fe0b0;font-weight:500">Connected</span></div>
-    </div>
-    <button class="btn btn-line btn-block" id="logoutBtn" type="button" style="color:#f48686;border-color:rgba(248,113,113,0.3)">Log out</button>
+  <div id="authIn" hidden>
+    <div class="dlg-user"><img id="duAvatar" alt=""><div><strong id="duName"></strong><span id="duTag"></span></div></div>
+    <button class="btn btn-line btn-block" id="logoutBtn" type="button">Log out</button>
   </div>
 </dialog>
 
@@ -887,9 +890,9 @@ footer{position:relative;overflow:hidden;padding-bottom:0}
 /* ---- EDIT YOUR LINKS HERE ---- */
 const LINKS = {
   download: "#",
-  discord:  "https://discord.gg/AhEK85REhG",
-  login:    "https://choatix-v2.onrender.com/api/auth/discord",
-  checkout: ""
+  discord:  "https://discord.gg/Y92hMwVaUc",
+  login:    "",   // optional: your existing login page URL. If set, the Log in button goes straight there.
+  checkout: ""    // your payment page URL (Stripe, Sell.app, Shopify...). Cart contents are added as ?items=id:qty&code=CODE
 };
 document.querySelectorAll("[data-link]").forEach(a => { a.href = LINKS[a.dataset.link] || "#"; });
 
@@ -899,12 +902,15 @@ document.querySelectorAll("[data-link]").forEach(a => { a.href = LINKS[a.dataset
    ===================================================================== */
 const CONFIG = {
   currency: "$",
-  authEndpoint: "",   // optional: POST JSON {mode,email,password,username} -> {ok,message,redirect}
+  discord: {
+    clientId: "1542139702382174249", // Phantom Discord application ID
+    redirectUri: ""   // blank = use this page's URL; register it at discord.com/developers/applications
+  },
   products: [
-    { id:"pro-30",      tier:"Pro",     period:"30 days",  price:9.99,  desc:"Pro-only tweaks, such as Steam process priority, on top of everything in Free." },
-    { id:"pro-life",    tier:"Pro",     period:"Lifetime", price:29.99, desc:"Pay once and keep Pro for good." },
-    { id:"phantom-30",  tier:"Phantom", period:"30 days",  price:14.99, desc:"The full tweak library, including Phantom-only tweaks." },
-    { id:"phantom-life",tier:"Phantom", period:"Lifetime", price:49.99, desc:"Pay once and keep the full library for good." }
+    { id:"pro-30",      tier:"Pro",     period:"30 days",  price:9.99,  desc:"Everything in Free plus Pro tweaks like Steam process priority." },
+    { id:"pro-life",    tier:"Pro",     period:"Lifetime", price:29.99, desc:"Pay once, keep Pro forever." },
+    { id:"phantom-30",  tier:"Phantom", period:"30 days",  price:14.99, desc:"Every tweak, including the Phantom-only ones." },
+    { id:"phantom-life",tier:"Phantom", period:"Lifetime", price:49.99, desc:"Pay once, keep everything forever." }
   ],
   // Discount codes. type: "percent" or "flat". Optional: min (minimum subtotal).
   discounts: {
@@ -912,10 +918,10 @@ const CONFIG = {
     "WELCOME5":  { type:"flat",    value:5, min:15 }
   },
   staff: [
-    { group:"Leadership",     name:"re1z",    role:"Developer",      bio:"Creator & developer of Phantom Tweaks.", handle:"re1z", photo:"", id:"1014494449809772544" },
-    { group:"Leadership",     name:"domi",    role:"Head Admin",     bio:"Head Administrator and project coordinator.", handle:"domi", photo:"", id:"1032970883192606780" },
-    { group:"Administration", name:"nedis",   role:"Head Admin",     bio:"Community management and operations.", handle:"nedis", photo:"", id:"398137085430726656" },
-    { group:"Support",        name:"lukutis", role:"Ticket Support", bio:"Customer support, license verification & assistance.", handle:"lukutis", photo:"", id:"1402203036914290764" }
+    { group:"Leadership",  name:"Your Name",   role:"Founder",         bio:"Started Phantom Tweaks and decides what goes in.", handle:"@yourhandle", photo:"" },
+    { group:"Development", name:"Dev Name",    role:"Lead developer",  bio:"Writes the tweaks and tests them before release.",        handle:"@devhandle",  photo:"" },
+    { group:"Support",     name:"Support Name",role:"Support",         bio:"Helps with setup, licenses and rollbacks.",        handle:"@supporthandle", photo:"" },
+    { group:"Support",     name:"Mod Name",    role:"Community moderator", bio:"Moderates the Discord.",          handle:"@modhandle",  photo:"" }
   ]
 };
 
@@ -926,7 +932,7 @@ const esc = t => String(t).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">"
 (function(){
   const burger=document.getElementById("burger"), menu=document.getElementById("mobileMenu");
   burger.addEventListener("click",()=>{const o=menu.classList.toggle("open");burger.setAttribute("aria-expanded",o)});
-  const titles={home:"Phantom Tweaks – Windows, tuned for gaming",store:"Store – Phantom Tweaks",team:"Team – Phantom Tweaks"};
+  const titles={home:"Phantom Tweaks – Windows optimizer for gaming",store:"Store – Phantom Tweaks",team:"Team – Phantom Tweaks"};
   function route(){
     const h=location.hash; let v="home";
     if(h==="#/store")v="store"; else if(h==="#/team")v="team";
@@ -1020,92 +1026,77 @@ const Cart=(function(){
   const groups=[...new Set(CONFIG.staff.map(m=>m.group))];
   document.getElementById("teamList").innerHTML=groups.map(g=>`<div class="group"><h2>${esc(g)}</h2>${CONFIG.staff.filter(m=>m.group===g).map(m=>{
     const ini=m.name.split(/\s+/).map(w=>w[0]).join("").slice(0,2).toUpperCase();
-    return `<div class="member"><div class="avatar" id="av-${m.id||m.name}">${m.photo?`<img src="${esc(m.photo)}" alt="${esc(m.name)}">`:esc(ini)}</div>
+    return `<div class="member"><div class="avatar">${m.photo?`<img src="${esc(m.photo)}" alt="${esc(m.name)}">`:esc(ini)}</div>
       <div><h3>${esc(m.name)}</h3><div class="role">${esc(m.role)}</div><p>${esc(m.bio)}</p></div><div class="handle">${esc(m.handle||"")}</div></div>`}).join("")}</div>`).join("");
-  CONFIG.staff.forEach(m => {
-    if (m.id) {
-      fetch(`${SITE_API}/api/team/${m.id}`).then(r=>r.json()).then(d=>{
-        if (d.avatar) {
-          const el = document.getElementById("av-" + m.id);
-          if (el) el.innerHTML = `<img src="${esc(d.avatar)}" alt="${esc(m.name)}">`;
-        }
-      }).catch(()=>{});
-    }
-  });
 })();
 
-/* ---- Discord Auth ---- */
-const SITE_API = "https://choatix-v2.onrender.com";
-
+/* ---- login with Discord (OAuth2 implicit grant, scope: identify) ---- */
 (function(){
-  const $=id=>document.getElementById(id), dlg=$("loginDialog");
-  const params = new URLSearchParams(location.search);
-  if (params.get("discord_id")) {
-    localStorage.setItem("discord_id", params.get("discord_id"));
-    if (params.get("username")) localStorage.setItem("username", params.get("username"));
-    if (params.get("avatar")) localStorage.setItem("avatar", params.get("avatar"));
-    history.replaceState({}, "", location.pathname + location.hash);
+  const $=id=>document.getElementById(id), dlg=$("loginDialog"), msg=$("loginMsg"), btn=$("loginBtn");
+  const KEY="phantom_discord_user", D=CONFIG.discord||{};
+  const store={
+    get(){try{return JSON.parse(localStorage.getItem(KEY)||"null")}catch(e){return null}},
+    set(v){try{localStorage.setItem(KEY,JSON.stringify(v))}catch(e){}},
+    del(){try{localStorage.removeItem(KEY)}catch(e){}}
+  };
+  const avatarUrl=u=>u.avatar
+    ? `https://cdn.discordapp.com/avatars/${u.id}/${u.avatar}.png?size=64`
+    : `https://cdn.discordapp.com/embed/avatars/${Number((BigInt(u.id)>>22n)%6n)}.png`;
+  const showErr=t=>{msg.className="code-msg err";msg.textContent=t};
+
+  function render(){
+    const u=store.get();
+    $("authOut").hidden=!!u; $("authIn").hidden=!u;
+    if(u){
+      const name=u.global_name||u.username;
+      $("loginTitle").textContent="You're logged in";
+      $("loginSub").textContent="Logged in with Discord.";
+      $("duAvatar").src=avatarUrl(u); $("duName").textContent=name; $("duTag").textContent="@"+u.username;
+      btn.innerHTML="";
+      const im=document.createElement("img"); im.className="nav-av"; im.src=avatarUrl(u); im.alt="";
+      const sp=document.createElement("span"); sp.textContent=name;
+      btn.append(im,sp);
+    }else{
+      $("loginTitle").textContent="Log in";
+      $("loginSub").textContent="Log in with your Discord account.";
+      btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4.5-6 8-6s7 2 8 6"/></svg><span>Log in</span>';
+    }
   }
 
-  const id = localStorage.getItem("discord_id");
-  const name = localStorage.getItem("username");
-  const av = localStorage.getItem("avatar");
-
-  const loginBtn = $("loginBtn"), loginIcon = $("loginIcon"), loginText = $("loginText");
-  const loggedOut = $("dlgLoggedOut"), loggedIn = $("dlgLoggedIn");
-
-  if (id && name) {
-    if (loginText) loginText.textContent = name;
-    if (loginIcon) {
-      if (av) {
-        loginIcon.innerHTML = `<img src="${esc(av)}" alt="${esc(name)}" style="width:22px;height:22px;border-radius:50%;object-fit:cover;border:1px solid rgba(255,255,255,0.3)">`;
-      }
-    }
-    if (loggedOut) loggedOut.hidden = true;
-    if (loggedIn) {
-      loggedIn.hidden = false;
-      $("dlgUsername").textContent = name;
-      $("dlgDiscordId").textContent = id;
-      if (av) $("dlgUserAvatar").src = av;
-      else $("dlgUserAvatar").src = `https://cdn.discordapp.com/embed/avatars/${(BigInt(id) >> 22n) % 6n}.png`;
-    }
-    fetch(`${SITE_API}/api/license/discord/${id}`)
-      .then(r=>r.json())
-      .then(d=>{
-        const raw = d.plan || d.tier;
-        if (raw) {
-          const t = String(raw).toLowerCase();
-          const tierName = t === "phantom" || t === "premium" ? "Phantom Plan" : t === "pro" ? "Pro Plan" : "Free Plan";
-          const el = $("dlgUserTier"); if (el) el.textContent = tierName;
-        }
-      })
-      .catch(()=>{});
-  } else {
-    if (loginText) loginText.textContent = "Log in";
-    if (loggedOut) loggedOut.hidden = false;
-    if (loggedIn) loggedIn.hidden = true;
-  }
-
-  loginBtn.addEventListener("click", () => {
-    if (localStorage.getItem("discord_id")) {
-      dlg.showModal();
-    } else {
-      location.href = `${SITE_API}/api/auth/discord`;
-    }
-  });
-
-  const logoutBtn = $("logoutBtn");
-  if (logoutBtn) {
-    logoutBtn.addEventListener("click", () => {
-      localStorage.removeItem("discord_id");
-      localStorage.removeItem("username");
-      localStorage.removeItem("avatar");
-      dlg.close();
-      location.reload();
+  function startLogin(){
+    if(!D.clientId){showErr("Discord login isn't connected yet. Add your Application ID to CONFIG.discord.clientId.");return}
+    const state=crypto.getRandomValues(new Uint32Array(4)).join("-");
+    try{sessionStorage.setItem("phantom_oauth_state",state)}catch(e){}
+    const redirect=D.redirectUri||(location.origin+location.pathname);
+    location.href="https://discord.com/oauth2/authorize?"+new URLSearchParams({
+      client_id:D.clientId, redirect_uri:redirect, response_type:"token", scope:"identify", state
     });
   }
 
-  dlg.addEventListener("click", e => { if (e.target === dlg) dlg.close(); });
+  async function finishLogin(){
+    if(!/access_token=/.test(location.hash)) return;
+    const p=new URLSearchParams(location.hash.slice(1));
+    const token=p.get("access_token"), state=p.get("state");
+    let saved=null; try{saved=sessionStorage.getItem("phantom_oauth_state");sessionStorage.removeItem("phantom_oauth_state")}catch(e){}
+    history.replaceState(null,"",location.pathname+location.search);
+    if(!token||!state||state!==saved){dlg.showModal();showErr("Couldn't log you in. Try again.");return}
+    try{
+      const r=await fetch("https://discord.com/api/users/@me",{headers:{Authorization:"Bearer "+token}});
+      if(!r.ok) throw 0;
+      const u=await r.json();
+      store.set({id:u.id,username:u.username,global_name:u.global_name||"",avatar:u.avatar||""});
+      render();
+    }catch(e){dlg.showModal();showErr("Couldn't reach Discord. Try again in a moment.")}
+  }
+
+  btn.addEventListener("click",()=>{
+    if(!store.get()&&LINKS.login){location.href=LINKS.login;return}
+    msg.textContent=""; msg.className="code-msg"; render(); dlg.showModal();
+  });
+  $("discordBtn").addEventListener("click",startLogin);
+  $("logoutBtn").addEventListener("click",()=>{store.del();render();dlg.close()});
+  dlg.addEventListener("click",e=>{ if(e.target===dlg) dlg.close(); });
+  render(); finishLogin();
 })();
 
 /* ---- live demo ---- */
@@ -1324,7 +1315,7 @@ const TwApp=(function(){
 const frameEl=document.getElementById("frame"), tabBtns=[...document.querySelectorAll(".tab")];
 function setTab(name){
   frameEl.dataset.tab=name; tabBtns.forEach(x=>x.setAttribute("aria-selected",x.dataset.tab===name));
-  document.getElementById("frameNote").textContent=name==="tweaks"?"Interactive preview. Search, filter and press Apply. Nothing here changes your PC.":"Interactive preview with simulated readings. Press Scan and optimize.";
+  document.getElementById("frameNote").textContent=name==="tweaks"?"Preview only. Search, filter and hit Apply, nothing changes on your PC.":"This preview uses made-up numbers. Hit Scan and optimize to try it.";
   if(name==="tweaks")TwApp.demo();
 }
 tabBtns.forEach(t=>t.addEventListener("click",()=>setTab(t.dataset.tab)));
