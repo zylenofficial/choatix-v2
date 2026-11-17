@@ -902,16 +902,14 @@ document.querySelectorAll("[data-link]").forEach(a => { a.href = LINKS[a.dataset
    The prices, products, codes and staff here are PLACEHOLDERS.
    ===================================================================== */
 const CONFIG = {
-  currency: "$",
+  currency: "EUR",
   discord: {
     clientId: "1542139702382174249", // Phantom Discord application ID
     redirectUri: ""   // blank = use this page's URL; register it at discord.com/developers/applications
   },
   products: [
-    { id:"pro-30",      tier:"Pro",     period:"30 days",  price:9.99,  desc:"Everything in Free plus Pro tweaks like Steam process priority." },
-    { id:"pro-life",    tier:"Pro",     period:"Lifetime", price:29.99, desc:"Pay once, keep Pro forever." },
-    { id:"phantom-30",  tier:"Phantom", period:"30 days",  price:14.99, desc:"Every tweak, including the Phantom-only ones." },
-    { id:"phantom-life",tier:"Phantom", period:"Lifetime", price:49.99, desc:"Pay once, keep everything forever." }
+    { id:"pro-key",     tier:"Pro",     period:"/ KEY", price:5.99, desc:"Everything in Free plus Pro tweaks like Steam process priority." },
+    { id:"phantom-key", tier:"Phantom", period:"/ KEY", price:9.99, desc:"Every tweak, including the Phantom-only ones." }
   ],
   // Discount codes. type: "percent" or "flat". Optional: min (minimum subtotal).
   discounts: {
@@ -927,7 +925,7 @@ const CONFIG = {
   ]
 };
 
-const money = n => CONFIG.currency + n.toFixed(2);
+const money = n => n.toFixed(2).replace(".", ",") + " " + CONFIG.currency;
 const esc = t => String(t).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 
 /* ---- router: #  (home) , #/store , #/team ---- */
